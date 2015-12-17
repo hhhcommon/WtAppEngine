@@ -277,18 +277,18 @@ public class ContentController {
     private Map<String,Object> getListByZone(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            //0-处理访问
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
-            if (m!=null&&m.size()>0) {
-                MobileParam mp=MobileUtils.getMobileParam(m);
-                MobileKey sk=(mp==null?null:mp.getMobileKey());
-                if (sk!=null){
-                    map.put("SessionId", sk.getSessionId());
-                    MobileSession ms=smm.getSession(sk);
-                    if (ms!=null) ms.access();
-                }
-                //获得SessionId，从而得到用户信息，获得偏好信息
-            }
+//            //0-处理访问
+//            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+//            if (m!=null&&m.size()>0) {
+//                MobileParam mp=MobileUtils.getMobileParam(m);
+//                MobileKey sk=(mp==null?null:mp.getMobileKey());
+//                if (sk!=null){
+//                    map.put("SessionId", sk.getSessionId());
+//                    MobileSession ms=smm.getSession(sk);
+//                    if (ms!=null) ms.access();
+//                }
+//                //获得SessionId，从而得到用户信息，获得偏好信息
+//            }
             //1-获取版本
             List<Map<String, Object>> sl=null;
             Map<String, Object> bcClass=null, bcItem=null;

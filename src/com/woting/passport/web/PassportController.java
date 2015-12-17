@@ -464,15 +464,16 @@ public class PassportController {
             u.put("ObjType", "User");
             u.put("UserId", "123456");
             u.put("UserName", "张先生1");
-            g.put("InnerPhoneNum", "1001");
+            u.put("InnerPhoneNum", "1001");
             u.put("Portrait", "images/person.png");
             hl.add(u);
             u = new HashMap<String, Object>();
             u.put("ObjType", "User");
             u.put("UserId", "336655");
             u.put("UserName", "张先生3");
-            g.put("InnerPhoneNum", "1002");
+            u.put("InnerPhoneNum", "1002");
             u.put("Portrait", "images/person.png");
+            hl.add(u);
             g = new HashMap<String, Object>();
             g.put("ObjType", "Group");
             g.put("GroupId", "311466");

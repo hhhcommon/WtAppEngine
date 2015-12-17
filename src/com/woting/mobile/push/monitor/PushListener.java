@@ -20,7 +20,7 @@ public class PushListener extends Thread {
     //开启推送内存清理任务
     private void startCleanMonitor() {
         System.out.println("启动推送内存清理任务，任务启动间隔["+pc.getCLEAN_INTERVAL()+"]毫秒");
-        Timer pushClean_Timer = new Timer("CleanPushMemoryTimer", true);
+        Timer pushClean_Timer = new Timer("清理推送内存任务，每隔["+pc.getCLEAN_INTERVAL()+"]毫秒执行", true);
         CleanPushMemoryTask cpmt = new CleanPushMemoryTask();
         pushClean_Timer.schedule(cpmt, new Date(), pc.getCLEAN_INTERVAL());
     }

@@ -95,5 +95,4 @@ public class PushMemoryManage {
     public void setServerRuning(boolean serverRuning) {
         this.serverRuning.set(serverRuning);
     }
-
 }
