@@ -414,19 +414,24 @@ public class ContentController {
             //------------------
             sl = new ArrayList<Map<String, Object>>();
             bcItem=new HashMap<String, Object>();
-            bcItem.put("ImgUrl", "abc/a.jpg");
+            bcItem.put("ImgUrl", "asset/contents/imgs/1280115949992.jpg");
             bcItem.put("ImgIdx", "0");
             bcItem.put("ImgDesc", "北京怀旧金曲");
             bcItem.put("ImgContentUrl", "abc/content.do?contentId=1");
             sl.add(bcItem);
-            bcItem.put("ImgUrl", "abc/a.jpg");
+            bcItem.put("ImgUrl", "asset/contents/imgs/1303967876491.jpg");
             bcItem.put("ImgIdx", "1");
             bcItem.put("ImgDesc", "故事新编");
             bcItem.put("ImgContentUrl", "abc/content.do?contentId=2");
             sl.add(bcItem);
-            bcItem.put("ImgUrl", "abc/a.jpg");
+            bcItem.put("ImgUrl", "asset/contents/imgs/m_1303967844788.jpg");
             bcItem.put("ImgIdx", "2");
             bcItem.put("ImgDesc", "新闻纵览");
+            bcItem.put("ImgContentUrl", "abc/content.do?contentId=3");
+            sl.add(bcItem);
+            bcItem.put("ImgUrl", "asset/contents/imgs/m_1303967870670.jpg");
+            bcItem.put("ImgIdx", "3");
+            bcItem.put("ImgDesc", "体坛风云");
             bcItem.put("ImgContentUrl", "abc/content.do?contentId=3");
             sl.add(bcItem);
            bcClass.put("SubList", sl);

@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.List;
 import java.util.Map;
 
@@ -18,17 +19,17 @@ import com.woting.mobile.push.mem.PushMemoryManage;
 import com.woting.mobile.push.model.Message;
 
 /**
- * 处理Socket的线程，此线程是处理一个客户端连接的基础线程。其中包括一个主线程，三个子线程<br/>
+ * 处理Socket的线程，此线程是处理一个客户端连接的基础线程。其中包括一个主线程，两个子线程<br/>
  * [主线程(监控本连接的健康状况)]:<br/>
  * 启动子线程，并监控Socket连接的健康状况
  * [子线程(处理业务逻辑)]:<br/>
- * 发送|心跳线程：每500毫秒发送<br/>
  * 发送|正常消息：对应的消息队列中有内容，就发送<br/>
  * 接收|正常+心跳：判断是否连接正常的逻辑也在这个现成中<br/>
  */
+//注意，服务端把心跳的功能去掉了
 public class SocketHandle extends Thread {
     //三个业务子线程
-    private SendBeat sendBeat;
+//    private SendBeat sendBeat;
     private SendMsg sendMsg;
     private ReceiveMsg receiveMsg;
 
@@ -36,7 +37,7 @@ public class SocketHandle extends Thread {
     protected SocketMonitorConfig smc=null;//套接字监控配置
     protected volatile Object socketSendLock=new Object();
     protected volatile boolean running=true;
-    protected long lastVisitTime=System.currentTimeMillis();
+//    protected long lastVisitTime=System.currentTimeMillis();
 
     //数据
     protected Socket socket=null;
@@ -58,10 +59,10 @@ public class SocketHandle extends Thread {
      * 运行程序，接收和发送消息
      */
     public void run() {
-        socketDesc="Socket["+socket.getInetAddress().getHostAddress()+":"+socket.getLocalPort()+",socketKey="+socket.hashCode()+"]";
+        socketDesc="Socket["+socket.getRemoteSocketAddress()+",socketKey="+socket.hashCode()+"]";
         //启动业务处理线程
-        this.sendBeat=new SendBeat(socketDesc+"发送心跳");
-        this.sendBeat.start();
+//        this.sendBeat=new SendBeat(socketDesc+"发送心跳");
+//        this.sendBeat.start();
         this.sendMsg=new SendMsg(socketDesc+"发送消息");
         this.sendMsg.start();
         this.receiveMsg=new ReceiveMsg(socketDesc+"接收消息");
@@ -71,22 +72,26 @@ public class SocketHandle extends Thread {
             while (true) {//有任何一个字线程出问题，则关闭这个连接
                 Thread.sleep(this.smc.get_MonitorDelay());
                 //判断时间戳，看连接是否还有效
+                /*
                 if (System.currentTimeMillis()-lastVisitTime>this.smc.calculate_TimeOut()) {
                     break;
                 }
+                */
                 //判断是否有某个子线程失败了
-                if (this.sendBeat.isInterrupted) {
+                /*
+                if (this.sendBeat.isInterrupted||!this.sendBeat.isRunning) {
                     this.sendMsg._interrupt();
                     this.receiveMsg._interrupt();
                     break;
                 }
-                if (this.sendMsg.isInterrupted) {
-                    this.sendBeat._interrupt();
+                */
+                if (this.sendMsg.isInterrupted||!this.sendMsg.isRunning) {
+//                    this.sendBeat._interrupt();
                     this.receiveMsg._interrupt();
                     break;
                 }
-                if (this.receiveMsg.isInterrupted) {
-                    this.sendBeat._interrupt();
+                if (this.receiveMsg.isInterrupted||!this.receiveMsg.isRunning) {
+//                    this.sendBeat._interrupt();
                     this.sendMsg._interrupt();
                     break;
                 }
@@ -95,7 +100,7 @@ public class SocketHandle extends Thread {
             System.out.println(socketDesc+"主监控线程出现异常:"+e.getMessage());
             e.printStackTrace();
         } finally {//关闭所有子任务进程
-            if (this.sendBeat!=null) {try {this.sendBeat._interrupt();} catch(Exception e) {}}
+//            if (this.sendBeat!=null) {try {this.sendBeat._interrupt();} catch(Exception e) {}}
             if (this.sendMsg!=null) {try {this.sendMsg._interrupt();} catch(Exception e) {}}
             if (this.receiveMsg!=null) {try {this.receiveMsg._interrupt();} catch(Exception e) {}}
             boolean canClose=false;
@@ -106,8 +111,8 @@ public class SocketHandle extends Thread {
                     canClose=true;
                     continue;
                 }
-                if ( (this.sendBeat!=null&&!this.sendBeat.isRunning)
-                   &&(this.sendMsg!=null&&!this.sendMsg.isRunning)
+                if (/* (this.sendBeat!=null&&!this.sendBeat.isRunning)
+                   &&*/(this.sendMsg!=null&&!this.sendMsg.isRunning)
                    &&(this.receiveMsg!=null&&!this.receiveMsg.isRunning) ) {
                     canClose=true;
                     continue;
@@ -119,7 +124,7 @@ public class SocketHandle extends Thread {
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
-                this.sendBeat=null;
+//                this.sendBeat=null;
                 this.sendMsg=null;
                 this.receiveMsg=null;
                 this.socket=null;
@@ -130,7 +135,6 @@ public class SocketHandle extends Thread {
     //=====================================================================================
     /*
      * 发送心跳线程
-     */
     class SendBeat extends Thread {
         private boolean isInterrupted=false;
         private boolean isRunning;
@@ -138,15 +142,16 @@ public class SocketHandle extends Thread {
             super.setName(name);
         }
         protected void _interrupt(){
-           isInterrupted = true;
-           super.interrupt();
+            isInterrupted = true;
+            this.interrupt();
+            super.interrupt();
         }
         public void run() {
             PrintWriter out=null;
             this.isRunning=true;
             try {
                 while (pmm.isServerRuning()&&SocketHandle.this.running&&!isInterrupted) {
-                    Thread.sleep(SocketHandle.this.smc.get_BeatDelay());//延迟
+                    try { Thread.sleep(SocketHandle.this.smc.get_BeatDelay()); } catch (InterruptedException e) {};//延迟
                     //发心跳
                     synchronized(socketSendLock) {
                         out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
@@ -167,6 +172,7 @@ public class SocketHandle extends Thread {
             }
         }
     }
+     */
     /*
      * 发送消息线程
      */
@@ -177,8 +183,9 @@ public class SocketHandle extends Thread {
             super.setName(name);
         }
         protected void _interrupt(){
-           isInterrupted = true;
-           super.interrupt();
+            isInterrupted = true;
+            this.interrupt();
+            super.interrupt();
         }
         public void run() {
             PrintWriter out=null;
@@ -228,8 +235,9 @@ public class SocketHandle extends Thread {
             super.setName(name);
         }
         protected void _interrupt(){
-           isInterrupted = true;
-           super.interrupt();
+            isInterrupted = true;
+            super.interrupt();
+            this.interrupt();
         }
         public void run() {
             BufferedReader in=null;
@@ -245,7 +253,7 @@ public class SocketHandle extends Thread {
                         //接收消息数据
                         in=new BufferedReader(new InputStreamReader(SocketHandle.this.socket.getInputStream(), "UTF-8"));
                         String revMsgStr=in.readLine();
-                        SocketHandle.this.lastVisitTime=System.currentTimeMillis();
+//                        SocketHandle.this.lastVisitTime=System.currentTimeMillis();
 
                         if (revMsgStr.equals("b")) continue;//判断是否是心跳信号
 
@@ -283,9 +291,13 @@ public class SocketHandle extends Thread {
                         continueErrCodunt=0;
                     } catch(Exception e) {
                         System.out.println(SocketHandle.this.socketDesc+"接收消息线程出现异常:"+e.getMessage());
-                        if ( (++continueErrCodunt>SocketHandle.this.smc.get_RecieveErr_ContinueCount())
-                           ||(++sumErrCount>SocketHandle.this.smc.get_RecieveErr_SumCount() )) {
+                        if (e instanceof SocketException) {
                             canContinue=false;
+                        } else {
+                            if ( (++continueErrCodunt>=SocketHandle.this.smc.get_RecieveErr_ContinueCount())
+                                ||(++sumErrCount>=SocketHandle.this.smc.get_RecieveErr_SumCount() )) {
+                                 canContinue=false;
+                             }
                         }
                     }//end try
                 }//end while

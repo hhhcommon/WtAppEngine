@@ -1,5 +1,6 @@
 package com.woting.mobile.push;
 
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import com.woting.mobile.push.mem.PushMemoryManage;
@@ -40,7 +41,7 @@ public class PushSocketServer extends Thread {
         if (pmm.isServerRuning()) return ;
         try {
             PushSocketServer.serverSocket=new ServerSocket(this.pc.getPORT_PUSHSERVER());
-            System.out.println("地址["+PushSocketServer.serverSocket.getInetAddress()+"]:端口["+pc.getPORT_PUSHSERVER()+"]启动推送服务监控进程");
+            System.out.println("地址["+InetAddress.getLocalHost().getHostAddress()+"]:端口["+pc.getPORT_PUSHSERVER()+"]启动推送服务监控进程");
             //加一个关闭jvm时可调用的方法，关闭此线程池
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
@@ -59,7 +60,7 @@ public class PushSocketServer extends Thread {
                 Socket client=serverSocket.accept();
                 //准备参数
                 SocketMonitorConfig smc=new SocketMonitorConfig();
-                new Thread(new SocketHandle(client, smc),"监控Socket["+client.getRemoteSocketAddress()+",socketKey="+client.hashCode()+"]").start();
+                new Thread(new SocketHandle(client, smc),"Socket["+client.getRemoteSocketAddress()+",socketKey="+client.hashCode()+"]监控主线程").start();
             }
         } catch(Exception e) {
             pmm.setServerRuning(false);
