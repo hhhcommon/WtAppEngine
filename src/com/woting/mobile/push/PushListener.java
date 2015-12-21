@@ -1,11 +1,11 @@
-package com.woting.mobile.push.monitor;
+package com.woting.mobile.push;
 
 import java.util.Date;
 import java.util.Timer;
 
-import com.woting.mobile.push.PushConfig;
-import com.woting.mobile.push.PushSocketServer;
 import com.woting.mobile.push.mem.ReceiveMemory;
+import com.woting.mobile.push.monitor.CleanPushMemoryTask;
+import com.woting.mobile.push.monitor.DealReceivePureQueue;
 
 public class PushListener extends Thread {
     private static PushConfig pc=null;//推送服务的配置信息

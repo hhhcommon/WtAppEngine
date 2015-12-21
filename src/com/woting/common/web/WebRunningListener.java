@@ -6,7 +6,7 @@ import javax.servlet.ServletContextListener;
 import org.apache.log4j.Logger;
 
 import com.woting.mobile.push.PushConfig;
-import com.woting.mobile.push.monitor.PushListener;
+import com.woting.mobile.push.PushListener;
 import com.woting.mobile.session.MobileSessionConfig;
 import com.woting.mobile.session.monitor.SessionListener;
 

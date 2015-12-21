@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -19,10 +20,11 @@ import com.woting.mobile.push.mem.PushMemoryManage;
 import com.woting.mobile.push.model.Message;
 
 /**
- * 处理Socket的线程，此线程是处理一个客户端连接的基础线程。其中包括一个主线程，两个子线程<br/>
+ * 处理Socket的线程，此线程是处理一个客户端连接的基础线程。其中包括一个主线程，两/三个子线程<br/>
  * [主线程(监控本连接的健康状况)]:<br/>
  * 启动子线程，并监控Socket连接的健康状况
  * [子线程(处理业务逻辑)]:<br/>
+ * 发送|心跳线程：检查连接是否能够联通<br/>
  * 发送|正常消息：对应的消息队列中有内容，就发送<br/>
  * 接收|正常+心跳：判断是否连接正常的逻辑也在这个现成中<br/>
  */
@@ -60,13 +62,16 @@ public class SocketHandle extends Thread {
      */
     public void run() {
         socketDesc="Socket["+socket.getRemoteSocketAddress()+",socketKey="+socket.hashCode()+"]";
+        System.out.println(socketDesc+"主线程启动");
         //启动业务处理线程
 //        this.sendBeat=new SendBeat(socketDesc+"发送心跳");
 //        this.sendBeat.start();
         this.sendMsg=new SendMsg(socketDesc+"发送消息");
         this.sendMsg.start();
+        System.out.println(socketDesc+"发送消息线程启动");
         this.receiveMsg=new ReceiveMsg(socketDesc+"接收消息");
         this.receiveMsg.start();
+        System.out.println(socketDesc+"接收消息线程启动");
         //主线程
         try {
             while (true) {//有任何一个字线程出问题，则关闭这个连接
@@ -254,6 +259,7 @@ public class SocketHandle extends Thread {
                         in=new BufferedReader(new InputStreamReader(SocketHandle.this.socket.getInputStream(), "UTF-8"));
                         String revMsgStr=in.readLine();
 //                        SocketHandle.this.lastVisitTime=System.currentTimeMillis();
+                        System.out.println(socketDesc+"<"+(new Date()).toString()+">:"+revMsgStr);
 
                         if (revMsgStr.equals("b")) continue;//判断是否是心跳信号
 

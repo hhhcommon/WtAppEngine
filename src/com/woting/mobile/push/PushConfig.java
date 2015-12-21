@@ -10,7 +10,7 @@ public class PushConfig {
         return THREADCOUNT_DEALRECEIVEQUEUE;
     }
 
-    private int PORT_PUSHSERVER=5678;//推送服务端口号
+    private int PORT_PUSHSERVER=15678;//推送服务端口号
     public int getPORT_PUSHSERVER() {
         return PORT_PUSHSERVER;
     }

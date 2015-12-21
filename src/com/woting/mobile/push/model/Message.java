@@ -33,15 +33,20 @@ import java.io.Serializable;
 public class Message implements Serializable, Comparable<Message> {
     private transient static final long serialVersionUID = -8842284912678595536L;
     private String msgId; //32位消息id
+    private String reMsgId; //32位消息id
+
     private String fromAddr; //消息发送地址
     private String proxyAddrs; //消息中转地址，用逗号隔开
     private String toAddr; //消息目标地址
+
     private int msgType; //消息类型:0是一般类型；1是回复类型
     private String msgBizType; //业务消息类型，根据此类型，框架会对消息进行分发，目前只有对讲一个业务类型"INTERCOM"
-    private String msgStr; //简易消息内容，应是基础数据类型的字符串，如11.2、我听科技、woting、true、false等，特别的，在msgType==1时，这个属性就是所回复的消息的Id
+
+    private String returnType; //返回值类型
+    private int affirem; //是否需要确认;0不需要1需要，默认值=0不需要确认
+
     private long receiveTime; //消息收到时间
     private long sendTime; //消息应答发送时间
-    private int affirem; //是否需要确认;0不需要1需要，默认值=0不需要确认
     private String msgContent; //消息内容，应该是严格的Json格式，建议这里面的结构如下：{"bType":数据的业务类型,"Data":真正的数据，仍然要是jon数据类型}
 
     public String getMsgId() {
@@ -50,6 +55,13 @@ public class Message implements Serializable, Comparable<Message> {
     public void setMsgId(String msgId) {
         this.msgId = msgId;
     }
+    public String getReMsgId() {
+        return reMsgId;
+    }
+    public void setReMsgId(String reMsgId) {
+        this.reMsgId = reMsgId;
+    }
+
     public String getFromAddr() {
         return fromAddr;
     }
@@ -68,6 +80,7 @@ public class Message implements Serializable, Comparable<Message> {
     public void setToAddr(String toAddr) {
         this.toAddr = toAddr;
     }
+
     public int getMsgType() {
         return msgType;
     }
@@ -80,12 +93,20 @@ public class Message implements Serializable, Comparable<Message> {
     public void setMsgBizType(String msgBizType) {
         this.msgBizType = msgBizType;
     }
-    public String getMsgStr() {
-        return msgStr;
+
+    public String getReturnType() {
+        return returnType;
     }
-    public void setMsgStr(String msgStr) {
-        this.msgStr = msgStr;
+    public void setReturnType(String returnType) {
+        this.returnType = returnType;
     }
+    public int getAffirem() {
+        return affirem;
+    }
+    public void setAffirem(int affirem) {
+        this.affirem = affirem;
+    }
+
     public long getReceiveTime() {
         return receiveTime;
     }
@@ -98,17 +119,12 @@ public class Message implements Serializable, Comparable<Message> {
     public void setSendTime(long sendTime) {
         this.sendTime = sendTime;
     }
+
     public String getMsgContent() {
         return msgContent;
     }
     public void setMsgContent(String msgContent) {
         this.msgContent = msgContent;
-    }
-    public int getAffirem() {
-        return affirem;
-    }
-    public void setAffirem(int affirem) {
-        this.affirem = affirem;
     }
 
     /**

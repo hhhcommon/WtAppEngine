@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.spiritdata.framework.util.JsonUtils;
+import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.mobile.MobileUtils;
 import com.woting.mobile.model.MobileKey;
@@ -51,6 +52,24 @@ public class DealReceivePureQueue extends Thread {
                     msg=(Message)parseM.get("msg");
                 }
                 if (msg!=null) rm.addTypeMsgMap(msg.getMsgBizType(), msg);
+                //以下为测试：看看是否能够发送出去
+                if (msg!=null) {
+                    SendMemory sm=mpp.getSendMemory();
+                    Message retMsg=new Message();
+                    retMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                    retMsg.setReMsgId(msg.getMsgId());
+                    retMsg.setMsgBizType(msg.getMsgBizType());
+                    retMsg.setToAddr(msg.getFromAddr());
+                    retMsg.setFromAddr(msg.getToAddr());
+                    retMsg.setSendTime(System.currentTimeMillis());
+                    retMsg.setMsgContent("");
+                    retMsg.setReturnType("1001");
+                    Map<String, Object> _m=new HashMap<String, Object>();
+                    _m.put("CmdType", "Group");
+                    _m.put("Command", "-1");
+                    _m.put("GroupId", ((Map)m.get("Date")).get("GroupId"));
+                    List<Map<String, String>> 
+                }
             } catch(Exception e) {
                 e.printStackTrace();
             }
