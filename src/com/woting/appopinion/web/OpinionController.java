@@ -22,7 +22,7 @@ import com.woting.mobile.model.MobileParam;
 import com.woting.mobile.session.mem.SessionMemoryManage;
 import com.woting.mobile.session.model.MobileSession;
 import com.woting.mobile.model.MobileKey;
-import com.woting.passport.UGA.persistence.pojo.User;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
 
 @Controller
 @RequestMapping(value="/opinion/app/")
@@ -66,7 +66,7 @@ public class OpinionController {
                 } else {
                     ms.access();
                     if (userId==null) {
-                        User u=(User)ms.getAttribute("user");
+                        UserPo u=(UserPo)ms.getAttribute("user");
                         if (u!=null) userId=u.getUserId();
                     }
                 }
@@ -138,7 +138,7 @@ public class OpinionController {
                 } else {
                     ms.access();
                     if (userId==null) {
-                        User u=(User)ms.getAttribute("user");
+                        UserPo u=(UserPo)ms.getAttribute("user");
                         if (u!=null) userId=u.getUserId();
                     }
                 }

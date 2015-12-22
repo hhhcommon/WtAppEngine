@@ -4,7 +4,7 @@ import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.mobile.session.model.MobileSession;
 import com.woting.mobile.model.MobileKey;
-import com.woting.passport.UGA.persistence.pojo.User;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
 
 /**
  * 会话管理类，也就是会话的服务类
@@ -103,7 +103,7 @@ public class SessionMemoryManage {
             for (MobileKey sKey: this.sm.mSessionMap.keySet()) {
                 if (sKey.getMobileId().equals(imei)) {
                     MobileSession ms = this.sm.mSessionMap.get(sKey);
-                    User u = (User)ms.getAttribute("user");
+                    UserPo u = (UserPo)ms.getAttribute("user");
                     if (u!=null&&u.getUserId().equals(userId)&&!ms.expired()) return ms;
                 }
             }

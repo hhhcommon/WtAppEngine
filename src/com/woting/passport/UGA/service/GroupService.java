@@ -5,17 +5,17 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
-import com.woting.passport.UGA.persistence.pojo.Group;
-import com.woting.passport.UGA.persistence.pojo.GroupUser;
-import com.woting.passport.UGA.persistence.pojo.User;
+import com.woting.passport.UGA.persistence.pojo.GroupPo;
+import com.woting.passport.UGA.persistence.pojo.GroupUserPo;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.SequenceUUID;
 
 public class GroupService {
     @Resource(name="defaultDAO")
-    private MybatisDAO<User> userDao;
+    private MybatisDAO<UserPo> userDao;
     @Resource(name="defaultDAO")
-    private MybatisDAO<Group> groupDao;
+    private MybatisDAO<GroupPo> groupDao;
 
     @PostConstruct
     public void initParam() {
@@ -28,15 +28,15 @@ public class GroupService {
      * @param group 用户组信息
      * @return 创建用户成功返回1，否则返回0
      */
-    public int insertGroup(Group group) {
+    public int insertGroup(GroupPo group) {
         int i=0;
         try {
             group.setGroupId(SequenceUUID.getUUIDSubSegment(4));
             groupDao.insert(group);
             //插入用户
-            List<User> ul = group.getGroupUsers();
+            List<UserPo> ul = group.getGroupUsers();
             if (ul!=null&&ul.size()>0) {
-                for (User u: ul) this.insertGroupUser(group, u);
+                for (UserPo u: ul) this.insertGroupUser(group, u);
             }
             i=1;
         } catch (Exception e) {
@@ -50,8 +50,8 @@ public class GroupService {
      * @param g 用户组
      * @param u 用户
      */
-    public int insertGroupUser(Group g, User u) {
-        GroupUser gu=new GroupUser();
+    public int insertGroupUser(GroupPo g, UserPo u) {
+        GroupUserPo gu=new GroupUserPo();
         gu.setId(SequenceUUID.getUUIDSubSegment(4));
         gu.setGroupId(g.getGroupId());
         gu.setUserId(u.getUserId());
@@ -71,7 +71,7 @@ public class GroupService {
      * @param user 用户信息
      * @return 更新用户成功返回1，否则返回0
      */
-    public int updateUser(Group group) {
+    public int updateUser(GroupPo group) {
         int i=0;
         try {
             groupDao.update(group);
@@ -87,7 +87,7 @@ public class GroupService {
      * @param userId
      * @return 用户组
      */
-    public List<Group> getGroupsByUserId(String userId) {
+    public List<GroupPo> getGroupsByUserId(String userId) {
         try {
             return groupDao.queryForList("getGroupListByUserId", userId);
         } catch (Exception e) {
@@ -101,7 +101,7 @@ public class GroupService {
      * @param groupId 用户组Id
      * @return 用户组中的用户
      */
-    public List<User> getGroupMembers(String groupId) {
+    public List<UserPo> getGroupMembers(String groupId) {
         try {
             return userDao.queryForList("getGroupMembers", groupId);
         } catch (Exception e) {

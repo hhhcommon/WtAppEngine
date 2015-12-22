@@ -6,10 +6,11 @@ import java.util.List;
 import com.spiritdata.framework.core.model.BaseObject;
 import com.spiritdata.framework.util.StringUtils;
 
-public class Group extends BaseObject {
+public class GroupPo extends BaseObject {
     private static final long serialVersionUID = -4171166651180143388L;
 
     private String groupId; //用户组id
+    private String groupNum; //组号，用于公开的号码
     private String groupName; //用户组名称
     private String groupImg; //用户组头像
     private String pId; //上级用户组Id
@@ -22,13 +23,19 @@ public class Group extends BaseObject {
     private Timestamp CTime; //记录创建时间
     private Timestamp lmTime; //最后修改时间:last modify time
 
-    private List<User> groupUsers; //所属用户
+    private List<UserPo> groupUsers; //所属用户
 
     public String getGroupId() {
         return groupId;
     }
     public void setGroupId(String groupId) {
         this.groupId = groupId;
+    }
+    public String getGroupNum() {
+        return groupNum;
+    }
+    public void setGroupNum(String groupNum) {
+        this.groupNum = groupNum;
     }
     public String getGroupName() {
         return groupName;
@@ -84,10 +91,10 @@ public class Group extends BaseObject {
     public void setLmTime(Timestamp lmTime) {
         this.lmTime = lmTime;
     }
-    public List<User> getGroupUsers() {
+    public List<UserPo> getGroupUsers() {
         return groupUsers;
     }
-    public void setGroupUsers(List<User> groupUsers) {
+    public void setGroupUsers(List<UserPo> groupUsers) {
         this.groupUsers = groupUsers;
     }
 

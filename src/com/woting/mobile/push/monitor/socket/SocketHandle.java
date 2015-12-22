@@ -39,7 +39,7 @@ public class SocketHandle extends Thread {
     protected SocketMonitorConfig smc=null;//套接字监控配置
     protected volatile Object socketSendLock=new Object();
     protected volatile boolean running=true;
-//    protected long lastVisitTime=System.currentTimeMillis();
+    protected long lastVisitTime=System.currentTimeMillis();
 
     //数据
     protected Socket socket=null;
@@ -72,16 +72,14 @@ public class SocketHandle extends Thread {
         this.receiveMsg=new ReceiveMsg(socketDesc+"接收消息");
         this.receiveMsg.start();
         System.out.println(socketDesc+"接收消息线程启动");
+
         //主线程
         try {
             while (true) {//有任何一个字线程出问题，则关闭这个连接
                 Thread.sleep(this.smc.get_MonitorDelay());
                 //判断时间戳，看连接是否还有效
-                /*
-                if (System.currentTimeMillis()-lastVisitTime>this.smc.calculate_TimeOut()) {
-                    break;
-                }
-                */
+                if (System.currentTimeMillis()-lastVisitTime>this.smc.calculate_TimeOut()) break;
+
                 //判断是否有某个子线程失败了
                 /*
                 if (this.sendBeat.isInterrupted||!this.sendBeat.isRunning) {
@@ -100,6 +98,8 @@ public class SocketHandle extends Thread {
                     this.sendMsg._interrupt();
                     break;
                 }
+                Thread.sleep(5000);
+                break;
             }
         } catch (InterruptedException e) {//有异常就退出
             System.out.println(socketDesc+"主监控线程出现异常:"+e.getMessage());
@@ -122,10 +122,12 @@ public class SocketHandle extends Thread {
                     canClose=true;
                     continue;
                 }
-                try { sleep(10); } catch (InterruptedException e) {}
+                try { sleep(10); } catch (InterruptedException e) {};
             }
             try {
-                this.socket.close(); //这是主线程的关键
+                SocketHandle.this.socket.close(); //这是主线程的关键
+                System.out.println(SocketHandle.this.socket.isClosed());
+                System.out.println(SocketHandle.this.socket.isConnected());
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
@@ -142,7 +144,7 @@ public class SocketHandle extends Thread {
      * 发送心跳线程
     class SendBeat extends Thread {
         private boolean isInterrupted=false;
-        private boolean isRunning;
+        private boolean isRunning=true;
         protected SendBeat(String name) {
             super.setName(name);
         }
@@ -177,13 +179,13 @@ public class SocketHandle extends Thread {
             }
         }
     }
-     */
+    */
     /*
      * 发送消息线程
      */
     class SendMsg extends Thread {
         private boolean isInterrupted=false;
-        private boolean isRunning;
+        private boolean isRunning=true;
         protected SendMsg(String name) {
             super.setName(name);
         }
@@ -232,7 +234,7 @@ public class SocketHandle extends Thread {
      */
     class ReceiveMsg extends Thread {
         private boolean isInterrupted=false;
-        private boolean isRunning;
+        private boolean isRunning=true;
         private boolean canContinue=true;
         private int continueErrCodunt=0;
         private int sumErrCount=0;
@@ -258,16 +260,22 @@ public class SocketHandle extends Thread {
                         //接收消息数据
                         in=new BufferedReader(new InputStreamReader(SocketHandle.this.socket.getInputStream(), "UTF-8"));
                         String revMsgStr=in.readLine();
-//                        SocketHandle.this.lastVisitTime=System.currentTimeMillis();
-                        System.out.println(socketDesc+"<"+(new Date()).toString()+">:"+revMsgStr);
+                        SocketHandle.this.lastVisitTime=System.currentTimeMillis();
 
-                        if (revMsgStr.equals("b")) continue;//判断是否是心跳信号
+                        if (revMsgStr.equals("b")) { //发送回执心跳
+                            synchronized(socketSendLock) {
+                                out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
+                                out.println("B");
+                                out.flush();
+                                try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
+                            }
+                            continue;//判断是否是心跳信号
+                        }
 
                         @SuppressWarnings("unchecked")
                         Map<String, Object> recMap=(Map<String, Object>)JsonUtils.jsonToObj(revMsgStr, Map.class);
                         if (recMap!=null&&recMap.size()>0) {
                             //记录最后收到信号的时间
-
                             String __tmp=(String)recMap.get("NeedAffirm");
                             isAffirm=__tmp==null?false:__tmp.trim().equals("1");
                             if (isAffirm) msgId=(String)recMap.get("MsgId");

@@ -7,7 +7,7 @@ import java.util.Map;
 import com.spiritdata.framework.UGA.UgaUser;
 import com.spiritdata.framework.util.StringUtils;
 
-public class User extends UgaUser {
+public class UserPo extends UgaUser {
     private static final long serialVersionUID = 400373602903981461L;
 
     private String mainPhoneNum; //用户主手机号码，用户可能有多个手机号码

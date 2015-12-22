@@ -5,7 +5,7 @@ import javax.annotation.Resource;
 
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.SequenceUUID;
-import com.woting.passport.login.persistence.pojo.MobileUsed;
+import com.woting.passport.login.persistence.pojo.MobileUsedPo;
 
 /**
  * 移动设备用户使用情况
@@ -13,7 +13,7 @@ import com.woting.passport.login.persistence.pojo.MobileUsed;
  */
 public class MobileUsedService {
     @Resource(name="defaultDAO")
-    private MybatisDAO<MobileUsed> muDao;
+    private MybatisDAO<MobileUsedPo> muDao;
 
     @PostConstruct
     public void initParam() {
@@ -24,7 +24,7 @@ public class MobileUsedService {
      * 保存用户使用情况
      * @param mu
      */
-    public void saveMobileUsed(MobileUsed mu) {
+    public void saveMobileUsed(MobileUsedPo mu) {
         try {
             mu.setMuId(SequenceUUID.getUUIDSubSegment(4));
             muDao.insert(mu);
@@ -41,7 +41,7 @@ public class MobileUsedService {
      * 根据手机串号，获取最后使用情况
      * @param imei 手机串号
      */
-    public MobileUsed getUsedInfo(String imei) {
+    public MobileUsedPo getUsedInfo(String imei) {
         return muDao.getInfoObject("getUsedInfo", imei);
     }
 }

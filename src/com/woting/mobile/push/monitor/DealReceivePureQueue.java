@@ -65,10 +65,10 @@ public class DealReceivePureQueue extends Thread {
                     retMsg.setMsgContent("");
                     retMsg.setReturnType("1001");
                     Map<String, Object> _m=new HashMap<String, Object>();
-                    _m.put("CmdType", "Group");
+                    _m.put("CmdType", "GroupPo");
                     _m.put("Command", "-1");
                     _m.put("GroupId", ((Map)m.get("Date")).get("GroupId"));
-                    List<Map<String, String>> 
+                    //List<Map<String, String>> 
                 }
             } catch(Exception e) {
                 e.printStackTrace();

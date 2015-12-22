@@ -18,7 +18,7 @@ import com.woting.mobile.model.MobileParam;
 import com.woting.mobile.session.mem.SessionMemoryManage;
 import com.woting.mobile.session.model.MobileSession;
 import com.woting.mobile.model.MobileKey;
-import com.woting.passport.UGA.persistence.pojo.User;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.friend.service.FriendService;
 
@@ -65,7 +65,7 @@ public class FriendController {
                 } else {
                     ms.access();
                     if (userId==null) {
-                        User u=(User)ms.getAttribute("user");
+                        UserPo u=(UserPo)ms.getAttribute("user");
                         if (u!=null) userId=u.getUserId();
                     }
                 }
@@ -83,11 +83,11 @@ public class FriendController {
                 return map;
             }
             try {
-                List<User> ul=friendService.getStrangers(userId, searchStr);
+                List<UserPo> ul=friendService.getStrangers(userId, searchStr);
                 if (ul!=null&&ul.size()>0) {
                     List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
                     Map<String, Object> um;
-                    for (User u: ul) {
+                    for (UserPo u: ul) {
                         if (!u.getUserId().equals(userId)) rul.add(u.toHashMap4Mobile());
                     }
                     map.put("ReturnType", "1001");
@@ -142,7 +142,7 @@ public class FriendController {
                 } else {
                     ms.access();
                     if (userId==null) {
-                        User u=(User)ms.getAttribute("user");
+                        UserPo u=(UserPo)ms.getAttribute("user");
                         if (u!=null) userId=u.getUserId();
                     }
                 }
@@ -153,7 +153,7 @@ public class FriendController {
                 return map;
             }
             //2-获取被邀请人Id
-            User u=null;
+            UserPo u=null;
             String inviteUserId=(String)m.get("InviteUserId");
             if (StringUtils.isNullOrEmptyOrSpace(inviteUserId)) {
                 map.put("ReturnType", "1003");
@@ -217,7 +217,7 @@ public class FriendController {
                 } else {
                     ms.access();
                     if (userId==null) {
-                        User u=(User)ms.getAttribute("user");
+                        UserPo u=(UserPo)ms.getAttribute("user");
                         if (u!=null) userId=u.getUserId();
                     }
                 }
@@ -292,7 +292,7 @@ public class FriendController {
                 } else {
                     ms.access();
                     if (userId==null) {
-                        User u=(User)ms.getAttribute("user");
+                        UserPo u=(UserPo)ms.getAttribute("user");
                         if (u!=null) userId=u.getUserId();
                     }
                 }
@@ -311,7 +311,7 @@ public class FriendController {
             }
             //3-邀请人id
             String inviteUserId=(String)m.get("InviteUserId");
-            User u=null;
+            UserPo u=null;
             if (StringUtils.isNullOrEmptyOrSpace(inviteUserId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "邀请人Id为空");
@@ -376,7 +376,7 @@ public class FriendController {
                 } else {
                     ms.access();
                     if (userId==null) {
-                        User u=(User)ms.getAttribute("user");
+                        UserPo u=(UserPo)ms.getAttribute("user");
                         if (u!=null) userId=u.getUserId();
                     }
                 }
@@ -386,10 +386,10 @@ public class FriendController {
                 map.put("Message", "无法获取用户Id");
                 return map;
             }
-            List<User> ul=friendService.getFriendList(userId);
+            List<UserPo> ul=friendService.getFriendList(userId);
             if (ul!=null&&ul.size()>0) {
                 List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
-                for (User u: ul) {
+                for (UserPo u: ul) {
                     if (!u.getUserId().equals(userId)) rul.add(u.toHashMap4Mobile());
                 }
                 map.put("ReturnType", "1001");

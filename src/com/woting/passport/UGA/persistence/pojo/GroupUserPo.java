@@ -4,7 +4,7 @@ import java.sql.Timestamp;
 
 import com.spiritdata.framework.core.model.BaseObject;
 
-public class GroupUser extends BaseObject {
+public class GroupUserPo extends BaseObject {
     private static final long serialVersionUID = 5582172023664319397L;
 
     private String id;

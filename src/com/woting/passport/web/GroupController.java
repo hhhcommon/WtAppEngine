@@ -18,8 +18,8 @@ import com.woting.mobile.model.MobileParam;
 import com.woting.mobile.session.mem.SessionMemoryManage;
 import com.woting.mobile.session.model.MobileSession;
 import com.woting.mobile.model.MobileKey;
-import com.woting.passport.UGA.persistence.pojo.Group;
-import com.woting.passport.UGA.persistence.pojo.User;
+import com.woting.passport.UGA.persistence.pojo.GroupPo;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.GroupService;
 import com.woting.passport.UGA.service.UserService;
 
@@ -66,7 +66,7 @@ public class GroupController {
                 } else {
                     ms.access();
                     if (creator==null) {
-                        User u=(User)ms.getAttribute("user");
+                        UserPo u=(UserPo)ms.getAttribute("user");
                         if (u!=null) creator=u.getUserId();
                         
                     }
@@ -90,7 +90,7 @@ public class GroupController {
                 for (int i=0; i<mArray.length;i++) {
                     members+=",'"+mArray[i].trim()+"'";
                 }
-                List<User> ml=userService.getMembers4BuildGroup(members.substring(1));
+                List<UserPo> ml=userService.getMembers4BuildGroup(members.substring(1));
                 if (ml==null||ml.size()==0) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "给定的组员信息不存在");
@@ -102,13 +102,13 @@ public class GroupController {
                     String groupName=(String)m.get("GroupName");
                     if (StringUtils.isNullOrEmptyOrSpace(groupName)) {
                         groupName="";
-                        for (User u:ml) {
+                        for (UserPo u:ml) {
                             groupName+=","+u.getLoginName();
                         }
                         groupName=groupName.substring(1);
                     }
                     //创建组
-                    Group g=new Group();
+                    GroupPo g=new GroupPo();
                     g.setCreateUserId(creator);
                     g.setGroupName(groupName);
                     g.setGroupUsers(ml);
@@ -159,7 +159,7 @@ public class GroupController {
                 } else {
                     ms.access();
                     if (userId==null) {
-                        User u=(User)ms.getAttribute("user");
+                        UserPo u=(UserPo)ms.getAttribute("user");
                         if (u!=null) userId=u.getUserId();
                     }
                 }
@@ -170,11 +170,11 @@ public class GroupController {
                 return map;
             }
             //2-得到用户组
-            List<Group> gl=groupService.getGroupsByUserId(userId);
+            List<GroupPo> gl=groupService.getGroupsByUserId(userId);
             List<Map<String, Object>> rgl=new ArrayList<Map<String, Object>>();
             if (gl!=null&&gl.size()>0) {
                 Map<String, Object> gm;
-                for (Group g:gl) {
+                for (GroupPo g:gl) {
                     gm=new HashMap<String, Object>();
                     gm.put("GroupId", g.getGroupId());
                     gm.put("GroupName", g.getGroupName());
@@ -233,10 +233,10 @@ public class GroupController {
                 map.put("Message", "无法获取组Id");
             } else {
                 List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
-                List<User> ul=groupService.getGroupMembers(groupId);
+                List<UserPo> ul=groupService.getGroupMembers(groupId);
                 if (ul!=null&&ul.size()>0) {
                     Map<String, Object> um;
-                    for (User u: ul) {
+                    for (UserPo u: ul) {
                         um=new HashMap<String, Object>();
                         um.put("UserId", u.getUserId());
                         um.put("UserName", u.getLoginName());

@@ -7,7 +7,7 @@ import com.spiritdata.framework.core.model.BaseObject;
  * 用户使用
  * @author wh
  */
-public class MobileUsed extends BaseObject {
+public class MobileUsedPo extends BaseObject {
     private static final long serialVersionUID = 6647191780195842477L;
 
     private String muId; //用户使用ID

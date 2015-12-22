@@ -6,6 +6,7 @@
   <!-- 对象定义:用户信息 -->
   <resultMap id="groupMap" type="WtGroup">
     <id      column="id"            property="groupId"       jdbcType="VARCHAR"/>
+    <result  column="groupNum"      property="groupNum"      jdbcType="VARCHAR"/>
     <result  column="groupName"     property="groupName"     jdbcType="VARCHAR"/>
     <result  column="groupImg"      property="groupImg"      jdbcType="VARCHAR"/>
     <result  column="pId"           property="pId"           jdbcType="VARCHAR"/>
@@ -18,7 +19,7 @@
     <result  column="groupCount"    property="groupCount"    jdbcType="INTEGER"/>
   </resultMap>
 
-  <!-- 对象定义:用户信息 -->
+  <!-- 对象定义:组用户信息 -->
   <resultMap id="groupUserMap" type="WtGroupUser">
     <id      column="id"       property="id"       jdbcType="VARCHAR"/>
     <result  column="groupId"  property="groupId"  jdbcType="VARCHAR"/>
@@ -29,7 +30,7 @@
 
   <!-- 所有列 -->
   <sql id="Base_Column_List">
-    id, groupName, groupImg, pId, sort, createUserId, adminUserId, descn, cTime, lmTime
+    id, groupNum, groupName, groupImg, pId, sort, createUserId, adminUserId, descn, cTime, lmTime
   </sql>
 
   <!-- 条件子句 -->
@@ -37,6 +38,7 @@
     <where>
       <trim prefix="(" suffix=")" prefixOverrides="and">
         <if test="groupId!=null"> and id=#{groupId,jdbcType=VARCHAR}</if>
+        <if test="groupNum!=null"> and groupNum=#{groupNum,jdbcType=VARCHAR}</if>
         <if test="groupName!=null"> and groupName=#{groupName,jdbcType=VARCHAR}</if>
         <if test="groupImg!=null"> and groupImg=#{groupImg,jdbcType=VARCHAR}</if>
         <if test="pId!=null"> and pId=#{pId,jdbcType=VARCHAR}</if>
@@ -83,6 +85,7 @@
   <insert id="insert" parameterType="java.util.Map"> insert into plat_Group
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="groupId!=null">id,</if>
+      <if test="groupNum!=null">groupNum,</if>
       <if test="groupName!=null">groupName,</if>
       <if test="groupImg!=null">groupImg,</if>
       <if test="pId!=null">pId,</if>
@@ -93,6 +96,7 @@
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="groupId!=null">#{groupId,jdbcType=VARCHAR},</if>
+      <if test="groupNum!=null">#{groupNum,jdbcType=VARCHAR},</if>
       <if test="groupName!=null">#{groupName,jdbcType=VARCHAR},</if>
       <if test="groupImg!=null">#{groupImg,jdbcType=VARCHAR},</if>
       <if test="pId!=null">#{pId,jdbcType=VARCHAR},</if>
@@ -108,6 +112,7 @@
     update plat_Group
     <set>
       <if test="groupId!=null">id=#{groupId,jdbcType=VARCHAR},</if>
+      <if test="groupNum!=null">groupNum=#{groupNum,jdbcType=VARCHAR},</if>
       <if test="groupName!=null">groupName=#{groupName,jdbcType=VARCHAR},</if>
       <if test="groupImg!=null">groupImg=#{groupImg,jdbcType=VARCHAR},</if>
       <if test="pId!=null">pId=#{pId,jdbcType=VARCHAR},</if>

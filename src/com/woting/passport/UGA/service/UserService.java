@@ -5,7 +5,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
-import com.woting.passport.UGA.persistence.pojo.User;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.spiritdata.framework.UGA.UgaUserService;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.SequenceUUID;
@@ -13,7 +13,7 @@ import com.spiritdata.framework.util.StringUtils;
 
 public class UserService implements UgaUserService {
     @Resource(name="defaultDAO")
-    private MybatisDAO<User> userDao;
+    private MybatisDAO<UserPo> userDao;
 
     @PostConstruct
     public void initParam() {
@@ -22,7 +22,7 @@ public class UserService implements UgaUserService {
 
     @Override
     @SuppressWarnings("unchecked")
-    public User getUserByLoginName(String loginName) {
+    public UserPo getUserByLoginName(String loginName) {
         try {
             return userDao.getInfoObject("getUserByLoginName", loginName);
         } catch (Exception e) {
@@ -33,7 +33,7 @@ public class UserService implements UgaUserService {
 
     @Override
     @SuppressWarnings("unchecked")
-    public User getUserById(String userId) {
+    public UserPo getUserById(String userId) {
         try {
             return userDao.getInfoObject("getUserById", userId);
         } catch (Exception e) {
@@ -47,7 +47,7 @@ public class UserService implements UgaUserService {
      * @param user 用户信息
      * @return 创建用户成功返回1，否则返回0
      */
-    public int insertUser(User user) {
+    public int insertUser(UserPo user) {
         int i=0;
         try {
             if (StringUtils.isNullOrEmptyOrSpace(user.getUserId())) {
@@ -66,7 +66,7 @@ public class UserService implements UgaUserService {
      * @param user 用户信息
      * @return 更新用户成功返回1，否则返回0
      */
-    public int updateUser(User user) {
+    public int updateUser(UserPo user) {
         int i=0;
         try {
             userDao.update(user);
@@ -82,9 +82,9 @@ public class UserService implements UgaUserService {
      * @param userId 用户id
      * @return 好友列表
      */
-    public List<User> getFriendList(String userId) {
+    public List<UserPo> getFriendList(String userId) {
         try {
-            List<User> ul=userDao.queryForList();
+            List<UserPo> ul=userDao.queryForList();
             return ul;
         } catch (Exception e) {
             e.printStackTrace();
@@ -97,9 +97,9 @@ public class UserService implements UgaUserService {
      * @param Members 组成员id，用逗号隔开
      * @return 组成员类表
      */
-    public List<User> getMembers4BuildGroup(String members) {
+    public List<UserPo> getMembers4BuildGroup(String members) {
         try {
-            List<User> ul=userDao.queryForList("getMembers", members);
+            List<UserPo> ul=userDao.queryForList("getMembers", members);
             return ul;
         } catch (Exception e) {
             e.printStackTrace();

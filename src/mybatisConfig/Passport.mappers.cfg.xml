@@ -4,10 +4,10 @@
 <configuration>
   <!-- 别名设置 -->
   <typeAliases>
-    <typeAlias alias="WtUser" type="com.woting.passport.UGA.persistence.pojo.User"/>
-    <typeAlias alias="WtGroup" type="com.woting.passport.UGA.persistence.pojo.Group"/>
-    <typeAlias alias="WtGroupUser" type="com.woting.passport.UGA.persistence.pojo.GroupUser"/>
-    <typeAlias alias="MobileUsed" type="com.woting.passport.login.persistence.pojo.MobileUsed"/>
+    <typeAlias alias="WtUser" type="com.woting.passport.UGA.persistence.pojo.UserPo"/>
+    <typeAlias alias="WtGroup" type="com.woting.passport.UGA.persistence.pojo.GroupPo"/>
+    <typeAlias alias="WtGroupUser" type="com.woting.passport.UGA.persistence.pojo.GroupUserPo"/>
+    <typeAlias alias="MobileUsed" type="com.woting.passport.login.persistence.pojo.MobileUsedPo"/>
     <typeAlias alias="InviteFriend" type="com.woting.passport.friend.persistence.pojo.InviteFriendPo"/>
     <typeAlias alias="FriendRel" type="com.woting.passport.friend.persistence.pojo.FriendRelPo"/>
   </typeAliases>

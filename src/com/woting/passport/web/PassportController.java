@@ -24,9 +24,9 @@ import com.woting.mobile.model.MobileParam;
 import com.woting.mobile.session.mem.SessionMemoryManage;
 import com.woting.mobile.session.model.MobileSession;
 import com.woting.mobile.model.MobileKey;
-import com.woting.passport.UGA.persistence.pojo.Group;
-import com.woting.passport.UGA.persistence.pojo.User;
-import com.woting.passport.login.persistence.pojo.MobileUsed;
+import com.woting.passport.UGA.persistence.pojo.GroupPo;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.login.persistence.pojo.MobileUsedPo;
 import com.woting.passport.login.service.MobileUsedService;
 
 @Controller
@@ -74,7 +74,7 @@ public class PassportController {
                 map.put("Message", errMsg+",无法登陆");
                 return map;
             }
-            User u=userService.getUserByLoginName(ln);
+            UserPo u=userService.getUserByLoginName(ln);
             //1-判断是否存在用户
             if (u==null) { //无用户
                 map.put("ReturnType", "1002");
@@ -97,7 +97,7 @@ public class PassportController {
                 ms.addAttribute("user", u);
                 smm.addOneSession(ms);
                 //3.2-保存使用情况
-                MobileUsed mu=new MobileUsed();
+                MobileUsedPo mu=new MobileUsedPo();
                 mu.setImei(sk.getMobileId());
                 mu.setStatus(1);
                 mu.setUserId(u.getUserId());
@@ -146,11 +146,11 @@ public class PassportController {
                 map.put("Message", errMsg+",无法注册");
                 return map;
             }
-            User nu=new User();
+            UserPo nu=new UserPo();
             nu.setLoginName(ln);
             nu.setPassword(pwd);
             //1-判断是否有重复的用户
-            User oldUser=userService.getUserByLoginName(ln);
+            UserPo oldUser=userService.getUserByLoginName(ln);
             if (oldUser!=null) { //重复
                 map.put("ReturnType", "1003");
                 map.put("Message", "登录名重复,无法注册.");
@@ -176,7 +176,7 @@ public class PassportController {
                 ms.addAttribute("user", nu);
                 smm.addOneSession(ms);
                 //3.2-保存使用情况
-                MobileUsed mu=new MobileUsed();
+                MobileUsedPo mu=new MobileUsedPo();
                 mu.setImei(sk.getMobileId());
                 mu.setStatus(1);
                 mu.setUserId(nu.getUserId());
@@ -224,7 +224,7 @@ public class PassportController {
                     smm.addOneSession(ms);
                 } else {
                     if (userId==null) {
-                        User u=(User)ms.getAttribute("user");
+                        UserPo u=(UserPo)ms.getAttribute("user");
                         if (u!=null) userId=u.getUserId();
                     }
                     ms.access();
@@ -232,7 +232,7 @@ public class PassportController {
                 }
                 //2.2-保存使用情况
                 if (!StringUtils.isNullOrEmptyOrSpace(userId)) {
-                    MobileUsed mu=new MobileUsed();
+                    MobileUsedPo mu=new MobileUsedPo();
                     mu.setImei(sk.getMobileId());
                     mu.setStatus(2);
                     mu.setUserId(userId);
@@ -273,7 +273,7 @@ public class PassportController {
                 return map;
             }
             //1-获取UserId，并处理访问
-            User u=null;
+            UserPo u=null;
             String userId=sk.isUserSession()?sk.getUserId():null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
@@ -284,7 +284,7 @@ public class PassportController {
                 } else {
                     ms.access();
                     if (userId==null) {
-                        u=(User)ms.getAttribute("user");
+                        u=(UserPo)ms.getAttribute("user");
                         if (u!=null) userId=u.getUserId();
                     }
                 }
@@ -347,7 +347,7 @@ public class PassportController {
                 return map;
             }
             //1-获取UserId，并处理访问
-            User u=null;
+            UserPo u=null;
             String userId=sk.isUserSession()?sk.getUserId():null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
@@ -358,7 +358,7 @@ public class PassportController {
                 } else {
                     ms.access();
                     if (userId==null) {
-                        u=(User)ms.getAttribute("user");
+                        u=(UserPo)ms.getAttribute("user");
                         if (u!=null) userId=u.getUserId();
                     }
                 }
@@ -453,7 +453,7 @@ public class PassportController {
             List<Map<String, Object>> hl = new ArrayList<Map<String, Object>>();
             Map<String, Object> u, g;
             g = new HashMap<String, Object>();
-            g.put("ObjType", "Group");
+            g.put("ObjType", "GroupPo");
             g.put("GroupId", "334466");
             g.put("GroupName", "用户组3");
             g.put("GroupCount", "3");
@@ -461,21 +461,21 @@ public class PassportController {
             g.put("GroupImg", "images/group.png");
             hl.add(g);
             u = new HashMap<String, Object>();
-            u.put("ObjType", "User");
+            u.put("ObjType", "UserPo");
             u.put("UserId", "123456");
             u.put("UserName", "张先生1");
             u.put("InnerPhoneNum", "1001");
             u.put("Portrait", "images/person.png");
             hl.add(u);
             u = new HashMap<String, Object>();
-            u.put("ObjType", "User");
+            u.put("ObjType", "UserPo");
             u.put("UserId", "336655");
             u.put("UserName", "张先生3");
             u.put("InnerPhoneNum", "1002");
             u.put("Portrait", "images/person.png");
             hl.add(u);
             g = new HashMap<String, Object>();
-            g.put("ObjType", "Group");
+            g.put("ObjType", "GroupPo");
             g.put("GroupId", "311466");
             g.put("GroupName", "用户组1");
             g.put("InnerPhoneNum", "3001");
@@ -530,7 +530,7 @@ public class PassportController {
                 } else {
                     ms.access();
                     if (userId==null) {
-                        User u=(User)ms.getAttribute("user");
+                        UserPo u=(UserPo)ms.getAttribute("user");
                         if (u!=null) userId=u.getUserId();
                     }
                 }
@@ -543,7 +543,7 @@ public class PassportController {
 
             //2-得到用户组及好友
             int size=0;
-            List<Group> gl=groupService.getGroupsByUserId(userId);
+            List<GroupPo> gl=groupService.getGroupsByUserId(userId);
             Map<String, Object> topItem=new HashMap<String, Object>();//一个分类
             if (gl!=null&&gl.size()>0) size=gl.size();
             topItem.put("Type", "group");
@@ -553,7 +553,7 @@ public class PassportController {
             if (size>0) {
                 List<Map<String, Object>> rgl=new ArrayList<Map<String, Object>>();
                 Map<String, Object> gm;
-                for (Group g:gl) {
+                for (GroupPo g:gl) {
                     gm=new HashMap<String, Object>();
                     gm.put("GroupId", g.getGroupId());
                     gm.put("GroupName", g.getGroupName());
@@ -568,7 +568,7 @@ public class PassportController {
             map.put("GroupList", topItem);
 
             size=0;
-            List<User> ul=friendService.getFriendList(userId);
+            List<UserPo> ul=friendService.getFriendList(userId);
             if (ul!=null&&ul.size()>0) size=ul.size();
             topItem=new HashMap<String, Object>();//一个分类
             topItem.put("Type", "user");
@@ -577,7 +577,7 @@ public class PassportController {
             topItem.put("AllSize", size);
             if (size>0) {
                 List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
-                for (User u: ul) {
+                for (UserPo u: ul) {
                     if (!u.getUserId().equals(userId)) rul.add(u.toHashMap4Mobile());
                 }
                 topItem.put("Friends", rul);

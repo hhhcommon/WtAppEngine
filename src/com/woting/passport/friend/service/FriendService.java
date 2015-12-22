@@ -12,7 +12,7 @@ import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.passport.UGA.persistence.pojo.User;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.friend.persistence.pojo.FriendRelPo;
 import com.woting.passport.friend.persistence.pojo.InviteFriendPo;
 
@@ -20,7 +20,7 @@ public class FriendService {
     static private int INVITE_INTERVAL_TIME=5*60*1000;//毫秒数：5分钟
     static private int INVITE_REFUSE_TIME=5*60*1000;//7*24*60*60*1000;//毫秒数：一周
     @Resource(name="defaultDAO")
-    private MybatisDAO<User> userDao;
+    private MybatisDAO<UserPo> userDao;
     @Resource(name="defaultDAO")
     private MybatisDAO<InviteFriendPo> inviteFriendDao;
     @Resource(name="defaultDAO")
@@ -39,7 +39,7 @@ public class FriendService {
      * @param searchStr 查找字符串
      * @return 陌生人列表或空
      */
-    public List<User> getStrangers(String userId, String searchStr) {
+    public List<UserPo> getStrangers(String userId, String searchStr) {
         if (StringUtils.isNullOrEmptyOrSpace(userId)) return null;
         if (StringUtils.isNullOrEmptyOrSpace(searchStr)) return null;
         Map<String, Object> param=new HashMap<String, Object>();
@@ -96,7 +96,7 @@ public class FriendService {
                 info.put("InviteMessage", ifPo.getInviteMessage());
                 info.put("InviteCount", ifPo.getInviteVector());
                 //获得对方信息
-                User u=userDao.getInfoObject("getUserById", ifPo.getaUserId());
+                UserPo u=userDao.getInfoObject("getUserById", ifPo.getaUserId());
                 info.put("InvitorName", u.getLoginName());
                 info.put("InvitorProtrait", u.getProtraitMini());
                 m.put("InviteInfo", info);
@@ -227,12 +227,12 @@ public class FriendService {
      * @param userId 我的用户Id
      * @return 好友用户列表，除了用户信息外
      */
-    public List<User> getFriendList(String userId) {
+    public List<UserPo> getFriendList(String userId) {
         if (StringUtils.isNullOrEmptyOrSpace(userId)) return null;
         try {
             Map<String, Object> param=new HashMap<String, Object>();
             param.put("userId", userId);
-            List<User> ret=userDao.queryForList("getFriends", param);
+            List<UserPo> ret=userDao.queryForList("getFriends", param);
             if (ret!=null&&ret.size()>0) return ret;
         } catch(Exception e) {
             e.printStackTrace();

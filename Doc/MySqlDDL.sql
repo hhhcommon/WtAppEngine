@@ -81,19 +81,21 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='手机用户使用';
 /**005 PLAT_GROUP(用户组)*/
 DROP TABLE IF EXISTS plat_Group;
 CREATE TABLE plat_Group (
-  id            varchar(32)      NOT NULL                COMMENT 'uuid(用户组id)',
-  groupName     varchar(100)     NOT NULL                COMMENT '组名称',
-  groupImg      varchar(200)                             COMMENT '用户组头像，是指向头像的URL',
-  pId           varchar(32)      NOT NULL  DEFAULT 0     COMMENT '上级用户组名称，默认0，为根',
-  sort          int(5) unsigned  NOT NULL  DEFAULT 0     COMMENT '排序,只在本级排序有意义,从大到小排序，越大越靠前',
-  createUserId  varchar(32)      NOT NULL                COMMENT '用户组创建者',
-  adminUserIds  varchar(32)                              COMMENT '用户组管理者，非一人',
-  descn         varchar(2000)              DEFAULT NULL  COMMENT '备注',
-  cTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
-  lmTime        timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改：每次更新的时间',
+  id             varchar(32)      NOT NULL                COMMENT 'uuid(用户组id)',
+  groupNum       varchar(100)                             COMMENT '组号，用于公开的号码',
+  groupName      varchar(100)     NOT NULL                COMMENT '组名称',
+  groupImg       varchar(200)                             COMMENT '用户组头像，是指向头像的URL',
+  pId            varchar(32)      NOT NULL  DEFAULT 0     COMMENT '上级用户组名称，默认0，为根',
+  sort           int(5) unsigned  NOT NULL  DEFAULT 0     COMMENT '排序,只在本级排序有意义,从大到小排序，越大越靠前',
+  createUserId   varchar(32)      NOT NULL                COMMENT '用户组创建者',
+  adminUserIds   varchar(32)                              COMMENT '用户组管理者，非一人',
+  descn          varchar(2000)              DEFAULT NULL  COMMENT '备注',
+  cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
+  lmTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改：每次更新的时间',
   PRIMARY KEY(id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户组表';
+ALTER TABLE `plat_group` ADD UNIQUE INDEX `idxGroupNum` (`groupNum`) USING HASH;
 /** 目前和树型组相关的字段pId, sort没有用 */
 
 /**006 PLAT_GROUPUSER(用户组成员)*/

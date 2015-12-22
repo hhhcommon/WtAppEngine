@@ -20,9 +20,9 @@ import com.woting.mobile.model.MobileParam;
 import com.woting.mobile.session.mem.SessionMemoryManage;
 import com.woting.mobile.session.model.MobileSession;
 import com.woting.mobile.model.MobileKey;
-import com.woting.passport.UGA.persistence.pojo.User;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
-import com.woting.passport.login.persistence.pojo.MobileUsed;
+import com.woting.passport.login.persistence.pojo.MobileUsedPo;
 import com.woting.passport.login.service.MobileUsedService;
 
 @Controller
@@ -65,7 +65,7 @@ public class CommonController {
             smm.expireAllSessionByIMEI(sk.getMobileId()); //作废所有imei对应的Session
             //2-处理
             map.put("SessionId", sk.getSessionId());
-            MobileUsed mu = muService.getUsedInfo(sk.getMobileId());
+            MobileUsedPo mu = muService.getUsedInfo(sk.getMobileId());
             MobileSession ms=null;
             if (mu==null||mu.getStatus()==2) {//上次未登陆
                 boolean canCreateSession=false;
@@ -91,7 +91,7 @@ public class CommonController {
                 } else { //找到了对应的对话，直接应用
                     ms.access();
                 }
-                User u = userService.getUserById(mu.getUserId());
+                UserPo u = userService.getUserById(mu.getUserId());
                 ms.addAttribute("user", u);
                 map.put("ReturnType", "1001"); //已登录
                 map.put("UserInfo", u.toHashMap4Mobile());
@@ -582,7 +582,7 @@ public class CommonController {
             MobileKey sk=(mp==null?null:mp.getMobileKey());
             //1-得到用户id
             String userId=(String)m.get("UserId");
-            User u = null;
+            UserPo u = null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
                 MobileSession ms=smm.getSession(sk);
@@ -591,7 +591,7 @@ public class CommonController {
                         userId=sk.getSessionId();
                         if (userId.length()!=12) {
                             userId=null;
-                            u = (User)ms.getAttribute("user");
+                            u = (UserPo)ms.getAttribute("user");
                             if (u!=null) userId = u.getUserId();
                         }
                     }
