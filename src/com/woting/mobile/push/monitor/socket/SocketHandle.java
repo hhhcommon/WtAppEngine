@@ -19,11 +19,10 @@ import com.woting.mobile.push.mem.PushMemoryManage;
 import com.woting.mobile.push.model.Message;
 
 /**
- * 处理Socket的线程，此线程是处理一个客户端连接的基础线程。其中包括一个主线程，两/三个子线程<br/>
+ * 处理Socket的线程，此线程是处理一个客户端连接的基础线程。其中包括一个主线程，两个子线程<br/>
  * [主线程(监控本连接的健康状况)]:<br/>
- * 启动子线程，并监控Socket连接的健康状况
+ * 启动子线程，并监控Socket连接的健康状况<br/>
  * [子线程(处理业务逻辑)]:<br/>
- * 发送|心跳线程：检查连接是否能够联通<br/>
  * 发送|正常消息：对应的消息队列中有内容，就发送<br/>
  * 接收|正常+心跳：判断是否连接正常的逻辑也在这个现成中<br/>
  */
@@ -78,11 +77,11 @@ public class SocketHandle extends Thread {
                 try { sleep(10); } catch (InterruptedException e) {};
                 Thread.sleep(this.smc.get_MonitorDelay());
                 //判断时间戳，看连接是否还有效
+                /*
                 if (System.currentTimeMillis()-lastVisitTime>this.smc.calculate_TimeOut()) {
                     System.out.println(socketDesc+"超时关闭");
                     break;
                 }
-
                 //判断是否有某个子线程失败了
                 /*
                 if (this.sendBeat.isInterrupted||!this.sendBeat.isRunning) {
@@ -178,7 +177,6 @@ public class SocketHandle extends Thread {
             }
         }
     }
-    */
     /*
      * 发送消息线程
      */
@@ -261,6 +259,7 @@ public class SocketHandle extends Thread {
                         //接收消息数据
                         in=new BufferedReader(new InputStreamReader(SocketHandle.this.socket.getInputStream(), "UTF-8"));
                         String revMsgStr=in.readLine();
+
                         SocketHandle.this.lastVisitTime=System.currentTimeMillis();
                         //判断是否是心跳信号
                         if (revMsgStr.equals("b")) { //发送回执心跳
