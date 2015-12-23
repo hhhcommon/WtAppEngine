@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.spiritdata.framework.util.JsonUtils;
-import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.mobile.MobileUtils;
 import com.woting.mobile.model.MobileKey;
@@ -18,8 +17,8 @@ import com.woting.mobile.push.model.Message;
  * @author wanghui
  */
 public class DealReceivePureQueue extends Thread {
+    private PushMemoryManage pmm=PushMemoryManage.getInstance();
 
-    private PushMemoryManage mpp=PushMemoryManage.getInstance();
     /**
      * 给线程起一个名字的构造函数
      * @param name 线程名称
@@ -31,9 +30,10 @@ public class DealReceivePureQueue extends Thread {
     @Override
     public void run() {
         System.out.println(this.getName()+"开始执行");
-        for (;;) {
+        while (true) {
             try {
-                ReceiveMemory rm=mpp.getReceiveMemory();
+                sleep(10);
+                ReceiveMemory rm=pmm.getReceiveMemory();
                 Map<String, Object> m=rm.pollPureQueue(); //执行后，原始消息接收队列中将不再有此消息
                 if (m==null) continue;
                 MobileKey mk=MobileUtils.getMobileKey(m);
@@ -43,7 +43,7 @@ public class DealReceivePureQueue extends Thread {
                     String __tmp=(String)m.get("NeedAffirm");
                     boolean isAffirm=__tmp==null?false:__tmp.trim().equals("1");
                     if (isAffirm) {//只有需要回执确认的消息才进行如下处理：直接写入
-                        SendMemory sm=mpp.getSendMemory();
+                        SendMemory sm=pmm.getSendMemory();
                         Message _msg=new Message();
                         _msg.setMsgContent("{\"returnType\":\"-2\",\"errMsg\":\""+parseM.get("err")+"\",\"sourceInfo\":{"+m.get("_S_STR")+"}}");
                         sm.addMsg2Queue(mk, _msg);
@@ -52,24 +52,6 @@ public class DealReceivePureQueue extends Thread {
                     msg=(Message)parseM.get("msg");
                 }
                 if (msg!=null) rm.addTypeMsgMap(msg.getMsgBizType(), msg);
-                //以下为测试：看看是否能够发送出去
-                if (msg!=null) {
-                    SendMemory sm=mpp.getSendMemory();
-                    Message retMsg=new Message();
-                    retMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                    retMsg.setReMsgId(msg.getMsgId());
-                    retMsg.setMsgBizType(msg.getMsgBizType());
-                    retMsg.setToAddr(msg.getFromAddr());
-                    retMsg.setFromAddr(msg.getToAddr());
-                    retMsg.setSendTime(System.currentTimeMillis());
-                    retMsg.setMsgContent("");
-                    retMsg.setReturnType("1001");
-                    Map<String, Object> _m=new HashMap<String, Object>();
-                    _m.put("CmdType", "GroupPo");
-                    _m.put("Command", "-1");
-                    _m.put("GroupId", ((Map)m.get("Date")).get("GroupId"));
-                    //List<Map<String, String>> 
-                }
             } catch(Exception e) {
                 e.printStackTrace();
             }

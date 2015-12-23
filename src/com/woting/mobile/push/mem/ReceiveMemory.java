@@ -22,19 +22,20 @@ public class ReceiveMemory {
     public static ReceiveMemory getInstance() {
         return InstanceHolder.instance;
     }
-    //java的占位单例模式===end
+    //java的占位单例模式===end0
 
     private ConcurrentLinkedQueue<Map<String, Object>> pureMsgQueue; //总接收队列所有收到的信息都会暂时先放入这个队列中
     private ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> typeMsgMap; //分类接收队列，不同类型的消息会由不同类去处理
 
-    /**
-     * 获得原始接收消息队列
-     * @return 总接收消息队列
+    /*
+     * 初始化，创建两个主要的对象
      */
-    public ConcurrentLinkedQueue<Map<String, Object>> getPureMsgQueue() {
-        return pureMsgQueue;
+    private ReceiveMemory() {
+       this.pureMsgQueue=new ConcurrentLinkedQueue<Map<String, Object>>();
+       this.typeMsgMap=new ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>>();
     }
 
+    //原始消息处理
     /**
      * 向原始接收队列加入消息
      * @param msg 消息，此消息是从底层读取的最原始的消息，采用字节数组
@@ -53,6 +54,7 @@ public class ReceiveMemory {
         return this.pureMsgQueue.poll();
     }
 
+    //分类消息处理
     /**
      * 按某一分类向分类接收队列加入消息
      * @param _type 分类标识
@@ -90,13 +92,5 @@ public class ReceiveMemory {
         if (this.typeMsgMap==null) return null;
         if (this.typeMsgMap.get(_type)==null) return null;
         return this.typeMsgMap.get(_type).peek();
-    }
-
-    /*
-     * 初始化，创建两个主要的对象
-     */
-    private ReceiveMemory() {
-       this.pureMsgQueue=new ConcurrentLinkedQueue<Map<String, Object>>();
-       this.typeMsgMap=new ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>>();
     }
 }

@@ -40,9 +40,8 @@ public class Message implements Serializable, Comparable<Message> {
     private String toAddr; //消息目标地址
 
     private int msgType; //消息类型:0是一般类型；1是回复类型
-    private String msgBizType; //业务消息类型，根据此类型，框架会对消息进行分发，目前只有对讲一个业务类型"INTERCOM"
-
     private String returnType; //返回值类型
+    private String msgBizType; //业务消息类型，根据此类型，框架会对消息进行分发，目前只有对讲一个业务类型"INTERCOM"
     private int affirem; //是否需要确认;0不需要1需要，默认值=0不需要确认
 
     private long receiveTime; //消息收到时间

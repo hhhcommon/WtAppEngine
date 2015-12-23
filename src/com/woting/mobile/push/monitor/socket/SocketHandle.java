@@ -75,6 +75,7 @@ public class SocketHandle extends Thread {
         //主线程
         try {
             while (true) {//有任何一个字线程出问题，则关闭这个连接
+                try { sleep(10); } catch (InterruptedException e) {};
                 Thread.sleep(this.smc.get_MonitorDelay());
                 //判断时间戳，看连接是否还有效
                 if (System.currentTimeMillis()-lastVisitTime>this.smc.calculate_TimeOut()) {
@@ -195,8 +196,9 @@ public class SocketHandle extends Thread {
         public void run() {
             PrintWriter out=null;
             this.isRunning=true;
-            try {
-                while (pmm.isServerRuning()&&SocketHandle.this.running&&!isInterrupted) {
+            while (pmm.isServerRuning()&&SocketHandle.this.running&&!isInterrupted) {
+                try {
+                    try { sleep(10); } catch (InterruptedException e) {};
                     //发消息
                     //获得消息
                     List<Message> msgList=null;
@@ -214,16 +216,16 @@ public class SocketHandle extends Thread {
                             try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
                         }
                     }
+                } catch (Exception e) {
+                    System.out.println(SocketHandle.this.socketDesc+"发送消息线程出现异常:" + e.getMessage());
+                } finally {
+                    try {
+                        if (out!=null) try {out.close();out=null;} catch(Exception e) {out=null;throw e;};
+                    } catch(Exception e) {
+                        e.printStackTrace();
+                    }
+                    this.isRunning=false;
                 }
-            } catch (Exception e) {
-                System.out.println(SocketHandle.this.socketDesc+"发送消息线程出现异常:" + e.getMessage());
-            } finally {
-                try {
-                    if (out!=null) try {out.close();out=null;} catch(Exception e) {out=null;throw e;};
-                } catch(Exception e) {
-                    e.printStackTrace();
-                }
-                this.isRunning=false;
             }
         }
     }
@@ -252,6 +254,7 @@ public class SocketHandle extends Thread {
                 //若总线程运行(并且)Socket处理主线程可运行(并且)本线程可运行(并且)本线程逻辑正确[未中断(并且)可以继续]
                 while(pmm.isServerRuning()&&SocketHandle.this.running&&(!isInterrupted&&canContinue)) {
                     try {
+                        try { sleep(10); } catch (InterruptedException e) {};
                         String msgId=null;
                         boolean isAffirm=false;
                         MobileKey mk=null;

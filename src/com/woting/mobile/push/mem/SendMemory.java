@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.woting.mobile.model.MobileKey;
 import com.woting.mobile.push.model.Message;
+import com.woting.mobile.push.model.SendMessageList;
 
 public class SendMemory {
     //java的占位单例模式===begin
@@ -18,18 +19,24 @@ public class SendMemory {
     //java的占位单例模式===end
 
     protected ConcurrentHashMap<MobileKey, ConcurrentLinkedQueue<Message>> msgMap;//将要发送的消息列表
+    protected ConcurrentHashMap<MobileKey, SendMessageList> msgSendedMap;//已发送的信息情况
 
     /*
-     * 初始化发送消息列表
+     * 初始化发送消息结构
      */
     private SendMemory() {
         msgMap=new ConcurrentHashMap<MobileKey, ConcurrentLinkedQueue<Message>>();
+        msgSendedMap=new ConcurrentHashMap<MobileKey, SendMessageList>();
     }
 
     protected Map<MobileKey, ConcurrentLinkedQueue<Message>> getMsgMap() {
         return this.msgMap;
     }
+    protected Map<MobileKey, SendMessageList> getMsgSendedMap() {
+        return this.msgSendedMap;
+    }
 
+    //发送消息处理
     /**
      * 向某一设移动设备的输出队列中插入
      * @param mk 移动设备标识
@@ -64,5 +71,31 @@ public class SendMemory {
         if (this.msgMap==null) return null;
         if (this.msgMap.get(mk)==null) return null;
         return this.msgMap.get(mk).peek();
+    }
+
+    //已发送消息处理
+    /**
+     * 向某一设移动设备的已发送列表插入数据
+     * @param mk
+     * @param msg
+     * @return 插入成功返回true，否则返回false
+     * @throws IllegalAccessException 
+     */
+    public boolean addSendedMsg(MobileKey mk, Message msg) throws IllegalAccessException {
+        SendMessageList mobileSendedList=this.msgSendedMap.get(mk);
+        if (mobileSendedList==null) {
+            mobileSendedList=new SendMessageList(mk);
+            this.msgSendedMap.put(mk, mobileSendedList);
+        }
+        return mobileSendedList.add(msg);
+    }
+
+    /**
+     * 根据某一移动设备标识，获得已发送消息列表
+     * @param mk
+     * @return
+     */
+    public SendMessageList getSendedMessagList(MobileKey mk) {
+        return this.msgSendedMap.get(mk);
     }
 }

@@ -21,7 +21,6 @@ public class PushMemoryManage {
     //数据区
     protected ReceiveMemory rm; //接收数据内存结构
     protected SendMemory sm; //发送数据内存结构
-    protected SendedMemory hasSm; //发送数据内存结构
     //数据区
 
     public ReceiveMemory getReceiveMemory() {
@@ -37,7 +36,6 @@ public class PushMemoryManage {
     private PushMemoryManage() {
         rm=ReceiveMemory.getInstance();
         sm=SendMemory.getInstance();
-        hasSm=SendedMemory.getInstance();
     }
 
     /**
@@ -52,10 +50,10 @@ public class PushMemoryManage {
                 if (mq==null||mq.isEmpty()) this.sm.msgMap.remove(sKey);
             }
         }
-        if (this.hasSm.msgMap!=null&&!this.hasSm.msgMap.isEmpty()) {
-            for (MobileKey sKey: this.hasSm.msgMap.keySet()) {
-                SendMessageList sml = this.hasSm.msgMap.get(sKey);
-                if (sml==null||sml.size()==0) this.hasSm.msgMap.remove(sKey);
+        if (this.sm.msgSendedMap!=null&&!this.sm.msgSendedMap.isEmpty()) {
+            for (MobileKey sKey: this.sm.msgSendedMap.keySet()) {
+                SendMessageList sml = this.sm.msgSendedMap.get(sKey);
+                if (sml==null||sml.size()==0) this.sm.msgSendedMap.remove(sKey);
             }
         }
     }
@@ -71,7 +69,7 @@ public class PushMemoryManage {
         //从发送队列取一条消息
         Message m1= sm.pollTypeQueue(mk);
         if (m1!=null) retl.add(m1);
-        SendMessageList hasSl = hasSm.getSendedMessagList(mk);
+        SendMessageList hasSl = sm.getSendedMessagList(mk);
         if (hasSl!=null&&hasSl.size()>0) {
             int lowerIndex=3-retl.size();
             if (hasSl.size()<lowerIndex) lowerIndex=hasSl.size();

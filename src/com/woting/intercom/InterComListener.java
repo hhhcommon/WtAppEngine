@@ -1,9 +1,7 @@
 package com.woting.intercom;
 
 import com.woting.intercom.mem.GroupMemory;
-import com.woting.mobile.push.PushSocketServer;
-import com.woting.mobile.push.mem.ReceiveMemory;
-import com.woting.mobile.push.monitor.DealReceivePureQueue;
+import com.woting.intercom.monitor.DealInterCom;
 
 public class InterComListener extends Thread {
     private static InterComConfig icc=null;//对讲控制的配置参数
@@ -20,18 +18,13 @@ public class InterComListener extends Thread {
             sleep(5000);//多少毫秒后启动任务处理，先让系统的其他启动任务完成，这里设置死为10秒钟
             //初始化内存结构
             GroupMemory.getInstance();
-            //启动服务
-//            PushSocketServer pss = new PushSocketServer(pc);
-//            pss.setDaemon(true);
-//            pss.start();
-//            //启动读取线程
-//            for (int i=0;i<pc.getTHREADCOUNT_DEALRECEIVEQUEUE(); i++) {
-//                DealReceivePureQueue drpq = new DealReceivePureQueue(""+i);
-//                drpq.setDaemon(true);
-//                drpq.start();
-//            }
-//            //启动清理内存服务——垃圾回收
-//            startCleanMonitor();
+            //加载用户组
+            //启动处理线程
+            for (int i=0;i<icc.getTHREADCOUNT_DEALINTERCOM(); i++) {
+                DealInterCom dic = new DealInterCom(""+i);
+                dic.setDaemon(true);
+                dic.start();
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
