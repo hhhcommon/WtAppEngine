@@ -2,6 +2,7 @@ package com.woting.intercom.mem;
 
 import java.util.concurrent.ConcurrentHashMap;
 import com.woting.intercom.model.GroupInterCom;
+import com.woting.passport.UGA.model.Group;
 
 public class GroupMemory {
     //java的占位单例模式===begin
@@ -13,5 +14,14 @@ public class GroupMemory {
     }
     //java的占位单例模式===end
 
-    protected ConcurrentHashMap<String, GroupInterCom> gicMap;//已发送的信息情况
+    protected ConcurrentHashMap<String, GroupInterCom> gicMap;//对讲组信息Map
+
+    /**
+     * 把一个组加入gicMap
+     * @param g 用户组模型
+     */
+    public void addOneGroup(Group g) {
+        GroupInterCom groupIC = new GroupInterCom(g);
+        this.gicMap.put(g.getGroupId(), groupIC);
+    }
 }

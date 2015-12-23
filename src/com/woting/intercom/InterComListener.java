@@ -1,6 +1,6 @@
 package com.woting.intercom;
 
-import com.woting.intercom.mem.GroupMemory;
+import com.woting.intercom.mem.GroupMemoryManage;
 import com.woting.intercom.monitor.DealInterCom;
 
 public class InterComListener extends Thread {
@@ -17,7 +17,8 @@ public class InterComListener extends Thread {
         try {
             sleep(5000);//多少毫秒后启动任务处理，先让系统的其他启动任务完成，这里设置死为10秒钟
             //初始化内存结构
-            GroupMemory.getInstance();
+            GroupMemoryManage gmm=GroupMemoryManage.getInstance();
+            gmm.initMemory();
             //加载用户组
             //启动处理线程
             for (int i=0;i<icc.getTHREADCOUNT_DEALINTERCOM(); i++) {

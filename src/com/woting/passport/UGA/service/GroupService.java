@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import com.woting.passport.UGA.model.Group;
 import com.woting.passport.UGA.persistence.pojo.GroupPo;
 import com.woting.passport.UGA.persistence.pojo.GroupUserPo;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
@@ -107,6 +108,11 @@ public class GroupService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
+    }
+
+    public List<Group> getAllGroup() {
+        
         return null;
     }
 }

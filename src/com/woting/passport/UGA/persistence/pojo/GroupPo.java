@@ -4,7 +4,6 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import com.spiritdata.framework.core.model.BaseObject;
-import com.spiritdata.framework.util.StringUtils;
 
 public class GroupPo extends BaseObject {
     private static final long serialVersionUID = -4171166651180143388L;
@@ -13,15 +12,14 @@ public class GroupPo extends BaseObject {
     private String groupNum; //组号，用于公开的号码
     private String groupName; //用户组名称
     private String groupImg; //用户组头像
-    private String pId; //上级用户组Id
-    private int sort; //用户组排序
+    private String PId; //上级用户组Id
+    private int sort; //用户组排序0
     private String createUserId; //创建者id
-    private String innerPhoneNum;  //内部电话号吗
-    private String defaultFreqNum;  //默认频段
-    private String adminUserId;  //管理者id
+    private String adminUserIds;  //管理者id，可以有多个管理者，第一个为主管理者
     private String descn; //用户描述
     private Timestamp CTime; //记录创建时间
     private Timestamp lmTime; //最后修改时间:last modify time
+    private int groupCount; //组用户个数
 
     private List<UserPo> groupUsers; //所属用户
 
@@ -49,11 +47,11 @@ public class GroupPo extends BaseObject {
     public void setGroupImg(String groupImg) {
         this.groupImg = groupImg;
     }
-    public String getpId() {
-        return pId;
+    public String getPId() {
+        return PId;
     }
-    public void setpId(String pId) {
-        this.pId = pId;
+    public void setPId(String PId) {
+        this.PId = PId;
     }
     public int getSort() {
         return sort;
@@ -67,11 +65,11 @@ public class GroupPo extends BaseObject {
     public void setCreateUserId(String createUserId) {
         this.createUserId = createUserId;
     }
-    public String getAdminUserId() {
-        return adminUserId;
+    public String getAdminUserIds() {
+        return adminUserIds;
     }
-    public void setAdminUserId(String adminUserId) {
-        this.adminUserId = adminUserId;
+    public void setAdminUserIds(String adminUserIds) {
+        this.adminUserIds = adminUserIds;
     }
     public String getDescn() {
         return descn;
@@ -98,25 +96,10 @@ public class GroupPo extends BaseObject {
         this.groupUsers = groupUsers;
     }
 
-    /* 以下属性不在数据库表中明显出现*/
-    private int groupCount; //组用户个数
     public int getGroupCount() {
         return groupCount;
     }
     public void setGroupCount(int groupCount) {
         this.groupCount = groupCount;
-    }
-    public String getDefaultFreqNum() {
-        return defaultFreqNum;
-    }
-    public void setDefaultFreqNum(String defaultFreqNum) {
-        this.defaultFreqNum = defaultFreqNum;
-    }
-    public String getInnerPhoneNum() {
-        if (StringUtils.isNullOrEmptyOrSpace(this.innerPhoneNum)) return "3000";
-        return innerPhoneNum;
-    }
-    public void setInnerPhoneNum(String innerPhoneNum) {
-        this.innerPhoneNum = innerPhoneNum;
     }
 }
