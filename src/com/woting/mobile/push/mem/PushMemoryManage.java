@@ -14,8 +14,7 @@ public class PushMemoryManage {
         public static PushMemoryManage instance = new PushMemoryManage();
     }
     public static PushMemoryManage getInstance() {
-        PushMemoryManage pmm = InstanceHolder.instance;
-        return pmm;
+        return InstanceHolder.instance;
     }
     //java的占位单例模式===end
 

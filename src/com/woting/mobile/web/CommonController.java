@@ -87,7 +87,6 @@ public class CommonController {
                 if (ms==null) { //找不到对应的移动会话
                     ms=new MobileSession(sk);
                     smm.addOneSession(ms);
-                    System.out.println(smm.Mem2Json());
                 } else { //找到了对应的对话，直接应用
                     ms.access();
                 }

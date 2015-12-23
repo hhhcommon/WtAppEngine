@@ -16,8 +16,7 @@ public class SessionMemoryManage {
         public static SessionMemoryManage instance = new SessionMemoryManage();
     }
     public static SessionMemoryManage getInstance() {
-        SessionMemoryManage smm = InstanceHolder.instance;
-        return smm;
+        return InstanceHolder.instance;
     }
     //java的占位单例模式===end
 
@@ -114,8 +113,8 @@ public class SessionMemoryManage {
     /**
      * 把内存情况转换为Json串，便于调试
      * @return
-     */
     public String Mem2Json() {
         return JsonUtils.objToJson(this.sm.mSessionMap);
     }
+     */
 }

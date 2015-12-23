@@ -1,10 +1,10 @@
-package com.woting.mobile.session.monitor;
+package com.woting.mobile.session;
 
 import java.util.Date;
 import java.util.Timer;
 
-import com.woting.mobile.session.MobileSessionConfig;
 import com.woting.mobile.session.mem.SessionMemory;
+import com.woting.mobile.session.monitor.CleanSessionTask;
 
 /**
  * <pre>会话监听，包括：
@@ -36,7 +36,7 @@ public class SessionListener extends Thread {
         try {
             sleep(5000);//多少毫秒后启动任务处理，先让系统的其他启动任务完成，这里设置死为10秒钟
             //初始化会话的内存结构
-            SessionMemory.getInstance().init(SessionListener.msc);
+            SessionMemory.getInstance();
             startMonitor(); //启动会话监控
         } catch (InterruptedException e) {
             e.printStackTrace();

@@ -8,7 +8,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -78,7 +77,10 @@ public class SocketHandle extends Thread {
             while (true) {//有任何一个字线程出问题，则关闭这个连接
                 Thread.sleep(this.smc.get_MonitorDelay());
                 //判断时间戳，看连接是否还有效
-                if (System.currentTimeMillis()-lastVisitTime>this.smc.calculate_TimeOut()) break;
+                if (System.currentTimeMillis()-lastVisitTime>this.smc.calculate_TimeOut()) {
+                    System.out.println(socketDesc+"超时关闭");
+                    break;
+                }
 
                 //判断是否有某个子线程失败了
                 /*
@@ -98,8 +100,6 @@ public class SocketHandle extends Thread {
                     this.sendMsg._interrupt();
                     break;
                 }
-                Thread.sleep(5000);
-                break;
             }
         } catch (InterruptedException e) {//有异常就退出
             System.out.println(socketDesc+"主监控线程出现异常:"+e.getMessage());
@@ -126,8 +126,6 @@ public class SocketHandle extends Thread {
             }
             try {
                 SocketHandle.this.socket.close(); //这是主线程的关键
-                System.out.println(SocketHandle.this.socket.isClosed());
-                System.out.println(SocketHandle.this.socket.isConnected());
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
@@ -261,15 +259,16 @@ public class SocketHandle extends Thread {
                         in=new BufferedReader(new InputStreamReader(SocketHandle.this.socket.getInputStream(), "UTF-8"));
                         String revMsgStr=in.readLine();
                         SocketHandle.this.lastVisitTime=System.currentTimeMillis();
-
+                        //判断是否是心跳信号
                         if (revMsgStr.equals("b")) { //发送回执心跳
+                            System.out.println(socketDesc+":"+revMsgStr);
                             synchronized(socketSendLock) {
                                 out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
                                 out.println("B");
                                 out.flush();
                                 try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
                             }
-                            continue;//判断是否是心跳信号
+                            continue;
                         }
 
                         @SuppressWarnings("unchecked")

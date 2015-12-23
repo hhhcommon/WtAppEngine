@@ -8,7 +8,7 @@ import org.apache.log4j.Logger;
 import com.woting.mobile.push.PushConfig;
 import com.woting.mobile.push.PushListener;
 import com.woting.mobile.session.MobileSessionConfig;
-import com.woting.mobile.session.monitor.SessionListener;
+import com.woting.mobile.session.SessionListener;
 
 public class WebRunningListener implements ServletContextListener {
     private Logger logger = Logger.getLogger(this.getClass());
@@ -20,6 +20,7 @@ public class WebRunningListener implements ServletContextListener {
             //移动会话Session启动
             MobileSessionConfig msc = new MobileSessionConfig();
             SessionListener.begin(msc);
+            //启动推送服务
             PushConfig pc = new PushConfig();
             PushListener.begin(pc);
         } catch(Exception e) {

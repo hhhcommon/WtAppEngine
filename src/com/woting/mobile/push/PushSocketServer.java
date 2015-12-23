@@ -3,6 +3,8 @@ package com.woting.mobile.push;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+//import java.net.UnknownHostException;
+//import java.io.IOException;
 import com.woting.mobile.push.mem.PushMemoryManage;
 import com.woting.mobile.push.monitor.socket.SocketHandle;
 import com.woting.mobile.push.monitor.socket.SocketMonitorConfig;
@@ -15,6 +17,12 @@ public class PushSocketServer extends Thread {
     private PushConfig pc=null;
     private static ServerSocket serverSocket=null;
     private static PushMemoryManage pmm=PushMemoryManage.getInstance();
+
+    /*
+    public static void main(String[] args) throws UnknownHostException, IOException {
+        PushSocketServer pss = new PushSocketServer(new PushConfig());
+        pss.start();
+    }*/
 
     /**
      * 构造函数

@@ -210,7 +210,6 @@ public class PassportController {
                 map.put("Message", "无法获取需要的参数");
                 return map;
             }
-            System.out.println(smm.Mem2Json());
             MobileParam mp=MobileUtils.getMobileParam(m);
             MobileKey sk=(mp==null?null:mp.getMobileKey());
             //2-处理

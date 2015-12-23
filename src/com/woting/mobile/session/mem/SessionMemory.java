@@ -21,18 +21,10 @@ public class SessionMemory {
     }
     //java的占位单例模式===end
 
-    //移动会话Map
-    protected Map<MobileKey, MobileSession> mSessionMap = null;
-    //移动会话的配置信息
-    protected MobileSessionConfig myConfig = null;
+    protected Map<MobileKey, MobileSession> mSessionMap;//移动会话Map
 
-    /**
-     * 初始化会话内存
-     * @param msc 移动会话配置
-     */
-    public void init(MobileSessionConfig msc) {
-        myConfig=(msc==null?new MobileSessionConfig():msc);
-        mSessionMap=new ConcurrentHashMap<MobileKey, MobileSession>();
+    public SessionMemory() {
+        this.mSessionMap = new ConcurrentHashMap<MobileKey, MobileSession>();
     }
 
     /**
