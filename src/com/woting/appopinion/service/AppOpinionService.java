@@ -87,7 +87,6 @@ public class AppOpinionService {
                             }
                         }
                         ret.add(item);
-                        
                     }
                 } else {
                     for (AppOpinionPo op: ol) {

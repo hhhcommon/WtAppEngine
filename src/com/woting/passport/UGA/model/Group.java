@@ -70,7 +70,7 @@ public class Group extends GroupPo implements  ModelSwapPo {
     }
 
     //组用户处理
-    private List<UserPo> userList;
+    private List<UserPo> userList = new ArrayList<UserPo>();;
     public List<UserPo> getUserList() {
         return userList;
     }
@@ -79,7 +79,6 @@ public class Group extends GroupPo implements  ModelSwapPo {
     }
 
     public void addOneUser(UserPo up) {
-        if (userList==null) userList = new ArrayList<UserPo>();
         for (UserPo _up: userList) {
             if (up.getUserId().equals(_up.getUserId())) return;
         }

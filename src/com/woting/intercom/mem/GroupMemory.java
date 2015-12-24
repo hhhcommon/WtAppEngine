@@ -16,6 +16,10 @@ public class GroupMemory {
 
     protected ConcurrentHashMap<String, GroupInterCom> gicMap;//对讲组信息Map
 
+    private GroupMemory() {
+        this.gicMap=new ConcurrentHashMap<String, GroupInterCom>();
+    }
+
     /**
      * 把一个组加入gicMap
      * @param g 用户组模型

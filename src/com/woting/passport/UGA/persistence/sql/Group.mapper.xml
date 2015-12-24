@@ -9,10 +9,10 @@
     <result  column="groupNum"      property="groupNum"      jdbcType="VARCHAR"/>
     <result  column="groupName"     property="groupName"     jdbcType="VARCHAR"/>
     <result  column="groupImg"      property="groupImg"      jdbcType="VARCHAR"/>
-    <result  column="pId"           property="pId"           jdbcType="VARCHAR"/>
+    <result  column="pId"           property="PId"           jdbcType="VARCHAR"/>
     <result  column="sort"          property="sort"          jdbcType="INTEGER"/>
     <result  column="createUserId"  property="createUserId"  jdbcType="VARCHAR"/>
-    <result  column="adminUserId"   property="adminUserId"   jdbcType="INTEGER"/>
+    <result  column="adminUserIds"  property="adminUserIds"  jdbcType="INTEGER"/>
     <result  column="descn"         property="descn"         jdbcType="VARCHAR"/>
     <result  column="cTime"         property="CTime"         jdbcType="TIMESTAMP"/>
     <result  column="lmTime"        property="lmTime"        jdbcType="TIMESTAMP"/>
@@ -30,7 +30,7 @@
 
   <!-- 所有列 -->
   <sql id="Base_Column_List">
-    id, groupNum, groupName, groupImg, pId, sort, createUserId, adminUserId, descn, cTime, lmTime
+    id, groupNum, groupName, groupImg, pId, sort, createUserId, adminUserIds, descn, cTime, lmTime
   </sql>
 
   <!-- 条件子句 -->
@@ -44,7 +44,7 @@
         <if test="pId!=null"> and pId=#{pId,jdbcType=VARCHAR}</if>
         <if test="sort!=null and sort!=0"> and sort=#{sort,jdbcType=INTEGER}</if>
         <if test="createUserId!=null"> and createUserId=#{createUserId,jdbcType=VARCHAR}</if>
-        <if test="adminUserId!=null"> and adminUserId=#{adminUserId,jdbcType=VARCHAR}</if>
+        <if test="adminUserIds!=null"> and adminUserIds=#{adminUserIds,jdbcType=VARCHAR}</if>
         <if test="descn!=null"> and descn=#{descn,jdbcType=VARCHAR}</if>
         <if test="CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
         <if test="lmTime!=null"> and lmTime=#{lmTime,jdbcType=TIMESTAMP}</if>
@@ -59,7 +59,7 @@
 
   <!-- 获得列表 -->
   <select id="getList" resultMap="groupMap" parameterType="java.util.Map">
-    select <include refid="Base_Column_List"/> from plat_User
+    select <include refid="Base_Column_List"/> from plat_Group
     <if test="_parameter=null"><include refid="WhereClauseByEntiey"/></if>
     <if test="orderByClause!=null">order by ${orderByClause}</if>
   </select>
@@ -91,7 +91,7 @@
       <if test="pId!=null">pId,</if>
       <if test="sort!=null and sort!=0">sort,</if>
       <if test="createUserId!=null">createUserId,</if>
-      <if test="adminUserId!=null">adminUserId,</if>
+      <if test="adminUserIds!=null">adminUserIds,</if>
       <if test="descn!=null">descn,</if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
@@ -102,7 +102,7 @@
       <if test="pId!=null">#{pId,jdbcType=VARCHAR},</if>
       <if test="sort!=null and sort!=0">#{sort,jdbcType=INTEGER},</if>
       <if test="createUserId!=null">#{createUserId,jdbcType=VARCHAR},</if>
-      <if test="adminUserId!=null">#{adminUserId,jdbcType=VARCHAR},</if>
+      <if test="adminUserIds!=null">#{adminUserIds,jdbcType=VARCHAR},</if>
       <if test="descn!=null">#{descn,jdbcType=VARCHAR},</if>
     </trim>
   </insert>
@@ -118,7 +118,7 @@
       <if test="pId!=null">pId=#{pId,jdbcType=VARCHAR},</if>
       <if test="sort!=null and sort!=0">sort=#{sort,jdbcType=INTEGER},</if>
       <if test="createUserId!=null">createUserId=#{createUserId,jdbcType=VARCHAR},</if>
-      <if test="adminUserId!=null">adminUserId=#{adminUserId,jdbcType=VARCHAR},</if>
+      <if test="adminUserIds!=null">adminUserIds=#{adminUserIds,jdbcType=VARCHAR},</if>
       <if test="descn!=null">descn=#{descn,jdbcType=VARCHAR},</if>
       <if test="CTime!=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
     </set>

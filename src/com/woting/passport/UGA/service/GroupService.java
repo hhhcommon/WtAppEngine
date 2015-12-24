@@ -1,6 +1,9 @@
 package com.woting.passport.UGA.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -111,8 +114,46 @@ public class GroupService {
         return null;
     }
 
+    /**
+     * 得到所有用户组信息，返回的用户组列表中的元素是用户组模型，包括该组下的用户。
+     * 此方法目前用于初始化对讲用户组内存数据库。
+     * @return
+     */
     public List<Group> getAllGroup() {
-        
+        Map<String, String> param = new HashMap<String, String>();
+        param.put("orderByClause", "groupId");
+        List<GroupPo> gl = this.groupDao.queryForList(param);
+        if (gl!=null&&gl.size()>0) {
+            List<Group> ret = new ArrayList<Group>();
+            Group item = null;
+            List<Map<String, Object>> ul = this.userDao.queryForListAutoTranform("getListUserInGroup", null);
+            if (ul!=null&&ul.size()>0) {
+                int i=0;
+                Map<String, Object> up=ul.get(i);
+                for (GroupPo gp: gl) {
+                    item=new Group();
+                    item.buildFromPo(gp);
+                    if (i<ul.size()) {
+                        while (((String)up.get("groupId")).equals(gp.getGroupId())) {
+                            UserPo _up = new UserPo();
+                            _up.fromHashMap(up);
+                            _up.setUserId((String)up.get("id"));
+                            item.addOneUser(_up);
+                            if (++i==ul.size()) break;
+                            up=ul.get(i);
+                        }
+                    }
+                    ret.add(item);
+                }
+            } else {
+                for (GroupPo gp: gl) {
+                    item=new Group();
+                    item.buildFromPo(gp);
+                    ret.add(item);
+                }
+            }
+            return ret;
+        }
         return null;
     }
 }
