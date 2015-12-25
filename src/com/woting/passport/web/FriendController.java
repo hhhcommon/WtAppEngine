@@ -55,7 +55,7 @@ public class FriendController {
                 return map;
             }
             //1-获取UserId，并处理访问
-            String userId=sk.isUserSession()?sk.getUserId():null;
+            String userId=sk.isUser()?sk.getUserId():null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
                 MobileSession ms=smm.getSession(sk);
@@ -86,7 +86,6 @@ public class FriendController {
                 List<UserPo> ul=friendService.getStrangers(userId, searchStr);
                 if (ul!=null&&ul.size()>0) {
                     List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
-                    Map<String, Object> um;
                     for (UserPo u: ul) {
                         if (!u.getUserId().equals(userId)) rul.add(u.toHashMap4Mobile());
                     }
@@ -132,7 +131,7 @@ public class FriendController {
                 return map;
             }
             //1-获取UserId，并处理访问
-            String userId=sk.isUserSession()?sk.getUserId():null;
+            String userId=sk.isUser()?sk.getUserId():null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
                 MobileSession ms=smm.getSession(sk);
@@ -207,7 +206,7 @@ public class FriendController {
                 return map;
             }
             //1-获取UserId，并处理访问
-            String userId=sk.isUserSession()?sk.getUserId():null;
+            String userId=sk.isUser()?sk.getUserId():null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
                 MobileSession ms=smm.getSession(sk);
@@ -282,7 +281,7 @@ public class FriendController {
                 return map;
             }
             //1-获取UserId，并处理访问
-            String userId=sk.isUserSession()?sk.getUserId():null;
+            String userId=sk.isUser()?sk.getUserId():null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
                 MobileSession ms=smm.getSession(sk);
@@ -366,7 +365,7 @@ public class FriendController {
                 return map;
             }
             //1-获取UserId，并处理访问
-            String userId=sk.isUserSession()?sk.getUserId():null;
+            String userId=sk.isUser()?sk.getUserId():null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
                 MobileSession ms=smm.getSession(sk);

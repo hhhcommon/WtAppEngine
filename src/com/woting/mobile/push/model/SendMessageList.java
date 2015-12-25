@@ -14,11 +14,6 @@ public class SendMessageList {
     private MobileKey mk=null; //本列表的移动端标识，一个列表只能有一个标识，即此列表只能对应一个设备
     private List<Message> msgList;
 
-    public SendMessageList() {
-        super();
-        this.msgList = new ArrayList<Message>();
-    }
-
     public SendMessageList(MobileKey mk) {
         super();
         this.mk=mk;
@@ -70,5 +65,12 @@ public class SendMessageList {
      */
     public int size() {
         return this.msgList.size();
+    }
+
+    /**
+     * 从消息列表中删除指定序号的消息
+     */
+    public void remove(int i) {
+        this.msgList.remove(i);
     }
 }

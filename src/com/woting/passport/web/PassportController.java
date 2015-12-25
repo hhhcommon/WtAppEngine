@@ -213,7 +213,7 @@ public class PassportController {
             MobileParam mp=MobileUtils.getMobileParam(m);
             MobileKey sk=(mp==null?null:mp.getMobileKey());
             //2-处理
-            String userId=sk.isUserSession()?sk.getUserId():null;
+            String userId=sk.isUser()?sk.getUserId():null;
             if (sk!=null) {
                 //2.1-获取UserId
                 map.put("SessionId", sk.getSessionId());
@@ -273,7 +273,7 @@ public class PassportController {
             }
             //1-获取UserId，并处理访问
             UserPo u=null;
-            String userId=sk.isUserSession()?sk.getUserId():null;
+            String userId=sk.isUser()?sk.getUserId():null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
                 MobileSession ms=smm.getSession(sk);
@@ -347,7 +347,7 @@ public class PassportController {
             }
             //1-获取UserId，并处理访问
             UserPo u=null;
-            String userId=sk.isUserSession()?sk.getUserId():null;
+            String userId=sk.isUser()?sk.getUserId():null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
                 MobileSession ms=smm.getSession(sk);
@@ -519,7 +519,7 @@ public class PassportController {
                 return map;
             }
             //1-获取UserId，并处理访问
-            String userId=sk.isUserSession()?sk.getUserId():null;
+            String userId=sk.isUser()?sk.getUserId():null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
                 MobileSession ms=smm.getSession(sk);

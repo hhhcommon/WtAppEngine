@@ -29,15 +29,15 @@ public class MobileKey implements Serializable {
     }
 
     /**
-     * 是否是用户Session，是用户登录成功后的Sessin
+     * 是否是用户
      */
-    public boolean isUserSession() {
+    public boolean isUser() {
         return MobileUtils.isValidUserId(this.userId);
     }
     /**
-     * 是否是设备Session，是用户未登录时的Sessin
+     * 是否是设备
      */
-    public boolean isMobileSession() {
+    public boolean isMobile() {
         return !MobileUtils.isValidUserId(this.userId);
     }
 

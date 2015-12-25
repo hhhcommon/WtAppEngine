@@ -77,12 +77,10 @@ public class SocketHandle extends Thread {
                 try { sleep(10); } catch (InterruptedException e) {};
                 Thread.sleep(this.smc.get_MonitorDelay());
                 //判断时间戳，看连接是否还有效
-                /*
                 if (System.currentTimeMillis()-lastVisitTime>this.smc.calculate_TimeOut()) {
                     System.out.println(socketDesc+"超时关闭");
                     break;
                 }
-                //判断是否有某个子线程失败了
                 /*
                 if (this.sendBeat.isInterrupted||!this.sendBeat.isRunning) {
                     this.sendMsg._interrupt();
@@ -194,36 +192,40 @@ public class SocketHandle extends Thread {
         public void run() {
             PrintWriter out=null;
             this.isRunning=true;
-            while (pmm.isServerRuning()&&SocketHandle.this.running&&!isInterrupted) {
-                try {
-                    try { sleep(10); } catch (InterruptedException e) {};
-                    //发消息
-                    //获得消息
-                    List<Message> msgList=null;
-                    if (SocketHandle.this.mk!=null) {
-                        msgList=pmm.getSendMessages(mk);
-                    }
-                    if (msgList!=null&&msgList.size()>0) {
-                        String outStr="";
-                        for (Message m: msgList) outStr+=","+m.getMsgContent();
-                        outStr="["+outStr.substring(1)+"]";
-                        synchronized(socketSendLock) {
-                            out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
-                            out.println(outStr);
-                            out.flush();
-                            try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
-                        }
-                    }
-                } catch (Exception e) {
-                    System.out.println(SocketHandle.this.socketDesc+"发送消息线程出现异常:" + e.getMessage());
-                } finally {
+            try {
+                while (pmm.isServerRuning()&&SocketHandle.this.running&&!isInterrupted) {
                     try {
-                        if (out!=null) try {out.close();out=null;} catch(Exception e) {out=null;throw e;};
-                    } catch(Exception e) {
-                        e.printStackTrace();
+                        try { sleep(10); } catch (InterruptedException e) {};
+                        //发消息
+                        //获得消息
+                        List<Message> msgList=null;
+                        if (SocketHandle.this.mk!=null) {
+                            msgList=pmm.getSendMessages(mk);
+                        }
+                        if (msgList!=null&&msgList.size()>0) {
+                            String outStr="";
+                            for (Message m: msgList) outStr+=","+m.getMsgContent();
+                            outStr="["+outStr.substring(1)+"]";
+                            synchronized(socketSendLock) {
+                                out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
+                                out.println(outStr);
+                                out.flush();
+                                try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.out.println(SocketHandle.this.socketDesc+"发送消息线程出现异常:" + e.getMessage());
                     }
-                    this.isRunning=false;
                 }
+            } catch (Exception e) {
+                System.out.println(SocketHandle.this.socketDesc+"发送消息线程出现异常:" + e.getMessage());
+            } finally {
+                try {
+                    if (out!=null) try {out.close();out=null;} catch(Exception e) {out=null;throw e;};
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+                this.isRunning=false;
             }
         }
     }

@@ -56,7 +56,7 @@ public class OpinionController {
                 return map;
             }
             //1-获取UserId，并处理访问
-            String userId=sk.isUserSession()?sk.getUserId():null;
+            String userId=sk.isUser()?sk.getUserId():null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
                 MobileSession ms=smm.getSession(sk);
@@ -128,7 +128,7 @@ public class OpinionController {
                 return map;
             }
             //1-获取UserId，并处理访问
-            String userId=sk.isUserSession()?sk.getUserId():null;
+            String userId=sk.isUser()?sk.getUserId():null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
                 MobileSession ms=smm.getSession(sk);

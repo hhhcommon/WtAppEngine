@@ -40,13 +40,16 @@ public class Message implements Serializable, Comparable<Message> {
     private String toAddr; //消息目标地址
 
     private int msgType; //消息类型:0是一般类型；1是回复类型
-    private String returnType; //返回值类型
-    private String msgBizType; //业务消息类型，根据此类型，框架会对消息进行分发，目前只有对讲一个业务类型"INTERCOM"
     private int affirem; //是否需要确认;0不需要1需要，默认值=0不需要确认
+    private String returnType; //返回值类型
+
+    private String msgBizType; //业务消息类型，根据此类型，框架会对消息进行分发，目前只有对讲一个业务类型"INTERCOM"
+    private String cmdType; //命令类型
+    private String command; //命令编号
 
     private long receiveTime; //消息收到时间
     private long sendTime; //消息应答发送时间
-    private String msgContent; //消息内容，应该是严格的Json格式，建议这里面的结构如下：{"bType":数据的业务类型,"Data":真正的数据，仍然要是jon数据类型}
+    private Object msgContent; //消息内容}
 
     public String getMsgId() {
         return msgId;
@@ -86,24 +89,36 @@ public class Message implements Serializable, Comparable<Message> {
     public void setMsgType(int msgType) {
         this.msgType = msgType;
     }
-    public String getMsgBizType() {
-        return msgBizType;
+    public int getAffirem() {
+        return affirem;
     }
-    public void setMsgBizType(String msgBizType) {
-        this.msgBizType = msgBizType;
+    public void setAffirem(int affirem) {
+        this.affirem = affirem;
     }
-
     public String getReturnType() {
         return returnType;
     }
     public void setReturnType(String returnType) {
         this.returnType = returnType;
     }
-    public int getAffirem() {
-        return affirem;
+
+    public String getMsgBizType() {
+        return msgBizType;
     }
-    public void setAffirem(int affirem) {
-        this.affirem = affirem;
+    public void setMsgBizType(String msgBizType) {
+        this.msgBizType = msgBizType;
+    }
+    public String getCmdType() {
+        return cmdType;
+    }
+    public void setCmdType(String cmdType) {
+        this.cmdType = cmdType;
+    }
+    public String getCommand() {
+        return command;
+    }
+    public void setCommand(String command) {
+        this.command = command;
     }
 
     public long getReceiveTime() {
@@ -119,10 +134,10 @@ public class Message implements Serializable, Comparable<Message> {
         this.sendTime = sendTime;
     }
 
-    public String getMsgContent() {
+    public Object getMsgContent() {
         return msgContent;
     }
-    public void setMsgContent(String msgContent) {
+    public void setMsgContent(Object msgContent) {
         this.msgContent = msgContent;
     }
 
@@ -134,11 +149,28 @@ public class Message implements Serializable, Comparable<Message> {
         return this.affirem==1;
     }
 
+    /**
+     * 用于消息排序
+     */
     @Override
     public int compareTo(Message o) {
         long flag=this.sendTime-o.getSendTime();
         if (flag==0) return 0;
         if (flag>0) return 1;
         return -1;
+    }
+
+    /**
+     * 是否是同类的消息
+     * @param m 另一消息
+     * @return
+     */
+    public boolean isSeamType(Message m) {
+        if (this.fromAddr.equals(m.fromAddr)
+          &&this.toAddr.equals(m.toAddr)
+          &&this.msgBizType.equals(m.msgBizType)
+          &&this.cmdType.equals(m.cmdType)
+          &&this.command.equals(m.command)) return true;
+        return false;
     }
 }

@@ -5,6 +5,7 @@ import javax.servlet.ServletContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.SystemCache;
+import com.woting.intercom.model.GroupInterCom;
 import com.woting.passport.UGA.model.Group;
 import com.woting.passport.UGA.service.GroupService;
 
@@ -38,9 +39,21 @@ public class GroupMemoryManage {
             List<Group> groups = groupService.getAllGroup();
             if (groups!=null&&groups.size()>0) {
                 for (Group g: groups) {
-                    this.gm.addOneGroup(g);
+                    this.addOneGroup(g);
                 }
             }
         }
+    }
+    //把一个用户组对象加入gicMap
+    private void addOneGroup(Group g) {
+        GroupInterCom groupIC = new GroupInterCom(g);
+        this.gm.gicMap.put(g.getGroupId(), groupIC);
+    }
+
+    /**
+     * 根据用户组id，获得用户组对讲模型
+     */
+    public GroupInterCom getGroupInterCom(String groupId) {
+        return this.gm.gicMap.get(groupId);
     }
 }

@@ -3,7 +3,6 @@ package com.woting.mobile.push.monitor;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.mobile.MobileUtils;
 import com.woting.mobile.model.MobileKey;
@@ -78,7 +77,7 @@ public class DealReceivePureQueue extends Thread {
         if (canContinue) {
             msg.setMsgId(__tmp);
             MobileKey mk=MobileUtils.getMobileKey(m);
-            if (mk.isMobileSession()) {
+            if (mk.isMobile()) {
                 __tmp="{()@@("+mk.getMobileId()+"||M)}";
             } else {
                 __tmp="{("+mk.getUserId()+"||wt)@@("+mk.getMobileId()+"||M)}";
@@ -86,32 +85,14 @@ public class DealReceivePureQueue extends Thread {
             msg.setFromAddr(__tmp);
             msg.setProxyAddrs("");
             msg.setToAddr("{(intercom)@@(www.woting.fm||S)}");
-            msg.setMsgBizType(m.get("BizType")+"");
-            msg.setMsgType(0);
+            msg.setMsgType(Integer.parseInt(m.get("MsgType")+""));
+            msg.setSendTime(Long.parseLong(m.get("sendTime")+""));
             msg.setReceiveTime(System.currentTimeMillis());
-            __tmp=(m.get("Command")+"").trim();
-            canContinue=(__tmp.equals("-1")||__tmp.equals("0")||__tmp.equals("1"));
-        }
-        if (!canContinue) {
-            err+=","+"请求命令不合法";
-        } else {
-            int _command=Integer.parseInt(__tmp);
-            if (_command==-1||_command==1) {
-                String _data=m.get("Data")+"";
-                try {
-                    Map<String, Object> _dm=(Map<String, Object>)JsonUtils.jsonToObj(_data, Map.class);
-                    String _groupId=_dm.get("GroupId")+"";
-                    if (_groupId.equals("null")) {
-                        err=","+"无法获得用户组Id";
-                    } else {
-                        _groupId="{\"Command\":\""+_command+"\",\"GroupId\":\""+_groupId+"\"}";
-                        msg.setMsgContent(_groupId);
-                    }
-                } catch(Exception e) {
-                    canContinue=false;
-                    err=","+"无法获得用户组Id，出现异常["+e.getMessage()+"]";
-                }
-            }
+
+            msg.setMsgBizType(m.get("BizType")+"");
+            msg.setCmdType(m.get("CmdType")+"");
+            msg.setCommand(m.get("Command")+"");
+            msg.setMsgContent(m.get("Data"));
         }
         if (StringUtils.isNullOrEmptyOrSpace(err)) retM.put("msg", msg);
         else retM.put("err", err);

@@ -1,5 +1,7 @@
 package com.woting.mobile.push.mem;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -49,6 +51,38 @@ public class SendMemory {
             this.msgMap.put(mk, mobileQueue);
         }
         mobileQueue.add(msg);
+    }
+    /**
+     * 向某一设移动设备的输出队列中插入唯一消息，唯一消息是指，同一时间某类消息对一个设备只能有一个消息内容。
+     * @param mk 移动设备标识
+     * @param msg 消息数据
+     */
+    public void addUniqueMsg2Queue(MobileKey mk, Message msg) {
+        ConcurrentLinkedQueue<Message> mobileQueue=this.msgMap.get(mk);
+        if (mobileQueue==null) {
+            mobileQueue=new ConcurrentLinkedQueue<Message>();
+            this.msgMap.put(mk, mobileQueue);
+        }
+        //唯一化处理
+        //1-首先把一已发送列表中的同类消息删除
+        SendMessageList sendedMl = this.msgSendedMap.get(mk);
+        if (sendedMl!=null&&sendedMl.size()>0) {
+            for (int i=sendedMl.size()-1; i>=0; i--) {
+                Message m=sendedMl.get(i);
+                if (msg.isSeamType(m)) sendedMl.remove(i);
+            }
+        }
+        //2-加入现有的队列
+        synchronized(mobileQueue) {
+            List<Message> removeMsg = new ArrayList<Message>();
+            for (Message m: mobileQueue) {
+                if (msg.isSeamType(m)) removeMsg.add(m);
+            }
+            for (Message m: removeMsg) {
+                mobileQueue.remove(m);
+            }
+            mobileQueue.add(msg);
+        }
     }
 
     /**
