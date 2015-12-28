@@ -2,6 +2,9 @@ package com.woting.mobile.push.model;
 
 import java.io.Serializable;
 
+import com.spiritdata.framework.util.JsonUtils;
+import com.spiritdata.framework.util.StringUtils;
+
 /**
  * 发送或接收到的消息，包括数据和标识信息。<br/>
  * 标识信息类似协议中的包头；<br/>
@@ -40,7 +43,7 @@ public class Message implements Serializable, Comparable<Message> {
     private String toAddr; //消息目标地址
 
     private int msgType; //消息类型:0是一般类型；1是回复类型
-    private int affirem; //是否需要确认;0不需要1需要，默认值=0不需要确认
+    private int affirm; //是否需要确认;0不需要1需要，默认值=0不需要确认
     private String returnType; //返回值类型
 
     private String msgBizType; //业务消息类型，根据此类型，框架会对消息进行分发，目前只有对讲一个业务类型"INTERCOM"
@@ -89,11 +92,11 @@ public class Message implements Serializable, Comparable<Message> {
     public void setMsgType(int msgType) {
         this.msgType = msgType;
     }
-    public int getAffirem() {
-        return affirem;
+    public int getAffirm() {
+        return affirm;
     }
-    public void setAffirem(int affirem) {
-        this.affirem = affirem;
+    public void setAffirm(int affirm) {
+        this.affirm = affirm;
     }
     public String getReturnType() {
         return returnType;
@@ -146,7 +149,7 @@ public class Message implements Serializable, Comparable<Message> {
      * @return 需要确认返回true，否则返回false
      */
     public boolean isAffirm() {
-        return this.affirem==1;
+        return this.affirm==1;
     }
 
     /**
@@ -160,17 +163,18 @@ public class Message implements Serializable, Comparable<Message> {
         return -1;
     }
 
-    /**
-     * 是否是同类的消息
-     * @param m 另一消息
-     * @return
-     */
-    public boolean isSeamType(Message m) {
-        if (this.fromAddr.equals(m.fromAddr)
-          &&this.toAddr.equals(m.toAddr)
-          &&this.msgBizType.equals(m.msgBizType)
-          &&this.cmdType.equals(m.cmdType)
-          &&this.command.equals(m.command)) return true;
-        return false;
+    public String toJson() {
+        String ret="";
+        ret+=",\"MsgId\":\""+this.msgId+"\"";
+        if (!StringUtils.isNullOrEmptyOrSpace(this.reMsgId)) ret+=",\"ReMsgId\":\""+this.reMsgId+"\"";
+        ret+=",\"NeedAffirm\":\""+this.affirm+"\"";
+        ret+=",\"MsgType\":\""+this.msgType+"\"";
+        ret+=",\"CmdType\":\""+this.cmdType+"\"";
+        ret+=",\"Command\":\""+this.command+"\"";
+        if (!StringUtils.isNullOrEmptyOrSpace(this.returnType)) ret+=",\"ReturnType\":\""+this.returnType+"\"";
+        ret+=",\"SendType\":\""+this.sendTime+"\"";
+        ret+=",\"Data\":"+JsonUtils.objToJson(this.msgContent);
+        ret+="{"+ret.substring(1)+"}";
+        return ret;
     }
 }

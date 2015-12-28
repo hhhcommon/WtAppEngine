@@ -1,7 +1,5 @@
 package com.woting.mobile.push.mem;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import com.woting.mobile.model.MobileKey;
 import com.woting.mobile.push.model.Message;
@@ -45,13 +43,13 @@ public class PushMemoryManage {
      */
     public void clean() {
         if (this.sm.msgMap!=null&&!this.sm.msgMap.isEmpty()) {
-            for (MobileKey sKey: this.sm.msgMap.keySet()) {
+            for (String sKey: this.sm.msgMap.keySet()) {
                 ConcurrentLinkedQueue<Message> mq = this.sm.msgMap.get(sKey);
                 if (mq==null||mq.isEmpty()) this.sm.msgMap.remove(sKey);
             }
         }
         if (this.sm.msgSendedMap!=null&&!this.sm.msgSendedMap.isEmpty()) {
-            for (MobileKey sKey: this.sm.msgSendedMap.keySet()) {
+            for (String sKey: this.sm.msgSendedMap.keySet()) {
                 SendMessageList sml = this.sm.msgSendedMap.get(sKey);
                 if (sml==null||sml.size()==0) this.sm.msgSendedMap.remove(sKey);
             }
@@ -59,30 +57,29 @@ public class PushMemoryManage {
     }
 
     /**
-     * 根据设备标识MobileKey(mk)，获得发送消息体，注意，消息体不得多于3条。<br/>
+     * 根据设备标识MobileKey(mk)，获得发送消息体。<br/>
      * 若有更多需要回传的消息，需通过下次请求给出。
      * @param mk 设备标识
      * @return 消息体
      */
-    public List<Message> getSendMessages(MobileKey mk) {
-        List<Message> retl = new ArrayList<Message>();
+    public Message getSendMessages(MobileKey mk) {
         //从发送队列取一条消息
-        Message m1= sm.pollTypeQueue(mk);
-        if (m1!=null) retl.add(m1);
-        SendMessageList hasSl = sm.getSendedMessagList(mk);
-        if (hasSl!=null&&hasSl.size()>0) {
-            int lowerIndex=3-retl.size();
-            if (hasSl.size()<lowerIndex) lowerIndex=hasSl.size();
-            for (int i=0; i<lowerIndex; i++) {
-                retl.add(hasSl.get(i));
+        Message m= sm.pollTypeQueue(mk);
+        if (m!=null) {
+            if (m.isAffirm()) {
+                try {
+                    sm.addSendedMsg(mk, m);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
             }
+        } else {/*
+            SendMessageList hasSl = sm.getSendedMessagList(mk);
+            if (hasSl.size()>0) {
+                m=hasSl.get(0);
+            }*/
         }
-        try {
-            if (m1!=null) hasSl.add(m1);
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-        return null;
+        return m;
     }
 
     private AtomicBoolean serverRuning=new AtomicBoolean(false); //推送服务是否正常运行

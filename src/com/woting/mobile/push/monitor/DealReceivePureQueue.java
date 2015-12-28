@@ -67,7 +67,7 @@ public class DealReceivePureQueue extends Thread {
         Message msg=new Message();
         String err=null;
         String __tmp=(String)m.get("NeedAffirm");
-        msg.setAffirem(__tmp==null?0:__tmp.trim().equals("1")?1:0);
+        msg.setAffirm(__tmp==null?0:__tmp.trim().equals("1")?1:0);
         __tmp=(String)m.get("MsgId");
         boolean canContinue=true;
         if (StringUtils.isNullOrEmptyOrSpace(__tmp)) {
@@ -86,7 +86,7 @@ public class DealReceivePureQueue extends Thread {
             msg.setProxyAddrs("");
             msg.setToAddr("{(intercom)@@(www.woting.fm||S)}");
             msg.setMsgType(Integer.parseInt(m.get("MsgType")+""));
-            msg.setSendTime(Long.parseLong(m.get("sendTime")+""));
+            msg.setSendTime(Long.parseLong(m.get("SendTime")+""));
             msg.setReceiveTime(System.currentTimeMillis());
 
             msg.setMsgBizType(m.get("BizType")+"");

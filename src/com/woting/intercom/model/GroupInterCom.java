@@ -1,13 +1,10 @@
 package com.woting.intercom.model;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.woting.mobile.model.MobileKey;
-import com.woting.mobile.push.model.Message;
 import com.woting.passport.UGA.model.Group;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 
@@ -19,14 +16,14 @@ public class GroupInterCom {
     //组信息
     private Group group;
     //进入该组的用户列表
-    private Map<MobileKey, UserPo> entryGroupUserMap;
+    private Map<String, UserPo> entryGroupUserMap;
     //组内发言人
     private UserPo speaker;
 
     public Group getGroup() {
         return group;
     }
-    public Map<MobileKey, UserPo> getEntryGroupUserMap() {
+    public Map<String, UserPo> getEntryGroupUserMap() {
         return entryGroupUserMap;
     }
 
@@ -36,7 +33,7 @@ public class GroupInterCom {
      */
     public GroupInterCom(Group g) {
         this.group=g;
-        this.entryGroupUserMap=new HashMap<MobileKey, UserPo>();
+        this.entryGroupUserMap=new HashMap<String, UserPo>();
         this.speaker=null;
     }
 
@@ -49,25 +46,19 @@ public class GroupInterCom {
     }
     /**
      * 设置对讲者，当且仅当，当前无对讲者时，才能设置成功
-     * @param speaker 对讲者
+     * @param speaker 对讲者ID
      * @return 若设置成功，返回的Map键为"T"，值为新设置的对讲者；若设置不成功，返回的Map键为"F"，值为原来的对讲者，若当前对讲者不在用户组，若改用户不在此组在线名单，则不允许设置，返回<"E",null>
      */
-    synchronized public Map<String, UserPo> setSpeaker(UserPo speaker) {
+    synchronized public Map<String, UserPo> setSpeaker(MobileKey speakerKey) {
         Map<String, UserPo> ret = new HashMap<String, UserPo>();
         if (this.entryGroupUserMap.size()==0) ret.put("E", null);
         else {
-            boolean exist=false;
-            for (MobileKey k: this.entryGroupUserMap.keySet()) {
-                if (k.getUserId().equals(speaker.getUserId())) {
-                    exist=true;
-                    break;
-                }
-            }
-            if (!exist) ret.put("E", null);
+            UserPo _speaker=this.entryGroupUserMap.get(speakerKey.toString());
+            if (_speaker==null) ret.put("E", null);
             else {
                 if (this.speaker!=null) ret.put("F", this.speaker);
                 else {
-                    this.speaker=speaker;
+                    this.speaker=_speaker;
                     ret.put("T", speaker);
                 }
             }
@@ -79,7 +70,7 @@ public class GroupInterCom {
      * @param speaker 需要退出对讲的对讲人
      * @return 若当前不存在对讲人，返回-1；若当前对讲人与需要退出者为同一人，则清空当前对讲人，返回1；若当前对讲人与需要退出者不同，则返回0；
      */
-    synchronized int removeSpeaker(MobileKey mk) {
+    synchronized public int removeSpeaker(MobileKey mk) {
         if (this.speaker==null) return -1;
         if (mk.getUserId().equals(this.speaker.getUserId())) {
             this.speaker=null;
@@ -89,35 +80,39 @@ public class GroupInterCom {
 
     /**
      * 把用户加入组进入Map
-     * @return 
-     *   若成功，返回加入后的进入组用户Map；<br/>
-     *   若用户已经在加入组列表，返回空列表；<br/>
-     *   若用户不在用户组返回null
+     * @param mk 用户标识
+     * @return
+     *   returnType=1成功；2用户已在加入组Map，无需再次加入；3用户不在用户组
+     *   entryGroupUsers=返回处理后的进入组用户Map；(当且仅当returnType=1)
+     *   needBroadCast=是否需要广播消息；(当且仅当returnType=1)
      */
-    synchronized public Map<MobileKey, UserPo> insertEntryUser(MobileKey mk) {
+    synchronized public Map<String, Object> insertEntryUser(MobileKey mk) {
         return toggleEntryUser(mk, 0);
     }
-
     /**
      * 把用户剔出组进入Map
-     * @return 
-     *   若成功，返回剔出后的进入组用户Map；<br/>
-     *   若用户不在进入组列表，无需剔出，返回空列表；<br/>
-     *   若用户不在用户组返回null
+     * @param mk 用户标识
+     * @return
+     *   returnType=1成功；2用户不在进入组列表，无需剔出；3用户不在用户组
+     *   entryGroupUsers=返回处理后的进入组用户Map；(当且仅当returnType=1)
+     *   needBroadCast=是否需要广播消息；(当且仅当returnType=1)
      */
-    synchronized public Map<MobileKey, UserPo> delEntryUser(MobileKey mk) {
+    synchronized public Map<String, Object> delEntryUser(MobileKey mk) {
         return toggleEntryUser(mk, 1);
     }
+
     /*
-     * 切换用户，
+     * 切换用户，进入用户组的进入与退出
      * @param mk 用户标识
      * @param type 0=进入;1=退出
-     * @return 
-     *   若成功，返回处理后的进入组用户Map；<br/>
-     *   若用户在加入组Map中的状态于Type不匹配，则返回空列表；<br/>
-     *   若用户不在用户组返回null
+     * @return
+     *   returnType=1成功；2在进入组状态不正确；3用户不在用户组
+     *   entryGroupUsers=返回处理后的进入组用户Map；(当且仅当returnType=1)
+     *   needBroadCast=是否需要广播消息；(当且仅当returnType=1)
      */
-    synchronized public Map<MobileKey, UserPo> toggleEntryUser(MobileKey mk, int type) {
+    synchronized private Map<String, Object> toggleEntryUser(MobileKey mk, int type) {
+        Map<String, Object> retM=new HashMap<String, Object>();
+
         UserPo entryUp=null;
         List<UserPo> _tl = this.group.getUserList();
         if (_tl==null||_tl.size()==0) return null;
@@ -130,26 +125,34 @@ public class GroupInterCom {
                 break;
             }
         }
-        if (!exist) return null;
-
-        Map<MobileKey, UserPo> _tm=new HashMap<MobileKey, UserPo>();
-        if (this.entryGroupUserMap.size()>0) {
-            //用户在加入组Map的状态
-            exist=false;
-            for (MobileKey k: this.entryGroupUserMap.keySet()) {
-                if (k.getUserId().equals(speaker.getUserId())) {
-                    exist=true;
-                    break;
-                }
-            }
-            if (!exist&&type==0) {//进入组处理
-                this.entryGroupUserMap.put(mk, entryUp);
-                _tm = this.entryGroupUserMap;
-            } else if (exist&&type==1) {//退出组处理
-                this.entryGroupUserMap.remove(mk);
-                _tm = this.entryGroupUserMap;
-            }
+        if (!exist) {
+            retM.put("returnType", "3");
+            return retM;
         }
-        return _tm;
+
+        //用户在加入组Map的状态
+        retM.put("returnType", "2");
+        int oldSize=entryGroupUserMap.size();
+        exist=entryGroupUserMap.containsKey(mk.toString());
+
+        if (!exist&&type==0) {//进入组处理
+            this.entryGroupUserMap.put(mk.toString(), entryUp);
+            retM.put("returnType", "1");
+            retM.put("entryGroupUsers", this.cloneEntryGroupUserMap());
+            if (oldSize>0) retM.put("needBroadCast", "1");
+        } else if (exist&&type==1) {//退出组处理
+            this.entryGroupUserMap.remove(mk.toString());
+            retM.put("returnType", "1");
+            retM.put("entryGroupUsers", this.cloneEntryGroupUserMap());
+            if (this.entryGroupUserMap.size()>0) retM.put("needBroadCast", "1");
+        }
+        return retM;
+    }
+    private Map<String, UserPo> cloneEntryGroupUserMap() {
+        Map<String, UserPo> _rm = new HashMap<String, UserPo>();
+        for (String k: entryGroupUserMap.keySet()) {
+            _rm.put(k, entryGroupUserMap.get(k));
+        }
+        return _rm;
     }
 }

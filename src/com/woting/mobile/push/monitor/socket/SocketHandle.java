@@ -8,11 +8,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.List;
 import java.util.Map;
 
 import com.spiritdata.framework.util.JsonUtils;
-import com.spiritdata.framework.util.StringUtils;
 import com.woting.mobile.MobileUtils;
 import com.woting.mobile.model.MobileKey;
 import com.woting.mobile.push.mem.PushMemoryManage;
@@ -197,20 +195,18 @@ public class SocketHandle extends Thread {
                     try {
                         try { sleep(10); } catch (InterruptedException e) {};
                         //发消息
-                        //获得消息
-                        List<Message> msgList=null;
                         if (SocketHandle.this.mk!=null) {
-                            msgList=pmm.getSendMessages(mk);
-                        }
-                        if (msgList!=null&&msgList.size()>0) {
-                            String outStr="";
-                            for (Message m: msgList) outStr+=","+m.getMsgContent();
-                            outStr="["+outStr.substring(1)+"]";
-                            synchronized(socketSendLock) {
-                                out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
-                                out.println(outStr);
-                                out.flush();
-                                try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
+                            //获得消息
+                            Message m=pmm.getSendMessages(mk);
+                            if (m!=null) {
+                                //发送消息
+                                synchronized(socketSendLock) {
+                                    out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
+                                    System.out.println(socketDesc+"[发送]:"+m.toJson());
+                                    out.println(m.toJson());
+                                    out.flush();
+                                    try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
+                                }
                             }
                         }
                     } catch (Exception e) {
@@ -255,17 +251,17 @@ public class SocketHandle extends Thread {
                 while(pmm.isServerRuning()&&SocketHandle.this.running&&(!isInterrupted&&canContinue)) {
                     try {
                         try { sleep(10); } catch (InterruptedException e) {};
-                        String msgId=null;
-                        boolean isAffirm=false;
+                        //String msgId=null;
+                        //boolean isAffirm=false;
                         MobileKey mk=null;
                         //接收消息数据
                         in=new BufferedReader(new InputStreamReader(SocketHandle.this.socket.getInputStream(), "UTF-8"));
                         String revMsgStr=in.readLine();
+                        System.out.println(socketDesc+"[接收]:"+revMsgStr);
 
                         SocketHandle.this.lastVisitTime=System.currentTimeMillis();
                         //判断是否是心跳信号
                         if (revMsgStr.equals("b")) { //发送回执心跳
-                            System.out.println(socketDesc+":"+revMsgStr);
                             synchronized(socketSendLock) {
                                 out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
                                 out.println("B");
@@ -279,31 +275,29 @@ public class SocketHandle extends Thread {
                         Map<String, Object> recMap=(Map<String, Object>)JsonUtils.jsonToObj(revMsgStr, Map.class);
                         if (recMap!=null&&recMap.size()>0) {
                             //记录最后收到信号的时间
-                            String __tmp=(String)recMap.get("NeedAffirm");
-                            isAffirm=__tmp==null?false:__tmp.trim().equals("1");
-                            if (isAffirm) msgId=(String)recMap.get("MsgId");
+                            //String __tmp=(String)recMap.get("NeedAffirm");
+                            //isAffirm=__tmp==null?false:__tmp.trim().equals("1");
+                            //if (isAffirm) msgId=(String)recMap.get("MsgId");
                             mk=MobileUtils.getMobileKey(recMap);
                             if (mk!=null) { //存入接收队列
                                 SocketHandle.this.mk=mk;//设置全局作用域下的移动Key
-                                recMap.put("_S_STR", revMsgStr);
-                                recMap.put("SocketId", SocketHandle.this.socket.hashCode());
                                 pmm.getReceiveMemory().addPureQueue(recMap);
                             }
                             //发送回执
-                            String outStr="[{\"returnType\":\"-1\"}]";//空，无内容包括已经收到
-                            if (isAffirm) {
-                                if (StringUtils.isNullOrEmptyOrSpace(msgId)) {
-                                    outStr="[{\"returnType\":\"-2\"}]";//错误内容
-                                } else {
-                                    outStr="[{\"returnType\":\"0\",\"data\":{\"MsgId\":\""+msgId+"\",\"dealFlag\":\"1\"}]}";//消息Id为msgId的消息已经处理，处理环节为：已收到
-                                }
-                            }
-                            synchronized(socketSendLock) {
-                                out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
-                                out.println(outStr);
-                                out.flush();
-                                try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
-                            }
+//                            String outStr="[{\"returnType\":\"-1\"}]";//空，无内容包括已经收到
+//                            if (isAffirm) {
+//                                if (StringUtils.isNullOrEmptyOrSpace(msgId)) {
+//                                    outStr="[{\"returnType\":\"-2\"}]";//错误内容
+//                                } else {
+//                                    outStr="[{\"returnType\":\"0\",\"data\":{\"MsgId\":\""+msgId+"\",\"dealFlag\":\"1\"}]}";//消息Id为msgId的消息已经处理，处理环节为：已收到
+//                                }
+//                            }
+//                            synchronized(socketSendLock) {
+//                                out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
+//                                out.println(outStr);
+//                                out.flush();
+//                                try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
+//                            }
                         }
                         continueErrCodunt=0;
                     } catch(Exception e) {

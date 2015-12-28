@@ -1,6 +1,5 @@
 package com.woting.mobile.session.mem;
 
-import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.mobile.session.model.MobileSession;
 import com.woting.mobile.model.MobileKey;
@@ -39,7 +38,7 @@ public class SessionMemoryManage {
         //System.out.println("【"+(new java.util.Date())+"】：清除过期会话");
         //清除会话
         if (this.sm.mSessionMap!=null&&!this.sm.mSessionMap.isEmpty()) {
-            for (MobileKey sKey: this.sm.mSessionMap.keySet()) {
+            for (String sKey: this.sm.mSessionMap.keySet()) {
                 MobileSession ms = this.sm.mSessionMap.get(sKey);
                 if (ms.expired()) this.sm.mSessionMap.remove(sKey);
             }
@@ -53,9 +52,9 @@ public class SessionMemoryManage {
     public void expireAllSessionByIMEI(String imei) {
         if (this.sm.mSessionMap!=null&&this.sm.mSessionMap.size()>0
             &&!StringUtils.isNullOrEmptyOrSpace(imei)) {
-            for (MobileKey sKey: this.sm.mSessionMap.keySet()) {
-                if (sKey.getMobileId().equals(imei)) {
-                    MobileSession ms = this.sm.mSessionMap.get(sKey);
+            for (String sKey: this.sm.mSessionMap.keySet()) {
+                MobileSession ms = this.sm.mSessionMap.get(sKey);
+                if (ms.getKey().getMobileId().equals(imei)) {
                     ms.expire();
                 }
             }
@@ -78,9 +77,10 @@ public class SessionMemoryManage {
     public MobileSession getSession(MobileKey sk) {
         if (sk==null) return null;
         MobileSession ms = null;
+        ms = this.sm.mSessionMap.get(sk);
         if (this.sm.mSessionMap!=null&&this.sm.mSessionMap.size()>0) {
-            for (MobileKey sKey: this.sm.mSessionMap.keySet()) {
-                if (sKey.equals(sk)) {
+            for (String sKey: this.sm.mSessionMap.keySet()) {
+                if (sKey.equals(sk.toString())) {
                     ms=this.sm.mSessionMap.get(sKey);
                     break;
                 }
@@ -99,9 +99,9 @@ public class SessionMemoryManage {
     public MobileSession getUserSession(String userId, String imei) {
         if (StringUtils.isNullOrEmptyOrSpace(userId)||StringUtils.isNullOrEmptyOrSpace(imei)) return null;
         if (this.sm.mSessionMap!=null&&this.sm.mSessionMap.size()>0) {
-            for (MobileKey sKey: this.sm.mSessionMap.keySet()) {
-                if (sKey.getMobileId().equals(imei)) {
-                    MobileSession ms = this.sm.mSessionMap.get(sKey);
+            for (String sKey: this.sm.mSessionMap.keySet()) {
+                MobileSession ms = this.sm.mSessionMap.get(sKey);
+                if (ms.getKey().getMobileId().equals(imei)) {
                     UserPo u = (UserPo)ms.getAttribute("user");
                     if (u!=null&&u.getUserId().equals(userId)&&!ms.expired()) return ms;
                 }

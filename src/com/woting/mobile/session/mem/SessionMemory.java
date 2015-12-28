@@ -2,10 +2,7 @@ package com.woting.mobile.session.mem;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import com.woting.mobile.session.MobileSessionConfig;
 import com.woting.mobile.session.model.MobileSession;
-import com.woting.mobile.model.MobileKey;
 
 /**
  * Session在内存中的对象
@@ -21,10 +18,10 @@ public class SessionMemory {
     }
     //java的占位单例模式===end
 
-    protected Map<MobileKey, MobileSession> mSessionMap;//移动会话Map
+    protected Map<String, MobileSession> mSessionMap;//移动会话Map
 
     public SessionMemory() {
-        this.mSessionMap = new ConcurrentHashMap<MobileKey, MobileSession>();
+        this.mSessionMap = new ConcurrentHashMap<String, MobileSession>();
     }
 
     /**
@@ -32,6 +29,6 @@ public class SessionMemory {
      * @param ms
      */
     public void add(MobileSession ms) {
-        mSessionMap.put(ms.getKey(), ms);
+        mSessionMap.put(ms.getKey().toString(), ms);
     }
 }

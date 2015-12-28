@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.woting.mobile.model.MobileKey;
+import com.woting.mobile.push.model.CompareMsg;
 import com.woting.mobile.push.model.Message;
 import com.woting.mobile.push.model.SendMessageList;
 
@@ -20,21 +21,21 @@ public class SendMemory {
     }
     //java的占位单例模式===end
 
-    protected ConcurrentHashMap<MobileKey, ConcurrentLinkedQueue<Message>> msgMap;//将要发送的消息列表
-    protected ConcurrentHashMap<MobileKey, SendMessageList> msgSendedMap;//已发送的信息情况
+    protected ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> msgMap;//将要发送的消息列表
+    protected ConcurrentHashMap<String, SendMessageList> msgSendedMap;//已发送的信息情况
 
     /*
      * 初始化发送消息结构
      */
     private SendMemory() {
-        msgMap=new ConcurrentHashMap<MobileKey, ConcurrentLinkedQueue<Message>>();
-        msgSendedMap=new ConcurrentHashMap<MobileKey, SendMessageList>();
+        msgMap=new ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>>();
+        msgSendedMap=new ConcurrentHashMap<String, SendMessageList>();
     }
 
-    protected Map<MobileKey, ConcurrentLinkedQueue<Message>> getMsgMap() {
+    protected Map<String, ConcurrentLinkedQueue<Message>> getMsgMap() {
         return this.msgMap;
     }
-    protected Map<MobileKey, SendMessageList> getMsgSendedMap() {
+    protected Map<String, SendMessageList> getMsgSendedMap() {
         return this.msgSendedMap;
     }
 
@@ -45,10 +46,10 @@ public class SendMemory {
      * @param msg 消息数据
      */
     public void addMsg2Queue(MobileKey mk, Message msg) {
-        ConcurrentLinkedQueue<Message> mobileQueue=this.msgMap.get(mk);
+        ConcurrentLinkedQueue<Message> mobileQueue=this.msgMap.get(mk.toString());
         if (mobileQueue==null) {
             mobileQueue=new ConcurrentLinkedQueue<Message>();
-            this.msgMap.put(mk, mobileQueue);
+            this.msgMap.put(mk.toString(), mobileQueue);
         }
         mobileQueue.add(msg);
     }
@@ -57,26 +58,26 @@ public class SendMemory {
      * @param mk 移动设备标识
      * @param msg 消息数据
      */
-    public void addUniqueMsg2Queue(MobileKey mk, Message msg) {
-        ConcurrentLinkedQueue<Message> mobileQueue=this.msgMap.get(mk);
-        if (mobileQueue==null) {
-            mobileQueue=new ConcurrentLinkedQueue<Message>();
-            this.msgMap.put(mk, mobileQueue);
-        }
+    public void addUniqueMsg2Queue(MobileKey mk, Message msg, CompareMsg compMsg) {
         //唯一化处理
         //1-首先把一已发送列表中的同类消息删除
         SendMessageList sendedMl = this.msgSendedMap.get(mk);
         if (sendedMl!=null&&sendedMl.size()>0) {
             for (int i=sendedMl.size()-1; i>=0; i--) {
                 Message m=sendedMl.get(i);
-                if (msg.isSeamType(m)) sendedMl.remove(i);
+                if (compMsg.compare(m, msg)) sendedMl.remove(i);
             }
         }
         //2-加入现有的队列
+        ConcurrentLinkedQueue<Message> mobileQueue=this.msgMap.get(mk.toString());
+        if (mobileQueue==null) {
+            mobileQueue=new ConcurrentLinkedQueue<Message>();
+            this.msgMap.put(mk.toString(), mobileQueue);
+        }
         synchronized(mobileQueue) {
             List<Message> removeMsg = new ArrayList<Message>();
             for (Message m: mobileQueue) {
-                if (msg.isSeamType(m)) removeMsg.add(m);
+                if (compMsg.compare(m, msg)) removeMsg.add(m);
             }
             for (Message m: removeMsg) {
                 mobileQueue.remove(m);
@@ -92,8 +93,8 @@ public class SendMemory {
      */
     public Message pollTypeQueue(MobileKey mk) {
         if (this.msgMap==null) return null;
-        if (this.msgMap.get(mk)==null) return null;
-        return this.msgMap.get(mk).poll();
+        if (this.msgMap.get(mk.toString())==null) return null;
+        return this.msgMap.get(mk.toString()).poll();
     }
 
     /**
@@ -103,8 +104,8 @@ public class SendMemory {
      */
     public Message peekMobileQueue(MobileKey mk) {
         if (this.msgMap==null) return null;
-        if (this.msgMap.get(mk)==null) return null;
-        return this.msgMap.get(mk).peek();
+        if (this.msgMap.get(mk.toString())==null) return null;
+        return this.msgMap.get(mk.toString()).peek();
     }
 
     //已发送消息处理
@@ -116,10 +117,10 @@ public class SendMemory {
      * @throws IllegalAccessException 
      */
     public boolean addSendedMsg(MobileKey mk, Message msg) throws IllegalAccessException {
-        SendMessageList mobileSendedList=this.msgSendedMap.get(mk);
+        SendMessageList mobileSendedList=this.msgSendedMap.get(mk.toString());
         if (mobileSendedList==null) {
             mobileSendedList=new SendMessageList(mk);
-            this.msgSendedMap.put(mk, mobileSendedList);
+            this.msgSendedMap.put(mk.toString(), mobileSendedList);
         }
         return mobileSendedList.add(msg);
     }
@@ -130,6 +131,6 @@ public class SendMemory {
      * @return
      */
     public SendMessageList getSendedMessagList(MobileKey mk) {
-        return this.msgSendedMap.get(mk);
+        return this.msgSendedMap.get(mk.toString());
     }
 }

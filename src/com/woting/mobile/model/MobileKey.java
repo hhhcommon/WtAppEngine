@@ -59,4 +59,12 @@ public class MobileKey implements Serializable {
     public String getSessionId() {
         return this.userId;
     }
+
+    /**
+     * 获得SessionId，SessionId就是UserId
+     * @return
+     */
+    public String toString() {
+        return this.mobileId+"::"+this.userId;
+    }
 }
