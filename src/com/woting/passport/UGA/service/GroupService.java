@@ -101,6 +101,20 @@ public class GroupService {
     }
 
     /**
+     * 根据用户ID,得到用户组
+     * @param userId
+     * @return 用户组
+     */
+    public List<GroupPo> getCreateGroupsByUserId(String userId) {
+        try {
+            return groupDao.queryForList("getCreateGroupListByUserId", userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
      * 获得用户组中的用户
      * @param groupId 用户组Id
      * @return 用户组中的用户

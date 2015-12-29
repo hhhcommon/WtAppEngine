@@ -139,7 +139,7 @@ public class DealInterCom extends Thread {
                                 String _sp[] = k.split("::");
                                 mk=new MobileKey();
                                 mk.setMobileId(_sp[0]);
-                                mk.setMobileId(_sp[1]);
+                                mk.setUserId(_sp[1]);
                                 pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                             }
                         }
@@ -193,7 +193,7 @@ public class DealInterCom extends Thread {
                     if (rt.equals("3")) {//该用户不在指定组
                         retMsg.setReturnType("1002");
                         pmm.getSendMemory().addMsg2Queue(mk, retMsg);
-                    } else if (rt.equals("3")) {//该用户已经在制定组
+                    } else if (rt.equals("2")) {//该用户已经在制定组
                         retMsg.setReturnType("1003");
                         pmm.getSendMemory().addMsg2Queue(mk, retMsg);
                     } else {//正式加入，这时可以广播了
@@ -225,7 +225,7 @@ public class DealInterCom extends Thread {
                                 String _sp[] = k.split("::");
                                 mk=new MobileKey();
                                 mk.setMobileId(_sp[0]);
-                                mk.setMobileId(_sp[1]);
+                                mk.setUserId(_sp[1]);
                                 pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                             }
                         }
@@ -302,7 +302,7 @@ public class DealInterCom extends Thread {
                             String _sp[] = k.split("::");
                             mk=new MobileKey();
                             mk.setMobileId(_sp[0]);
-                            mk.setMobileId(_sp[1]);
+                            mk.setUserId(_sp[1]);
                             pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                         }
                     }
@@ -380,7 +380,7 @@ public class DealInterCom extends Thread {
                             String _sp[] = k.split("::");
                             mk=new MobileKey();
                             mk.setMobileId(_sp[0]);
-                            mk.setMobileId(_sp[1]);
+                            mk.setUserId(_sp[1]);
                             pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                         }
                     }

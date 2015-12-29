@@ -76,7 +76,6 @@ public class UserPo extends UgaUser {
         this.lmTime = lmTime;
     }
     public String getInnerPhoneNum() {
-        if (StringUtils.isNullOrEmptyOrSpace(this.innerPhoneNum)) return "3000";
         return innerPhoneNum;
     }
     public void setInnerPhoneNum(String innerPhoneNum) {

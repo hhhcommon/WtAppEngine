@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Date;
 import java.util.Map;
 
 import com.spiritdata.framework.util.JsonUtils;
@@ -58,16 +59,16 @@ public class SocketHandle extends Thread {
      */
     public void run() {
         socketDesc="Socket["+socket.getRemoteSocketAddress()+",socketKey="+socket.hashCode()+"]";
-        System.out.println(socketDesc+"主线程启动");
+        System.out.println("<"+(new Date()).toString()+">"+socketDesc+"主线程启动");
         //启动业务处理线程
 //        this.sendBeat=new SendBeat(socketDesc+"发送心跳");
 //        this.sendBeat.start();
         this.sendMsg=new SendMsg(socketDesc+"发送消息");
         this.sendMsg.start();
-        System.out.println(socketDesc+"发送消息线程启动");
+        System.out.println("<"+(new Date()).toString()+">"+socketDesc+"发送消息线程启动");
         this.receiveMsg=new ReceiveMsg(socketDesc+"接收消息");
         this.receiveMsg.start();
-        System.out.println(socketDesc+"接收消息线程启动");
+        System.out.println("<"+(new Date()).toString()+">"+socketDesc+"接收消息线程启动");
 
         //主线程
         try {
@@ -76,7 +77,7 @@ public class SocketHandle extends Thread {
                 Thread.sleep(this.smc.get_MonitorDelay());
                 //判断时间戳，看连接是否还有效
                 if (System.currentTimeMillis()-lastVisitTime>this.smc.calculate_TimeOut()) {
-                    System.out.println(socketDesc+"超时关闭");
+                    System.out.println("<"+(new Date()).toString()+">"+socketDesc+"超时关闭");
                     break;
                 }
                 /*
@@ -98,7 +99,7 @@ public class SocketHandle extends Thread {
                 }
             }
         } catch (InterruptedException e) {//有异常就退出
-            System.out.println(socketDesc+"主监控线程出现异常:"+e.getMessage());
+            System.out.println("<"+(new Date()).toString()+">"+socketDesc+"主监控线程出现异常:"+e.getMessage());
             e.printStackTrace();
         } finally {//关闭所有子任务进程
 //            if (this.sendBeat!=null) {try {this.sendBeat._interrupt();} catch(Exception e) {}}
@@ -202,7 +203,7 @@ public class SocketHandle extends Thread {
                                 //发送消息
                                 synchronized(socketSendLock) {
                                     out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
-                                    System.out.println(socketDesc+"[发送]:"+m.toJson());
+                                    System.out.println("<"+(new Date()).toString()+">"+socketDesc+"[发送]:"+m.toJson());
                                     out.println(m.toJson());
                                     out.flush();
                                     try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
@@ -210,11 +211,11 @@ public class SocketHandle extends Thread {
                             }
                         }
                     } catch (Exception e) {
-                        System.out.println(SocketHandle.this.socketDesc+"发送消息线程出现异常:" + e.getMessage());
+                        System.out.println("<"+(new Date()).toString()+">"+socketDesc+"发送消息线程出现异常:" + e.getMessage());
                     }
                 }
             } catch (Exception e) {
-                System.out.println(SocketHandle.this.socketDesc+"发送消息线程出现异常:" + e.getMessage());
+                System.out.println("<"+(new Date()).toString()+">"+socketDesc+"发送消息线程出现异常:" + e.getMessage());
             } finally {
                 try {
                     if (out!=null) try {out.close();out=null;} catch(Exception e) {out=null;throw e;};
@@ -257,7 +258,8 @@ public class SocketHandle extends Thread {
                         //接收消息数据
                         in=new BufferedReader(new InputStreamReader(SocketHandle.this.socket.getInputStream(), "UTF-8"));
                         String revMsgStr=in.readLine();
-                        System.out.println(socketDesc+"[接收]:"+revMsgStr);
+                        System.out.println("<"+(new Date()).toString()+">"+socketDesc+"[接收]:"+revMsgStr);
+                        if (revMsgStr==null) continue;
 
                         SocketHandle.this.lastVisitTime=System.currentTimeMillis();
                         //判断是否是心跳信号
@@ -301,7 +303,7 @@ public class SocketHandle extends Thread {
                         }
                         continueErrCodunt=0;
                     } catch(Exception e) {
-                        System.out.println(SocketHandle.this.socketDesc+"接收消息线程出现异常:"+e.getMessage());
+                        System.out.println("<"+(new Date()).toString()+">"+socketDesc+"接收消息线程出现异常:"+e.getMessage());
                         if (e instanceof SocketException) {
                             canContinue=false;
                         } else {
@@ -313,7 +315,7 @@ public class SocketHandle extends Thread {
                     }//end try
                 }//end while
             } catch(Exception e) {
-                System.out.println(SocketHandle.this.socketDesc+"接收消息线程出现异常:" + e.getMessage());
+                System.out.println("<"+(new Date()).toString()+">"+socketDesc+"接收消息线程出现异常:" + e.getMessage());
             } finally {
                 try {
                     if (in!=null) try {in.close();in=null;} catch(Exception e) {in=null;};

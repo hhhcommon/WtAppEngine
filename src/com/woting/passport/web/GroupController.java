@@ -199,6 +199,78 @@ public class GroupController {
     }
 
     /**
+     * 获得我所创建的用户组
+     */
+    @RequestMapping(value="getCreateGroupList.do")
+    @ResponseBody
+    public Map<String,Object> getCreateGroupList(HttpServletRequest request) {
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+                return map;
+            }
+            MobileParam mp=MobileUtils.getMobileParam(m);
+            MobileKey sk=(mp==null?null:mp.getMobileKey());
+            if (sk==null) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取设备Id(IMEI)");
+                return map;
+            }
+            //1-获取UserId，并处理访问
+            String userId=sk.isUser()?sk.getUserId():null;
+            if (sk!=null) {
+                map.put("SessionId", sk.getSessionId());
+                MobileSession ms=smm.getSession(sk);
+                if (ms==null) {
+                    ms=new MobileSession(sk);
+                    smm.addOneSession(ms);
+                } else {
+                    ms.access();
+                    if (userId==null) {
+                        UserPo u=(UserPo)ms.getAttribute("user");
+                        if (u!=null) userId=u.getUserId();
+                    }
+                }
+            }
+            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                map.put("ReturnType", "1002");
+                map.put("Message", "无法获取用户Id");
+                return map;
+            }
+            //2-得到用户组
+            List<GroupPo> gl=groupService.getCreateGroupsByUserId(userId);
+            List<Map<String, Object>> rgl=new ArrayList<Map<String, Object>>();
+            if (gl!=null&&gl.size()>0) {
+                Map<String, Object> gm;
+                for (GroupPo g:gl) {
+                    gm=new HashMap<String, Object>();
+                    gm.put("GroupId", g.getGroupId());
+                    gm.put("GroupName", g.getGroupName());
+                    gm.put("GroupCount", g.getGroupCount());
+                    gm.put("GroupImg", "images/group.png");
+                    gm.put("InnerPhoneNum", "3000");
+                    gm.put("Descripte", g.getDescn());
+                    rgl.add(gm);
+                }
+                map.put("ReturnType", "1001");
+                map.put("GroupList", rgl);
+            } else {
+                map.put("ReturnType", "1011");
+                map.put("Message", "无所属用户组");
+            }
+            return map;
+        } catch(Exception e) {
+            map.put("ReturnType", "T");
+            map.put("SessionId", e.getMessage());
+            return map;
+        }
+    }
+
+    /**
      * 获得组成员列表
      */
     @RequestMapping(value="getGroupMembers.do")

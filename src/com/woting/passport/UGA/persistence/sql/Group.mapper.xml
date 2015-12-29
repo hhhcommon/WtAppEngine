@@ -74,11 +74,17 @@
 
   <!-- 得到某用户所属的用户组 -->
   <select id="getGroupListByUserId" resultMap="groupMap" parameterType="java.lang.String">
-    select f.*, s.groupCount from plat_Group f, 
-      (select a.groupid, count(a.userid) groupCount from plat_GroupUser a, plat_GroupUser b
-       where a.groupid=b.groupid and b.userid=#{value, jdbcType=VARCHAR}
-       group by a.groupid) s
-    where f.id=s.groupid
+    select a.*, b.groupCount  from plat_Group a,
+    (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b,
+    (select groupId from plat_GroupUser where userId=#{value, jdbcType=VARCHAR}) c
+    where a.id=b.groupid and a.id=c.groupid
+  </select>
+
+  <!-- 得到某用户所创建的用户组 -->
+  <select id="getCreateGroupListByUserId" resultMap="groupMap" parameterType="java.lang.String">
+    select a.*, b.groupCount  from plat_Group a,
+    (select groupid, count(userId) groupCount from plat_GroupUser group by groupId) b
+    where a.id=b.groupid and a.createUserId=#{value, jdbcType=VARCHAR}
   </select>
 
   <!-- 新增数据 -->

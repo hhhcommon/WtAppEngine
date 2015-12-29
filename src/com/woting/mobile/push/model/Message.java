@@ -174,7 +174,7 @@ public class Message implements Serializable, Comparable<Message> {
         if (!StringUtils.isNullOrEmptyOrSpace(this.returnType)) ret+=",\"ReturnType\":\""+this.returnType+"\"";
         ret+=",\"SendType\":\""+this.sendTime+"\"";
         ret+=",\"Data\":"+JsonUtils.objToJson(this.msgContent);
-        ret+="{"+ret.substring(1)+"}";
+        ret="{"+ret.substring(1)+"}";
         return ret;
     }
 }

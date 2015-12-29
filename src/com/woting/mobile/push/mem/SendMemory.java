@@ -61,7 +61,7 @@ public class SendMemory {
     public void addUniqueMsg2Queue(MobileKey mk, Message msg, CompareMsg compMsg) {
         //唯一化处理
         //1-首先把一已发送列表中的同类消息删除
-        SendMessageList sendedMl = this.msgSendedMap.get(mk);
+        SendMessageList sendedMl = this.msgSendedMap.get(mk.toString());
         if (sendedMl!=null&&sendedMl.size()>0) {
             for (int i=sendedMl.size()-1; i>=0; i--) {
                 Message m=sendedMl.get(i);

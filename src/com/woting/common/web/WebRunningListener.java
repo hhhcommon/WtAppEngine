@@ -22,12 +22,12 @@ public class WebRunningListener implements ServletContextListener {
             //移动会话Session启动
             MobileSessionConfig msc = new MobileSessionConfig();
             SessionListener.begin(msc);
-            //启动推送服务
-            PushConfig pc = new PushConfig();
-            PushListener.begin(pc);
             //启动对讲处理服务
             InterComConfig icc = new InterComConfig();
             InterComListener.begin(icc);
+            //启动推送服务
+            PushConfig pc = new PushConfig();
+            PushListener.begin(pc);
         } catch(Exception e) {
             logger.error("Web运行时监听启动异常：",e);
         }
