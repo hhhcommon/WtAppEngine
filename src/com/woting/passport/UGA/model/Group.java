@@ -43,6 +43,7 @@ public class Group extends GroupPo implements  ModelSwapPo {
         this.setGroupNum(_po.getGroupNum());
         this.setGroupName(_po.getGroupName());
         this.setGroupImg(_po.getGroupImg());
+        this.setGroupType(_po.getGroupType());
         this.setPId(_po.getPId());
         this.setSort(_po.getSort());
         this.setCreateUserId(_po.getCreateUserId());
@@ -59,6 +60,7 @@ public class Group extends GroupPo implements  ModelSwapPo {
         ret.setGroupNum(this.getGroupNum());
         ret.setGroupName(this.getGroupName());
         ret.setGroupImg(this.getGroupImg());
+        ret.setGroupType(this.getGroupType());
         ret.setPId(this.getPId());
         ret.setSort(this.getSort());
         ret.setCreateUserId(this.getCreateUserId());

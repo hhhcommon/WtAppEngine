@@ -1,5 +1,6 @@
 package com.woting.passport.UGA.service;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,15 +33,15 @@ public class GroupService {
      * @param group 用户组信息
      * @return 创建用户成功返回1，否则返回0
      */
-    public int insertGroup(GroupPo group) {
+    public int insertGroup(Group group) {
         int i=0;
         try {
             group.setGroupId(SequenceUUID.getUUIDSubSegment(4));
             groupDao.insert(group);
             //插入用户
-            List<UserPo> ul = group.getGroupUsers();
+            List<UserPo> ul = group.getUserList();
             if (ul!=null&&ul.size()>0) {
-                for (UserPo u: ul) this.insertGroupUser(group, u);
+                for (UserPo u: ul) this.insertGroupUser((GroupPo)group.convert2Po(), u, 0);
             }
             i=1;
         } catch (Exception e) {
@@ -54,12 +55,12 @@ public class GroupService {
      * @param g 用户组
      * @param u 用户
      */
-    public int insertGroupUser(GroupPo g, UserPo u) {
+    public int insertGroupUser(GroupPo g, UserPo u, int isSelfIn) {
         GroupUserPo gu=new GroupUserPo();
         gu.setId(SequenceUUID.getUUIDSubSegment(4));
         gu.setGroupId(g.getGroupId());
         gu.setUserId(u.getUserId());
-        gu.setInviter(g.getCreateUserId());
+        gu.setInviter(isSelfIn==1?u.getUserId():g.getCreateUserId());
         int i=0;
         try {
             groupDao.insert("insertGroupUser", gu);
@@ -169,5 +170,73 @@ public class GroupService {
             return ret;
         }
         return null;
+    }
+
+    //以下为号码组================================
+    /**
+     * 获得我所创建的用户组的个数
+     * @param userId 用户Id
+     * @return 所创建的用户组数量
+     */
+    public int getCreateGroupCount(String userId) {
+        try {
+            return groupDao.getCount("getCreateGroupCount", userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    /**
+     * 获得我所创建的用户组的个数
+     * @param userId 用户Id
+     * @param lastTimeMinutes 最近的分钟数量
+     * @return 所创建的用户组数量
+     */
+    public int getCreateGroupLimitTimeCount(String userId, int lastTimeMinutes) {
+        try {
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("userId", userId);
+            param.put("lastTimeMinutes", new Timestamp(System.currentTimeMillis()-(lastTimeMinutes*1000*60)));
+            return groupDao.getCount("getCreateGroupLimitTimeCount", param);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    /**
+     * 判断所给定的组号是否重复
+     * @param groupNum 组号
+     * @return 根据此组号查出的组的个数
+     */
+    public int existGroupNum(String groupNum) {
+        try {
+            return groupDao.getCount("existGroupNum", groupNum);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public GroupPo getGroup(Map<String, Object> m) {
+        try {
+            return groupDao.getInfoObject(m);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public int existUserInGroup(String groupId, String userId) {
+        try {
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("userId", userId);
+            param.put("groupId", groupId);
+            return groupDao.getCount("existUserInGroup", param);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 }

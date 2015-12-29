@@ -9,6 +9,7 @@
     <result  column="groupNum"      property="groupNum"      jdbcType="VARCHAR"/>
     <result  column="groupName"     property="groupName"     jdbcType="VARCHAR"/>
     <result  column="groupImg"      property="groupImg"      jdbcType="VARCHAR"/>
+    <result  column="groupType"     property="groupType"     jdbcType="INTEGER"/>
     <result  column="pId"           property="PId"           jdbcType="VARCHAR"/>
     <result  column="sort"          property="sort"          jdbcType="INTEGER"/>
     <result  column="createUserId"  property="createUserId"  jdbcType="VARCHAR"/>
@@ -30,7 +31,7 @@
 
   <!-- 所有列 -->
   <sql id="Base_Column_List">
-    id, groupNum, groupName, groupImg, pId, sort, createUserId, adminUserIds, descn, cTime, lmTime
+    id, groupNum, groupName, groupImg, groupType, pId, sort, createUserId, adminUserIds, descn, cTime, lmTime
   </sql>
 
   <!-- 条件子句 -->
@@ -41,6 +42,7 @@
         <if test="groupNum!=null"> and groupNum=#{groupNum,jdbcType=VARCHAR}</if>
         <if test="groupName!=null"> and groupName=#{groupName,jdbcType=VARCHAR}</if>
         <if test="groupImg!=null"> and groupImg=#{groupImg,jdbcType=VARCHAR}</if>
+        <if test="groupType!=null"> and groupType=#{groupType,jdbcType=INTEGER}</if>
         <if test="pId!=null"> and pId=#{pId,jdbcType=VARCHAR}</if>
         <if test="sort!=null and sort!=0"> and sort=#{sort,jdbcType=INTEGER}</if>
         <if test="createUserId!=null"> and createUserId=#{createUserId,jdbcType=VARCHAR}</if>
@@ -54,22 +56,19 @@
 
   <!-- 获得记录条数-->
   <select id="count" parameterType="java.util.Map" resultType="java.lang.Integer">
-    select count(*) from plat_Group <if test="_parameter=null"><include refid="WhereClauseByEntiey"/></if>
+    select count(*) from plat_Group <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </select>
 
   <!-- 获得列表 -->
   <select id="getList" resultMap="groupMap" parameterType="java.util.Map">
     select <include refid="Base_Column_List"/> from plat_Group
-    <if test="_parameter=null"><include refid="WhereClauseByEntiey"/></if>
+    <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
     <if test="orderByClause!=null">order by ${orderByClause}</if>
   </select>
 
   <!-- 获得一条数据 -->
   <select id="getInfo" resultMap="groupMap" parameterType="java.util.Map">
-    select <include refid="Base_Column_List"/> from plat_User <if test="_parameter=null"><include refid="WhereClauseByEntiey"/></if>
-  </select>
-  <select id="getUserById" resultMap="groupMap" parameterType="java.lang.String">
-    select <include refid="Base_Column_List"/> from plat_User where id=#{userId,jdbcType=VARCHAR}
+    select <include refid="Base_Column_List"/> from plat_Group <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </select>
 
   <!-- 得到某用户所属的用户组 -->
@@ -82,9 +81,27 @@
 
   <!-- 得到某用户所创建的用户组 -->
   <select id="getCreateGroupListByUserId" resultMap="groupMap" parameterType="java.lang.String">
-    select a.*, b.groupCount  from plat_Group a,
-    (select groupid, count(userId) groupCount from plat_GroupUser group by groupId) b
+    select a.*, b.groupCount from plat_Group a,
+    (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b
     where a.id=b.groupid and a.createUserId=#{value, jdbcType=VARCHAR}
+  </select>
+  <!-- 得到某用户所创建的用户组的数量 -->
+  <select id="getCreateGroupCount" resultType="java.lang.Integer" parameterType="java.lang.String">
+    select count(*) from plat_Group where createUserId=#{value, jdbcType=VARCHAR} and groupType=1
+  </select>
+  <!-- 得到某用户所创建的用户组的数量 -->
+  <select id="getCreateGroupLimitTimeCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+  <![CDATA[
+    select count(*) from plat_Group where createUserId=#{userId, jdbcType=VARCHAR} and CTime>#{lastTimeMinutes, jdbcType=TIMESTAMP} and groupType=1
+  ]]>
+  </select>
+  <!-- 判断所给定的组号是否重复 -->
+  <select id="existGroupNum" resultType="java.lang.Integer" parameterType="java.lang.String">
+    select count(*) from plat_Group where groupNum=#{value, jdbcType=VARCHAR}
+  </select>
+  <!-- 用户是否已在组 -->
+  <select id="existUserInGroup" resultType="java.lang.Integer" parameterType="java.lang.String">
+    select count(*) from plat_GroupUser where groupId=#{groupId, jdbcType=VARCHAR} and userId=#{userId, jdbcType=VARCHAR}
   </select>
 
   <!-- 新增数据 -->
@@ -94,6 +111,7 @@
       <if test="groupNum!=null">groupNum,</if>
       <if test="groupName!=null">groupName,</if>
       <if test="groupImg!=null">groupImg,</if>
+      <if test="groupType!=null">groupType,</if>
       <if test="pId!=null">pId,</if>
       <if test="sort!=null and sort!=0">sort,</if>
       <if test="createUserId!=null">createUserId,</if>
@@ -105,6 +123,7 @@
       <if test="groupNum!=null">#{groupNum,jdbcType=VARCHAR},</if>
       <if test="groupName!=null">#{groupName,jdbcType=VARCHAR},</if>
       <if test="groupImg!=null">#{groupImg,jdbcType=VARCHAR},</if>
+      <if test="groupType!=null">#{groupType,jdbcType=INTEGER},</if>
       <if test="pId!=null">#{pId,jdbcType=VARCHAR},</if>
       <if test="sort!=null and sort!=0">#{sort,jdbcType=INTEGER},</if>
       <if test="createUserId!=null">#{createUserId,jdbcType=VARCHAR},</if>
@@ -121,6 +140,7 @@
       <if test="groupNum!=null">groupNum=#{groupNum,jdbcType=VARCHAR},</if>
       <if test="groupName!=null">groupName=#{groupName,jdbcType=VARCHAR},</if>
       <if test="groupImg!=null">groupImg=#{groupImg,jdbcType=VARCHAR},</if>
+      <if test="groupType!=null">groupType=#{groupType,jdbcType=VARCHAR},</if>
       <if test="pId!=null">pId=#{pId,jdbcType=VARCHAR},</if>
       <if test="sort!=null and sort!=0">sort=#{sort,jdbcType=INTEGER},</if>
       <if test="createUserId!=null">createUserId=#{createUserId,jdbcType=VARCHAR},</if>
@@ -136,7 +156,7 @@
     delete from plat_Group where id=#{userId,jdbcType=VARCHAR}
   </delete>
   <delete id="deleteByEntity" parameterType="java.util.Map">
-    delete from plat_Group <if test="_parameter=null"><include refid="WhereClauseByEntiey"/></if>
+    delete from plat_Group <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </delete>
 
   <!-- 新增数据 -->

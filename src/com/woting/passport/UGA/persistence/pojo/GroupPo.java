@@ -1,8 +1,6 @@
 package com.woting.passport.UGA.persistence.pojo;
 
 import java.sql.Timestamp;
-import java.util.List;
-
 import com.spiritdata.framework.core.model.BaseObject;
 
 public class GroupPo extends BaseObject {
@@ -12,7 +10,8 @@ public class GroupPo extends BaseObject {
     private String groupNum; //组号，用于公开的号码
     private String groupName; //用户组名称
     private String groupImg; //用户组头像
-    private String PId; //上级用户组Id
+    private int groupType; //组号，用于公开的号码
+    private String pId; //上级用户组Id
     private int sort; //用户组排序0
     private String createUserId; //创建者id
     private String adminUserIds;  //管理者id，可以有多个管理者，第一个为主管理者
@@ -20,8 +19,6 @@ public class GroupPo extends BaseObject {
     private Timestamp CTime; //记录创建时间
     private Timestamp lmTime; //最后修改时间:last modify time
     private int groupCount; //组用户个数
-
-    private List<UserPo> groupUsers; //所属用户
 
     public String getGroupId() {
         return groupId;
@@ -47,11 +44,17 @@ public class GroupPo extends BaseObject {
     public void setGroupImg(String groupImg) {
         this.groupImg = groupImg;
     }
-    public String getPId() {
-        return PId;
+    public int getGroupType() {
+        return groupType;
     }
-    public void setPId(String PId) {
-        this.PId = PId;
+    public void setGroupType(int groupType) {
+        this.groupType = groupType;
+    }
+    public String getPId() {
+        return pId;
+    }
+    public void setPId(String pId) {
+        this.pId = pId;
     }
     public int getSort() {
         return sort;
@@ -89,13 +92,6 @@ public class GroupPo extends BaseObject {
     public void setLmTime(Timestamp lmTime) {
         this.lmTime = lmTime;
     }
-    public List<UserPo> getGroupUsers() {
-        return groupUsers;
-    }
-    public void setGroupUsers(List<UserPo> groupUsers) {
-        this.groupUsers = groupUsers;
-    }
-
     public int getGroupCount() {
         return groupCount;
     }

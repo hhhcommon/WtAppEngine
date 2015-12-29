@@ -76,13 +76,13 @@
 
   <!-- 获得记录条数-->
   <select id="count" parameterType="java.util.Map" resultType="java.lang.Integer">
-    select count(*) from plat_dictd <if test="_parameter=null"><include refid="WhereClauseByEntiey"/></if>
+    select count(*) from plat_dictd <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </select>
 
   <!-- 获得列表 -->
   <select id="getList" resultMap="BaseResultMap" parameterType="java.util.Map">
     select <include refid="Base_Column_List"/> from plat_dictd
-    <if test="_parameter=null"><include refid="WhereClauseByEntiey"/></if>
+    <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
     <if test="sortByClause!=null">order by ${sortByClause}</if>
   </select>
   <!-- 根据所有者信息获得列表 -->
@@ -95,7 +95,7 @@
 
   <!-- 获得一条数据 -->
   <select id="getInfo" resultMap="BaseResultMap" parameterType="java.util.Map">
-    select <include refid="Base_Column_List"/> from plat_dictd <if test="_parameter=null"><include refid="WhereClauseByEntiey"/></if>
+    select <include refid="Base_Column_List"/> from plat_dictd <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </select>
   <select id="getInfoById" resultMap="BaseResultMap" parameterType="java.lang.String">
     select <include refid="Base_Column_List"/> from plat_dictd where id=#{id,jdbcType=VARCHAR}
@@ -163,6 +163,6 @@
     delete from plat_dictd where id=#{id,jdbcType=VARCHAR}
   </delete>
   <delete id="deleteByEntity" parameterType="java.util.Map">
-    delete from plat_dictd <if test="_parameter=null"><include refid="WhereClauseByEntiey"/></if>
+    delete from plat_dictd <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </delete>
 </mapper>

@@ -83,9 +83,10 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='手机用户使用';
 DROP TABLE IF EXISTS plat_Group;
 CREATE TABLE plat_Group (
   id             varchar(32)      NOT NULL                COMMENT 'uuid(用户组id)',
-  groupNum       varchar(100)                             COMMENT '组号，用于公开的号码',
+  groupNum       varchar(32)                              COMMENT '组号，用于公开的号码',
   groupName      varchar(100)     NOT NULL                COMMENT '组名称',
   groupImg       varchar(200)                             COMMENT '用户组头像，是指向头像的URL',
+  groupType      int(2) unsigned  NOT NULL  DEFAULT 0     COMMENT '用户组类型,0一般组(由用户根据好友创建);1号码组',
   pId            varchar(32)      NOT NULL  DEFAULT 0     COMMENT '上级用户组名称，默认0，为根',
   sort           int(5) unsigned  NOT NULL  DEFAULT 0     COMMENT '排序,只在本级排序有意义,从大到小排序，越大越靠前',
   createUserId   varchar(32)      NOT NULL                COMMENT '用户组创建者',
