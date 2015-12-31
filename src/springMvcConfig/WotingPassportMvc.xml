@@ -15,13 +15,13 @@
     http://www.springframework.org/schema/aop
     http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
 
-  <context:component-scan base-package="com.woting" use-default-filters="false">
+  <context:component-scan base-package="com.woting.appengine" use-default-filters="false">
     <context:include-filter type="regex" expression=".*.web.*Controller"/>
   </context:component-scan>
 
-  <bean id="loginService" class="com.woting.passport.login.service.LoginServiceImpl"/>
+  <bean id="loginService" class="com.woting.appengine.passport.login.service.LoginServiceImpl"/>
 
-  <bean name="/wtFileUpload4App.do" class="com.woting.common.web.FileUploadController">
+  <bean name="/wtFileUpload4App.do" class="com.woting.appengine.common.web.FileUploadController">
     <property name="savePath" value="userData"/>  <!--保存的路径 -->
     <property name="conflictType" value="0"/> <!-- 冲突规则：默认=0命名规则顺序加1，类似windows，这是默认方式，若进行10次仍然重名，则随机删除重名文件删除掉；=1，覆盖同名的文件 -->
     <property name="breakOnOneFaild" value="true"/>  <!--某一文件上传失败后的处理模式：默认=false,某一文件上传失败后，仍然处理后续文件；=true,某一文件上传失败后，上传终止，后续文件不进行处理了 -->

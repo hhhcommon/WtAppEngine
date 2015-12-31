@@ -4,11 +4,11 @@
 <configuration>
   <!-- 别名设置 -->
   <typeAliases>
-    <typeAlias alias="WtAppOpinion"   type="com.woting.appopinion.persistence.pojo.AppOpinionPo"/>
-    <typeAlias alias="wtAppReOpinion" type="com.woting.appopinion.persistence.pojo.AppReOpinionPo"/>
+    <typeAlias alias="WtAppOpinion"   type="com.woting.appengine.appopinion.persistence.pojo.AppOpinionPo"/>
+    <typeAlias alias="wtAppReOpinion" type="com.woting.appengine.appopinion.persistence.pojo.AppReOpinionPo"/>
   </typeAliases>
   <mappers>
-    <mapper resource="com/woting/appopinion/persistence/sql/AppOpinion.mapper.xml"/>
-    <mapper resource="com/woting/appopinion/persistence/sql/AppReOpinion.mapper.xml"/>
+    <mapper resource="com/woting/appengine/appopinion/persistence/sql/AppOpinion.mapper.xml"/>
+    <mapper resource="com/woting/appengine/appopinion/persistence/sql/AppReOpinion.mapper.xml"/>
   </mappers>
 </configuration>

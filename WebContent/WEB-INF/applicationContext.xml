@@ -83,9 +83,9 @@
 
   <!-- 以下为UGA框架(用户/用户组/权限框架)所需配置 -->
   <!--gisUga用户服务：平台 -->
-  <bean id="ugaUserService"       class="com.woting.passport.UGA.service.UserService"/>
+  <bean id="ugaUserService"       class="com.woting.appengine.passport.UGA.service.UserService"/>
   <!--Uga用户模块服务：平台 -->
-  <bean id="ugaAuthorityService"  class="com.woting.passport.UGA.service.AuthorityService"/>
+  <bean id="ugaAuthorityService"  class="com.woting.appengine.passport.UGA.service.AuthorityService"/>
 
   <context:annotation-config/>
 </beans>

@@ -60,7 +60,7 @@
   </listener>
   <!-- Web环境运行时监听 -->
   <listener>
-    <listener-class>com.woting.common.web.WebRunningListener</listener-class>
+    <listener-class>com.woting.appengine.common.web.WebRunningListener</listener-class>
   </listener>
   <!-- end监听设置 -->
 

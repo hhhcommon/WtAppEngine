@@ -16,7 +16,7 @@
     http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
 
   <!-- 扫描类包，将标注Spring注解的类自动转化Bean，同时完成Bean的注入 -->
-  <context:component-scan base-package="com.woting" use-default-filters="false">
+  <context:component-scan base-package="com.woting.appengine" use-default-filters="false">
     <context:include-filter type="regex" expression=".*.service.*Service"/>
   </context:component-scan>
 </beans>
