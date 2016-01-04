@@ -9,6 +9,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
 import com.spiritdata.framework.core.model.tree.TreeNode;
+import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.core.web.SessionLoader;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.appengine.WtAppEngineConstants;
@@ -139,11 +140,11 @@ class Thread_LoadData implements Runnable {
                 _t.setParentId(null);
                 _t.setOrder(1);
                 _t.setBCode("root");
-                TreeNode<DictDetail> root = new TreeNode<DictDetail>(_t);
+                TreeNode<? extends TreeNodeBean> root = new TreeNode<DictDetail>(_t);
 
                 Map<String, Object> m = TreeUtils.convertFromList(ddList);
-                root.setChildren((List<TreeNode<DictDetail>>)m.get("forest"));
-                dModel.dictTree = root;
+                root.setChildren((List<TreeNode<? extends TreeNodeBean>>)m.get("forest"));
+                dModel.dictTree = (TreeNode<DictDetail>)root;
                 //暂不处理错误记录
             }
         }

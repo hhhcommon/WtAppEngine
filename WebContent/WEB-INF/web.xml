@@ -58,9 +58,9 @@
   <listener>
     <listener-class>com.spiritdata.framework.core.web.InitSysConfigListener</listener-class>
   </listener>
-  <!-- Web环境运行时监听 -->
+  <!-- App引擎运行时监听 -->
   <listener>
-    <listener-class>com.woting.appengine.common.web.WebRunningListener</listener-class>
+    <listener-class>com.woting.appengine.common.web.AppRunningListener</listener-class>
   </listener>
   <!-- end监听设置 -->
 

@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS plat_DictM;
 CREATE TABLE plat_DictM (
   id         varchar(32)      NOT NULL             COMMENT '字典组表ID(UUID)',
   ownerId    varchar(32)      NOT NULL             COMMENT '所有者Id',
-  ownerType  int(1) unsigned  NOT NULL  DEFAULT 1  COMMENT '所有者类型(1-用户,2-session)',
+  ownerType  int(1) unsigned  NOT NULL  DEFAULT 1  COMMENT '所有者类型(0-系统,1-用户,2-session)',
   dmName     varchar(200)     NOT NULL             COMMENT '字典组名称',
   nPy        varchar(800)                          COMMENT '名称拼音',
   sort       int(5) unsigned  NOT NULL  DEFAULT 0  COMMENT '字典组排序,从大到小排序，越大越靠前',
@@ -158,17 +158,37 @@ CREATE TABLE wt_Broadcast (
   id          varchar(32)   NOT NULL  COMMENT 'uuid(主键)',
   bcTitle     varchar(100)  NOT NULL  COMMENT '电台名称',
   bcPublisher varchar(100)  NOT NULL  COMMENT '电台所属集团名称',
-  frequency   varchar(100)  NOT NULL  COMMENT '电台频段，主频段',
   bcImg       varchar(100)            COMMENT '电台图标',
-  bcSource    varchar(100)            COMMENT '电台来源',
-  flowURI     varchar(100)  NOT NULL  COMMENT '直播流的URI',
   bcURL       varchar(100)            COMMENT '电台网址',
-  bcType      varchar(100)            COMMENT '电台分类，对应字典表',
-  bcAreaCode  varchar(100)            COMMENT '所属地区编码，对应字典表',
+  descn       varchar(4000)           COMMENT '电台说明',
   cTime       timestamp    NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='电台主表';
+/**011 WT_BCFLOWSOURCE(电台直播流子表)*/
+DROP TABLE IF EXISTS wt_BCLiveFlow;
+CREATE TABLE wt_BCLiveFlow (
+  id        varchar(32)   NOT NULL           COMMENT 'uuid(主键)',
+  bcId      varchar(32)   NOT NULL           COMMENT '电台Id,外键',
+  bcSource  varchar(100)  NOT NULL           COMMENT '来源，描述',
+  flowURI   varchar(300)  NOT NULL           COMMENT '直播流URL',
+  isMain    integer(1)    NOT NULL  DEFAULT 0  COMMENT '是否是主频段；1是主频段',
+  cTime     timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  PRIMARY KEY(id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='电台直播流子表';
+/**012 WT_BCFrequnce(电台频段)*/
+DROP TABLE IF EXISTS wt_BCFrequnce;
+CREATE TABLE wt_BCFrequnce (
+  id        varchar(32)   NOT NULL           COMMENT 'uuid(主键)',
+  bcId      varchar(32)   NOT NULL           COMMENT '电台Id,外键',
+  areaCode  varchar(100)  NOT NULL           COMMENT '地区编码',
+  frequnce  varchar(300)  NOT NULL           COMMENT '频段',
+  cTime     timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  PRIMARY KEY(id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='电台频段子表';
+
 /**
   frequency,目前先不涉及频段表
  */
@@ -195,7 +215,7 @@ CREATE TABLE wt_AppOpinion (
   cTime    timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间，意见成功提交时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='电台分类表';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='应用意见表';
 
 /**013 WT_APPREOPINION(应用反馈表)*/
 DROP TABLE IF EXISTS wt_AppReOpinion;
@@ -207,7 +227,7 @@ CREATE TABLE wt_AppReOpinion (
   cTime      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间，反馈成功提交时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='电台分类表';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='应用反馈表';
 
 
 

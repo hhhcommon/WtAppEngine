@@ -94,14 +94,13 @@ public class DealInterCom extends Thread {
 
             retMsg.setSendTime(System.currentTimeMillis());
 
+            Map<String, Object> dataMap=new HashMap<String, Object>();
+            dataMap.put("GroupId", groupId);
+            retMsg.setMsgContent(dataMap);
             GroupInterCom gic=gmm.getGroupInterCom(groupId);
             MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
-            if (mk!=null) {
+            if (mk!=null&&gic!=null) {
                 if (mk.isUser()) {
-                    Map<String, Object> dataMap=new HashMap<String, Object>();
-                    dataMap.put("GroupId", groupId);
-                    retMsg.setMsgContent(dataMap);
-
                     Map<String, Object> retM=gic.insertEntryUser(mk);
                     String rt = (String)retM.get("returnType");
                     if (rt.equals("3")) {//该用户不在指定组
@@ -148,6 +147,9 @@ public class DealInterCom extends Thread {
                     retMsg.setReturnType("1000");
                     pmm.getSendMemory().addMsg2Queue(mk, retMsg);
                 }
+            } else {
+                retMsg.setReturnType("1000");
+                pmm.getSendMemory().addMsg2Queue(mk, retMsg);
             }
         }
     }
@@ -180,14 +182,13 @@ public class DealInterCom extends Thread {
 
             retMsg.setSendTime(System.currentTimeMillis());
 
+            Map<String, Object> dataMap=new HashMap<String, Object>();
+            dataMap.put("GroupId", groupId);
+            retMsg.setMsgContent(dataMap);
             GroupInterCom gic=gmm.getGroupInterCom(groupId);
             MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
-            if (mk!=null) {
+            if (mk!=null&&gic!=null) {
                 if (mk.isUser()) {
-                    Map<String, Object> dataMap=new HashMap<String, Object>();
-                    dataMap.put("GroupId", groupId);
-                    retMsg.setMsgContent(dataMap);
-
                     Map<String, Object> retM=gic.delEntryUser(mk);
                     String rt = (String)retM.get("returnType");
                     if (rt.equals("3")) {//该用户不在指定组
@@ -234,6 +235,9 @@ public class DealInterCom extends Thread {
                     retMsg.setReturnType("1000");
                     pmm.getSendMemory().addMsg2Queue(mk, retMsg);
                 }
+            } else {
+                retMsg.setReturnType("1000");
+                pmm.getSendMemory().addMsg2Queue(mk, retMsg);
             }
         }
     }

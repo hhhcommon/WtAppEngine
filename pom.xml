@@ -43,9 +43,9 @@
     <dependency>
       <groupId>com.spiritdata</groupId>
       <artifactId>BasicPlat</artifactId>
-      <version>0.1.0.6</version>
+      <version>0.1.0.7</version>
       <scope>system</scope>
-      <systemPath>${build.webProjectDir}/lib/BasicPlat-0.1.0.6.jar</systemPath>
+      <systemPath>${build.webProjectDir}/lib/BasicPlat-0.1.0.7.jar</systemPath>
     </dependency>
     <!-- 引入httpmine -->
     <dependency>

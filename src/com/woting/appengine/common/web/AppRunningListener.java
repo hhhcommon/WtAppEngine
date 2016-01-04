@@ -12,7 +12,7 @@ import com.woting.appengine.mobile.push.PushListener;
 import com.woting.appengine.mobile.session.MobileSessionConfig;
 import com.woting.appengine.mobile.session.SessionListener;
 
-public class WebRunningListener implements ServletContextListener {
+public class AppRunningListener implements ServletContextListener {
     private Logger logger = Logger.getLogger(this.getClass());
 
     @Override
