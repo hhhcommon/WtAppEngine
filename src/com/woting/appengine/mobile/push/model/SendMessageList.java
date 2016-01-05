@@ -3,7 +3,7 @@ package com.woting.appengine.mobile.push.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.woting.appengine.mobile.MobileUtils;
+import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 
 /**

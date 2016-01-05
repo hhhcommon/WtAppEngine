@@ -228,6 +228,15 @@ public class GroupService {
         return null;
     }
 
+    public GroupPo getGroupById(String groupId) {
+        try {
+            return groupDao.getInfoObject("getGroupById", groupId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public int existUserInGroup(String groupId, String userId) {
         try {
             Map<String, Object> param = new HashMap<String, Object>();
@@ -238,5 +247,21 @@ public class GroupService {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    /**
+     * 更新用户
+     * @param user 用户信息
+     * @return 更新用户成功返回1，否则返回0
+     */
+    public int updateGroup(GroupPo g) {
+        int i=0;
+        try {
+            groupDao.update(g);
+            i=1;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return i;
     }
 }

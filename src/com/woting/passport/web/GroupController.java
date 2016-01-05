@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.SpiritRandom;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.mobile.MobileUtils;
+import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.model.MobileParam;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
@@ -410,14 +410,8 @@ public class GroupController {
                 List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
                 List<UserPo> ul=groupService.getGroupMembers(groupId);
                 if (ul!=null&&ul.size()>0) {
-                    Map<String, Object> um;
                     for (UserPo u: ul) {
-                        um=new HashMap<String, Object>();
-                        um.put("UserId", u.getUserId());
-                        um.put("UserName", u.getLoginName());
-                        um.put("InnerPhoneNum", u.getInnerPhoneNum());
-                        um.put("Portrait", "images/person.png");
-                        rul.add(um);
+                        rul.add(u.toHashMap4Mobile());
                     }
                     map.put("ReturnType", "1001");
                     map.put("UserList", rul);
@@ -525,14 +519,8 @@ public class GroupController {
             List<UserPo> ul=groupService.getGroupMembers(gp.getGroupId());
             if (ul!=null&&ul.size()>0) {
                 gm.put("GroupCount", ul.size());
-                Map<String, Object> um;
                 for (UserPo _u: ul) {
-                    um=new HashMap<String, Object>();
-                    um.put("UserId", _u.getUserId());
-                    um.put("UserName", _u.getLoginName());
-                    um.put("InnerPhoneNum", _u.getInnerPhoneNum());
-                    um.put("Portrait", "images/person.png");
-                    rul.add(um);
+                    rul.add(_u.toHashMap4Mobile());
                 }
                 map.put("UserList", rul);
             }

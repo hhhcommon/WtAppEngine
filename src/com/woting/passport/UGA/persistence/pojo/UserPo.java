@@ -90,7 +90,8 @@ public class UserPo extends UgaUser {
         if (!StringUtils.isNullOrEmptyOrSpace(this.mainPhoneNum)) retM.put("PhoneNum", this.mainPhoneNum);
         if (!StringUtils.isNullOrEmptyOrSpace(this.mailAddress)) retM.put("Email", this.mailAddress);
         if (!StringUtils.isNullOrEmptyOrSpace(this.descn)) retM.put("Descript", this.descn);
-        //if (!StringUtils.isNullOrEmptyOrSpace(this.innerPhoneNum)) retM.put("InnerPhoneNum", this.innerPhoneNum);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.protraitBig)) retM.put("ProtraitBig", this.protraitBig);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.protraitMini)) retM.put("ProtraitMini", this.protraitMini);
         retM.put("InnerPhoneNum", this.getInnerPhoneNum());
         return retM;
     }

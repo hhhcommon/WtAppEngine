@@ -2,7 +2,7 @@ package com.woting.appengine.mobile.model;
 
 import java.io.Serializable;
 
-import com.woting.appengine.mobile.MobileUtils;
+import com.woting.appengine.common.util.MobileUtils;
 
 /**
  * 会话key，包括设备ID和用户Id

@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.spiritdata.framework.util.SequenceUUID;
+import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.intercom.model.GroupInterCom;
-import com.woting.appengine.mobile.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.appengine.mobile.push.model.CompareMsg;

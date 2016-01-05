@@ -1,4 +1,4 @@
-package com.woting.appengine.mobile;
+package com.woting.appengine.common.util;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;

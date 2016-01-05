@@ -70,6 +70,9 @@
   <select id="getInfo" resultMap="groupMap" parameterType="java.util.Map">
     select <include refid="Base_Column_List"/> from plat_Group <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </select>
+  <select id="getGroupById" resultMap="groupMap" parameterType="java.lang.String">
+    select <include refid="Base_Column_List"/> from plat_Group where id=#{value,jdbcType=VARCHAR}
+  </select>
 
   <!-- 得到某用户所属的用户组 -->
   <select id="getGroupListByUserId" resultMap="groupMap" parameterType="java.lang.String">

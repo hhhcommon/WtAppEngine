@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.Map;
 
 import com.spiritdata.framework.util.JsonUtils;
-import com.woting.appengine.mobile.MobileUtils;
+import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.appengine.mobile.push.model.Message;
