@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.woting.appengine.mobile.model.MobileKey;
-import com.woting.appengine.passport.UGA.model.Group;
-import com.woting.appengine.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.model.Group;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
 
 /**
  * 对讲用户组结构

@@ -6,8 +6,8 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.woting.appengine.intercom.model.GroupInterCom;
-import com.woting.appengine.passport.UGA.model.Group;
-import com.woting.appengine.passport.UGA.service.GroupService;
+import com.woting.passport.UGA.model.Group;
+import com.woting.passport.UGA.service.GroupService;
 
 public class GroupMemoryManage {
     //java的占位单例模式===begin

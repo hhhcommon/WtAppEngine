@@ -13,7 +13,7 @@ import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.appengine.mobile.push.model.CompareMsg;
 import com.woting.appengine.mobile.push.model.Message;
-import com.woting.appengine.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
 
 public class DealInterCom extends Thread {
     private PushMemoryManage pmm=PushMemoryManage.getInstance();

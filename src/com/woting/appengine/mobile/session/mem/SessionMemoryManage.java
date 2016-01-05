@@ -3,7 +3,7 @@ package com.woting.appengine.mobile.session.mem;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.session.model.MobileSession;
-import com.woting.appengine.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
 
 /**
  * 会话管理类，也就是会话的服务类

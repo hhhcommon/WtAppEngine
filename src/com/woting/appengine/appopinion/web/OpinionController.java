@@ -22,7 +22,7 @@ import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.model.MobileParam;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.appengine.mobile.session.model.MobileSession;
-import com.woting.appengine.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
 
 @Controller
 @RequestMapping(value="/opinion/app/")

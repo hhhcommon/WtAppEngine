@@ -20,10 +20,10 @@ import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.model.MobileParam;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.appengine.mobile.session.model.MobileSession;
-import com.woting.appengine.passport.UGA.persistence.pojo.UserPo;
-import com.woting.appengine.passport.UGA.service.UserService;
-import com.woting.appengine.passport.login.persistence.pojo.MobileUsedPo;
-import com.woting.appengine.passport.login.service.MobileUsedService;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.service.UserService;
+import com.woting.passport.login.persistence.pojo.MobileUsedPo;
+import com.woting.passport.login.service.MobileUsedService;
 
 @Controller
 public class CommonController {

@@ -60,6 +60,7 @@
   <bean id="cachePool" class=" com.spiritdata.framework.core.cache.CachePool">
     <property name="caches">
       <map>
+        <entry key="1" value-ref="cacheAppEngineCLU"/>
       </map>
     </property>
   </bean>
@@ -83,9 +84,13 @@
 
   <!-- 以下为UGA框架(用户/用户组/权限框架)所需配置 -->
   <!--gisUga用户服务：平台 -->
-  <bean id="ugaUserService"       class="com.woting.appengine.passport.UGA.service.UserService"/>
+  <bean id="ugaUserService"       class="com.woting.passport.UGA.service.UserService"/>
   <!--Uga用户模块服务：平台 -->
-  <bean id="ugaAuthorityService"  class="com.woting.appengine.passport.UGA.service.AuthorityService"/>
+  <bean id="ugaAuthorityService"  class="com.woting.passport.UGA.service.AuthorityService"/>
+
+  <!-- 以下为缓存设置 -->
+  <!--Uga缓存：平台 -->
+  <bean id="cacheAppEngineCLU" class="com.woting.appengine.common.cache.AppEngineCLU"/>
 
   <context:annotation-config/>
 </beans>

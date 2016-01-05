@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!-- 字典相关 -->
+<configuration>
+  <!-- 类别名设置 -->
+  <typeAliases>
+    <typeAlias alias="dictMaster" type="com.woting.dictionary.persistence.pojo.DictMasterPo"/>
+    <typeAlias alias="dictDetail" type="com.woting.dictionary.persistence.pojo.DictDetailPo"/>
+  </typeAliases>
+  <!-- SQL配置 -->
+  <mappers>
+    <mapper resource="com/woting/dictionary/persistence/sql/DictMaster.mapper.xml"/>
+    <mapper resource="com/woting/dictionary/persistence/sql/DictDetail.mapper.xml"/>
+  </mappers>
+</configuration>

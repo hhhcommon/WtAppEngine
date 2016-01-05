@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!-- 前端引擎 -->
+<configuration>
+  <!-- 别名设置 -->
+  <typeAliases>
+    <!-- 用户意见 -->
+    <typeAlias alias="WtAppOpinion"   type="com.woting.appengine.appopinion.persistence.pojo.AppOpinionPo"/>
+    <typeAlias alias="wtAppReOpinion" type="com.woting.appengine.appopinion.persistence.pojo.AppReOpinionPo"/>
+  </typeAliases>
+  <!-- SQL配置 -->
+  <mappers>
+    <!-- 用户意见 -->
+    <mapper resource="com/woting/appengine/appopinion/persistence/sql/AppOpinion.mapper.xml"/>
+    <mapper resource="com/woting/appengine/appopinion/persistence/sql/AppReOpinion.mapper.xml"/>
+  </mappers>
+</configuration>
