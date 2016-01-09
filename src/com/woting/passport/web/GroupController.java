@@ -50,7 +50,9 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
                 return map;
             }
+            String creator=(String)m.get("Creator");
             MobileParam mp=MobileUtils.getMobileParam(m);
+            mp.setUserId(creator);
             MobileKey sk=(mp==null?null:mp.getMobileKey());
             if (sk==null) {
                 map.put("ReturnType", "0000");
@@ -58,7 +60,6 @@ public class GroupController {
                 return map;
             }
             //1-得到创建者，并处理访问
-            String creator=sk.isUser()?sk.getUserId():null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
                 MobileSession ms=smm.getSession(sk);
@@ -142,7 +143,9 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
                 return map;
             }
+            String creator=(String)m.get("Creator");
             MobileParam mp=MobileUtils.getMobileParam(m);
+            mp.setUserId(creator);
             MobileKey sk=(mp==null?null:mp.getMobileKey());
             if (sk==null) {
                 map.put("ReturnType", "0000");
@@ -152,7 +155,6 @@ public class GroupController {
 
             MobileSession ms=null;
             //1-得到创建者，并处理访问
-            String creator=sk.isUser()?sk.getUserId():null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
                 ms=smm.getSession(sk);
@@ -179,7 +181,7 @@ public class GroupController {
                     map.put("Message", "您所创建的组已达50个，不能再创建了");
                 } else {
                     c=groupService.getCreateGroupLimitTimeCount(creator, 20);
-                    if (c>20) {
+                    if (c>5) {
                         map.put("ReturnType", "1003");
                         map.put("Message", "20分钟内创建组不能超过5个");
                     } else {
@@ -209,7 +211,7 @@ public class GroupController {
                         Map<String, String> groupMap=new HashMap<String, String>();
                         groupMap.put("GroupId", g.getGroupId());
                         groupMap.put("GroupName", g.getGroupName());
-                        groupMap.put("GroupImg", "asset/group/2345/img/aa.jpg");
+                        groupMap.put("GroupImg", g.getGroupImg());
                         groupMap.put("GroupNum", g.getGroupNum());
                         groupMap.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date()));
                         map.put("GroupInfo", groupMap);
@@ -226,7 +228,7 @@ public class GroupController {
     }
 
     /**
-     * 获得用户组
+     * 获得我所在的用户组
      */
     @RequestMapping(value="getGroupList.do")
     @ResponseBody
@@ -280,7 +282,7 @@ public class GroupController {
                     gm.put("GroupCount", g.getGroupCount());
                     gm.put("GroupNum", g.getGroupNum());
                     gm.put("CreateTime", g.getCTime());
-                    gm.put("GroupImg", "images/group.png");
+                    gm.put("GroupImg", g.getGroupImg());
                     gm.put("InnerPhoneNum", "3000");
                     gm.put("Descripte", g.getDescn());
                     rgl.add(gm);
@@ -354,7 +356,7 @@ public class GroupController {
                     gm.put("GroupCount", g.getGroupCount());
                     gm.put("GroupNum", g.getGroupNum());
                     gm.put("CreateTime", g.getCTime());
-                    gm.put("GroupImg", "images/group.png");
+                    gm.put("GroupImg", g.getGroupImg());
                     gm.put("InnerPhoneNum", "3000");
                     gm.put("Descripte", g.getDescn());
                     rgl.add(gm);
@@ -429,11 +431,11 @@ public class GroupController {
     }
 
     /**
-     * 进入号码组
+     * 加入号码组
      */
-    @RequestMapping(value="num/entryGroup.do")
+    @RequestMapping(value="num/joininGroup.do")
     @ResponseBody
-    public Map<String,Object> entryGroup(HttpServletRequest request) {
+    public Map<String,Object> joininGroup(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
@@ -489,6 +491,11 @@ public class GroupController {
                 map.put("Message", "无法获取用户组号码");
                 return map;
             }
+            if (gp.getGroupType()==0) {
+                map.put("ReturnType", "1005");
+                map.put("Message", "加入的组需要验证，不能直接加入");
+                return map;
+            }
             //检查是否已经在组
             int c=groupService.existUserInGroup(gp.getGroupId(), userId);
             if (c==0&&gp.getGroupCount()>50) {//不存在
@@ -538,6 +545,79 @@ public class GroupController {
     @RequestMapping(value="exitGroup.do")
     @ResponseBody
     public Map<String,Object> exitGroup(HttpServletRequest request) {
-        return null;
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+                return map;
+            }
+            MobileParam mp=MobileUtils.getMobileParam(m);
+            MobileKey sk=(mp==null?null:mp.getMobileKey());
+            if (sk==null) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取设备Id(IMEI)");
+                return map;
+            }
+
+            MobileSession ms=null;
+            UserPo u=null;
+            //1-获取UserId，并处理访问
+            String userId=sk.isUser()?sk.getUserId():null;
+            if (sk!=null) {
+                map.put("SessionId", sk.getSessionId());
+                ms=smm.getSession(sk);
+                if (ms==null) {
+                    ms=new MobileSession(sk);
+                    smm.addOneSession(ms);
+                } else {
+                    ms.access();
+                    if (userId==null) {
+                        u=(UserPo)ms.getAttribute("user");
+                        if (u!=null) userId=u.getUserId();
+                    }
+                }
+            }
+            if (u==null) u=userService.getUserById(userId);
+            if (u==null) {
+                map.put("ReturnType", "1002");
+                map.put("Message", "无法获取用户Id");
+                return map;
+            }
+            //2-判断用户组进入是否符合业务逻辑
+            String groupId=(String)m.get("GroupId");
+            if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
+                map.put("ReturnType", "1000");
+                map.put("Message", "无法获取用户组号码");
+                return map;
+            }
+            m.clear();
+            m.put("groupId", groupId);
+            GroupPo gp=groupService.getGroup(m);
+            if (gp==null) {
+                map.put("ReturnType", "1003");
+                map.put("Message", "用户组不存在");
+                return map;
+            }
+            //检查是否已经在组
+            int c=groupService.exitUserFromGroup(gp, u);
+            if (c==0) {//不存在此用户
+                map.put("ReturnType", "1004");
+                map.put("Message", "用户不在该组，无法删除");
+            } else if (c==1) {
+                map.put("ReturnType", "1001");
+                map.put("Message", "用户已退出组");
+            } else {
+                map.put("ReturnType", "1101");
+                map.put("Message", "用户已退出组，并已经删除此组");
+            }
+            return map;
+        } catch(Exception e) {
+            map.put("ReturnType", "T");
+            map.put("SessionId", e.getMessage());
+            return map;
+        }
     }
 }

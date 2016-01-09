@@ -162,8 +162,5 @@
   <select id="getListUserInGroup" resultType="java.util.HashMap" parameterType="java.util.Map">
     select <include refid="Base_Column_List_A"/>, b.groupId from plat_User a, plat_GroupUser b where a.id=b.userId
     order by b.groupId
-     
-    <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
-    <if test="orderByClause!=null">order by ${orderByClause}</if>
   </select>
 </mapper>

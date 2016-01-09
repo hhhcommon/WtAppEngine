@@ -278,4 +278,14 @@ public abstract class MobileUtils {
             return mk;
         }
     }
+
+    public static String getAddr(MobileKey mk) {
+        String ret="";
+        if (mk.isMobile()) {
+            ret="{()@@("+mk.getMobileId()+"||M)}";
+        } else {
+            ret="{("+mk.getUserId()+"||wt)@@("+mk.getMobileId()+"||M)}";
+        }
+        return ret;
+    }
 }

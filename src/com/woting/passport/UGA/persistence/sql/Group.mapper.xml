@@ -178,4 +178,12 @@
       <if test="inviter!=null">#{inviter,jdbcType=VARCHAR},</if>
     </trim>
   </insert>
+  <!-- 删除数据 -->
+  <delete id="deleteGroupUser" parameterType="java.util.Map">
+    delete from plat_GroupUser where groupId=#{groupId,jdbcType=VARCHAR} <if test="userId!=null">and userId=#{userId,jdbcType=VARCHAR}</if>
+  </delete>
+  <!-- 得到某用户所创建的用户组的数量 -->
+  <select id="getGroupUserByGroupId" resultMap="groupUserMap" parameterType="java.lang.String">
+    select * from plat_GroupUser where groupId=#{groupId, jdbcType=VARCHAR}
+  </select>
 </mapper>

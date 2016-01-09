@@ -86,6 +86,14 @@ public class Group extends GroupPo implements  ModelSwapPo {
         }
         userList.add(up);
     }
+    public void delOneUser(UserPo up) {
+        for (UserPo _up: userList) {
+            if (up.getUserId().equals(_up.getUserId())) {
+                userList.remove(_up);
+                break;
+            }
+        }
+    }
 
     /**
      * 获得此组用户

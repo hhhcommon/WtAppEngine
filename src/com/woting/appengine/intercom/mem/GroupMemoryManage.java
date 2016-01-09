@@ -45,9 +45,13 @@ public class GroupMemoryManage {
         }
     }
     //把一个用户组对象加入gicMap
-    private void addOneGroup(Group g) {
+    public void addOneGroup(Group g) {
         GroupInterCom groupIC = new GroupInterCom(g);
         this.gm.gicMap.put(g.getGroupId(), groupIC);
+    }
+    //删除一个组
+    public void delOneGroup(Group g) {
+        this.gm.gicMap.remove(g.getGroupId());
     }
 
     /**

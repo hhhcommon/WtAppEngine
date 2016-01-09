@@ -93,6 +93,7 @@ public class CommonController {
                 UserPo u = userService.getUserById(mu.getUserId());
                 ms.addAttribute("user", u);
                 map.put("ReturnType", "1001"); //已登录
+                map.put("ServerStatus", "1"); //服务器状态
                 map.put("UserInfo", u.toHashMap4Mobile());
             }
             return map;
@@ -138,6 +139,7 @@ public class CommonController {
                     map.put("PatchInfo", vs[2]);
                 }
             }
+            map.put("ServerStatus", "1");
             return map;
         } catch(Exception e) {
             e.printStackTrace();

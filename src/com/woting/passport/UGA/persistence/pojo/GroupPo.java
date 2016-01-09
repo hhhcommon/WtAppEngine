@@ -10,7 +10,7 @@ public class GroupPo extends BaseObject {
     private String groupNum; //组号，用于公开的号码
     private String groupName; //用户组名称
     private String groupImg; //用户组头像
-    private int groupType; //组号，用于公开的号码
+    private int groupType; //0一般组，1号码组，进入组不需要验证
     private String pId; //上级用户组Id
     private int sort; //用户组排序0
     private String createUserId; //创建者id

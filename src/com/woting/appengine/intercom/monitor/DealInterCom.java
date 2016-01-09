@@ -139,6 +139,7 @@ public class DealInterCom extends Thread {
                                 mk=new MobileKey();
                                 mk.setMobileId(_sp[0]);
                                 mk.setUserId(_sp[1]);
+                                bMsg.setToAddr(MobileUtils.getAddr(mk));
                                 pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                             }
                         }
@@ -227,6 +228,7 @@ public class DealInterCom extends Thread {
                                 mk=new MobileKey();
                                 mk.setMobileId(_sp[0]);
                                 mk.setUserId(_sp[1]);
+                                bMsg.setToAddr(MobileUtils.getAddr(mk));
                                 pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                             }
                         }
@@ -307,6 +309,7 @@ public class DealInterCom extends Thread {
                             mk=new MobileKey();
                             mk.setMobileId(_sp[0]);
                             mk.setUserId(_sp[1]);
+                            bMsg.setToAddr(MobileUtils.getAddr(mk));
                             pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                         }
                     }
@@ -385,6 +388,7 @@ public class DealInterCom extends Thread {
                             mk=new MobileKey();
                             mk.setMobileId(_sp[0]);
                             mk.setUserId(_sp[1]);
+                            bMsg.setToAddr(MobileUtils.getAddr(mk));
                             pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                         }
                     }
@@ -431,6 +435,5 @@ public class DealInterCom extends Thread {
             }
             return false;
         }
-        
     }
 }

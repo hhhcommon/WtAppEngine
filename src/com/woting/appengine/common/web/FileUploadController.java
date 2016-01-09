@@ -16,6 +16,7 @@ import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.web.AbstractFileUploadController;
 import com.spiritdata.framework.util.FileNameUtils;
+import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
@@ -78,7 +79,7 @@ public class FileUploadController extends AbstractFileUploadController {
                 } else {
                     try {
                         String bigImgFileName=((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent();
-                        bigImgFileName = "asset\\members\\"+userId+"\\Portrait\\bigImg"+(extName.startsWith(".")?extName:"."+extName);
+                        bigImgFileName = "asset"+File.separatorChar+"members"+File.separatorChar+userId+File.separatorChar+"Portrait"+File.separatorChar+"bigImg"+SequenceUUID.getUUIDSubSegment(2)+(extName.startsWith(".")?extName:"."+extName);
                         FileUtils.copyFile(new File(tempFileName), new File(FileNameUtils.concatPath(((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent(),bigImgFileName)));
                         //图片文件缩略存储
                         //文件保存到数据库中
@@ -103,7 +104,7 @@ public class FileUploadController extends AbstractFileUploadController {
                 } else {
                     try {
                         String bigImgFileName=((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent();
-                        bigImgFileName = "asset\\group\\"+groupId+"\\Portrait\\bigImg"+(extName.startsWith(".")?extName:"."+extName);
+                        bigImgFileName = "asset"+File.separatorChar+"group"+File.separatorChar+groupId+File.separatorChar+"Portrait"+File.separatorChar+"bigImg"+SequenceUUID.getUUIDSubSegment(2)+(extName.startsWith(".")?extName:"."+extName);
                         FileUtils.copyFile(new File(tempFileName), new File(FileNameUtils.concatPath(((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent(),bigImgFileName)));
                         //图片文件缩略存储
                         //文件保存到数据库中

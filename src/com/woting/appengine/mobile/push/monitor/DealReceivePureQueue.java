@@ -12,7 +12,7 @@ import com.woting.appengine.mobile.push.mem.SendMemory;
 import com.woting.appengine.mobile.push.model.Message;
 
 /**
- * 
+ * 处理收到的纯净数据
  * @author wanghui
  */
 public class DealReceivePureQueue extends Thread {
@@ -77,12 +77,7 @@ public class DealReceivePureQueue extends Thread {
         if (canContinue) {
             msg.setMsgId(__tmp);
             MobileKey mk=MobileUtils.getMobileKey(m);
-            if (mk.isMobile()) {
-                __tmp="{()@@("+mk.getMobileId()+"||M)}";
-            } else {
-                __tmp="{("+mk.getUserId()+"||wt)@@("+mk.getMobileId()+"||M)}";
-            }
-            msg.setFromAddr(__tmp);
+            msg.setFromAddr(MobileUtils.getAddr(mk));
             msg.setProxyAddrs("");
             msg.setToAddr("{(intercom)@@(www.woting.fm||S)}");
             msg.setMsgType(Integer.parseInt(m.get("MsgType")+""));
