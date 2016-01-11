@@ -55,7 +55,7 @@ public class SocketHandle extends Thread {
         this.smc=smc;
     }
     /*
-     * 运行程序，接收和发送消息
+     * 主线程
      */
     public void run() {
         socketDesc="Socket["+socket.getRemoteSocketAddress()+",socketKey="+socket.hashCode()+"]";

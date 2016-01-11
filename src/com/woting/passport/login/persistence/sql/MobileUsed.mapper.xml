@@ -32,30 +32,30 @@
 
   <!-- 获得记录条数-->
   <select id="count" parameterType="java.util.Map" resultType="java.lang.Integer">
-    select count(*) from plat_U_MobileUsed <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+    select count(*) from wt_MobileUsed <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </select>
 
   <!-- 获得列表 -->
   <select id="getList" resultMap="BaseResultMap" parameterType="java.util.Map">
-    select <include refid="Base_Column_List"/> from plat_U_MobileUsed
+    select <include refid="Base_Column_List"/> from wt_MobileUsed
     <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
     <if test="orderByClause!=null">order by ${orderByClause}</if>
   </select>
 
   <!-- 获得一条数据 -->
   <select id="getInfo" resultMap="BaseResultMap" parameterType="java.util.Map">
-    select <include refid="Base_Column_List"/> from plat_U_MobileUsed <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+    select <include refid="Base_Column_List"/> from wt_MobileUsed <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </select>
   <select id="getInfoById" resultMap="BaseResultMap" parameterType="java.lang.String">
-    select <include refid="Base_Column_List"/> from plat_U_MobileUsed where id=#{id,jdbcType=VARCHAR}
+    select <include refid="Base_Column_List"/> from wt_MobileUsed where id=#{id,jdbcType=VARCHAR}
   </select>
   <select id="getUsedInfo" resultMap="BaseResultMap" parameterType="java.lang.String">
-    select <include refid="Base_Column_List"/> from plat_U_MobileUsed where imei=#{imei,jdbcType=VARCHAR}
+    select <include refid="Base_Column_List"/> from wt_MobileUsed where imei=#{imei,jdbcType=VARCHAR}
   </select>
 
   <!-- 新增数据 -->
   <insert id="insert" parameterType="java.util.Map">
-    insert into plat_U_MobileUsed
+    insert into wt_MobileUsed
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="muId!=null">id,</if>
       <if test="imei!=null">imei,</if>
@@ -72,7 +72,7 @@
 
   <!-- 修改 根据主键-->
   <update id="update" parameterType="java.util.Map">
-    update plat_U_MobileUsed
+    update wt_MobileUsed
     <set>
       <if test="imei!=null">imei=#{imei,jdbcType=VARCHAR},</if>
       <if test="userId!=null">userId=#{userId,jdbcType=VARCHAR},</if>
@@ -83,7 +83,7 @@
 
   <!-- 修改 根据IMEI-->
   <update id="updateByIMEI" parameterType="java.util.Map">
-    update plat_U_MobileUsed
+    update wt_MobileUsed
     <set>
       <if test="userId!=null">userId=#{userId,jdbcType=VARCHAR},</if>
       <if test="status!=null and status!=0">status=#{status,jdbcType=INTEGER},</if>
@@ -93,9 +93,9 @@
 
   <!-- 删除数据 -->
   <delete id="delete" parameterType="java.lang.String">
-    delete from plat_U_MobileUsed where id=#{id,jdbcType=VARCHAR}
+    delete from wt_MobileUsed where id=#{id,jdbcType=VARCHAR}
   </delete>
   <delete id="deleteByEntity" parameterType="java.util.Map">
-    delete from plat_U_MobileUsed <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+    delete from wt_MobileUsed <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </delete>
 </mapper>

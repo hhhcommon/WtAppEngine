@@ -51,7 +51,10 @@ public class SendMemory {
             mobileQueue=new ConcurrentLinkedQueue<Message>();
             this.msgMap.put(mk.toString(), mobileQueue);
         }
-        mobileQueue.add(msg);
+        synchronized(mobileQueue) {
+            if (msg.getSendTime()==0) msg.setSendTime(System.currentTimeMillis());
+            mobileQueue.add(msg);
+        }
     }
     /**
      * 向某一设移动设备的输出队列中插入唯一消息，唯一消息是指，同一时间某类消息对一个设备只能有一个消息内容。
@@ -82,6 +85,7 @@ public class SendMemory {
             for (Message m: removeMsg) {
                 mobileQueue.remove(m);
             }
+            if (msg.getSendTime()==0) msg.setSendTime(System.currentTimeMillis());
             mobileQueue.add(msg);
         }
     }

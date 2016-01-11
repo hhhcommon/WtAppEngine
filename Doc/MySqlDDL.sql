@@ -61,13 +61,13 @@ CREATE TABLE plat_User (
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='003用户表';
 
-/**004 手机用户使用[PLAT_USER_MOBILEUSED]*/
+/**004 手机用户使用[WT_MOBILEUSED]*/
 /**
  * 记录手机最近一次用某账号登录的情况。
  * 若一个月没有登录，是否就删除掉呢，或者是1年??
  */
-DROP TABLE IF EXISTS plat_U_MobileUsed;
-CREATE TABLE plat_U_MobileUsed (
+DROP TABLE IF EXISTS wt_MobileUsed;
+CREATE TABLE wt_MobileUsed (
   id      varchar(32)   NOT NULL  COMMENT 'uuid',
   imei    varchar(100)  NOT NULL  COMMENT '手机串号，手机身份码',
   userId  varchar(32)   NOT NULL  COMMENT '用户Id',
@@ -154,13 +154,19 @@ VIEW vWt_Friend_Rel AS
 /**010 WT_BROADCAST(电台主表)*/
 DROP TABLE IF EXISTS wt_Broadcast;
 CREATE TABLE wt_Broadcast (
-  id          varchar(32)   NOT NULL  COMMENT 'uuid(主键)',
-  bcTitle     varchar(100)  NOT NULL  COMMENT '电台名称',
-  bcPublisher varchar(100)  NOT NULL  COMMENT '电台所属集团名称',
-  bcImg       varchar(100)            COMMENT '电台图标',
-  bcURL       varchar(100)            COMMENT '电台网址',
-  descn       varchar(4000)           COMMENT '电台说明',
-  cTime       timestamp    NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  id            varchar(32)      NOT NULL  COMMENT 'uuid(主键)',
+  bcTitle       varchar(100)     NOT NULL  COMMENT '电台名称',
+  bcPubType     int(1) unsigned  NOT NULL  COMMENT '电台所属类型：1-组织表,2-文本',
+  bcPubId       varchar(32)      NOT NULL  COMMENT '电台所属集团',
+  bcPublisher   varchar(100)     NOT NULL  COMMENT '电台所属集团',
+  bcImg         varchar(100)               COMMENT '电台图标',
+  bcURL         varchar(100)               COMMENT '电台网址',
+  mainCataMid   varchar(32)                COMMENT '主分类Mid',
+  mainCataDid   varchar(32)                COMMENT '主分类Did',
+  mainCataCode  varchar(32)                COMMENT '主分类业务编码',
+  mainCataName  varchar(32)                COMMENT '主分类名称',
+  descn         varchar(4000)              COMMENT '电台说明',
+  cTime         timestamp    NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='010电台主表';
@@ -168,12 +174,15 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='010电台主表';
 /**011 WT_BCLIVEFLOW(电台直播流子表)*/
 DROP TABLE IF EXISTS wt_BCLiveFlow;
 CREATE TABLE wt_BCLiveFlow (
-  id        varchar(32)   NOT NULL             COMMENT 'uuid(主键)',
-  bcId      varchar(32)   NOT NULL             COMMENT '电台Id,外键',
-  bcSource  varchar(100)  NOT NULL             COMMENT '来源，描述',
-  flowURI   varchar(300)  NOT NULL             COMMENT '直播流URL',
-  isMain    integer(1)    NOT NULL  DEFAULT 0  COMMENT '是否是主直播流；1是主直播流',
-  cTime     timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  id         varchar(32)      NOT NULL             COMMENT 'uuid(主键)',
+  bcId       varchar(32)      NOT NULL             COMMENT '电台Id,外键',
+  bcSrcType  int(1) unsigned  NOT NULL             COMMENT '来源，类型：1-组织表；2-文本',
+  bcSrcId    varchar(32)                           COMMENT '来源Id，当bcScrType=1',
+  bcSource   varchar(100)     NOT NULL             COMMENT '来源，名称',
+  flowURI    varchar(300)     NOT NULL             COMMENT '直播流URL',
+  isMain     int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '是否是主直播流；1是主直播流',
+  descn      varchar(4000)                         COMMENT '来源说明',
+  cTime      timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='011电台直播流子表';
@@ -184,6 +193,7 @@ CREATE TABLE wt_BCFrequnce (
   id        varchar(32)   NOT NULL             COMMENT 'uuid(主键)',
   bcId      varchar(32)   NOT NULL             COMMENT '电台Id,外键',
   areaCode  varchar(100)  NOT NULL             COMMENT '地区编码',
+  areaName  varchar(100)  NOT NULL             COMMENT '地区名称',
   frequnce  varchar(300)  NOT NULL             COMMENT '频段',
   isMain    integer(1)    NOT NULL  DEFAULT 0  COMMENT '是否是主频段；1是主频段',
   cTime     timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
@@ -201,7 +211,7 @@ CREATE TABLE wt_AppOpinion (
   cTime    timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间，意见成功提交时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='013应用意见表';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='013App用户意见表';
 
 /**014 WT_APPREOPINION(应用反馈表)*/
 DROP TABLE IF EXISTS wt_AppReOpinion;
@@ -213,7 +223,7 @@ CREATE TABLE wt_AppReOpinion (
   cTime      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间，反馈成功提交时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='014应用反馈表';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='014App用户意见反馈表';
 
 /*****************************************/
 /**
@@ -239,23 +249,24 @@ VIEW vWt_Friend_Rel AS
 /**015 WT_MEDIAASSET(媒体资源，文件类聚合，原子性的)*/
 DROP TABLE IF EXISTS wt_MediaAsset;
 CREATE TABLE wt_MediaAsset (
-  id              varchar(32)   NOT NULL  COMMENT 'uuid(主键)',
-  maTitle         varchar(100)  NOT NULL  COMMENT '媒体资源名称',
-  maPublisher     varchar(100)            COMMENT '发布者',
-  maPublisherTime timestamp               COMMENT '发布时间',
-  maImg           varchar(100)            COMMENT '媒体图',
-  maURL           varchar(100)            COMMENT '媒体主地址，可以是聚合的源，也可以是Wt平台中的文件URL',
-  subjectWord     varchar(400)            COMMENT '主题词',
-  skeyWord        varchar(400)            COMMENT '关键词',
-  langCataDid     varchar(32)             COMMENT '语言字典项Id',
-  language        varchar(32)             COMMENT '语言名称',
-  timeLong        long                    COMMENT '时长，毫秒数',
-  mainCataMid     varchar(32)             COMMENT '主分类Mid',
-  mainCataDid     varchar(32)             COMMENT '主分类Did',
-  mainCataCode    varchar(32)             COMMENT '主分类业务编码',
-  mainCataName    varchar(32)             COMMENT '主分类名称',
-  descn           varchar(4000)           COMMENT '说明',
-  creator         varchar(32)             COMMENT '创建者',
+  id              varchar(32)      NOT NULL  COMMENT 'uuid(主键)',
+  maTitle         varchar(100)     NOT NULL  COMMENT '媒体资源名称',
+  maPubType       int(1) unsigned  NOT NULL  COMMENT '发布类型：1-组织表,2-文本',
+  maPubId         varchar(32)      NOT NULL  COMMENT '发布所属组织',
+  maPublisher     varchar(100)               COMMENT '发布者',
+  maPublisherTime timestamp                  COMMENT '发布时间',
+  maImg           varchar(100)               COMMENT '媒体图',
+  maURL           varchar(100)               COMMENT '媒体主地址，可以是聚合的源，也可以是Wt平台中的文件URL',
+  subjectWord     varchar(400)               COMMENT '主题词',
+  keyWord         varchar(400)               COMMENT '关键词',
+  langDid         varchar(32)                COMMENT '语言字典项Id',
+  language        varchar(32)                COMMENT '语言名称',
+  timeLong        long                       COMMENT '时长，毫秒数',
+  mainCataMid     varchar(32)                COMMENT '主分类Mid',
+  mainCataDid     varchar(32)                COMMENT '主分类Did',
+  mainCataCode    varchar(32)                COMMENT '主分类业务编码',
+  mainCataName    varchar(32)                COMMENT '主分类名称',
+  descn           varchar(4000)              COMMENT '说明',
   cTime           timestamp    NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
@@ -264,21 +275,22 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='015媒体资源';
 /**016 WT_SEQMEDIAASSET(系列媒体资源)*/
 DROP TABLE IF EXISTS wt_SeqMediaAsset;
 CREATE TABLE wt_SeqMediaAsset (
-  id                varchar(32)   NOT NULL  COMMENT 'uuid(主键)',
-  smaTitle          varchar(100)  NOT NULL  COMMENT '系列媒体资源名称',
-  smaPublisher      varchar(100)            COMMENT '发布者',
-  smaPublisherTime  timestamp               COMMENT '发布时间',
-  smaImg            varchar(100)            COMMENT '媒体图',
-  subjectWord       varchar(400)            COMMENT '主题词',
-  skeyWord          varchar(400)            COMMENT '关键词',
-  langCataDid       varchar(32)             COMMENT '语言字典项Id',
-  language          varchar(32)             COMMENT '语言名称',
-  mainCataMid       varchar(32)             COMMENT '主分类Mid',
-  mainCataDid       varchar(32)             COMMENT '主分类Did',
-  mainCataCode      varchar(32)             COMMENT '主分类业务编码',
-  mainCataName      varchar(32)             COMMENT '主分类名称',
-  descn             varchar(4000)           COMMENT '说明',
-  creator           varchar(32)             COMMENT '创建者',
+  id                varchar(32)      NOT NULL  COMMENT 'uuid(主键)',
+  smaTitle          varchar(100)     NOT NULL  COMMENT '系列媒体资源名称',
+  smaPubType        int(1) unsigned  NOT NULL  COMMENT '发布类型：1-组织表,2-文本',
+  smaPubId          varchar(32)      NOT NULL  COMMENT '发布所属组织',
+  smaPublisher      varchar(100)               COMMENT '发布者',
+  smaPublisherTime  timestamp                  COMMENT '发布时间',
+  smaImg            varchar(100)               COMMENT '媒体图',
+  subjectWord       varchar(400)               COMMENT '主题词',
+  keyWord           varchar(400)               COMMENT '关键词',
+  langCataDid       varchar(32)                COMMENT '语言字典项Id',
+  language          varchar(32)                COMMENT '语言名称',
+  mainCataMid       varchar(32)                COMMENT '主分类Mid',
+  mainCataDid       varchar(32)                COMMENT '主分类Did',
+  mainCataCode      varchar(32)                COMMENT '主分类业务编码',
+  mainCataName      varchar(32)                COMMENT '主分类名称',
+  descn             varchar(4000)              COMMENT '说明',
   cTime             timestamp    NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
@@ -286,30 +298,32 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='016系列媒体资源';
 
 /**017 WT_MASOURCE(资产来源以及播放地址)*/
 DROP TABLE IF EXISTS wt_MaSource;
-CREATE TABLE wt_BCLiveFlow (
-  id        varchar(32)   NOT NULL             COMMENT 'uuid(主键)',
-  maId      varchar(32)   NOT NULL             COMMENT '电台Id,外键',
-  maSource  varchar(100)  NOT NULL             COMMENT '来源，描述',
-  playURI   varchar(300)  NOT NULL             COMMENT '直播流URL',
-  isMain    integer(1)    NOT NULL  DEFAULT 0  COMMENT '是否主播放地址；1是主播放',
-  creator   varchar(32)                        COMMENT '创建者',
-  cTime     timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+CREATE TABLE wt_MaSource (
+  id         varchar(32)      NOT NULL             COMMENT 'uuid(主键)',
+  maId       varchar(32)      NOT NULL             COMMENT '媒体Id,外键',
+  maSrcTppe  int(1) unsigned  NOT NULL             COMMENT '来源，类型：1-组织表；2-文本',
+  maSrcId    varchar(32)      NOT NULL             COMMENT '来源，描述',
+  maSource   varchar(100)     NOT NULL             COMMENT '来源，名称',
+  smType     int(1) unsigned  NOT NULL             COMMENT '来源媒体分类:1-文件;2-直播流',
+  playURI    varchar(300)     NOT NULL             COMMENT '直播流URL',
+  isMain     integer(1)       NOT NULL  DEFAULT 0  COMMENT '是否主播放地址；1是主播放',
+  descn      varchar(4000)                         COMMENT '来源说明',
+  cTime      timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='011电台直播流子表';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='017资产来源以及播放地址';
 
-/**018 WT_REF_SeqMA(系列与单体的关系：多对多)*/
-DROP TABLE IF EXISTS wt_Ref_SeqMA;
-CREATE TABLE wt_Ref_SeqMA (
+/**018 WT_SEQMA_REF(系列媒体与单体媒体对应表)*/
+DROP TABLE IF EXISTS wt_SeqMA_Ref;
+CREATE TABLE wt_SeqMA_Ref (
   id          varchar(32)    NOT NULL  COMMENT 'uuid(主键)',
   sId         varchar(32)    NOT NULL  COMMENT '系列Id,主表Id',
   mId         varchar(32)    NOT NULL  COMMENT '媒体Id',
   descn       varchar(4000)            COMMENT '关联说明',
-  smaCreator  varchar(32)              COMMENT '创建者',
   cTime       timestamp      NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='017系列媒体资源';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='018系列媒体与单体媒体对应表';
 
 /**019 WT_PERSON(干系人，主要是人的自然信息，和User不同)*/
 DROP TABLE IF EXISTS wt_Person;
@@ -321,33 +335,49 @@ CREATE TABLE wt_Person (
   sex           varchar(100)               DEFAULT NULL  COMMENT '邮箱(非空为一索引)',
   descn         varchar(100)               DEFAULT NULL  COMMENT '用户主手机号码',
   phoneNum      varchar(100)               DEFAULT NULL  COMMENT '内部通话号码，VOIP',
-  email         varchar(100)               DEFAULT NULL  COMMENT '内部通话号码，VOIP',
+  email         varchar(100)               DEFAULT NULL  COMMENT 'eMail',
+  homepage      varchar(100)                             COMMENT '个人主页',
   protraitBig   varchar(300)                             COMMENT '用户头像大',
   protraitMini  varchar(300)                             COMMENT '用户头像小',
   cTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='018系列媒体资源';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='019干系人';
 
-/**020 WT_REF_MAPERSON(干系人与媒体信息关系)*/
-DROP TABLE IF EXISTS wt_Ref_MaPerson;
-CREATE TABLE wt_Ref_MaPerson (
+/**020 WT_ORGANIZE(组织机构，和Group不同)*/
+DROP TABLE IF EXISTS wt_Organize;
+CREATE TABLE wt_Organize (
+  id            varchar(32)      NOT NULL                COMMENT 'uuid(用户id)',
+  oName         varchar(100)     NOT NULL                COMMENT '名称',
+  descn         varchar(100)               DEFAULT NULL  COMMENT '用户主手机号码',
+  webPage       varchar(100)               DEFAULT NULL  COMMENT '官网地址',
+  orgTypeId     varchar(100)                             COMMENT '组织分类Id，可分为：电台、网站等',
+  orgTypeName   varchar(100)                             COMMENT '组织分类名称',
+  protraitBig   varchar(300)                             COMMENT '组织logo大图像',
+  protraitMini  varchar(300)                             COMMENT '组织logo小图像',
+  cTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
+  PRIMARY KEY(id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='020组织机构';
+
+/**021 WT_MAPERSON_REF(干系人与媒体信息关系)*/
+DROP TABLE IF EXISTS wt_MaPerson_Ref;
+CREATE TABLE wt_MaPerson_Ref (
   id         varchar(32)    NOT NULL                COMMENT 'uuid(id)',
   personId   varchar(32)    NOT NULL                COMMENT '用户Id',
   rType      varchar(32)    NOT NULL                COMMENT '资源类型Id：1电台；2单体媒体资源；3系列媒体资源',
   rId        varchar(32)    NOT NULL                COMMENT '资源Id',
-  refType    varchar(32)    NOT NULL                COMMENT '关联类型，是字典项，是专门的一个字典组',
+  refTypeId  varchar(32)    NOT NULL                COMMENT '关联类型，是字典项，是专门的一个字典组',
   cName      varchar(200)   NOT NULL                COMMENT '字典项名称',
-  bCode      varchar(200)   NOT NULL                COMMENT '字典项业务编码',
   descn      varchar(100)             DEFAULT NULL  COMMENT '描述',
   cTime      timestamp      NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='019系列媒体资源';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='021干系人与媒体信息关系';
 
-/**021 WT_REF_RESCATA(资源分类对应关系)*/
-DROP TABLE IF EXISTS wt_Ref_ResCata;
-CREATE TABLE wt_Ref_ResCata (
+/**022 WT_RESCATA_REF(资源分类对应关系)*/
+DROP TABLE IF EXISTS wt_ResCata_Ref;
+CREATE TABLE wt_ResCata_Ref (
   id         varchar(32)    NOT NULL  COMMENT 'uuid(主键)',
   rType      varchar(32)    NOT NULL  COMMENT '资源类型Id：1电台；2单体媒体资源；3系列媒体资源',
   rId        varchar(32)    NOT NULL  COMMENT '资源Id',
@@ -360,4 +390,4 @@ CREATE TABLE wt_Ref_ResCata (
   cTime      timestamp      NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='020电台分类表';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='022电台分类表';

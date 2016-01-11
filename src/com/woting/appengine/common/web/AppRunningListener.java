@@ -7,6 +7,8 @@ import org.apache.log4j.Logger;
 
 import com.woting.appengine.intercom.InterComConfig;
 import com.woting.appengine.intercom.InterComListener;
+import com.woting.appengine.mobile.mediaflow.MfConfig;
+import com.woting.appengine.mobile.mediaflow.MfListener;
 import com.woting.appengine.mobile.push.PushConfig;
 import com.woting.appengine.mobile.push.PushListener;
 import com.woting.appengine.mobile.session.MobileSessionConfig;
@@ -25,6 +27,9 @@ public class AppRunningListener implements ServletContextListener {
             //启动对讲处理服务
             InterComConfig icc = new InterComConfig();
             InterComListener.begin(icc);
+            //启动流数据处理服务
+            MfConfig mfc = new MfConfig();
+            MfListener.begin(mfc);
             //启动推送服务
             PushConfig pc = new PushConfig();
             PushListener.begin(pc);

@@ -37,7 +37,7 @@ public class DealInterCom extends Thread {
                 //读取Receive内存中的typeMsgMap中的内容
                 Message m=pmm.getReceiveMemory().pollTypeQueue("INTERCOM_CTL");
                 if (m==null) continue;
-                
+
                 if (m.getCmdType().equals("GROUP")) {
                     if (m.getCommand().equals("1")) {
                         tempStr="处理消息[MsgId="+m.getMsgId()+"]-用户进入组::(User="+m.getFromAddr()+";Group="+((Map)m.getMsgContent()).get("GroupId")+")";

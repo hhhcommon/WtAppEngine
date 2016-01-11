@@ -1,7 +1,6 @@
 package com.woting.appengine.intercom.mem;
 
 import java.util.concurrent.ConcurrentHashMap;
-
 import com.woting.appengine.intercom.model.GroupInterCom;
 
 public class GroupMemory {

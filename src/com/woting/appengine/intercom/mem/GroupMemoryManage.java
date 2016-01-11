@@ -29,10 +29,12 @@ public class GroupMemoryManage {
         gm=GroupMemory.getInstance();
     }
 
+    private boolean inited=false;
     /**
      * 从数据库中读取信息，并初始化内存结构
      */
-    public void initMemory() {
+    public synchronized void initMemory() {
+        if (this.inited) return;
         ServletContext sc = (ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
         if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
             GroupService groupService = (GroupService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("groupService");
@@ -43,6 +45,7 @@ public class GroupMemoryManage {
                 }
             }
         }
+        this.inited=true;
     }
     //把一个用户组对象加入gicMap
     public void addOneGroup(Group g) {
