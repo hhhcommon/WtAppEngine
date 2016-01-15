@@ -9,6 +9,8 @@ import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.intercom.model.GroupInterCom;
+import com.woting.appengine.mobile.mediaflow.mem.TalkMemoryManage;
+import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.appengine.mobile.push.model.CompareMsg;
@@ -284,11 +286,14 @@ public class DealInterCom extends Thread {
                     retMsg.setMsgContent(dataMap);
 
                     Map<String, UserPo> _m=gic.setSpeaker(mk);
+                    System.out.println("LOG:开始PPT===="+gic.getSpeaker().getUserId());
                     if (_m.containsKey("E")) {
-                        retMsg.setReturnType("1003");
+                        //retMsg.setReturnType("1003");
+                        retMsg.setReturnType("1001");
                         pmm.getSendMemory().addMsg2Queue(mk, retMsg);
                     } else if (_m.containsKey("F")) {
-                        retMsg.setReturnType("1002");
+                        //retMsg.setReturnType("1002");
+                        retMsg.setReturnType("1001");
                         pmm.getSendMemory().addMsg2Queue(mk, retMsg);
                     } else {//成功可以开始对讲了
                         retMsg.setReturnType("1001");
@@ -315,11 +320,7 @@ public class DealInterCom extends Thread {
                     }
                 } else {
                     retMsg.setReturnType("1000");
-                    try {
-                        pmm.getSendMemory().addSendedMsg(mk, retMsg);
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
+                    pmm.getSendMemory().addMsg2Queue(mk, retMsg);
                 }
             }
         }
@@ -374,31 +375,33 @@ public class DealInterCom extends Thread {
                         retMsg.setReturnType("1001");
                         pmm.getSendMemory().addMsg2Queue(mk, retMsg);
 
-                        //广播开始对讲消息
-                        Message bMsg=getBroadCastMessage(retMsg);
-                        bMsg.setCommand("b2");
-                        dataMap=new HashMap<String, Object>();
-                        dataMap.put("GroupId", groupId);
-                        dataMap.put("TalkUserId", mk.getUserId());
-                        bMsg.setMsgContent(dataMap);
-                        //发送广播消息
-                        Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
-                        for (String k: entryGroupUsers.keySet()) {
-                            String _sp[] = k.split("::");
-                            mk=new MobileKey();
-                            mk.setMobileId(_sp[0]);
-                            mk.setUserId(_sp[1]);
-                            bMsg.setToAddr(MobileUtils.getAddr(mk));
-                            pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
+                        //判断是否结束了
+                        TalkMemoryManage tmm = TalkMemoryManage.getInstance();
+                        WholeTalk wt = tmm.getWholeTalk(mk);
+                        if (wt!=null&&wt.isReceiveCompleted()) {
+                            gic.delSpeakerOnDataCompleted();
+                            //广播开始对讲消息，放到收到结束语音包的时候再处理了
+                            Message bMsg=getBroadCastMessage(retMsg);
+                            bMsg.setCommand("b2");
+                            dataMap=new HashMap<String, Object>();
+                            dataMap.put("GroupId", groupId);
+                            dataMap.put("TalkUserId", mk.getUserId());
+                            bMsg.setMsgContent(dataMap);
+                            //发送广播消息
+                            Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
+                            for (String k: entryGroupUsers.keySet()) {
+                                String _sp[] = k.split("::");
+                                mk=new MobileKey();
+                                mk.setMobileId(_sp[0]);
+                                mk.setUserId(_sp[1]);
+                                bMsg.setToAddr(MobileUtils.getAddr(mk));
+                                pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
+                            }
                         }
                     }
                 } else {
                     retMsg.setReturnType("1000");
-                    try {
-                        pmm.getSendMemory().addSendedMsg(mk, retMsg);
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
+                    pmm.getSendMemory().addMsg2Queue(mk, retMsg);
                 }
             }
         }

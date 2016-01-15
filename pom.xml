@@ -47,6 +47,12 @@
       <scope>system</scope>
       <systemPath>${build.webProjectDir}/lib/BasicPlat-0.1.0.7.jar</systemPath>
     </dependency>
+    <!-- 加解密包 -->
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.9</version>
+    </dependency>
     <!-- 引入httpmine -->
     <dependency>
       <groupId>org.apache</groupId>

@@ -68,11 +68,11 @@ public class PushMemoryManage {
         Message m= sm.pollTypeQueue(mk);
         if (m!=null) {
             if (m.isAffirm()) {
-                try {
-                    sm.addSendedMsg(mk, m);
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    sm.addSendedMsg(mk, m);
+//                } catch (IllegalAccessException e) {
+//                    e.printStackTrace();
+//                }
             }
         } else {/*
             SendMessageList hasSl = sm.getSendedMessagList(mk);

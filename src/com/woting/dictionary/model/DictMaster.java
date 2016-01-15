@@ -26,6 +26,7 @@ public class DictMaster implements Serializable, ModelSwapPo {
     private int order; //排序号，越大越靠前
     private int isValidate; //字典组是否可用 1可用，2不可用
     private int MType; //字典组类型：1系统保留；2系统；3定义；
+    private int MClass; //字典分类(1-字典,2-分类,3-栏目)；
     private String MRef; //字典组引用，当mType=3
     private String desc; //说明
     private Timestamp CTime; //记录创建时间
@@ -74,6 +75,12 @@ public class DictMaster implements Serializable, ModelSwapPo {
     public void setMType(int mType) {
         MType = mType;
     }
+    public int getMClass() {
+        return MClass;
+    }
+    public void setMClass(int mClass) {
+        MClass = mClass;
+    }
     public String getMRef() {
         return MRef;
     }
@@ -119,6 +126,7 @@ public class DictMaster implements Serializable, ModelSwapPo {
         ret.setIsValidate(this.isValidate);
         ret.setMRef(this.MRef);
         ret.setMType(this.MType);
+        ret.setMClass(this.MClass);
         ret.setDesc(this.desc);
         ret.setCTime(this.CTime);
         ret.setLmTime(this.lmTime);
@@ -137,6 +145,7 @@ public class DictMaster implements Serializable, ModelSwapPo {
         this.isValidate = _po.getIsValidate();
         this.MRef = _po.getMRef();
         this.MType = _po.getMType();
+        this.MClass = _po.getMClass();
         this.desc = _po.getDesc();
         this.CTime = _po.getCTime();
         this.lmTime = _po.getLmTime();

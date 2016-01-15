@@ -87,7 +87,7 @@ public class GroupService {
                     //生成消息
                     Message bMsg=new Message();
                     bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                    bMsg.setFromAddr("{(groupCTL)@@(www.woting.fm||S)}");
+                    bMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
                     bMsg.setMsgType(1);
                     bMsg.setAffirm(0);
                     bMsg.setMsgBizType("GROUP_CTL");
@@ -393,7 +393,7 @@ public class GroupService {
                     //生成消息
                     Message bMsg=new Message();
                     bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                    bMsg.setFromAddr("{(groupCTL)@@(www.woting.fm||S)}");
+                    bMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
                     bMsg.setMsgType(1);
                     bMsg.setAffirm(0);
                     bMsg.setMsgBizType("GROUP_CTL");
@@ -415,6 +415,8 @@ public class GroupService {
                         bMsg.setToAddr(MobileUtils.getAddr(mk));
                         pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                     }
+                    //若在对讲，也要推出对讲结构
+                    
                 }
             }
             return 1;

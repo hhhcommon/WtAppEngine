@@ -155,4 +155,7 @@ public class GroupInterCom {
         }
         return _rm;
     }
+    public void delSpeakerOnDataCompleted() {
+        this.speaker=null;
+    }
 }

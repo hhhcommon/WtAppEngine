@@ -7,7 +7,8 @@ import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 
 /**
- * 发送消息列表。要保证其列中消息指向同一个设备，并且消息定应该是需要确认的消息,m.isAffirm()为真。;
+ * 已发送消息列表。要保证其列中消息指向同一个设备，并且消息定应该是需要确认的消息,m.isAffirm()为真。
+ * 存储转发机制的确认。
  * @author wanghui
  */
 public class SendMessageList {
@@ -27,12 +28,11 @@ public class SendMessageList {
      * @throws IllegalAccessException 若消息不属于同一设备，则抛出此异常
      */
     public boolean add(Message m) throws IllegalAccessException {
-        if (!m.isAffirm()) {
-            throw new IllegalAccessException("消息为不需要确认的消息，无需加入");
-        }
-        if (this.mk!=null&&!this.mk.equals(MobileUtils.getMobileKey(m))) {
-            throw new IllegalAccessException("不是同一设备的消息，不能加入");
-        }
+        if (!m.isAffirm()) throw new IllegalAccessException("消息为不需要确认的消息，无需加入");
+
+        System.out.println("1=="+this.mk.toString());
+        System.out.println("2=="+MobileUtils.getMobileKey(m).toString());
+        if (this.mk!=null&&!this.mk.equals(MobileUtils.getMobileKey(m))) throw new IllegalAccessException("不是同一设备的消息，不能加入");
 
         if (this.msgList.size()==0) {
             if (this.mk==null) this.mk=MobileUtils.getMobileKey(m);

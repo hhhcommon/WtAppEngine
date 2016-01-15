@@ -30,4 +30,16 @@ public class TalkMemoryManage {
     public void removeWt(WholeTalk wt) {
         this.tm.talkMap.remove(wt.getTalkerMk().toString());
     }
+
+    /**
+     * 加入内存
+     * @param wt
+     * @return 返回内存中与这个对讲对应的结构，若内存中已经存在，则返回内存中的结构，否则返回这个新结构
+     */
+    public WholeTalk addWt(WholeTalk wt) {
+        WholeTalk ret=this.tm.talkMap.get(wt.getTalkerMk().toString());
+        this.tm.talkMap.put(wt.getTalkerMk().toString(), wt);
+        ret=wt;
+        return ret;
+    }
 }

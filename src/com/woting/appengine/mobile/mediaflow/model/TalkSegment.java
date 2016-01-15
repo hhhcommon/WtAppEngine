@@ -1,6 +1,7 @@
 package com.woting.appengine.mobile.mediaflow.model;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,7 @@ public class TalkSegment {
         super();
         this.sendUsers = new HashMap<String, UserPo>();
         this.sendFlags = new HashMap<String, String>();
-        this.sendTime = new HashMap<String, List<SendTime>>();
+        this.sendTime = new HashMap<String, List<Date>>();
     }
 
     private WholeTalk wt; //本段话对应的完整对话
@@ -26,7 +27,7 @@ public class TalkSegment {
     private int seqNum; //序列号：从0开始
     private Map<String, UserPo> sendUsers; //需要传输的用户列表
     private Map<String/*userId*/, String/*状态：0未传送；1已传送；2传送成功；3传送失败*/> sendFlags; //为各用户传送数据的结果情况
-    private Map<String/*userId*/, List<SendTime>> sendTime; //为各用户传送数据的结果情况
+    private Map<String/*userId*/, List<Date>> sendTime; //为各用户传送数据的结果情况
 
     public WholeTalk getWt() {
         return wt;
@@ -65,6 +66,7 @@ public class TalkSegment {
         this.sendUsers = sendUsers;
         for (String k: sendUsers.keySet()) {
             this.sendFlags.put(k, "0");
+            this.sendTime.put(k, new ArrayList<Date>());
         }
     }
     public Map<String, String> getSendFlags() {
@@ -73,10 +75,10 @@ public class TalkSegment {
     public void setSendFlags(Map<String, String> sendFlags) {
         this.sendFlags = sendFlags;
     }
-    public Map<String, List<SendTime>> getSendTime() {
+    public Map<String, List<Date>> getSendTime() {
         return sendTime;
     }
-    public void setSendTime(Map<String, List<SendTime>> sendTime) {
-        this.sendTime = sendTime;
+    public void addSendTime(String uk, Date d) {
+        this.sendTime.get(uk).add(d);
     }
 }

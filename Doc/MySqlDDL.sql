@@ -9,6 +9,7 @@ CREATE TABLE plat_DictM (
   sort       int(5) unsigned  NOT NULL  DEFAULT 0  COMMENT '字典组排序,从大到小排序，越大越靠前',
   isValidate int(1) unsigned  NOT NULL  DEFAULT 1  COMMENT '是否生效(1-生效,2-无效)',
   mType      int(1) unsigned  NOT NULL  DEFAULT 3  COMMENT '字典类型(1-系统保留,2-系统,3-自定义)',
+  mClass     int(1) unsigned  NOT NULL  DEFAULT 1  COMMENT '字典分类(1-字典,2-分类,3-栏目)',
   mRef       varchar(4000)                         COMMENT '创建时间',
   descn      varchar(500)                          COMMENT '说明',
   cTime      timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
@@ -124,7 +125,7 @@ CREATE TABLE wt_FriendInvite (
   firstInviteTime  timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:首次邀请时间',
   inviteTime       timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '本次邀请时间',
   acceptFlag       int(1)        NOT NULL  DEFAULT 0     COMMENT '邀请状态：0未处理;1邀请成功;2拒绝邀请',
-  acceptTime       timestamp               DEFAULT NULL  COMMENT '接受/拒绝邀请的时间',
+  acceptTime       timestamp               DEFAULT CURRENT_TIMESTAMP  COMMENT '接受/拒绝邀请的时间',
   refuseMessage    varchar(32)                           COMMENT '拒绝邀请理由',
   PRIMARY KEY(id)
 )
@@ -157,14 +158,10 @@ CREATE TABLE wt_Broadcast (
   id            varchar(32)      NOT NULL  COMMENT 'uuid(主键)',
   bcTitle       varchar(100)     NOT NULL  COMMENT '电台名称',
   bcPubType     int(1) unsigned  NOT NULL  COMMENT '电台所属类型：1-组织表,2-文本',
-  bcPubId       varchar(32)      NOT NULL  COMMENT '电台所属集团',
-  bcPublisher   varchar(100)     NOT NULL  COMMENT '电台所属集团',
+  bcPubId       varchar(32)                COMMENT '电台所属集团Id',
+  bcPublisher   varchar(100)               COMMENT '电台所属集团',
   bcImg         varchar(100)               COMMENT '电台图标',
   bcURL         varchar(100)               COMMENT '电台网址',
-  mainCataMid   varchar(32)                COMMENT '主分类Mid',
-  mainCataDid   varchar(32)                COMMENT '主分类Did',
-  mainCataCode  varchar(32)                COMMENT '主分类业务编码',
-  mainCataName  varchar(32)                COMMENT '主分类名称',
   descn         varchar(4000)              COMMENT '电台说明',
   cTime         timestamp    NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
@@ -181,7 +178,7 @@ CREATE TABLE wt_BCLiveFlow (
   bcSource   varchar(100)     NOT NULL             COMMENT '来源，名称',
   flowURI    varchar(300)     NOT NULL             COMMENT '直播流URL',
   isMain     int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '是否是主直播流；1是主直播流',
-  descn      varchar(4000)                         COMMENT '来源说明',
+  descn      varchar(4000)                         COMMENT '直播流描述',
   cTime      timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
@@ -262,10 +259,6 @@ CREATE TABLE wt_MediaAsset (
   langDid         varchar(32)                COMMENT '语言字典项Id',
   language        varchar(32)                COMMENT '语言名称',
   timeLong        long                       COMMENT '时长，毫秒数',
-  mainCataMid     varchar(32)                COMMENT '主分类Mid',
-  mainCataDid     varchar(32)                COMMENT '主分类Did',
-  mainCataCode    varchar(32)                COMMENT '主分类业务编码',
-  mainCataName    varchar(32)                COMMENT '主分类名称',
   descn           varchar(4000)              COMMENT '说明',
   cTime           timestamp    NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
@@ -286,10 +279,6 @@ CREATE TABLE wt_SeqMediaAsset (
   keyWord           varchar(400)               COMMENT '关键词',
   langCataDid       varchar(32)                COMMENT '语言字典项Id',
   language          varchar(32)                COMMENT '语言名称',
-  mainCataMid       varchar(32)                COMMENT '主分类Mid',
-  mainCataDid       varchar(32)                COMMENT '主分类Did',
-  mainCataCode      varchar(32)                COMMENT '主分类业务编码',
-  mainCataName      varchar(32)                COMMENT '主分类名称',
   descn             varchar(4000)              COMMENT '说明',
   cTime             timestamp    NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
@@ -329,12 +318,12 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='018系列媒体与单体媒体对应
 DROP TABLE IF EXISTS wt_Person;
 CREATE TABLE wt_Person (
   id            varchar(32)      NOT NULL                COMMENT 'uuid(用户id)',
-  pName         varchar(100)               DEFAULT NULL  COMMENT '名称',
-  age           varchar(15)      NOT NULL                COMMENT '中文名称',
-  birthday      varchar(30)                DEFAULT NULL  COMMENT '密码',
-  sex           varchar(100)               DEFAULT NULL  COMMENT '邮箱(非空为一索引)',
-  descn         varchar(100)               DEFAULT NULL  COMMENT '用户主手机号码',
-  phoneNum      varchar(100)               DEFAULT NULL  COMMENT '内部通话号码，VOIP',
+  pName         varchar(100)     NOT NULL                COMMENT '名称',
+  age           varchar(15)                              COMMENT '年龄',
+  birthday      varchar(30)                DEFAULT NULL  COMMENT '生日',
+  sex           varchar(100)                             COMMENT '性别',
+  descn         varchar(4000)              DEFAULT NULL  COMMENT '人员描述',
+  phoneNum      varchar(100)               DEFAULT NULL  COMMENT '人员手机',
   email         varchar(100)               DEFAULT NULL  COMMENT 'eMail',
   homepage      varchar(100)                             COMMENT '个人主页',
   protraitBig   varchar(300)                             COMMENT '用户头像大',
@@ -349,7 +338,7 @@ DROP TABLE IF EXISTS wt_Organize;
 CREATE TABLE wt_Organize (
   id            varchar(32)      NOT NULL                COMMENT 'uuid(用户id)',
   oName         varchar(100)     NOT NULL                COMMENT '名称',
-  descn         varchar(100)               DEFAULT NULL  COMMENT '用户主手机号码',
+  descn         varchar(100)               DEFAULT NULL  COMMENT '说明',
   webPage       varchar(100)               DEFAULT NULL  COMMENT '官网地址',
   orgTypeId     varchar(100)                             COMMENT '组织分类Id，可分为：电台、网站等',
   orgTypeName   varchar(100)                             COMMENT '组织分类名称',
@@ -379,13 +368,13 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='021干系人与媒体信息关系';
 DROP TABLE IF EXISTS wt_ResCata_Ref;
 CREATE TABLE wt_ResCata_Ref (
   id         varchar(32)    NOT NULL  COMMENT 'uuid(主键)',
-  rType      varchar(32)    NOT NULL  COMMENT '资源类型Id：1电台；2单体媒体资源；3系列媒体资源',
-  rId        varchar(32)    NOT NULL  COMMENT '资源Id',
+  resType    varchar(32)    NOT NULL  COMMENT '资源类型Id：1电台；2单体媒体资源；3系列媒体资源',
+  resId      varchar(32)    NOT NULL  COMMENT '资源Id',
   dictMid    varchar(32)    NOT NULL  COMMENT '字典组Id',
   dictDid    varchar(32)    NOT NULL  COMMENT '字典项Id',
-  name       varchar(200)   NOT NULL  COMMENT '字典项Id',
+  title      varchar(200)   NOT NULL  COMMENT '字典项名称',
   bCode      varchar(200)   NOT NULL  COMMENT '字典项业务编码',
-  pathName   varchar(1000)  NOT NULL  COMMENT '字典项全名称',
+  pathNames  varchar(1000)  NOT NULL  COMMENT '字典项全名称',
   pathIds    varchar(100)   NOT NULL  COMMENT '字典项路径Id',
   cTime      timestamp      NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
