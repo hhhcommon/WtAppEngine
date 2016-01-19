@@ -76,6 +76,7 @@ public class DealReceivePureQueue extends Thread {
         }
         if (canContinue) {
             msg.setMsgId(__tmp);
+            msg.setReMsgId(m.get("ReMsgId")+"");
             MobileKey mk=MobileUtils.getMobileKey(m);
             msg.setFromAddr(MobileUtils.getAddr(mk));
             msg.setProxyAddrs("");
@@ -87,6 +88,7 @@ public class DealReceivePureQueue extends Thread {
             msg.setMsgBizType(m.get("BizType")+"");
             msg.setCmdType(m.get("CmdType")+"");
             msg.setCommand(m.get("Command")+"");
+            msg.setReturnType(m.get("ReturnType")+"");
             msg.setMsgContent(m.get("Data"));
         }
         if (StringUtils.isNullOrEmptyOrSpace(err)) retM.put("msg", msg);

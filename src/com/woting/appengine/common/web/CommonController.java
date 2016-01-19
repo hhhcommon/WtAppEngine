@@ -122,10 +122,10 @@ public class CommonController {
                     if (ms!=null) ms.access();
                 }
             }
-            //1-获取版本,逗号分开的序列，前面是版本号，后面是发布日期
+            //1-获取版本
             String _temp=MobileUtils.getLastVersion();
             if (_temp==null) {
-                map.put("Version", "内部版本0.0.x");
+                map.put("Version", "0.0.0.0.0");
                 map.put("PublishDate", "2015-09-18");
             } else {
                 String[] vs = _temp.split(",");
@@ -136,7 +136,11 @@ public class CommonController {
                     map.put("PublishDate", DateUtils.convert2LocalStr("yyyy-MM-dd", new Date()));
                 }
                 if (vs.length>2) {
-                    map.put("PatchInfo", vs[2]);
+                    String patchInfo="";
+                    for (int i=2; i<vs.length; i++) {
+                        patchInfo+=vs[i];
+                    }
+                    map.put("PatchInfo", patchInfo);
                 }
             }
             map.put("ServerStatus", "1");

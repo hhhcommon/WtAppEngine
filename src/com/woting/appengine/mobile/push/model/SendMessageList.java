@@ -29,9 +29,6 @@ public class SendMessageList {
      */
     public boolean add(Message m) throws IllegalAccessException {
         if (!m.isAffirm()) throw new IllegalAccessException("消息为不需要确认的消息，无需加入");
-
-        System.out.println("1=="+this.mk.toString());
-        System.out.println("2=="+MobileUtils.getMobileKey(m).toString());
         if (this.mk!=null&&!this.mk.equals(MobileUtils.getMobileKey(m))) throw new IllegalAccessException("不是同一设备的消息，不能加入");
 
         if (this.msgList.size()==0) {

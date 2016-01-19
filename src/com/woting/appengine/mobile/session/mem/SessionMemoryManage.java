@@ -1,6 +1,10 @@
 package com.woting.appengine.mobile.session.mem;
 
+import com.spiritdata.framework.core.cache.CacheEle;
+import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.util.StringUtils;
+import com.woting.WtAppEngineConstants;
+import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
@@ -35,7 +39,10 @@ public class SessionMemoryManage {
      * 清除过期的会话
      */
     public void clean() {
-        //System.out.println("【"+(new java.util.Date())+"】：清除过期会话");
+        //读取版本号
+        SystemCache.setCache(
+            new CacheEle<String>(WtAppEngineConstants.APP_VERSION, "移动端版本", MobileUtils.getVersion())
+        );
         //清除会话
         if (this.sm.mSessionMap!=null&&!this.sm.mSessionMap.isEmpty()) {
             for (String sKey: this.sm.mSessionMap.keySet()) {

@@ -63,10 +63,13 @@ public class TalkSegment {
         return sendUsers;
     }
     public void setSendUsers(Map<String, UserPo> sendUsers) {
-        this.sendUsers = sendUsers;
+        this.sendUsers = new HashMap<String, UserPo>();
         for (String k: sendUsers.keySet()) {
-            this.sendFlags.put(k, "0");
-            this.sendTime.put(k, new ArrayList<Date>());
+            if (!k.equals(this.wt.getTalkerMk().toString())) {
+                this.sendUsers.put(k, sendUsers.get(k));
+                this.sendFlags.put(k, "0");
+                this.sendTime.put(k, new ArrayList<Date>());
+            }
         }
     }
     public Map<String, String> getSendFlags() {
@@ -77,8 +80,5 @@ public class TalkSegment {
     }
     public Map<String, List<Date>> getSendTime() {
         return sendTime;
-    }
-    public void addSendTime(String uk, Date d) {
-        this.sendTime.get(uk).add(d);
     }
 }

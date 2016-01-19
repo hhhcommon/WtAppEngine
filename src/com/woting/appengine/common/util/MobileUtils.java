@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,6 +14,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletRequest;
@@ -29,6 +32,7 @@ import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
+import com.woting.WtAppEngineConstants;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.model.MobileParam;
 import com.woting.appengine.mobile.push.model.Message;
@@ -195,13 +199,12 @@ public abstract class MobileUtils {
         }
     }
 
-
     /**
      * 得到最新的版本号
      */
     public static String getLastVersion() {
         //应该从某一个文件中读取最新的版本号
-        return "1.2.23.A.3344,2015-11-20,1-电台功能;2-用户互相查找;3-修改了用户绑定的Bugs";
+        return ((CacheEle<String>)SystemCache.getCache(WtAppEngineConstants.APP_VERSION)).getContent();
     }
 
     /**
@@ -287,5 +290,22 @@ public abstract class MobileUtils {
             ret="{("+mk.getUserId()+"||wt)@@("+mk.getMobileId()+"||M)}";
         }
         return ret;
+    }
+
+    public static String getVersion() {
+        String version="0.0.0.0.0000";
+        Properties prop = new Properties();
+        FileInputStream in = null;
+        try {
+            String appPfileName= ((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent()+"/WEB-INF/app.properties";
+            in = new FileInputStream(appPfileName);
+            prop.load(in);
+            version = prop.getProperty("appVersion").trim()+","+prop.getProperty("publishTime").trim()+","+prop.getProperty("patchInfo").trim();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {in.close();} catch(Exception _e){} finally{in=null;}
+        }
+        return version;
     }
 }

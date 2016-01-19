@@ -167,12 +167,13 @@ public class Message implements Serializable, Comparable<Message> {
         String ret="";
         ret+=",\"MsgId\":\""+this.msgId+"\"";
         if (!StringUtils.isNullOrEmptyOrSpace(this.reMsgId)) ret+=",\"ReMsgId\":\""+this.reMsgId+"\"";
-        ret+=",\"NeedAffirm\":\""+this.affirm+"\"";
         ret+=",\"MsgType\":\""+this.msgType+"\"";
+        if (!StringUtils.isNullOrEmptyOrSpace(this.returnType)) ret+=",\"ReturnType\":\""+this.returnType+"\"";
+        ret+=",\"NeedAffirm\":\""+this.affirm+"\"";
+        ret+=",\"BizType\":\""+this.msgBizType+"\"";
         ret+=",\"CmdType\":\""+this.cmdType+"\"";
         ret+=",\"Command\":\""+this.command+"\"";
-        if (!StringUtils.isNullOrEmptyOrSpace(this.returnType)) ret+=",\"ReturnType\":\""+this.returnType+"\"";
-        ret+=",\"SendType\":\""+this.sendTime+"\"";
+        ret+=",\"SendTime\":\""+this.sendTime+"\"";
         ret+=",\"Data\":"+JsonUtils.objToJson(this.msgContent);
         ret="{"+ret.substring(1)+"}";
         return ret;

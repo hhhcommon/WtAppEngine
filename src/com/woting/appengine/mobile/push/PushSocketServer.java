@@ -17,12 +17,6 @@ public class PushSocketServer extends Thread {
     private static ServerSocket serverSocket=null;
     private static PushMemoryManage pmm=PushMemoryManage.getInstance();
 
-    /*
-    public static void main(String[] args) throws UnknownHostException, IOException {
-        PushSocketServer pss = new PushSocketServer(new PushConfig());
-        pss.start();
-    }*/
-
     /**
      * 构造函数
      * @param pc 推送参数

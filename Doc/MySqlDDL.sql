@@ -380,3 +380,11 @@ CREATE TABLE wt_ResCata_Ref (
   PRIMARY KEY(id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='022电台分类表';
+
+/**023 WT_BLACK_GNUM(组号黑名单，名单中号码不会出现在组号中)*/
+DROP TABLE IF EXISTS wt_Black_GNum;
+CREATE TABLE wt_Black_GNum (
+  groupNum  int(16) unsigned  NOT NULL  COMMENT '黑名单号码',
+  PRIMARY KEY(groupNum)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='023组号黑名单';

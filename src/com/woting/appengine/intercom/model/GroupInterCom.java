@@ -1,5 +1,6 @@
 package com.woting.appengine.intercom.model;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,13 +19,22 @@ public class GroupInterCom {
     //进入该组的用户列表
     private Map<String, UserPo> entryGroupUserMap;
     //组内发言人
-    private UserPo speaker;
+    private UserPo speaker;//用于组控制
+    //最后发言时间，用于清除发言人
+    private Date lastTalkTime;
 
     public Group getGroup() {
         return group;
     }
     public Map<String, UserPo> getEntryGroupUserMap() {
         return entryGroupUserMap;
+    }
+
+    public Date getLastTalkTime() {
+        return lastTalkTime;
+    }
+    public void setLastTalkTime(Date lastTalkTime) {
+        this.lastTalkTime = lastTalkTime;
     }
 
     /**
@@ -60,20 +70,21 @@ public class GroupInterCom {
                 else {
                     this.speaker=_speaker;
                     ret.put("T", speaker);
+                    this.lastTalkTime=null;
                 }
             }
         }
         return ret;
     }
     /**
-     * 删除当前对讲者，退出对讲
+     * 结束对讲
      * @param speaker 需要退出对讲的对讲人
      * @return 若当前不存在对讲人，返回-1；若当前对讲人与需要退出者为同一人，则清空当前对讲人，返回1；若当前对讲人与需要退出者不同，则返回0；
      */
-    synchronized public int removeSpeaker(MobileKey mk) {
+    synchronized public int endPTT(MobileKey mk) {
         if (this.speaker==null) return -1;
         if (mk.getUserId().equals(this.speaker.getUserId())) {
-            this.speaker=null;
+            //this.speaker=null;
             return 1;
         } else  return 0;
     }
@@ -155,7 +166,8 @@ public class GroupInterCom {
         }
         return _rm;
     }
-    public void delSpeakerOnDataCompleted() {
+    synchronized public void delSpeakerOnDataCompleted() {
         this.speaker=null;
+        this.lastTalkTime=null;
     }
 }

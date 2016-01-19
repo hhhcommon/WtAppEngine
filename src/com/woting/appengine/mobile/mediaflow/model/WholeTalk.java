@@ -10,6 +10,10 @@ import com.woting.appengine.mobile.model.MobileKey;
  * @author wanghui
  */
 public class WholeTalk {
+    protected long cycleTime=500;//周期时间，0.5秒
+    private int expiresT=5; //过期周期
+    //以上是控制时间的周期
+
     public WholeTalk() {
         super();
         this.talkData = new HashMap<Integer, TalkSegment>();
@@ -54,7 +58,7 @@ public class WholeTalk {
      * @param ts
      */
     public void addSegment(TalkSegment ts) {
-        if (ts.getWt()==null||!ts.getWt().getTalkId().equals(this.talkId)) throw new IllegalArgumentException("对话段的主对话与当前主对话不匹配");
+        if (ts.getWt()==null||!ts.getWt().getTalkId().equals(this.talkId)) throw new IllegalArgumentException("对话段的主对话与当前对话段不匹配");
         this.talkData.put(ts.getSeqNum(), ts);
         if (ts.getSeqNum()>this.MaxNum) this.MaxNum=ts.getSeqNum();
     }
@@ -70,7 +74,7 @@ public class WholeTalk {
         for (String k: ts.getSendFlags().keySet()) {
             if (!ts.getSendFlags().get(k).equals("2")) return false;
         }
-        for (int i=0; i<this.MaxNum; i++) {
+        for (int i=0-expiresT; i<this.MaxNum; i++) {
             ts = talkData.get(i);
             if (ts==null) return false;
             for (String k: ts.getSendFlags().keySet()) {
@@ -89,7 +93,7 @@ public class WholeTalk {
         if (ts==null) return false;
         if (!(new String(ts.getData())).equals("####")) return false;
 
-        for (int i=0; i<this.MaxNum; i++) {
+        for (int i=this.MaxNum-expiresT; i<this.MaxNum; i++) {//注意，若5个周期前的数据没有收到，则认为还没有全部收到
             ts = talkData.get(i);
             if (ts==null) return false;
         }

@@ -83,6 +83,9 @@ public class PushMemoryManage {
         return m;
     }
 
+    public int sendSize() {
+        return this.getSendMemory().msgMap.size();
+    }
     private AtomicBoolean serverRuning=new AtomicBoolean(false); //推送服务是否正常运行
     public boolean isServerRuning() {
         return this.serverRuning.get();

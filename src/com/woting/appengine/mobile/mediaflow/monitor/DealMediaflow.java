@@ -1,5 +1,6 @@
 package com.woting.appengine.mobile.mediaflow.monitor;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,7 +18,7 @@ import com.woting.appengine.mobile.push.model.CompareMsg;
 import com.woting.appengine.mobile.push.model.Message;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 
-public class DealMf extends Thread {
+public class DealMediaflow extends Thread {
     private PushMemoryManage pmm=PushMemoryManage.getInstance();
     private GroupMemoryManage gmm=GroupMemoryManage.getInstance();
 
@@ -25,7 +26,7 @@ public class DealMf extends Thread {
      * 给线程起一个名字的构造函数
      * @param name 线程名称
      */
-    public DealMf(String name) {
+    public DealMediaflow(String name) {
         super("流数据处理线程"+((name==null||name.trim().length()==0)?"":"::"+name));
     }
 
@@ -115,6 +116,13 @@ public class DealMf extends Thread {
             ts.setSendUsers(gic.getEntryGroupUserMap());
             ts.setSeqNum(seqNum);
             wt.addSegment(ts);
+            gic.setLastTalkTime(new Date());
+
+            //发送正常回执
+            retMsg.setReturnType("1001");
+            pmm.getSendMemory().addUniqueMsg2Queue(mk, retMsg, new CompareAudioFlowMsg());
+
+//            if (new String(ts.getData()).equals("####")) System.out.println("deCode:::====="+new String(ts.getData()));
             //发送广播消息，简单处理，只把这部分消息发给目的地，是声音数据文件
             Message bMsg=new Message();
             bMsg.setFromAddr("{(flowCTL)@@(www.woting.fm||S)}");
@@ -135,17 +143,17 @@ public class DealMf extends Thread {
                 mk=new MobileKey();
                 mk.setMobileId(_sp[0]);
                 mk.setUserId(_sp[1]);
-                if (!mk.getUserId().equals(talkerId)) {
-                    bMsg.setToAddr(MobileUtils.getAddr(mk));
-                    pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareAudioFlowMsg());
-                }
+                bMsg.setToAddr(MobileUtils.getAddr(mk));
+                pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareAudioFlowMsg());
                 //处理流数据
                 ts.getSendFlags().put(k, "1");
+                ts.getSendTime().get(k).add(new Date());
             }
             
             //看是否是结束包
-            System.out.println("deCode:::====="+new String(ts.getData()));
-            if (wt.isReceiveCompleted()) {
+            //if (wt.isReceiveCompleted()) {
+            if (true) {
+                gic.delSpeakerOnDataCompleted();
                 //广播结束消息
                 Message exitPttMsg=new Message();
                 exitPttMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
@@ -156,7 +164,7 @@ public class DealMf extends Thread {
                 exitPttMsg.setCommand("b2");
                 dataMap=new HashMap<String, Object>();
                 dataMap.put("GroupId", groupId);
-                dataMap.put("TalkUserId", talkId);
+                dataMap.put("TalkUserId", wt.getTalkerId());
                 exitPttMsg.setMsgContent(dataMap);
                 //发送广播消息
                 Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
@@ -182,7 +190,6 @@ public class DealMf extends Thread {
         public void run() {
             MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
             if (!mk.isUser()) return;
-            String talkerId=mk.getUserId();
             String talkId=((Map)sourceMsg.getMsgContent()).get("TalkId")+"";
             if (StringUtils.isEmptyOrWhitespaceOnly(talkId)) return;
             int seqNum=Integer.parseInt(((Map)sourceMsg.getMsgContent()).get("SeqNum")+"");
@@ -191,14 +198,43 @@ public class DealMf extends Thread {
             if (StringUtils.isEmptyOrWhitespaceOnly(groupId)) return;
 
             TalkMemoryManage tmm = TalkMemoryManage.getInstance();
-            WholeTalk wt = tmm.getWholeTalk(mk);
+            WholeTalk wt = tmm.getWholeTalk(talkId);
             if (wt!=null) {
                 if (sourceMsg.getReturnType().equals("1001")) {
                     TalkSegment ts = wt.getTalkData().get(seqNum);
                     String s = ts.getSendFlags().get(mk.toString());
                     if (s!=null) ts.getSendFlags().put(mk.toString(), "2");
                 }
-                if (wt.isCompleted()) tmm.removeWt(wt);
+                if (wt.isCompleted()) {
+                    tmm.removeWt(wt);
+                    //发送结束对讲消息
+                    GroupInterCom gic=gmm.getGroupInterCom(groupId);
+                    if (gic!=null&&gic.getSpeaker()!=null) {
+                        gic.delSpeakerOnDataCompleted();
+                        //广播结束消息
+                        Message exitPttMsg=new Message();
+                        exitPttMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+                        exitPttMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                        exitPttMsg.setMsgType(1);
+                        exitPttMsg.setMsgBizType("INTERCOM_CTL");
+                        exitPttMsg.setCmdType("PTT");
+                        exitPttMsg.setCommand("b2");
+                        Map<String, Object> dataMap=new HashMap<String, Object>();
+                        dataMap.put("GroupId", groupId);
+                        dataMap.put("TalkUserId", wt.getTalkerId());
+                        exitPttMsg.setMsgContent(dataMap);
+                        //发送广播消息
+                        Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
+                        for (String k: entryGroupUsers.keySet()) {
+                            String _sp[] = k.split("::");
+                            mk=new MobileKey();
+                            mk.setMobileId(_sp[0]);
+                            mk.setUserId(_sp[1]);
+                            exitPttMsg.setToAddr(MobileUtils.getAddr(mk));
+                            pmm.getSendMemory().addUniqueMsg2Queue(mk, exitPttMsg, new CompareGroupMsg());
+                        }
+                    }
+                }
             }
         }
     }

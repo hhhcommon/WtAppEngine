@@ -16,7 +16,7 @@ public class MobileSessionConfig {
     }
 
     //检查清除会话的间隔时间
-    private int CLEAN_INTERVAL=1000;
+    private int CLEAN_INTERVAL=60000;//60秒
 
     public int getCLEAN_INTERVAL() {
         return CLEAN_INTERVAL;
