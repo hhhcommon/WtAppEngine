@@ -422,7 +422,65 @@ public class GroupService {
             return 1;
         }
     }
+    /**
+     * 搜索用户组
+     * @param searchStr 搜索的字符串
+     * @return 用户列表
+     */
+    public List<Group> searchGroup(String searchStr) {
+        List<Group> ret = new ArrayList<Group>();
+        Map<String, Group> _tempM=new HashMap<String, Group>();
+        //从内存中查找
+        Group _g;
+        int max=0;
+        Map<String, GroupInterCom> gm = gmm.getAllGroup();
+        for (String sKey: gm.keySet()) {
+            GroupInterCom gic=gm.get(sKey);
+            _g=gic.getGroup();
+            int ss = searchScore(searchStr, _g);
+            if (ss>0) {
+                _tempM.put(ss+"", _g);
+                max=ss>max?ss:max;
+            }
+        }
+        _g=null;
+        for (int i=max; i>0; i--) {
+            _g=_tempM.get(i+"");
+            if (_g!=null) ret.add(_g);
+            _g=null;
+        }
+        return ret;
+    }
+    private int searchScore(String searchStr, Group g) {
+        int ret=0;
+        String s[]=searchStr.split(",");
+        for (int i=1; i<=s.length; i++) {
+            int wordScore=oneWordScore(s[i-1], g);
+            if (wordScore>0) ret+=wordScore*(1/Math.sqrt(i));
+        }
+        return ret;
+    }
+    private int oneWordScore(String oneWord, Group g) {
+        int ret=0;
+        if (g.getGroupName()!=null&&g.getGroupName().equals(oneWord)) ret+=30;
+        if (g.getGroupNum()!=null&&g.getGroupNum().equals(oneWord)) ret+=30;
+        if (g.getGroupName()!=null&&g.getGroupName().indexOf(oneWord)>0) ret+=10;
+        if (g.getGroupNum()!=null&&g.getGroupNum().indexOf(oneWord)>0) ret+=10;
+        List<UserPo> ul=g.getUserList();
+        UserPo up;
+        String userName;
+        for (int i=0;i<ul.size(); i++) {
+            up=ul.get(i);
+            userName=up.getLoginName();
+            if (userName!=null) {
+                if (userName.equals(oneWord)) ret+=3;
+                if (userName.indexOf(oneWord)>0) ret+=1;
+            }
+        }
+        return ret;
+    }
 
+    
     class CompareGroupMsg implements CompareMsg {
         @Override
         public boolean compare(Message msg1, Message msg2) {

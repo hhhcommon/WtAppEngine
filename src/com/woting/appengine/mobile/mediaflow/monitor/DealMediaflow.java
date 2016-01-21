@@ -149,10 +149,11 @@ public class DealMediaflow extends Thread {
                 ts.getSendFlags().put(k, "1");
                 ts.getSendTime().get(k).add(new Date());
             }
-            
+
             //看是否是结束包
             //if (wt.isReceiveCompleted()) {
             if (true) {
+                System.out.println("===========对讲结束：释放资源===============");
                 gic.delSpeakerOnDataCompleted();
                 //广播结束消息
                 Message exitPttMsg=new Message();

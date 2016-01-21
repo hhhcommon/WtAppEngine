@@ -1,6 +1,9 @@
 package com.woting.appengine.intercom.mem;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import javax.servlet.ServletContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import com.spiritdata.framework.FConstants;
@@ -62,5 +65,11 @@ public class GroupMemoryManage {
      */
     public GroupInterCom getGroupInterCom(String groupId) {
         return this.gm.gicMap.get(groupId);
+    }
+    /**
+     * 获取内存中所有数据
+     */
+    public Map<String, GroupInterCom> getAllGroup() {
+        return this.gm.gicMap;
     }
 }

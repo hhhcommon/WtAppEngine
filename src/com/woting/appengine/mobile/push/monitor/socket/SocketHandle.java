@@ -258,8 +258,8 @@ public class SocketHandle extends Thread {
                         //接收消息数据
                         in=new BufferedReader(new InputStreamReader(SocketHandle.this.socket.getInputStream(), "UTF-8"));
                         String revMsgStr=in.readLine();
-                        System.out.println("<"+(new Date()).toString()+">"+socketDesc+"[接收]:"+revMsgStr);
                         if (revMsgStr==null) continue;
+                        System.out.println("<"+(new Date()).toString()+">"+socketDesc+"[接收]:"+revMsgStr);
 
                         SocketHandle.this.lastVisitTime=System.currentTimeMillis();
                         //判断是否是心跳信号

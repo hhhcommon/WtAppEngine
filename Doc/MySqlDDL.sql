@@ -86,6 +86,7 @@ CREATE TABLE plat_Group (
   id             varchar(32)      NOT NULL                COMMENT 'uuid(用户组id)',
   groupNum       varchar(32)                              COMMENT '组号，用于公开的号码',
   groupName      varchar(100)     NOT NULL                COMMENT '组名称',
+  groupPwd       varchar(100)     NOT NULL                COMMENT '组密码',
   groupImg       varchar(200)                             COMMENT '用户组头像，是指向头像的URL',
   groupType      int(2) unsigned  NOT NULL  DEFAULT 0     COMMENT '用户组类型,0一般组(由用户根据好友创建);1号码组',
   pId            varchar(32)      NOT NULL  DEFAULT 0     COMMENT '上级用户组名称，默认0，为根',

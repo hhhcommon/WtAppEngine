@@ -9,6 +9,7 @@ public class GroupPo extends BaseObject {
     private String groupId; //用户组id
     private String groupNum; //组号，用于公开的号码
     private String groupName; //用户组名称
+    private String groupPwd; //用户组密码，可为空
     private String groupImg; //用户组头像
     private int groupType; //0一般组，1号码组，进入组不需要验证
     private String pId; //上级用户组Id
@@ -37,6 +38,12 @@ public class GroupPo extends BaseObject {
     }
     public void setGroupName(String groupName) {
         this.groupName = groupName;
+    }
+    public String getGroupPwd() {
+        return groupPwd;
+    }
+    public void setGroupPwd(String groupPwd) {
+        this.groupPwd = groupPwd;
     }
     public String getGroupImg() {
         return groupImg;
