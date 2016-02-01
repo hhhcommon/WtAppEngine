@@ -3,6 +3,7 @@ package com.woting.passport.web;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
@@ -555,11 +557,15 @@ public class PassportController {
                 for (GroupPo g:gl) {
                     gm=new HashMap<String, Object>();
                     gm.put("GroupId", g.getGroupId());
+                    gm.put("GroupNum", g.getGroupNum());
+                    gm.put("GroupType", g.getGroupType()+"");
+                    gm.put("GroupImg", g.getGroupImg());
                     gm.put("GroupName", g.getGroupName());
-                    gm.put("GroupCount", g.getGroupCount());
-                    gm.put("GroupImg", "images/group.png");
-                    gm.put("InnerPhoneNum", "3000");
-                    gm.put("Descripte", g.getDescn());
+                    gm.put("GroupCreator", g.getCreateUserId());
+                    gm.put("GroupManager", g.getAdminUserIds());
+                    gm.put("GroupCount", g.getGroupCount()+"");
+                    gm.put("GroupDesc", g.getDescn());
+                    gm.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date(g.getCTime().getTime())));
                     rgl.add(gm);
                 }
                 topItem.put("Groups", rgl);

@@ -352,7 +352,7 @@ public class DealInterCom extends Thread {
                     dataMap.put("GroupId", groupId);
                     retMsg.setMsgContent(dataMap);
 
-                    gic.setLastTalkTime(new Date());
+                    gic.setLastTalkTime(gic.getSpeaker()==null?null:gic.getSpeaker().getUserId());
                     int _r=gic.endPTT(mk);
                     if (_r==-1) {
                         retMsg.setReturnType("1002");

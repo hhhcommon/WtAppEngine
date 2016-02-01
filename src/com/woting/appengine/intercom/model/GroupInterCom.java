@@ -33,8 +33,10 @@ public class GroupInterCom {
     public Date getLastTalkTime() {
         return lastTalkTime;
     }
-    public void setLastTalkTime(Date lastTalkTime) {
-        this.lastTalkTime = lastTalkTime;
+    public void setLastTalkTime(String userId) {
+        if (this.speaker!=null&&userId.equals(this.speaker.getUserId())) {
+            this.lastTalkTime = new Date(System.currentTimeMillis());
+        }
     }
 
     /**
@@ -66,12 +68,19 @@ public class GroupInterCom {
             UserPo _speaker=this.entryGroupUserMap.get(speakerKey.toString());
             if (_speaker==null) ret.put("E", null);
             else {
+                //为测试，把判断Speaker的功能去掉：
+                {
+                    this.speaker=_speaker;
+                    ret.put("T", speaker);
+                    this.lastTalkTime=new Date(System.currentTimeMillis());
+                }
+                /*
                 if (this.speaker!=null) ret.put("F", this.speaker);
                 else {
                     this.speaker=_speaker;
                     ret.put("T", speaker);
                     this.lastTalkTime=null;
-                }
+                }*/
             }
         }
         return ret;
@@ -113,11 +122,11 @@ public class GroupInterCom {
     }
 
     /*
-     * 切换用户，进入用户组的进入与退出
+     * 切换用户，用户组的进入与退出
      * @param mk 用户标识
      * @param type 0=进入;1=退出
      * @return
-     *   returnType=1成功；2在进入组状态不正确；3用户不在用户组
+     *   returnType=1成功；2组状态不正确；3用户不在用户组
      *   entryGroupUsers=返回处理后的进入组用户Map；(当且仅当returnType=1)
      *   needBroadCast=是否需要广播消息；(当且仅当returnType=1)
      */
@@ -143,10 +152,10 @@ public class GroupInterCom {
 
         //用户在加入组Map的状态
         retM.put("returnType", "2");
-        int oldSize=entryGroupUserMap.size();
         exist=entryGroupUserMap.containsKey(mk.toString());
 
         if (!exist&&type==0) {//进入组处理
+            int oldSize=entryGroupUserMap.size();
             this.entryGroupUserMap.put(mk.toString(), entryUp);
             retM.put("returnType", "1");
             retM.put("entryGroupUsers", this.cloneEntryGroupUserMap());
@@ -166,8 +175,13 @@ public class GroupInterCom {
         }
         return _rm;
     }
-    synchronized public void delSpeakerOnDataCompleted() {
-        this.speaker=null;
-        this.lastTalkTime=null;
+    /**
+     * 删除对讲者
+     */
+    synchronized public void delSpeaker(String userId) {
+        if (this.speaker!=null&&userId.equals(this.speaker.getUserId())) {
+            this.speaker=null;
+            this.lastTalkTime=null;
+        }
     }
 }

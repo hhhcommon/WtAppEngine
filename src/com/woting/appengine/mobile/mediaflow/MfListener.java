@@ -16,11 +16,11 @@ public class MfListener extends Thread {
         mfl.start();
     }
 
-    public void cleanTmm() {
+    private void cleanTmm() {
         System.out.println("启动对讲会话清理任务，任务启动间隔["+mfc.getCLEAN_INTERVAL()+"]毫秒");
-        Timer mediaflow_Timer = new Timer("对讲会话清理任务，每隔["+mfc.getCLEAN_INTERVAL()+"]毫秒执行", true);
+        Timer mediaflow_CleanTimer = new Timer("对讲会话清理任务，每隔["+mfc.getCLEAN_INTERVAL()+"]毫秒执行", true);
         CleanMediaflowTask ct = new CleanMediaflowTask();
-        mediaflow_Timer.schedule(ct, new Date(), mfc.getCLEAN_INTERVAL());
+        mediaflow_CleanTimer.schedule(ct, new Date(), mfc.getCLEAN_INTERVAL());
     }
 
     @Override

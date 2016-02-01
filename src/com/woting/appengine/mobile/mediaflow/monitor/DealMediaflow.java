@@ -116,7 +116,7 @@ public class DealMediaflow extends Thread {
             ts.setSendUsers(gic.getEntryGroupUserMap());
             ts.setSeqNum(seqNum);
             wt.addSegment(ts);
-            gic.setLastTalkTime(new Date());
+            gic.setLastTalkTime(talkerId);
 
             //发送正常回执
             retMsg.setReturnType("1001");
@@ -154,7 +154,7 @@ public class DealMediaflow extends Thread {
             //if (wt.isReceiveCompleted()) {
             if (true) {
                 System.out.println("===========对讲结束：释放资源===============");
-                gic.delSpeakerOnDataCompleted();
+                gic.delSpeaker(talkerId);
                 //广播结束消息
                 Message exitPttMsg=new Message();
                 exitPttMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
@@ -191,8 +191,9 @@ public class DealMediaflow extends Thread {
         public void run() {
             MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
             if (!mk.isUser()) return;
+            String talkerId=mk.getUserId();
             String talkId=((Map)sourceMsg.getMsgContent()).get("TalkId")+"";
-            if (StringUtils.isEmptyOrWhitespaceOnly(talkId)) return;
+            if (StringUtils.isEmptyOrWhitespaceOnly(talkerId)) return;
             int seqNum=Integer.parseInt(((Map)sourceMsg.getMsgContent()).get("SeqNum")+"");
             if (seqNum<0) return;
             String groupId=((Map)sourceMsg.getMsgContent()).get("GroupId")+"";
@@ -211,7 +212,7 @@ public class DealMediaflow extends Thread {
                     //发送结束对讲消息
                     GroupInterCom gic=gmm.getGroupInterCom(groupId);
                     if (gic!=null&&gic.getSpeaker()!=null) {
-                        gic.delSpeakerOnDataCompleted();
+                        gic.delSpeaker(talkerId);
                         //广播结束消息
                         Message exitPttMsg=new Message();
                         exitPttMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");

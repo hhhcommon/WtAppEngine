@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
+import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.model.MobileParam;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
@@ -31,6 +32,8 @@ public class CommonController {
     private UserService userService;
     @Resource
     private MobileUsedService muService;
+    @Resource
+    private ContentService contentService;
 
     private SessionMemoryManage smm=SessionMemoryManage.getInstance();
 
@@ -229,6 +232,7 @@ public class CommonController {
                 }
                 //获得SessionId
             }
+            
             //1-获取地区信息
             List<Map<String, Object>> ml = new ArrayList<Map<String, Object>>();
             Map<String, Object> media;
@@ -483,82 +487,126 @@ public class CommonController {
     public Map<String,Object> searchByVoice(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            //0-处理访问
+            //0-获取参数
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
-            if (m!=null&&m.size()>0) {
-                MobileParam mp=MobileUtils.getMobileParam(m);
-                MobileKey sk=(mp==null?null:mp.getMobileKey());
-                if (sk!=null){
-                    map.put("SessionId", sk.getSessionId());
-                    MobileSession ms=smm.getSession(sk);
-                    if (ms!=null) ms.access();
-                }
-                //获得语音转文字的结果
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+                return map;
             }
-            //1-获取地区信息
-            List<Map<String, Object>> rl = new ArrayList<Map<String, Object>>();
-            Map<String, Object> media;
-            media = new HashMap<String, Object>();
-            media.put("MediaType", "RES"); //文件资源
-            media.put("ResType", "mp3");
-            media.put("ResClass", "评书");
-            media.put("ResStyle", "文学名著");
-            media.put("ResActor", "张三");
-            media.put("ResName", "三打白骨精");
-            media.put("ResImg", "images/dft_res.png");
-            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
-            media.put("ResTime", "14:35");
-            rl.add(media);
-            media = new HashMap<String, Object>();
-            media.put("MediaType", "RADIO"); //电台
-            media.put("RadioName", "CRI英语漫听电台");
-            media.put("RadioId", "001");
-            media.put("RadioImg", "images/dft_broadcast.png");
-            media.put("RadioURI", "mms://live.cri.cn/english");
-            media.put("CurrentContent", "路况信息");//当前节目
-            rl.add(media);
-            media = new HashMap<String, Object>();
-            media.put("MediaType", "RES"); //文件资源
-            media.put("ResType", "mp3");
-            media.put("ResClass", "歌曲");
-            media.put("ResStyle", "摇滚");
-            media.put("ResActor", "李四");
-            media.put("ResName", "歌曲名称");
-            media.put("ResImg", "images/dft_actor.png");
-            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
-            media.put("ResTime", "4:35");
-            rl.add(media);
-            media = new HashMap<String, Object>();
-            media.put("MediaType", "RADIO"); //电台
-            media.put("RadioName", "CRI乡村民谣音乐");
-            media.put("RadioId", "003");
-            media.put("RadioImg", "images/dft_broadcast.png");
-            media.put("RadioURI", "mms://live.cri.cn/country");
-            media.put("CurrentContent", "时政要闻");//当前节目
-            rl.add(media);
-            media = new HashMap<String, Object>();
-            media.put("MediaType", "RES"); //文件资源
-            media.put("ResType", "mp3");
-            media.put("ResClass", "脱口秀");
-            media.put("ResStyle", "文化");
-            media.put("ResSeries", "逻辑思维");
-            media.put("ResActor", "罗某某");
-            media.put("ResName", "逻辑思维001");
-            media.put("ResImg", "images/dft_actor.png");
-            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
-            media.put("ResTime", "4:35");
-            rl.add(media);
-            media = new HashMap<String, Object>();
-            media.put("MediaType", "RADIO"); //电台
-            media.put("RadioName", "CRI肯尼亚调频");
-            media.put("RadioId", "002");
-            media.put("RadioImg", "images/dft_broadcast.png");
-            media.put("RadioURI", "mms://livexwb.cri.com.cn/kenya");
-            media.put("CurrentContent", "经典回顾");//当前节目
-            rl.add(media);
-            map.put("ReturnType", "1001");
-            map.put("ResultList", rl);
+            String creator=(String)m.get("Creator");
+            MobileParam mp=MobileUtils.getMobileParam(m);
+            mp.setUserId(creator);
+            MobileKey sk=(mp==null?null:mp.getMobileKey());
+            if (sk==null) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取设备Id(IMEI)");
+                return map;
+            }
+            //1-得到创建者，并处理访问
+            map.put("SessionId", sk.getSessionId());
+            MobileSession ms=smm.getSession(sk);
+            if (ms==null) {
+                ms=new MobileSession(sk);
+                smm.addOneSession(ms);
+            } else {
+                ms.access();
+                if (creator==null) {
+                    UserPo u=(UserPo)ms.getAttribute("user");
+                    if (u!=null) creator=u.getUserId();
+                }
+            }
+            if (StringUtils.isNullOrEmptyOrSpace(creator)) {
+                map.put("ReturnType", "1002");
+                map.put("Message", "无法得到创建者");
+                return map;
+            }
+            //获得查询串
+            String searchStr=(String)m.get("SearchStr");
+            if (StringUtils.isNullOrEmptyOrSpace(searchStr)) {
+                map.put("ReturnType", "1003");
+                map.put("Message", "无法得到查询串");
+                return map;
+            }
+            //获得结果类型
+            int resultType=0;
+            try {
+                resultType=Integer.parseInt(m.get("ResultType")+"");
+            } catch(Exception e) {
+            }
+            
+            Map<String, Object> cl = contentService.searchAll(searchStr, resultType);
+            if (cl!=null&&cl.size()>0) {
+                
+                map.put("ReturnType", "1001");
+            } else {
+                map.put("ReturnType", "1011");
+                map.put("Message", "没有查到任何内容");
+            }
             return map;
+//            List<Map<String, Object>> rl = new ArrayList<Map<String, Object>>();
+//            Map<String, Object> media;
+//            media = new HashMap<String, Object>();
+//            media.put("MediaType", "RES"); //文件资源
+//            media.put("ResType", "mp3");
+//            media.put("ResClass", "评书");
+//            media.put("ResStyle", "文学名著");
+//            media.put("ResActor", "张三");
+//            media.put("ResName", "三打白骨精");
+//            media.put("ResImg", "images/dft_res.png");
+//            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
+//            media.put("ResTime", "14:35");
+//            rl.add(media);
+//            media = new HashMap<String, Object>();
+//            media.put("MediaType", "RADIO"); //电台
+//            media.put("RadioName", "CRI英语漫听电台");
+//            media.put("RadioId", "001");
+//            media.put("RadioImg", "images/dft_broadcast.png");
+//            media.put("RadioURI", "mms://live.cri.cn/english");
+//            media.put("CurrentContent", "路况信息");//当前节目
+//            rl.add(media);
+//            media = new HashMap<String, Object>();
+//            media.put("MediaType", "RES"); //文件资源
+//            media.put("ResType", "mp3");
+//            media.put("ResClass", "歌曲");
+//            media.put("ResStyle", "摇滚");
+//            media.put("ResActor", "李四");
+//            media.put("ResName", "歌曲名称");
+//            media.put("ResImg", "images/dft_actor.png");
+//            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
+//            media.put("ResTime", "4:35");
+//            rl.add(media);
+//            media = new HashMap<String, Object>();
+//            media.put("MediaType", "RADIO"); //电台
+//            media.put("RadioName", "CRI乡村民谣音乐");
+//            media.put("RadioId", "003");
+//            media.put("RadioImg", "images/dft_broadcast.png");
+//            media.put("RadioURI", "mms://live.cri.cn/country");
+//            media.put("CurrentContent", "时政要闻");//当前节目
+//            rl.add(media);
+//            media = new HashMap<String, Object>();
+//            media.put("MediaType", "RES"); //文件资源
+//            media.put("ResType", "mp3");
+//            media.put("ResClass", "脱口秀");
+//            media.put("ResStyle", "文化");
+//            media.put("ResSeries", "逻辑思维");
+//            media.put("ResActor", "罗某某");
+//            media.put("ResName", "逻辑思维001");
+//            media.put("ResImg", "images/dft_actor.png");
+//            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
+//            media.put("ResTime", "4:35");
+//            rl.add(media);
+//            media = new HashMap<String, Object>();
+//            media.put("MediaType", "RADIO"); //电台
+//            media.put("RadioName", "CRI肯尼亚调频");
+//            media.put("RadioId", "002");
+//            media.put("RadioImg", "images/dft_broadcast.png");
+//            media.put("RadioURI", "mms://livexwb.cri.com.cn/kenya");
+//            media.put("CurrentContent", "经典回顾");//当前节目
+//            rl.add(media);
+//            map.put("ReturnType", "1001");
+//            map.put("ResultList", rl);
+//            return map;
         } catch(Exception e) {
             e.printStackTrace();
             map.put("ReturnType", "T");

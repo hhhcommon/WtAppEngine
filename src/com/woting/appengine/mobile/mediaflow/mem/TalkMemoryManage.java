@@ -61,7 +61,9 @@ public class TalkMemoryManage {
         return ret;
     }
 
-    //清除内存，按时间判断，并且要处理对讲组内存
+    /**
+     * 清除内存，按时间判断，并且要处理对讲组内存
+     */
     public void clean() {
         if (this.tm.talkMap!=null&&!this.tm.talkMap.isEmpty()) {
             Map<String, Object> dataMap;
@@ -74,16 +76,9 @@ public class TalkMemoryManage {
                 WholeTalk wt = this.tm.talkMap.get(k);
 
                 GroupInterCom gic = gmm.getGroupInterCom(wt.getGroupId());
-                boolean talkEnd=false;
                 //判断对讲是否结束
-                if (wt.isCompleted()) talkEnd=true;
-                else {
-                    if (gic!=null&&gic.getLastTalkTime()!=null) {
-                        if (System.currentTimeMillis()-gic.getLastTalkTime().getTime()>60000) {//5秒钟没有处理了
-                            talkEnd=true;
-                        }
-                    }
-                }
+                boolean talkEnd=false;
+                talkEnd=wt.isCompleted()||gic==null||gic.getSpeaker()==null;
                 if (talkEnd) {
                     this.removeWt(wt);//清除对讲内存
                     //发广播消息，推出PTT
@@ -111,7 +106,7 @@ public class TalkMemoryManage {
                             pmm.getSendMemory().addUniqueMsg2Queue(mk, exitPttMsg, new CompareGroupMsg());
                         }
                     }
-                    gic.delSpeakerOnDataCompleted();
+                    gic.delSpeaker(gic.getSpeaker()==null?null:gic.getSpeaker().getUserId());
                 }
             }
         }

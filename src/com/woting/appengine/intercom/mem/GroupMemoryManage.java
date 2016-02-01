@@ -2,7 +2,6 @@ package com.woting.appengine.intercom.mem;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -33,6 +32,7 @@ public class GroupMemoryManage {
     }
 
     private boolean inited=false;
+
     /**
      * 从数据库中读取信息，并初始化内存结构
      */
@@ -50,11 +50,13 @@ public class GroupMemoryManage {
         }
         this.inited=true;
     }
+
     //把一个用户组对象加入gicMap
     public void addOneGroup(Group g) {
-        GroupInterCom groupIC = new GroupInterCom(g);
-        this.gm.gicMap.put(g.getGroupId(), groupIC);
+        GroupInterCom gic = new GroupInterCom(g);
+        this.gm.gicMap.put(g.getGroupId(), gic);
     }
+
     //删除一个组
     public void delOneGroup(Group g) {
         this.gm.gicMap.remove(g.getGroupId());
@@ -66,10 +68,26 @@ public class GroupMemoryManage {
     public GroupInterCom getGroupInterCom(String groupId) {
         return this.gm.gicMap.get(groupId);
     }
+
     /**
      * 获取内存中所有数据
      */
     public Map<String, GroupInterCom> getAllGroup() {
         return this.gm.gicMap;
+    }
+
+    /**
+     * 清除对话过期的对讲者
+     * @param expireTime 
+     */
+    public void cleanSpeaker(long expireTime) {
+        GroupInterCom gic=null;
+        for (String k: this.gm.gicMap.keySet()) {
+            gic=this.gm.gicMap.get(k);
+            if (gic==null||gic.getSpeaker()==null||gic.getLastTalkTime()==null) continue;
+            if (System.currentTimeMillis()-gic.getLastTalkTime().getTime()>expireTime) {
+                gic.delSpeaker(gic.getSpeaker().getUserId());
+            }
+        }
     }
 }

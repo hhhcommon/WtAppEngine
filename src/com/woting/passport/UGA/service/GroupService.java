@@ -455,7 +455,7 @@ public class GroupService {
         int ret=0;
         String s[]=searchStr.split(",");
         for (int i=1; i<=s.length; i++) {
-            int wordScore=oneWordScore(s[i-1], g);
+            int wordScore=oneWordScore(s[i-1].trim(), g);
             if (wordScore>0) ret+=wordScore*(1/Math.sqrt(i));
         }
         return ret;
