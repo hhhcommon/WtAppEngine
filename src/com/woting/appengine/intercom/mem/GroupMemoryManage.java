@@ -82,6 +82,7 @@ public class GroupMemoryManage {
      */
     public void cleanSpeaker(long expireTime) {
         GroupInterCom gic=null;
+        long b=System.currentTimeMillis();
         for (String k: this.gm.gicMap.keySet()) {
             gic=this.gm.gicMap.get(k);
             if (gic==null||gic.getSpeaker()==null||gic.getLastTalkTime()==null) continue;
