@@ -191,4 +191,60 @@
   <select id="getGroupUserByGroupId" resultMap="groupUserMap" parameterType="java.lang.String">
     select * from plat_GroupUser where groupId=#{groupId, jdbcType=VARCHAR}
   </select>
+
+  <!-- 以下临时 -->
+  <select id="searchCata" resultType="java.util.HashMap">
+    select * from wt_ResCata_Ref where
+    <foreach collection="array" index="index" item="tag" open="" separator="or" close="">
+    title like '%${tag}%'
+    </foreach>
+  </select>
+  <select id="searchBc" resultType="java.util.HashMap" parameterType="java.util.Map">
+    select a.*, b.bcSource, b.flowURI from wt_Broadcast a
+    left join wt_BCLiveFlow b on a.id=b.bcId and b.isMain=1
+    where 
+    <foreach collection="searchArray" index="index" item="tag" open="" separator="or" close="">
+    CONCAT(a.bcTitle, '#S#', a.bcPublisher) like '%${tag}%'
+    </foreach>
+    <if test="inIds!=null">
+    union 
+    select c.*, d.bcSource, d.flowURI from wt_Broadcast c
+    left join wt_BCLiveFlow d on c.id=d.bcId and d.isMain=1
+    where c.id in (${inIds})
+    </if>
+  </select>
+  <select id="searchPerson" resultType="java.util.HashMap">
+    select * from wt_MaPerson_Ref a, wt_Person b
+    where a.personId=b.id and (
+    <foreach collection="array" index="index" item="tag" open="" separator="or" close="">
+    pName like '%${tag}%'
+    </foreach>
+    )
+  </select>
+  <select id="searchMa" resultType="java.util.HashMap" parameterType="java.util.Map">
+    select a.*, b.smType, b.maSource, b.playURI from wt_MediaAsset a
+    left join wt_MaSource b on a.id=b.maId and b.isMain=1
+    where
+    <foreach collection="searchArray" index="index" item="tag" open="" separator="or" close="">
+    CONCAT(a.maTitle,'#S#',a.maPublisher,'#S#',a.subjectWord,'#S#',a.keyWord,'#S#',a.descn) like '%${tag}%'
+    </foreach>
+    <if test="inIds!=null">
+    union 
+    select c.*, d.smType, d.maSource, d.playURI from wt_MediaAsset c
+    left join wt_MaSource d on c.id=d.maId and d.isMain=1
+    where c.id in (${inIds})
+    </if>
+  </select>
+  <select id="searchSeqMa" resultType="java.util.HashMap" parameterType="java.util.Map">
+    select a.*, b.count from wt_SeqMediaAsset a, (select sid, count(*) count from wt_SeqMA_Ref group by sid) b
+    where a.id=b.sid and
+    <foreach collection="searchArray" index="index" item="tag" open="" separator="or" close="">
+    CONCAT(a.smaTitle,'#S#',a.smaPublisher,'#S#',a.subjectWord,'#S#',a.keyWord,'#S#',a.descn) like '%${tag}%'
+    </foreach>
+    <if test="inIds!=null">
+    union 
+    select c.*, d.count from wt_SeqMediaAsset c, (select sid, count(*) count from wt_SeqMA_Ref group by sid) d
+    where c.id=d.sid and c.id in (${inIds})
+    </if>
+  </select>
 </mapper>

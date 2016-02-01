@@ -80,15 +80,9 @@ public class GroupController {
 
             //创建用户组
             //得到组分类：验证群0；公开群1[原来的号码群]；密码群2
-            String groupType=(String)m.get("GroupType");
-            if (StringUtils.isNullOrEmptyOrSpace(groupType)) {
-                map.put("ReturnType", "1003");
-                map.put("Message", "无法得到组分类");
-                return map;
-            }
             int _groupType=0;
             try {
-                _groupType=Integer.parseInt(groupType);
+                _groupType=Integer.parseInt(m.get("GroupType")+"");
             } catch(Exception e) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法得到组分类");
@@ -104,7 +98,7 @@ public class GroupController {
                 }
             }
             //是否需要用户组
-            boolean needMember=((String)m.get("NeedMember")).equals("1");
+            boolean needMember=(m.get("NeedMember")+"").equals("1");
             String memNames="";
             List<UserPo> ml=null;
             if (needMember) {
@@ -180,6 +174,7 @@ public class GroupController {
             if (_groupType==2) g.setGroupPwd(groupPwd);
             g.setCreateUserId(creator);
             g.setAdminUserIds(creator);
+            g.setGroupType(_groupType);
             g.setUserList(ml);
             g.setGroupType(_groupType);
             groupService.insertGroup(g);
@@ -192,6 +187,8 @@ public class GroupController {
             groupMap.put("GroupName", g.getGroupName());
             groupMap.put("GroupCreator", g.getCreateUserId());
             groupMap.put("GroupManager", g.getAdminUserIds());
+            groupMap.put("GroupCount", ml.size()+"");
+            groupMap.put("GroupDesc", g.getDescn());
             groupMap.put("GroupImg", g.getGroupImg());
             groupMap.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date()));
             map.put("GroupInfo", groupMap);
@@ -456,9 +453,14 @@ public class GroupController {
                     oneGroup.put("GroupId", _g.getGroupId());
                     oneGroup.put("GroupNum", _g.getGroupNum());
                     oneGroup.put("GroupType", _g.getGroupType()+"");
+                    oneGroup.put("GroupImg", _g.getGroupImg());
                     oneGroup.put("GroupName", _g.getGroupName());
                     oneGroup.put("GroupCreator", _g.getCreateUserId());
                     oneGroup.put("GroupManager", _g.getAdminUserIds());
+                    oneGroup.put("GroupCount", _g.getUserList().size()+"");
+                    oneGroup.put("GroupDesc", _g.getDescn());
+                    oneGroup.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date(_g.getCTime().getTime())));
+
                     List<UserPo> ul=_g.getUserList();
                     String userNames="";
                     for (int j=0;j<ul.size(); j++) {
@@ -529,7 +531,7 @@ public class GroupController {
                 map.put("Message", "无法得到用户组Id");
                 return map;
             }
-            boolean hasField=false;//是否有可用的更新内容
+            //boolean hasField=false;//是否有可用的更新内容
 
             return map;
         } catch(Exception e) {
@@ -590,88 +592,15 @@ public class GroupController {
                 for (GroupPo g:gl) {
                     gm=new HashMap<String, Object>();
                     gm.put("GroupId", g.getGroupId());
-                    gm.put("GroupName", g.getGroupName());
-                    gm.put("GroupCount", g.getGroupCount());
                     gm.put("GroupNum", g.getGroupNum());
-                    gm.put("CreateTime", g.getCTime());
+                    gm.put("GroupType", g.getGroupType()+"");
                     gm.put("GroupImg", g.getGroupImg());
-                    gm.put("InnerPhoneNum", "3000");
-                    gm.put("Descripte", g.getDescn());
-                    rgl.add(gm);
-                }
-                map.put("ReturnType", "1001");
-                map.put("GroupList", rgl);
-            } else {
-                map.put("ReturnType", "1011");
-                map.put("Message", "无所属用户组");
-            }
-            return map;
-        } catch(Exception e) {
-            map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
-            return map;
-        }
-    }
-
-    /**
-     * 根据某一个字符串查找用户组
-     */
-    @RequestMapping(value="findGroup.do")
-    @ResponseBody
-    public Map<String,Object> findGroup(HttpServletRequest request) {
-        Map<String,Object> map=new HashMap<String, Object>();
-        try {
-            //0-获取参数
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
-            if (m==null||m.size()==0) {
-                map.put("ReturnType", "0000");
-                map.put("Message", "无法获取需要的参数");
-                return map;
-            }
-            MobileParam mp=MobileUtils.getMobileParam(m);
-            MobileKey sk=(mp==null?null:mp.getMobileKey());
-            if (sk==null) {
-                map.put("ReturnType", "0000");
-                map.put("Message", "无法获取设备Id(IMEI)");
-                return map;
-            }
-            //1-获取UserId，并处理访问
-            String userId=sk.isUser()?sk.getUserId():null;
-            if (sk!=null) {
-                map.put("SessionId", sk.getSessionId());
-                MobileSession ms=smm.getSession(sk);
-                if (ms==null) {
-                    ms=new MobileSession(sk);
-                    smm.addOneSession(ms);
-                } else {
-                    ms.access();
-                    if (userId==null) {
-                        UserPo u=(UserPo)ms.getAttribute("user");
-                        if (u!=null) userId=u.getUserId();
-                    }
-                }
-            }
-            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
-                map.put("ReturnType", "1002");
-                map.put("Message", "无法获取用户Id");
-                return map;
-            }
-            
-            //2-得到用户组
-            List<GroupPo> gl=groupService.getGroupsByUserId(userId);
-            List<Map<String, Object>> rgl=new ArrayList<Map<String, Object>>();
-            if (gl!=null&&gl.size()>0) {
-                Map<String, Object> gm;
-                for (GroupPo g:gl) {
-                    gm=new HashMap<String, Object>();
-                    gm.put("GroupId", g.getGroupId());
                     gm.put("GroupName", g.getGroupName());
-                    gm.put("GroupCount", g.getGroupCount());
-                    gm.put("GroupNum", g.getGroupNum());
-                    gm.put("CreateTime", g.getCTime());
-                    gm.put("GroupImg", g.getGroupImg());
-                    gm.put("InnerPhoneNum", "3000");
-                    gm.put("Descripte", g.getDescn());
+                    gm.put("GroupCreator", g.getCreateUserId());
+                    gm.put("GroupManager", g.getAdminUserIds());
+                    gm.put("GroupCount", g.getGroupCount()+"");
+                    gm.put("GroupDesc", g.getDescn());
+                    gm.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date(g.getCTime().getTime())));
                     rgl.add(gm);
                 }
                 map.put("ReturnType", "1001");
@@ -739,13 +668,16 @@ public class GroupController {
                 for (GroupPo g:gl) {
                     gm=new HashMap<String, Object>();
                     gm.put("GroupId", g.getGroupId());
-                    gm.put("GroupName", g.getGroupName());
-                    gm.put("GroupCount", g.getGroupCount());
                     gm.put("GroupNum", g.getGroupNum());
-                    gm.put("CreateTime", g.getCTime());
+                    gm.put("GroupType", g.getGroupType()+"");
                     gm.put("GroupImg", g.getGroupImg());
+                    gm.put("GroupName", g.getGroupName());
+                    gm.put("GroupCreator", g.getCreateUserId());
+                    gm.put("GroupManager", g.getAdminUserIds());
+                    gm.put("GroupCount", g.getGroupCount());
+                    gm.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date(g.getCTime().getTime())));
+                    gm.put("GroupDesc", g.getDescn());
                     gm.put("InnerPhoneNum", "3000");
-                    gm.put("Descripte", g.getDescn());
                     rgl.add(gm);
                 }
                 map.put("ReturnType", "1001");
@@ -901,13 +833,16 @@ public class GroupController {
             //组信息
             Map<String, Object> gm = new HashMap<String, Object>();
             gm.put("GroupId", gp.getGroupId());
-            gm.put("GroupName", gp.getGroupName());
-            gm.put("GroupCount", "0");
+            gm.put("GroupNum", gp.getGroupNum());
+            gm.put("GroupType", gp.getGroupType()+"");
             gm.put("GroupImg", gp.getGroupImg());
-            gm.put("CreateTime", gp.getCTime());
+            gm.put("GroupName", gp.getGroupName());
+            gm.put("GroupCreator", gp.getCreateUserId());
+            gm.put("GroupManager", gp.getAdminUserIds());
+            gm.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date(gp.getCTime().getTime())));
+            gm.put("GroupDesc", gp.getDescn());
             gm.put("InnerPhoneNum", "3000");
-            gm.put("CreateUserId", gp.getCreateUserId());
-            map.put("GroupInfo", gm);
+
             //组成员
             List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
             List<UserPo> ul=groupService.getGroupMembers(gp.getGroupId());
@@ -918,6 +853,7 @@ public class GroupController {
                 }
                 map.put("UserList", rul);
             }
+            gm.put("GroupCount", rul.size()+"");
             return map;
         } catch(Exception e) {
             map.put("ReturnType", "T");
