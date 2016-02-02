@@ -1,11 +1,16 @@
 package com.woting.appengine.intercom.model;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.spiritdata.framework.util.SequenceUUID;
+import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
+import com.woting.appengine.mobile.push.mem.PushMemoryManage;
+import com.woting.appengine.mobile.push.model.CompareMsg;
+import com.woting.appengine.mobile.push.model.Message;
 import com.woting.passport.UGA.model.Group;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 
@@ -21,7 +26,9 @@ public class GroupInterCom {
     //组内发言人
     private UserPo speaker;//用于组控制
     //最后发言时间，用于清除发言人
-    private Date lastTalkTime;
+    private long lastTalkTime=-1;
+    //是否已经发送了结束对讲的消息
+    public AtomicBoolean isSendEndPPTMsg=new AtomicBoolean(false);
 
     public Group getGroup() {
         return group;
@@ -30,12 +37,12 @@ public class GroupInterCom {
         return entryGroupUserMap;
     }
 
-    public Date getLastTalkTime() {
+    public long getLastTalkTime() {
         return lastTalkTime;
     }
     public void setLastTalkTime(String userId) {
         if (this.speaker!=null&&userId.equals(this.speaker.getUserId())) {
-            this.lastTalkTime = new Date(System.currentTimeMillis());
+            this.lastTalkTime=System.currentTimeMillis();
         }
     }
 
@@ -58,8 +65,11 @@ public class GroupInterCom {
     }
     /**
      * 设置对讲者，当且仅当，当前无对讲者时，才能设置成功
-     * @param speaker 对讲者ID
-     * @return 若设置成功，返回的Map键为"T"，值为新设置的对讲者；若设置不成功，返回的Map键为"F"，值为原来的对讲者，若当前对讲者不在用户组，若改用户不在此组在线名单，则不允许设置，返回<"E",null>
+     * @param speaker 新对讲者ID
+     * @return 若设置成功，设置新的对讲者，返回<"T",null>
+     *          若新对讲者不在用户组，不允许设置，返回<"E",null>
+     *          若原对讲者不为空，不允许设置，返回<"F",this.speaker>，原对讲者对象
+     *          若原对讲者不为空，不允许设置，返回<"O",null>，只有一个人在对讲组
      */
     synchronized public Map<String, UserPo> setSpeaker(MobileKey speakerKey) {
         Map<String, UserPo> ret = new HashMap<String, UserPo>();
@@ -69,30 +79,31 @@ public class GroupInterCom {
             if (_speaker==null) ret.put("E", null);
             else {
                 //为测试，把判断Speaker的功能去掉：
+                /*
                 {
                     this.speaker=_speaker;
                     ret.put("T", speaker);
                     this.lastTalkTime=new Date(System.currentTimeMillis());
-                }
-                /*
+                }*/
                 if (this.speaker!=null) ret.put("F", this.speaker);
+                else if (this.entryGroupUserMap.size()<2) ret.put("O", null);
                 else {
                     this.speaker=_speaker;
                     ret.put("T", speaker);
-                    this.lastTalkTime=null;
-                }*/
+                    this.isSendEndPPTMsg.lazySet(false);
+                }
             }
         }
         return ret;
     }
     /**
      * 结束对讲
-     * @param speaker 需要退出对讲的对讲人
+     * @param speakerMk 需要退出对讲的对讲人
      * @return 若当前不存在对讲人，返回-1；若当前对讲人与需要退出者为同一人，则清空当前对讲人，返回1；若当前对讲人与需要退出者不同，则返回0；
      */
-    synchronized public int endPTT(MobileKey mk) {
+    synchronized public int endPTT(MobileKey speakerMk) {
         if (this.speaker==null) return -1;
-        if (mk.getUserId().equals(this.speaker.getUserId())) {
+        if (speakerMk.getUserId().equals(this.speaker.getUserId())) {
             //this.speaker=null;
             return 1;
         } else  return 0;
@@ -134,7 +145,7 @@ public class GroupInterCom {
         Map<String, Object> retM=new HashMap<String, Object>();
 
         UserPo entryUp=null;
-        List<UserPo> _tl = this.group.getUserList();
+        List<UserPo> _tl=this.group.getUserList();
         if (_tl==null||_tl.size()==0) return null;
         //判断加入的用户是否属于这个组
         boolean exist=false;
@@ -181,7 +192,60 @@ public class GroupInterCom {
     synchronized public void delSpeaker(String userId) {
         if (this.speaker!=null&&userId.equals(this.speaker.getUserId())) {
             this.speaker=null;
-            this.lastTalkTime=null;
+            this.lastTalkTime=-1;
         }
+    }
+
+    /**
+     * 发送结束对讲的广播消息
+     * @param gic
+     * @param talkerId
+     * @param groupId
+     * @param mk
+     * @param wt
+     */
+    public void sendEndPTT() {
+        if (!this.isSendEndPPTMsg.get()) {
+            System.out.println("===========对讲结束：释放Speaker资源：广播结束PPT的消息===============");
+            PushMemoryManage pmm=PushMemoryManage.getInstance();
+            //广播结束消息
+            Message exitPttMsg=new Message();
+            exitPttMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+            exitPttMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+            exitPttMsg.setMsgType(1);
+            exitPttMsg.setMsgBizType("INTERCOM_CTL");
+            exitPttMsg.setCmdType("PTT");
+            exitPttMsg.setCommand("b2");
+            Map<String, Object> dataMap=new HashMap<String, Object>();
+            dataMap.put("GroupId", this.getGroup().getGroupId());
+            dataMap.put("TalkUserId", this.speaker.getUserId());
+            exitPttMsg.setMsgContent(dataMap);
+            //发送广播消息
+            Map<String, UserPo> entryGroupUsers=this.getEntryGroupUserMap();
+            for (String k: entryGroupUsers.keySet()) {
+                String _sp[] = k.split("::");
+                MobileKey mk=new MobileKey();
+                mk.setMobileId(_sp[0]);
+                mk.setUserId(_sp[1]);
+                exitPttMsg.setToAddr(MobileUtils.getAddr(mk));
+                pmm.getSendMemory().addUniqueMsg2Queue(mk, exitPttMsg, new CompareGroupMsg());
+            }
+            this.isSendEndPPTMsg.lazySet(true);
+        }
+    }
+}
+class CompareGroupMsg implements CompareMsg {
+    @Override
+    public boolean compare(Message msg1, Message msg2) {
+        if (msg1.getFromAddr().equals(msg2.getFromAddr())
+          &&msg1.getToAddr().equals(msg2.getToAddr())
+          &&msg1.getMsgBizType().equals(msg2.getMsgBizType())
+          &&msg1.getCmdType().equals(msg2.getCmdType())
+          &&msg1.getCommand().equals(msg2.getCommand()) ) {
+            if (msg1.getMsgContent()==null&&msg2.getMsgContent()==null) return true;
+            if (((msg1.getMsgContent()!=null&&msg2.getMsgContent()!=null))
+              &&(((Map)msg1.getMsgContent()).get("GroupId").equals(((Map)msg2.getMsgContent()).get("GroupId")))) return true;
+        }
+        return false;
     }
 }

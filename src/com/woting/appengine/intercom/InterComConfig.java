@@ -11,7 +11,7 @@ public class InterComConfig {
         return CLEANSPEAKER_INTERVAL;
     }
 
-    private int SPEAKER_EXPIRE=2000;//对讲者过期时间，默认2秒；若在一个对讲组内，在这个时间内未收到任何对讲者的信息，就视为对讲过期
+    private int SPEAKER_EXPIRE=3500;//对讲者过期时间，默认2秒；若在一个对讲组内，在这个时间内未收到任何对讲者的信息，就视为对讲过期
     public int getSPEAKER_EXPIRE() {
         return SPEAKER_EXPIRE;
     }

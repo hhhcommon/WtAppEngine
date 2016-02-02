@@ -50,7 +50,7 @@ public class DealReceivePureQueue extends Thread {
                 } else {
                     msg=(Message)parseM.get("msg");
                 }
-                if (msg!=null) rm.addTypeMsgMap(msg.getMsgBizType(), msg);
+                if (msg!=null) rm.appendTypeMsgMap(msg.getMsgBizType(), msg);
             } catch(Exception e) {
                 e.printStackTrace();
             }

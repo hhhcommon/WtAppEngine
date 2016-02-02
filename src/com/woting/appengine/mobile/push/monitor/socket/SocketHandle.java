@@ -11,8 +11,10 @@ import java.net.SocketException;
 import java.util.Date;
 import java.util.Map;
 
+import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.JsonUtils;
 import com.woting.appengine.common.util.MobileUtils;
+import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.appengine.mobile.push.model.Message;
@@ -77,7 +79,7 @@ public class SocketHandle extends Thread {
                 Thread.sleep(this.smc.get_MonitorDelay());
                 //判断时间戳，看连接是否还有效
                 if (System.currentTimeMillis()-lastVisitTime>this.smc.calculate_TimeOut()) {
-                    System.out.println("<"+(new Date()).toString()+">"+socketDesc+"超时关闭");
+                    System.out.println("<"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSSS", new Date())+">"+socketDesc+"超时关闭");
                     break;
                 }
                 /*
@@ -99,7 +101,7 @@ public class SocketHandle extends Thread {
                 }
             }
         } catch (InterruptedException e) {//有异常就退出
-            System.out.println("<"+(new Date()).toString()+">"+socketDesc+"主监控线程出现异常:"+e.getMessage());
+            System.out.println("<"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSSS", new Date())+">"+socketDesc+"主监控线程出现异常:"+e.getMessage());
             e.printStackTrace();
         } finally {//关闭所有子任务进程
 //            if (this.sendBeat!=null) {try {this.sendBeat._interrupt();} catch(Exception e) {}}
@@ -203,7 +205,7 @@ public class SocketHandle extends Thread {
                                 //发送消息
                                 synchronized(socketSendLock) {
                                     out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
-                                    System.out.println("<"+(new Date()).toString()+">"+socketDesc+"[发送]:"+m.toJson());
+                                    System.out.println("<"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSSS", new Date())+">"+socketDesc+"[发送]:"+m.toJson());
                                     out.println(m.toJson());
                                     out.flush();
                                     try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
@@ -211,11 +213,11 @@ public class SocketHandle extends Thread {
                             }
                         }
                     } catch (Exception e) {
-                        System.out.println("<"+(new Date()).toString()+">"+socketDesc+"发送消息线程出现异常:" + e.getMessage());
+                        System.out.println("<"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSSS", new Date())+">"+socketDesc+"发送消息线程出现异常:" + e.getMessage());
                     }
                 }
             } catch (Exception e) {
-                System.out.println("<"+(new Date()).toString()+">"+socketDesc+"发送消息线程出现异常:" + e.getMessage());
+                System.out.println("<"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSSS", new Date())+">"+socketDesc+"发送消息线程出现异常:" + e.getMessage());
             } finally {
                 try {
                     if (out!=null) try {out.close();out=null;} catch(Exception e) {out=null;throw e;};
@@ -259,7 +261,7 @@ public class SocketHandle extends Thread {
                         in=new BufferedReader(new InputStreamReader(SocketHandle.this.socket.getInputStream(), "UTF-8"));
                         String revMsgStr=in.readLine();
                         if (revMsgStr==null) continue;
-                        System.out.println("<"+(new Date()).toString()+">"+socketDesc+"[接收]:"+revMsgStr);
+                        System.out.println("<"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSSS", new Date())+">"+socketDesc+"[接收]:"+revMsgStr);
 
                         SocketHandle.this.lastVisitTime=System.currentTimeMillis();
                         //判断是否是心跳信号
@@ -270,40 +272,54 @@ public class SocketHandle extends Thread {
                                 out.flush();
                                 try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
                             }
+                            //以下设置lastTime.要删除掉
+                            if (SocketHandle.this.mk!=null) {
+                                GroupMemoryManage gmm=GroupMemoryManage.getInstance();
+                                gmm.setLastTalkTime(SocketHandle.this.mk);
+                            }
                             continue;
                         }
 
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> recMap=(Map<String, Object>)JsonUtils.jsonToObj(revMsgStr, Map.class);
-                        if (recMap!=null&&recMap.size()>0) {
-                            //记录最后收到信号的时间
-                            //String __tmp=(String)recMap.get("NeedAffirm");
-                            //isAffirm=__tmp==null?false:__tmp.trim().equals("1");
-                            //if (isAffirm) msgId=(String)recMap.get("MsgId");
-                            mk=MobileUtils.getMobileKey(recMap);
-                            if (mk!=null) { //存入接收队列
-                                SocketHandle.this.mk=mk;//设置全局作用域下的移动Key
-                                pmm.getReceiveMemory().addPureQueue(recMap);
-                            }
-                            //发送回执
-//                            String outStr="[{\"returnType\":\"-1\"}]";//空，无内容包括已经收到
-//                            if (isAffirm) {
-//                                if (StringUtils.isNullOrEmptyOrSpace(msgId)) {
-//                                    outStr="[{\"returnType\":\"-2\"}]";//错误内容
-//                                } else {
-//                                    outStr="[{\"returnType\":\"0\",\"data\":{\"MsgId\":\""+msgId+"\",\"dealFlag\":\"1\"}]}";//消息Id为msgId的消息已经处理，处理环节为：已收到
+                        //以下try要修改
+                        try{
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> recMap=(Map<String, Object>)JsonUtils.jsonToObj(revMsgStr, Map.class);
+                            
+                            if (recMap!=null&&recMap.size()>0) {
+                                //记录最后收到信号的时间
+                                //String __tmp=(String)recMap.get("NeedAffirm");
+                                //isAffirm=__tmp==null?false:__tmp.trim().equals("1");
+                                //if (isAffirm) msgId=(String)recMap.get("MsgId");
+                                mk=MobileUtils.getMobileKey(recMap);
+                                if (mk!=null) { //存入接收队列
+                                    SocketHandle.this.mk=mk;//设置全局作用域下的移动Key
+                                    pmm.getReceiveMemory().addPureQueue(recMap);
+                                }
+                                //发送回执
+//                                String outStr="[{\"returnType\":\"-1\"}]";//空，无内容包括已经收到
+//                                if (isAffirm) {
+//                                    if (StringUtils.isNullOrEmptyOrSpace(msgId)) {
+//                                        outStr="[{\"returnType\":\"-2\"}]";//错误内容
+//                                    } else {
+//                                        outStr="[{\"returnType\":\"0\",\"data\":{\"MsgId\":\""+msgId+"\",\"dealFlag\":\"1\"}]}";//消息Id为msgId的消息已经处理，处理环节为：已收到
+//                                    }
 //                                }
-//                            }
-//                            synchronized(socketSendLock) {
-//                                out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
-//                                out.println(outStr);
-//                                out.flush();
-//                                try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
-//                            }
+//                                synchronized(socketSendLock) {
+//                                    out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
+//                                    out.println(outStr);
+//                                    out.flush();
+//                                    try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
+//                                }
+                            }
+                        } catch(Exception e) {
+                            System.out.println("==============================================================");
+                            System.out.println("EXCEPTIOIN::"+e.getClass().getName()+"/t"+e.getMessage());
+                            System.out.println("JSONERROR::"+revMsgStr);
+                            System.out.println("==============================================================");
                         }
                         continueErrCodunt=0;
                     } catch(Exception e) {
-                        System.out.println("<"+(new Date()).toString()+">"+socketDesc+"接收消息线程出现异常:"+e.getMessage());
+                        System.out.println("<"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSSS", new Date())+">"+socketDesc+"接收消息线程出现异常:"+e.getMessage());
                         if (e instanceof SocketException) {
                             canContinue=false;
                         } else {
@@ -315,7 +331,7 @@ public class SocketHandle extends Thread {
                     }//end try
                 }//end while
             } catch(Exception e) {
-                System.out.println("<"+(new Date()).toString()+">"+socketDesc+"接收消息线程出现异常:" + e.getMessage());
+                System.out.println("<"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSSS", new Date())+">"+socketDesc+"接收消息线程出现异常:" + e.getMessage());
             } finally {
                 try {
                     if (in!=null) try {in.close();in=null;} catch(Exception e) {in=null;};

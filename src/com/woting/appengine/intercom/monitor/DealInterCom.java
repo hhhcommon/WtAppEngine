@@ -285,6 +285,9 @@ public class DealInterCom extends Thread {
                     } else if (_m.containsKey("F")) {
                         retMsg.setReturnType("1002");
                         pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+                    } else if (_m.containsKey("O")) {
+                        retMsg.setReturnType("1004");
+                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
                     } else {//成功可以开始对讲了
                         retMsg.setReturnType("1001");
                         pmm.getSendMemory().addMsg2Queue(mk, retMsg);

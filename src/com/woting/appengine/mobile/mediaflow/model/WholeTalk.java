@@ -68,13 +68,13 @@ public class WholeTalk {
      * @return
      */
     public boolean isCompleted() {
-        TalkSegment ts=talkData.get(this.MaxNum);
+        TalkSegment ts=talkData.get(new Integer(-1));
         if (ts==null) return false;
-        if (!(new String(ts.getData())).equals("####")) return false;
         for (String k: ts.getSendFlags().keySet()) {
             if (!ts.getSendFlags().get(k).equals("2")) return false;
         }
-        for (int i=0-expiresT; i<this.MaxNum; i++) {
+        int lowIndex=this.MaxNum-expiresT;
+        for (int i=(lowIndex>=0?lowIndex:0); i<this.MaxNum; i++) {
             ts = talkData.get(i);
             if (ts==null) return false;
             for (String k: ts.getSendFlags().keySet()) {
@@ -89,11 +89,10 @@ public class WholeTalk {
      * @return
      */
     public boolean isReceiveCompleted() {
-        TalkSegment ts=talkData.get(this.MaxNum);
+        TalkSegment ts=talkData.get(new Integer(-1));
         if (ts==null) return false;
-        if (!(new String(ts.getData())).equals("####")) return false;
-
-        for (int i=this.MaxNum-expiresT; i<this.MaxNum; i++) {//注意，若5个周期前的数据没有收到，则认为还没有全部收到
+        int lowIndex=this.MaxNum-expiresT;
+        for (int i=(lowIndex>=0?lowIndex:0); i<this.MaxNum; i++) {//注意，若5个周期前的数据没有收到，则认为还没有全部收到
             ts = talkData.get(i);
             if (ts==null) return false;
         }

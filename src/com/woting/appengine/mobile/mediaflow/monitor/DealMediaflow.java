@@ -16,7 +16,6 @@ import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.appengine.mobile.push.model.CompareMsg;
 import com.woting.appengine.mobile.push.model.Message;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
 
 public class DealMediaflow extends Thread {
     private PushMemoryManage pmm=PushMemoryManage.getInstance();
@@ -73,7 +72,7 @@ public class DealMediaflow extends Thread {
             String talkId=((Map)sourceMsg.getMsgContent()).get("TalkId")+"";
             if (StringUtils.isEmptyOrWhitespaceOnly(talkId)) return;
             int seqNum=Integer.parseInt(((Map)sourceMsg.getMsgContent()).get("SeqNum")+"");
-            if (seqNum<0) return;
+            if (seqNum<-1) return;
             String groupId=((Map)sourceMsg.getMsgContent()).get("GroupId")+"";
             if (StringUtils.isEmptyOrWhitespaceOnly(groupId)) return;
 
@@ -96,7 +95,7 @@ public class DealMediaflow extends Thread {
             dataMap.put("GroupId", groupId);
             dataMap.put("SeqNum", seqNum);
             retMsg.setMsgContent(dataMap);
-            if (gic==null) {//||gic.getSpeaker()==null||!gic.getSpeaker().getUserId().equals(talkerId)) {
+            if (gic==null||gic.getSpeaker()==null||!gic.getSpeaker().getUserId().equals(talkerId)) {
                 retMsg.setReturnType("1002");
                 pmm.getSendMemory().addUniqueMsg2Queue(mk, retMsg, new CompareAudioFlowMsg());
                 return;
@@ -151,32 +150,9 @@ public class DealMediaflow extends Thread {
             }
 
             //看是否是结束包
-            //if (wt.isReceiveCompleted()) {
-            if (true) {
-                System.out.println("===========对讲结束：释放资源===============");
+            if (wt.isReceiveCompleted()) {
+                gic.sendEndPTT();
                 gic.delSpeaker(talkerId);
-                //广播结束消息
-                Message exitPttMsg=new Message();
-                exitPttMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
-                exitPttMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                exitPttMsg.setMsgType(1);
-                exitPttMsg.setMsgBizType("INTERCOM_CTL");
-                exitPttMsg.setCmdType("PTT");
-                exitPttMsg.setCommand("b2");
-                dataMap=new HashMap<String, Object>();
-                dataMap.put("GroupId", groupId);
-                dataMap.put("TalkUserId", wt.getTalkerId());
-                exitPttMsg.setMsgContent(dataMap);
-                //发送广播消息
-                Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
-                for (String k: entryGroupUsers.keySet()) {
-                    String _sp[] = k.split("::");
-                    mk=new MobileKey();
-                    mk.setMobileId(_sp[0]);
-                    mk.setUserId(_sp[1]);
-                    exitPttMsg.setToAddr(MobileUtils.getAddr(mk));
-                    pmm.getSendMemory().addUniqueMsg2Queue(mk, exitPttMsg, new CompareGroupMsg());
-                }
             }
         }
     }
@@ -213,28 +189,6 @@ public class DealMediaflow extends Thread {
                     GroupInterCom gic=gmm.getGroupInterCom(groupId);
                     if (gic!=null&&gic.getSpeaker()!=null) {
                         gic.delSpeaker(talkerId);
-                        //广播结束消息
-                        Message exitPttMsg=new Message();
-                        exitPttMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
-                        exitPttMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                        exitPttMsg.setMsgType(1);
-                        exitPttMsg.setMsgBizType("INTERCOM_CTL");
-                        exitPttMsg.setCmdType("PTT");
-                        exitPttMsg.setCommand("b2");
-                        Map<String, Object> dataMap=new HashMap<String, Object>();
-                        dataMap.put("GroupId", groupId);
-                        dataMap.put("TalkUserId", wt.getTalkerId());
-                        exitPttMsg.setMsgContent(dataMap);
-                        //发送广播消息
-                        Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
-                        for (String k: entryGroupUsers.keySet()) {
-                            String _sp[] = k.split("::");
-                            mk=new MobileKey();
-                            mk.setMobileId(_sp[0]);
-                            mk.setUserId(_sp[1]);
-                            exitPttMsg.setToAddr(MobileUtils.getAddr(mk));
-                            pmm.getSendMemory().addUniqueMsg2Queue(mk, exitPttMsg, new CompareGroupMsg());
-                        }
                     }
                 }
             }
