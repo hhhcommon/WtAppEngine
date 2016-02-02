@@ -50,7 +50,7 @@ public class ReceiveMemory {
      * 从原始接收队列获取消息，并从队列移除该消息
      * @return  消息元素
      */
-    public Map<String, Object> pollPureQueue() {
+    public synchronized Map<String, Object> pollPureQueue() {
         if (this.pureMsgQueue==null) return null;
         return this.pureMsgQueue.poll();
     }
@@ -78,7 +78,7 @@ public class ReceiveMemory {
      * @param _type 分类标识
      * @return 消息
      */
-    public Message pollTypeQueue(String _type) {
+    public synchronized Message pollTypeQueue(String _type) {
         if (this.typeMsgMap==null) return null;
         if (this.typeMsgMap.get(_type)==null) return null;
         return this.typeMsgMap.get(_type).poll();

@@ -96,7 +96,7 @@ public class DealMediaflow extends Thread {
             dataMap.put("GroupId", groupId);
             dataMap.put("SeqNum", seqNum);
             retMsg.setMsgContent(dataMap);
-            if (gic==null||gic.getSpeaker()==null||!gic.getSpeaker().getUserId().equals(talkerId)) {
+            if (gic==null) {//||gic.getSpeaker()==null||!gic.getSpeaker().getUserId().equals(talkerId)) {
                 retMsg.setReturnType("1002");
                 pmm.getSendMemory().addUniqueMsg2Queue(mk, retMsg, new CompareAudioFlowMsg());
                 return;

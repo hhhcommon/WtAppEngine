@@ -9,7 +9,6 @@ CREATE TABLE plat_DictM (
   sort       int(5) unsigned  NOT NULL  DEFAULT 0  COMMENT '字典组排序,从大到小排序，越大越靠前',
   isValidate int(1) unsigned  NOT NULL  DEFAULT 1  COMMENT '是否生效(1-生效,2-无效)',
   mType      int(1) unsigned  NOT NULL  DEFAULT 3  COMMENT '字典类型(1-系统保留,2-系统,3-自定义)',
-  mClass     int(1) unsigned  NOT NULL  DEFAULT 1  COMMENT '字典分类(1-字典,2-分类,3-栏目)',
   mRef       varchar(4000)                         COMMENT '创建时间',
   descn      varchar(500)                          COMMENT '说明',
   cTime      timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
