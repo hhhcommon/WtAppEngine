@@ -92,7 +92,6 @@ public class DealInterCom extends Thread {
             retMsg.setCmdType(sourceMsg.getCmdType());
             retMsg.setCommand("-1");
 
-
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("GroupId", groupId);
             retMsg.setMsgContent(dataMap);
@@ -300,9 +299,11 @@ public class DealInterCom extends Thread {
                         dataMap.put("TalkUserId", mk.getUserId());
                         bMsg.setMsgContent(dataMap);
                         //发送广播消息
+                        String ptterId=mk.getUserId();
                         Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
                         for (String k: entryGroupUsers.keySet()) {
                             String _sp[] = k.split("::");
+                            if (ptterId.equals(_sp[1])) continue;
                             mk=new MobileKey();
                             mk.setMobileId(_sp[0]);
                             mk.setUserId(_sp[1]);

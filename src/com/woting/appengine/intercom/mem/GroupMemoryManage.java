@@ -88,7 +88,6 @@ public class GroupMemoryManage {
             gic=this.gm.gicMap.get(k);
             if (gic==null||gic.getSpeaker()==null||gic.getLastTalkTime()==-1) continue;
             if (System.currentTimeMillis()-gic.getLastTalkTime()>expireTime) {
-                System.out.println("在清理："+System.currentTimeMillis()+">>"+gic.getLastTalkTime()+"||"+expireTime);
                 gic.sendEndPTT();
                 gic.delSpeaker(gic.getSpeaker().getUserId());
             }

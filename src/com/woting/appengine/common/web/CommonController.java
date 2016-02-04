@@ -68,7 +68,7 @@ public class CommonController {
             smm.expireAllSessionByIMEI(sk.getMobileId()); //作废所有imei对应的Session
             //2-处理
             map.put("SessionId", sk.getSessionId());
-            MobileUsedPo mu = muService.getUsedInfo(sk.getMobileId());
+            MobileUsedPo mu=muService.getUsedInfo(sk.getMobileId());
             MobileSession ms=null;
             if (mu==null||mu.getStatus()==2) {//上次未登陆
                 boolean canCreateSession=false;
@@ -93,7 +93,7 @@ public class CommonController {
                 } else { //找到了对应的对话，直接应用
                     ms.access();
                 }
-                UserPo u = userService.getUserById(mu.getUserId());
+                UserPo u=userService.getUserById(mu.getUserId());
                 ms.addAttribute("user", u);
                 map.put("ReturnType", "1001"); //已登录
                 map.put("ServerStatus", "1"); //服务器状态
@@ -131,7 +131,7 @@ public class CommonController {
                 map.put("Version", "0.0.0.0.0");
                 map.put("PublishDate", "2015-09-18");
             } else {
-                String[] vs = _temp.split(",");
+                String[] vs=_temp.split(",");
                 map.put("Version", vs[0]);
                 if (vs.length>1) {
                     map.put("PublishDate", vs[1]);
@@ -175,13 +175,13 @@ public class CommonController {
                 //获得上级地区分类Id
             }
             //1-获取地区信息
-            List<Map<String, Object>> zl = new ArrayList<Map<String, Object>>();
+            List<Map<String, Object>> zl=new ArrayList<Map<String, Object>>();
             Map<String, Object> zone;
-            zone = new HashMap<String, Object>();
+            zone=new HashMap<String, Object>();
             zone.put("ZoneId", "001");
             zone.put("ZoneName", "北京");
             zl.add(zone);
-            zone = new HashMap<String, Object>();
+            zone=new HashMap<String, Object>();
             zone.put("ZoneId", "001");
             zone.put("ZoneName", "北京");
             zl.add(zone);
@@ -220,82 +220,43 @@ public class CommonController {
     public Map<String,Object> mainPage(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            //0-处理访问
+            //0-获取参数
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
-            if (m!=null&&m.size()>0) {
-                MobileParam mp=MobileUtils.getMobileParam(m);
-                MobileKey sk=(mp==null?null:mp.getMobileKey());
-                if (sk!=null){
-                    map.put("SessionId", sk.getSessionId());
-                    MobileSession ms=smm.getSession(sk);
-                    if (ms!=null) ms.access();
-                }
-                //获得SessionId
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+                return map;
             }
-            
-            //1-获取地区信息
-            List<Map<String, Object>> ml = new ArrayList<Map<String, Object>>();
-            Map<String, Object> media;
-            media = new HashMap<String, Object>();
-            media.put("MediaType", "RADIO"); //电台
-            media.put("RadioName", "CRI 轻松调频");
-            media.put("RadioId", "001");
-            media.put("RadioImg", "images/dft_broadcast.png");
-            media.put("RadioURI", "mms://live.cri.cn/en4");
-            media.put("CurrentContent", "路况信息");//当前节目
-            ml.add(media);
-            media = new HashMap<String, Object>();
-            media.put("MediaType", "RES"); //文件资源
-            media.put("ResType", "mp3");
-            media.put("ResClass", "评书");
-            media.put("ResStyle", "文学名著");
-            media.put("ResActor", "张三");
-            media.put("ResName", "三打白骨精");
-            media.put("ResImg", "images/dft_res.png");
-            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
-            media.put("ResTime", "14:35");
-            ml.add(media);
-            media = new HashMap<String, Object>();
-            media.put("MediaType", "RES"); //文件资源
-            media.put("ResType", "mp3");
-            media.put("ResClass", "歌曲");
-            media.put("ResStyle", "摇滚");
-            media.put("ResActor", "李四");
-            media.put("ResName", "歌曲名称");
-            media.put("ResImg", "images/dft_actor.png");
-            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
-            media.put("ResTime", "4:35");
-            ml.add(media);
-            media = new HashMap<String, Object>();
-            media.put("MediaType", "RADIO"); //电台
-            media.put("RadioName", "CRI怀旧金曲音乐频道");
-            media.put("RadioId", "002");
-            media.put("RadioImg", "images/dft_broadcast.png");
-            media.put("RadioURI", "mms://a.b.c/aaa.mpg");
-            media.put("CurrentContent", "经典回顾");//当前节目
-            ml.add(media);
-            media = new HashMap<String, Object>();
-            media.put("MediaType", "RADIO"); //电台
-            media.put("RadioName", "央广新闻");
-            media.put("RadioId", "003");
-            media.put("RadioImg", "images/dft_broadcast.png");
-            media.put("RadioURI", "mms://live.cri.cn/oldies");
-            media.put("CurrentContent", "时政要闻");//当前节目
-            ml.add(media);
-            media = new HashMap<String, Object>();
-            media.put("MediaType", "RES"); //文件资源
-            media.put("ResType", "mp3");
-            media.put("ResClass", "脱口秀");
-            media.put("ResStyle", "文化");
-            media.put("ResSeries", "逻辑思维");
-            media.put("ResActor", "罗某某");
-            media.put("ResName", "逻辑思维001");
-            media.put("ResImg", "images/dft_actor.png");
-            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
-            media.put("ResTime", "4:35");
-            ml.add(media);
-            map.put("ReturnType", "1001");
-            map.put("MainList", ml);
+            String userId=(String)m.get("UserId");
+            MobileParam mp=MobileUtils.getMobileParam(m);
+            mp.setUserId(userId);
+            MobileKey sk=(mp==null?null:mp.getMobileKey());
+            if (sk==null) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取设备Id(IMEI)");
+                return map;
+            }
+            //1-得到用户，并处理访问
+            map.put("SessionId", sk.getSessionId());
+            MobileSession ms=smm.getSession(sk);
+            if (ms==null) {
+                ms=new MobileSession(sk);
+                smm.addOneSession(ms);
+            } else {
+                ms.access();
+                if (userId==null) {
+                    UserPo u=(UserPo)ms.getAttribute("user");
+                    if (u!=null) userId=u.getUserId();
+                }
+            }
+            Map<String, Object> cl=contentService.getMainPage(userId);
+            if (cl!=null&&cl.size()>0) {
+                map.put("ResultList", cl);
+                map.put("ReturnType", "1001");
+            } else {
+                map.put("ReturnType", "1011");
+                map.put("Message", "没有查到任何内容");
+            }
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -311,18 +272,41 @@ public class CommonController {
     public Map<String,Object> getHotKeys(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            //0-处理访问
+            //0-获取参数
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
-            if (m!=null&&m.size()>0) {
-                MobileParam mp=MobileUtils.getMobileParam(m);
-                MobileKey sk=(mp==null?null:mp.getMobileKey());
-                if (sk!=null){
-                    map.put("SessionId", sk.getSessionId());
-                    MobileSession ms=smm.getSession(sk);
-                    if (ms!=null) ms.access();
-                }
-                //获得语音转文字的结果
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+                return map;
             }
+            String userId=(String)m.get("UserId");
+            MobileParam mp=MobileUtils.getMobileParam(m);
+            mp.setUserId(userId);
+            MobileKey sk=(mp==null?null:mp.getMobileKey());
+            if (sk==null) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取设备Id(IMEI)");
+                return map;
+            }
+            //1-得到用户，并处理访问
+            map.put("SessionId", sk.getSessionId());
+            MobileSession ms=smm.getSession(sk);
+            if (ms==null) {
+                ms=new MobileSession(sk);
+                smm.addOneSession(ms);
+            } else {
+                ms.access();
+                if (userId==null) {
+                    UserPo u=(UserPo)ms.getAttribute("user");
+                    if (u!=null) userId=u.getUserId();
+                }
+            }
+            /* 无用户也可以处理
+            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                map.put("ReturnType", "1002");
+                map.put("Message", "无法得到用户");
+                return map;
+            }*/
             map.put("ReturnType", "1001");
             map.put("KeyList", "逻辑思维,郭德纲,芈月传奇,数学,恐怖主义,鬼吹灯,盗墓笔记,老梁说事");
             return map;
@@ -353,7 +337,7 @@ public class CommonController {
                 //获得语音转文字的结果
             }
             map.put("ReturnType", "1001");
-            List<Map<String, String>> demoData = new ArrayList<Map<String, String>>();
+            List<Map<String, String>> demoData=new ArrayList<Map<String, String>>();
             Map<String, String> item=new HashMap<String, String>();
             item.put("CatalogType", "001");item.put("CatalogId", "001");item.put("CatalogImg", "img/a.jpg");item.put("CatalogName", "段子笑话");demoData.add(item);
             item=new HashMap<String, String>();
@@ -410,9 +394,9 @@ public class CommonController {
                 //获得语音转文字的结果
             }
             //1-获取地区信息
-            List<Map<String, Object>> rl = new ArrayList<Map<String, Object>>();
+            List<Map<String, Object>> rl=new ArrayList<Map<String, Object>>();
             Map<String, Object> media;
-            media = new HashMap<String, Object>();
+            media=new HashMap<String, Object>();
             media.put("MediaType", "RES"); //文件资源
             media.put("ResType", "mp3");
             media.put("ResClass", "评书");
@@ -423,7 +407,7 @@ public class CommonController {
             media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
             media.put("ResTime", "14:35");
             rl.add(media);
-            media = new HashMap<String, Object>();
+            media=new HashMap<String, Object>();
             media.put("MediaType", "RADIO"); //电台
             media.put("RadioName", "CRI英语漫听电台");
             media.put("RadioId", "001");
@@ -431,7 +415,7 @@ public class CommonController {
             media.put("RadioURI", "mms://live.cri.cn/english");
             media.put("CurrentContent", "路况信息");//当前节目
             rl.add(media);
-            media = new HashMap<String, Object>();
+            media=new HashMap<String, Object>();
             media.put("MediaType", "RES"); //文件资源
             media.put("ResType", "mp3");
             media.put("ResClass", "歌曲");
@@ -442,7 +426,7 @@ public class CommonController {
             media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
             media.put("ResTime", "4:35");
             rl.add(media);
-            media = new HashMap<String, Object>();
+            media=new HashMap<String, Object>();
             media.put("MediaType", "RADIO"); //电台
             media.put("RadioName", "CRI乡村民谣音乐");
             media.put("RadioId", "003");
@@ -450,7 +434,7 @@ public class CommonController {
             media.put("RadioURI", "mms://live.cri.cn/country");
             media.put("CurrentContent", "时政要闻");//当前节目
             rl.add(media);
-            media = new HashMap<String, Object>();
+            media=new HashMap<String, Object>();
             media.put("MediaType", "RES"); //文件资源
             media.put("ResType", "mp3");
             media.put("ResClass", "脱口秀");
@@ -462,7 +446,7 @@ public class CommonController {
             media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
             media.put("ResTime", "4:35");
             rl.add(media);
-            media = new HashMap<String, Object>();
+            media=new HashMap<String, Object>();
             media.put("MediaType", "RADIO"); //电台
             media.put("RadioName", "CRI肯尼亚调频");
             media.put("RadioId", "002");
@@ -494,16 +478,17 @@ public class CommonController {
                 map.put("Message", "无法获取需要的参数");
                 return map;
             }
-            String creator=(String)m.get("Creator");
+            String userId=(String)m.get("UserId");
             MobileParam mp=MobileUtils.getMobileParam(m);
-            mp.setUserId(creator);
+            mp.setUserId(userId);
             MobileKey sk=(mp==null?null:mp.getMobileKey());
             if (sk==null) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取设备Id(IMEI)");
                 return map;
             }
-            //1-得到创建者，并处理访问
+            map.put("SessionId", sk.getSessionId());
+            //1-得到用户，并处理访问
             map.put("SessionId", sk.getSessionId());
             MobileSession ms=smm.getSession(sk);
             if (ms==null) {
@@ -511,42 +496,45 @@ public class CommonController {
                 smm.addOneSession(ms);
             } else {
                 ms.access();
-                if (creator==null) {
+                if (userId==null) {
                     UserPo u=(UserPo)ms.getAttribute("user");
-                    if (u!=null) creator=u.getUserId();
+                    if (u!=null) userId=u.getUserId();
                 }
             }
-            if (StringUtils.isNullOrEmptyOrSpace(creator)) {
+            /* 无用户也可以处理
+            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
                 map.put("ReturnType", "1002");
-                map.put("Message", "无法得到创建者");
+                map.put("Message", "无法得到用户");
                 return map;
-            }
+            }*/
             //获得查询串
             String searchStr=(String)m.get("SearchStr");
             if (StringUtils.isNullOrEmptyOrSpace(searchStr)) {
-                map.put("ReturnType", "1003");
+                map.put("ReturnType", "1002");
                 map.put("Message", "无法得到查询串");
                 return map;
             }
-            //获得结果类型
+            //获得结果类型，0获得一个列表，1获得分类列表，这个列表根据content字段处理，这个字段目前没有用到
             int resultType=0;
             try {
                 resultType=Integer.parseInt(m.get("ResultType")+"");
             } catch(Exception e) {
             }
-            
-            Map<String, Object> cl = contentService.searchAll(searchStr, resultType);
+
+            Map<String, Object> cl=contentService.searchAll(searchStr, resultType);
             if (cl!=null&&cl.size()>0) {
-                
+                map.put("ResultType", cl.get("ResultType"));
+                cl.remove("ResultType");
+                map.put("ResultList", cl);
                 map.put("ReturnType", "1001");
             } else {
                 map.put("ReturnType", "1011");
                 map.put("Message", "没有查到任何内容");
             }
             return map;
-//            List<Map<String, Object>> rl = new ArrayList<Map<String, Object>>();
+//            List<Map<String, Object>> rl=new ArrayList<Map<String, Object>>();
 //            Map<String, Object> media;
-//            media = new HashMap<String, Object>();
+//            media=new HashMap<String, Object>();
 //            media.put("MediaType", "RES"); //文件资源
 //            media.put("ResType", "mp3");
 //            media.put("ResClass", "评书");
@@ -557,7 +545,7 @@ public class CommonController {
 //            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
 //            media.put("ResTime", "14:35");
 //            rl.add(media);
-//            media = new HashMap<String, Object>();
+//            media=new HashMap<String, Object>();
 //            media.put("MediaType", "RADIO"); //电台
 //            media.put("RadioName", "CRI英语漫听电台");
 //            media.put("RadioId", "001");
@@ -565,7 +553,7 @@ public class CommonController {
 //            media.put("RadioURI", "mms://live.cri.cn/english");
 //            media.put("CurrentContent", "路况信息");//当前节目
 //            rl.add(media);
-//            media = new HashMap<String, Object>();
+//            media=new HashMap<String, Object>();
 //            media.put("MediaType", "RES"); //文件资源
 //            media.put("ResType", "mp3");
 //            media.put("ResClass", "歌曲");
@@ -576,7 +564,7 @@ public class CommonController {
 //            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
 //            media.put("ResTime", "4:35");
 //            rl.add(media);
-//            media = new HashMap<String, Object>();
+//            media=new HashMap<String, Object>();
 //            media.put("MediaType", "RADIO"); //电台
 //            media.put("RadioName", "CRI乡村民谣音乐");
 //            media.put("RadioId", "003");
@@ -584,7 +572,7 @@ public class CommonController {
 //            media.put("RadioURI", "mms://live.cri.cn/country");
 //            media.put("CurrentContent", "时政要闻");//当前节目
 //            rl.add(media);
-//            media = new HashMap<String, Object>();
+//            media=new HashMap<String, Object>();
 //            media.put("MediaType", "RES"); //文件资源
 //            media.put("ResType", "mp3");
 //            media.put("ResClass", "脱口秀");
@@ -596,7 +584,7 @@ public class CommonController {
 //            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
 //            media.put("ResTime", "4:35");
 //            rl.add(media);
-//            media = new HashMap<String, Object>();
+//            media=new HashMap<String, Object>();
 //            media.put("MediaType", "RADIO"); //电台
 //            media.put("RadioName", "CRI肯尼亚调频");
 //            media.put("RadioId", "002");
@@ -635,7 +623,7 @@ public class CommonController {
             MobileKey sk=(mp==null?null:mp.getMobileKey());
             //1-得到用户id
             String userId=(String)m.get("UserId");
-            UserPo u = null;
+            UserPo u=null;
             if (sk!=null) {
                 map.put("SessionId", sk.getSessionId());
                 MobileSession ms=smm.getSession(sk);
@@ -644,8 +632,8 @@ public class CommonController {
                         userId=sk.getSessionId();
                         if (userId.length()!=12) {
                             userId=null;
-                            u = (UserPo)ms.getAttribute("user");
-                            if (u!=null) userId = u.getUserId();
+                            u=(UserPo)ms.getAttribute("user");
+                            if (u!=null) userId=u.getUserId();
                         }
                     }
                     ms.access();

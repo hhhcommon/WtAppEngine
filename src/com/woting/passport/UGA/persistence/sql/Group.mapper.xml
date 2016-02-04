@@ -192,7 +192,7 @@
     select * from plat_GroupUser where groupId=#{groupId, jdbcType=VARCHAR}
   </select>
 
-  <!-- 以下临时 -->
+  <!-- 以下临时，应该移动到内容中======================================================================================================= -->
   <select id="searchCata" resultType="java.util.HashMap">
     select * from wt_ResCata_Ref where
     <foreach collection="array" index="index" item="tag" open="" separator="or" close="">
@@ -235,16 +235,39 @@
     where c.id in (${inIds})
     </if>
   </select>
+
   <select id="searchSeqMa" resultType="java.util.HashMap" parameterType="java.util.Map">
-    select a.*, b.count from wt_SeqMediaAsset a, (select sid, count(*) count from wt_SeqMA_Ref group by sid) b
-    where a.id=b.sid and
+    select a.*, case when b.count is null then 0 else b.count end as count from wt_SeqMediaAsset a
+    left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) b on a.id=b.sid
+    <where>
     <foreach collection="searchArray" index="index" item="tag" open="" separator="or" close="">
     CONCAT(a.smaTitle,'#S#',a.smaPublisher,'#S#',a.subjectWord,'#S#',a.keyWord,'#S#',a.descn) like '%${tag}%'
     </foreach>
+    </where>
     <if test="inIds!=null">
     union 
-    select c.*, d.count from wt_SeqMediaAsset c, (select sid, count(*) count from wt_SeqMA_Ref group by sid) d
-    where c.id=d.sid and c.id in (${inIds})
+    select c.*, case when d.count is null then 0 else d.count end as count from wt_SeqMediaAsset c
+    left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) d on c.id=d.sid
+    where c.id in (${inIds})
     </if>
   </select>
+  <!-- 重构 -->
+  <select id="refPersonById" resultType="java.util.HashMap" parameterType="java.util.Map">
+    select * from wt_MaPerson_Ref a, wt_Person b
+    where a.personId=b.id
+    <trim prefix="and (" suffix=")" prefixOverrides="or">
+    <if test="bcIds!=null">or (a.resType=1 and a.resId in (${bcIds}))</if>
+    <if test="maIds!=null">or (a.resType=2 and a.resId in (${maIds}))</if>
+    <if test="smaIds!=null">or (a.resType=3 and a.resId in (${smaIds}))</if>
+    </trim>
+  </select>
+  <select id="refCataById" resultType="java.util.HashMap" parameterType="java.util.Map">
+    select * from wt_ResCata_Ref
+    <where><trim prefix="" suffix="" prefixOverrides="or">
+    <if test="bcIds!=null">or (resType=1 and resId in (${bcIds}))</if>
+    <if test="maIds!=null">or (resType=2 and resId in (${maIds}))</if>
+    <if test="smaIds!=null">or (resType=3 and resId in (${smaIds}))</if>
+    </trim></where>
+  </select>
+  <!-- ======================================================================================================= -->
 </mapper>

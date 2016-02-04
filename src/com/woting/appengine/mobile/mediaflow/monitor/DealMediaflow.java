@@ -188,6 +188,7 @@ public class DealMediaflow extends Thread {
                     //发送结束对讲消息
                     GroupInterCom gic=gmm.getGroupInterCom(groupId);
                     if (gic!=null&&gic.getSpeaker()!=null) {
+                        gic.sendEndPTT();
                         gic.delSpeaker(talkerId);
                     }
                 }
