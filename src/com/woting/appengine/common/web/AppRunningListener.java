@@ -5,6 +5,8 @@ import javax.servlet.ServletContextListener;
 
 import org.apache.log4j.Logger;
 
+import com.woting.appengine.calling.CallingConfig;
+import com.woting.appengine.calling.CallingListener;
 import com.woting.appengine.intercom.InterComConfig;
 import com.woting.appengine.intercom.InterComListener;
 import com.woting.appengine.mobile.mediaflow.MfConfig;
@@ -22,17 +24,15 @@ public class AppRunningListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent arg0) {
         try {
             //移动会话Session启动
-            MobileSessionConfig msc = new MobileSessionConfig();
-            SessionListener.begin(msc);
+            SessionListener.begin(new MobileSessionConfig());
             //启动对讲处理服务
-            InterComConfig icc = new InterComConfig();
-            InterComListener.begin(icc);
+            InterComListener.begin(new InterComConfig());
+            //启动电话处理服务
+            CallingListener.begin(new CallingConfig());
             //启动流数据处理服务
-            MfConfig mfc = new MfConfig();
-            MfListener.begin(mfc);
+            MfListener.begin(new MfConfig());
             //启动推送服务
-            PushConfig pc = new PushConfig();
-            PushListener.begin(pc);
+            PushListener.begin(new PushConfig());
         } catch(Exception e) {
             logger.error("Web运行时监听启动异常：",e);
         }

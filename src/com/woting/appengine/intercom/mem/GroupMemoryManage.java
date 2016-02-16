@@ -23,10 +23,10 @@ public class GroupMemoryManage {
     //java的占位单例模式===end
 
     //数据区
-    protected GroupMemory gm; //接收数据内存结构
+    protected GroupMemory gm; //用户组内存结构
 
     /*
-     * 构造方法，初始化消息推送的内存结构
+     * 构造方法，初始化用户组的内存结构
      */
     private GroupMemoryManage() {
         gm=GroupMemory.getInstance();
@@ -102,5 +102,22 @@ public class GroupMemoryManage {
         for (String k: this.gm.gicMap.keySet()) {
             this.gm.gicMap.get(k).setLastTalkTime(mk.getUserId());
         }
+    }
+
+    /**
+     * 判断会否有人在说话，为电话控制使用的方法。
+     *
+     * @param userId 用户Id，这里是被叫者Id
+     * @return 若在通话返回true。
+     */
+    //TODO 这里要按找事物进行处理，可能需要设置全局的用户索。
+    public boolean isTalk(String userId) {
+        GroupInterCom gic=null;
+        for (String k: this.gm.gicMap.keySet()) {
+            gic=this.gm.gicMap.get(k);
+            if (gic==null||gic.getSpeaker()==null||gic.getLastTalkTime()==-1) continue;
+            if (gic.getSpeaker().getUserId().equals(userId)) return true;
+        }
+        return false;
     }
 }

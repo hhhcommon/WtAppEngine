@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.spiritdata.framework.util.SequenceUUID;
+import com.woting.appengine.calling.mem.CallingMemoryManage;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.intercom.model.GroupInterCom;
@@ -126,7 +127,11 @@ public class DealInterCom extends Thread {
                                 um=new HashMap<String, Object>();
                                 //TODO 这里的号码可能还需要处理
                                 um.put("UserId", up.getUserId());
+                                um.put("UserName", up.getLoginName());
                                 um.put("InnerPhoneNum", up.getInnerPhoneNum());
+                                um.put("Portrait", up.getProtraitMini());
+                                um.put("Mail", up.getMailAddress());
+                                um.put("Desc", up.getDescn());
                                 inGroupUsers.add(um);
                             }
                             dataMap.put("InGroupUsers", inGroupUsers);
@@ -286,6 +291,9 @@ public class DealInterCom extends Thread {
                         pmm.getSendMemory().addMsg2Queue(mk, retMsg);
                     } else if (_m.containsKey("O")) {
                         retMsg.setReturnType("1004");
+                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+                    } else if (CallingMemoryManage.getInstance().isTalk(mk.getUserId())) {//电话通话判断 //TODO 这里应该用全局锁
+                        retMsg.setReturnType("1005");
                         pmm.getSendMemory().addMsg2Queue(mk, retMsg);
                     } else {//成功可以开始对讲了
                         retMsg.setReturnType("1001");

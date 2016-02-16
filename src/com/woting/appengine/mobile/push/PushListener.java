@@ -27,7 +27,7 @@ public class PushListener extends Thread {
     @Override
     public void run() {
         try {
-            sleep(5000);//多少毫秒后启动任务处理，先让系统的其他启动任务完成，这里设置死为10秒钟
+            sleep(3000);//多少毫秒后启动任务处理，先让系统的其他启动任务完成，这里设置死为10秒钟
             //初始化内存结构
             ReceiveMemory.getInstance();
             //启动服务

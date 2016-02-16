@@ -216,7 +216,7 @@ public class ContentService {
         retM.put("ContentFreqs", one.get(""));//S02-特有：频率列表，目前为空
         retM.put("ContentList", one.get(""));//S03-特有：节目单列表，目前为空
 
-        retM.put("cTime", one.get("cTime"));//A1-管控：节目创建时间，目前以此进行排序
+        retM.put("CTime", one.get("cTime"));//A1-管控：节目创建时间，目前以此进行排序
 
         return retM;
     }
@@ -242,7 +242,8 @@ public class ContentService {
 
         retM.put("ContentTimes", one.get("timeLong"));//S01-特有：播放时长
 
-        retM.put("cTime", one.get("cTime"));//A1-管控：节目创建时间，目前以此进行排序
+        retM.put("CTime", one.get("cTime"));//A1-管控：节目创建时间，目前以此进行排序
+
         return retM;
     }
     private Map<String, Object> convert2MediaMap_3(Map<String, Object> one, List<Map<String, Object>> cataList, List<Map<String, Object>> personList) {
@@ -264,7 +265,8 @@ public class ContentService {
 
         retM.put("ContentSubCount", one.get("count"));//S01-特有：下级节目的个数
 
-        retM.put("cTime", one.get("cTime"));//A1-管控：节目创建时间，目前以此进行排序
+        retM.put("CTime", one.get("cTime"));//A1-管控：节目创建时间，目前以此进行排序
+
         return retM;
     }
     private List<Map<String, Object>> fetchPersons(List<Map<String, Object>> personList, int resType, String resId) {

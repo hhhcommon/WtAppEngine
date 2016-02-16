@@ -1,7 +1,7 @@
 package com.woting.appengine.mobile.push.model;
 
 /**
- * 比较两个消息是否是同批次的消息，消息应该有批次号
+ * 比较两个消息是否是相同的消息
  * @author wanghui
  */
 public interface CompareMsg {

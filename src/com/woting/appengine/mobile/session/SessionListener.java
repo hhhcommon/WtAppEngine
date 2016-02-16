@@ -3,9 +3,6 @@ package com.woting.appengine.mobile.session;
 import java.util.Date;
 import java.util.Timer;
 
-import javax.servlet.ServletContext;
-
-import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.woting.WtAppEngineConstants;
@@ -41,7 +38,7 @@ public class SessionListener extends Thread {
     @Override
     public void run() {
         try {
-            sleep(5000);//多少毫秒后启动任务处理，先让系统的其他启动任务完成，这里设置死为10秒钟
+            sleep(3000);//多少毫秒后启动任务处理，先让系统的其他启动任务完成
             //读取版本号，并存入内存
             SystemCache.setCache(
                 new CacheEle<String>(WtAppEngineConstants.APP_VERSION, "移动端版本", MobileUtils.getVersion())

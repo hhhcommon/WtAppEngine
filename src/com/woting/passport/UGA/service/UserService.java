@@ -78,21 +78,6 @@ public class UserService implements UgaUserService {
     }
 
     /**
-     * 获得好友列表
-     * @param userId 用户id
-     * @return 好友列表
-     */
-    public List<UserPo> getFriendList(String userId) {
-        try {
-            List<UserPo> ul=userDao.queryForList();
-            return ul;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
      * 获得组成员，为创建用户组使用
      * @param Members 组成员id，用逗号隔开
      * @return 组成员类表

@@ -85,7 +85,7 @@ public class WholeTalk {
     }
 
     /**
-     * 是否接受到了全部的包
+     * 是否接收到了全部的包
      * @return
      */
     public boolean isReceiveCompleted() {
