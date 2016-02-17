@@ -34,19 +34,13 @@ public class TalkMemoryManage {
         tm=TalkMemory.getInstance();
     }
 
-    public WholeTalk getWholeTalk(MobileKey mk) {
-        return this.tm.talkMap.get(mk.toString());
-    }
     public WholeTalk getWholeTalk(String talkId) {
-        for (String k: this.tm.talkMap.keySet()) {
-            WholeTalk wt = this.tm.talkMap.get(k);
-            if (wt.getTalkId().equals(talkId)) return wt;;
-        }
-        return null;
+        return this.tm.talkMap.get(talkId);
     }
 
     public void removeWt(WholeTalk wt) {
-        this.tm.talkMap.remove(wt.getTalkerMk().toString());
+//        this.tm.talkMap.remove(wt.getTalkerMk().toString());
+        this.tm.talkMap.remove(wt.getTalkId());
     }
 
     /**
@@ -54,15 +48,12 @@ public class TalkMemoryManage {
      * @param wt
      * @return 返回内存中与这个对讲对应的结构，若内存中已经存在，则返回内存中的结构，否则返回这个新结构
      */
-    public WholeTalk addWt(WholeTalk wt) {
-        WholeTalk ret=this.tm.talkMap.get(wt.getTalkerMk().toString());
-        this.tm.talkMap.put(wt.getTalkerMk().toString(), wt);
-        ret=wt;
-        return ret;
+    public void addWt(WholeTalk wt) {
+        this.tm.talkMap.put(wt.getTalkId(), wt);
     }
 
     /**
-     * 清除内存，按时间判断，并且要处理对讲组内存
+     * 清除组对讲内存
      */
     public void clean() {
         if (this.tm.talkMap!=null&&!this.tm.talkMap.isEmpty()) {
@@ -74,39 +65,40 @@ public class TalkMemoryManage {
             GroupMemoryManage gmm=GroupMemoryManage.getInstance();
             for (String k: this.tm.talkMap.keySet()) {
                 WholeTalk wt = this.tm.talkMap.get(k);
-
-                GroupInterCom gic = gmm.getGroupInterCom(wt.getGroupId());
-                //判断对讲是否结束
-                boolean talkEnd=false;
-                talkEnd=wt.isCompleted()||gic==null||gic.getSpeaker()==null;
-                if (talkEnd) {
-                    this.removeWt(wt);//清除对讲内存
-                    //发广播消息，推出PTT
-                    if (gic.getSpeaker()!=null) {
-                        //广播结束消息
-                        exitPttMsg=new Message();
-                        exitPttMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
-                        exitPttMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                        exitPttMsg.setMsgType(1);
-                        exitPttMsg.setMsgBizType("INTERCOM_CTL");
-                        exitPttMsg.setCmdType("PTT");
-                        exitPttMsg.setCommand("b2");
-                        dataMap=new HashMap<String, Object>();
-                        dataMap.put("GroupId", wt.getGroupId());
-                        dataMap.put("TalkUserId", wt.getTalkerId());
-                        exitPttMsg.setMsgContent(dataMap);
-                        //发送广播消息
-                        Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
-                        for (String _k: entryGroupUsers.keySet()) {
-                            String _sp[] = _k.split("::");
-                            mk=new MobileKey();
-                            mk.setMobileId(_sp[0]);
-                            mk.setUserId(_sp[1]);
-                            exitPttMsg.setToAddr(MobileUtils.getAddr(mk));
-                            pmm.getSendMemory().addUniqueMsg2Queue(mk, exitPttMsg, new CompareGroupMsg());
+                if (wt.getTalkType()==1) {
+                    GroupInterCom gic = gmm.getGroupInterCom(wt.getObjId());
+                    //判断对讲是否结束
+                    boolean talkEnd=false;
+                    talkEnd=wt.isCompleted()||gic==null||gic.getSpeaker()==null;
+                    if (talkEnd) {
+                        this.removeWt(wt);//清除语音内存
+                        //发广播消息，推出PTT
+                        if (gic.getSpeaker()!=null) {
+                            //广播结束消息
+                            exitPttMsg=new Message();
+                            exitPttMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+                            exitPttMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                            exitPttMsg.setMsgType(1);
+                            exitPttMsg.setMsgBizType("INTERCOM_CTL");
+                            exitPttMsg.setCmdType("PTT");
+                            exitPttMsg.setCommand("b2");
+                            dataMap=new HashMap<String, Object>();
+                            dataMap.put("GroupId", wt.getObjId());
+                            dataMap.put("TalkUserId", wt.getTalkerId());
+                            exitPttMsg.setMsgContent(dataMap);
+                            //发送广播消息
+                            Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
+                            for (String _k: entryGroupUsers.keySet()) {
+                                String _sp[] = _k.split("::");
+                                mk=new MobileKey();
+                                mk.setMobileId(_sp[0]);
+                                mk.setUserId(_sp[1]);
+                                exitPttMsg.setToAddr(MobileUtils.getAddr(mk));
+                                pmm.getSendMemory().addUniqueMsg2Queue(mk, exitPttMsg, new CompareGroupMsg());
+                            }
                         }
+                        gic.delSpeaker(gic.getSpeaker()==null?null:gic.getSpeaker().getUserId());
                     }
-                    gic.delSpeaker(gic.getSpeaker()==null?null:gic.getSpeaker().getUserId());
                 }
             }
         }
@@ -124,6 +116,21 @@ public class TalkMemoryManage {
                   &&(((Map)msg1.getMsgContent()).get("GroupId").equals(((Map)msg2.getMsgContent()).get("GroupId")))) return true;
             }
             return false;
+        }
+    }
+
+    /**
+     * 清除电话通话内容
+     * @param callId 通话id
+     */
+    public void cleanCallData(String callId) {
+        if (this.tm.talkMap!=null&&!this.tm.talkMap.isEmpty()) {
+            for (String k: this.tm.talkMap.keySet()) {
+                WholeTalk wt=this.tm.talkMap.get(k);
+                if (wt.getTalkType()==2&&wt.getObjId().equals(callId)) {
+                    this.removeWt(wt);
+                }
+            }
         }
     }
 }

@@ -43,7 +43,7 @@ public class CallingMemoryManage {
         OneCall oc=null;
         for (String k: this.cm.callMap.keySet()) {
             oc=this.cm.callMap.get(k);
-            if (oc==null) continue;
+            if (oc==null||oc.getStatus()==9) continue;
             if (oc.getCallorId().equals(callorId)||oc.getDiallorId().equals(callorId)) return true;
         }
         return false;
@@ -55,6 +55,18 @@ public class CallingMemoryManage {
      * @return 电话通话数据
      */
     public OneCall getCallData(String callId) {
-        return (this.cm!=null&&this.cm.callMap!=null)?this.cm.callMap.get(callId):null;
+        if (this.cm!=null&&this.cm.callMap!=null) {
+            OneCall oc=this.cm.callMap.get(callId);
+            if (oc.getStatus()!=9&&oc.getStatus()!=4) return oc;
+        }
+        return null;
+    }
+
+    //这个现在不用了
+    public void removeCallData(String callId) {
+        if (this.cm!=null&&this.cm.callMap!=null) {
+            if (this.cm.callMap.get(callId)!=null) this.cm.callMap.get(callId).setStatus_9();
+            this.cm.callMap.remove(callId);
+        }
     }
 }

@@ -118,6 +118,25 @@ public class SessionMemoryManage {
     }
 
     /**
+     * 根据IuserId获得
+     * @param userId 用户Id
+     * @return 对应的Session
+     */
+    public MobileSession getUserSessionByUserId(String userId) {
+        if (StringUtils.isNullOrEmptyOrSpace(userId)) return null;
+        if (this.sm.mSessionMap!=null&&this.sm.mSessionMap.size()>0) {
+            for (String sKey: this.sm.mSessionMap.keySet()) {
+                MobileSession ms = this.sm.mSessionMap.get(sKey);
+                if (ms.getKey().getUserId().equals(userId)) {
+                    UserPo u = (UserPo)ms.getAttribute("user");
+                    if (u!=null) return ms;
+                    break;
+                }
+            }
+        }
+        return null;
+    }
+    /**
      * 把内存情况转换为Json串，便于调试
      * @return
     public String Mem2Json() {

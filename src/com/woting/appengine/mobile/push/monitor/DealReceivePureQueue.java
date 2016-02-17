@@ -80,7 +80,11 @@ public class DealReceivePureQueue extends Thread {
             MobileKey mk=MobileUtils.getMobileKey(m);
             msg.setFromAddr(MobileUtils.getAddr(mk));
             msg.setProxyAddrs("");
-            msg.setToAddr("{(intercom)@@(www.woting.fm||S)}");
+            __tmp="";
+            if ((m.get("BizType")+"").equals("INTERCOM_CTL")) __tmp="intercom";
+            if ((m.get("BizType")+"").equals("AUDIOFLOW")) __tmp="audioflow";
+            if ((m.get("BizType")+"").equals("CALL_CTL")) __tmp="phone";
+            msg.setToAddr("{("+__tmp+")@@(www.woting.fm||S)}");
             msg.setMsgType(Integer.parseInt(m.get("MsgType")+""));
             msg.setSendTime(Long.parseLong(m.get("SendTime")+""));
             msg.setReceiveTime(System.currentTimeMillis());

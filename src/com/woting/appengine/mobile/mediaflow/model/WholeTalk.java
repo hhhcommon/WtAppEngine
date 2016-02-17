@@ -6,7 +6,9 @@ import java.util.Map;
 import com.woting.appengine.mobile.model.MobileKey;
 
 /**
- * 一次完整的通话
+ * 一次完整的通话：
+ * 对讲中是某个人的一次说话
+ * 电话中是通话某一方的整个说话
  * @author wanghui
  */
 public class WholeTalk {
@@ -19,8 +21,9 @@ public class WholeTalk {
         this.talkData = new HashMap<Integer, TalkSegment>();
     }
 
-    private String talkId; //本段通话的Id
-    private String groupId; //本通话的组Id
+    private String talkId; //通话的Id
+    private int talkType; //通话类型，目前仅有两类：1=对讲；2=电话
+    private String objId; //通话所对应的对讲的Id，当为对讲时是groupId，当为电话时是callId
     private MobileKey talkerMk; //讲话人Id
     private int MaxNum=0; //当前通话的最大包数
     private Map<Integer, TalkSegment> talkData; //通话的完整数据
@@ -31,11 +34,17 @@ public class WholeTalk {
     public void setTalkId(String talkId) {
         this.talkId = talkId;
     }
-    public String getGroupId() {
-        return groupId;
+    public int getTalkType() {
+        return talkType;
     }
-    public void setGroupId(String groupId) {
-        this.groupId = groupId;
+    public void setTalkType(int talkType) {
+        this.talkType = talkType;
+    }
+    public String getObjId() {
+        return this.objId;
+    }
+    public void setObjId(String objId) {
+        this.objId = objId;
     }
     public Map<Integer, TalkSegment> getTalkData() {
         return talkData;

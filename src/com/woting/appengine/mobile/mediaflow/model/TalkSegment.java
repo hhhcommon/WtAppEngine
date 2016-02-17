@@ -21,7 +21,7 @@ public class TalkSegment {
     }
 
     private WholeTalk wt; //本段话对应的完整对话
-    private byte[] data; //本段对话的实际
+    private byte[] data; //本段对话的实际数据
     private long begin; //开始时间点：离通话开始时间
     private long end; //本包结束的时间点：离通话开始时间
     private int seqNum; //序列号：从0开始
@@ -63,7 +63,7 @@ public class TalkSegment {
         return sendUsers;
     }
     public void setSendUsers(Map<String, UserPo> sendUsers) {
-        this.sendUsers = new HashMap<String, UserPo>();
+        this.sendUsers=new HashMap<String, UserPo>();
         for (String k: sendUsers.keySet()) {
             if (!k.equals(this.wt.getTalkerMk().toString())) {
                 this.sendUsers.put(k, sendUsers.get(k));

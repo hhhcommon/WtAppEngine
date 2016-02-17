@@ -10,7 +10,7 @@ public class ProcessedMsg {
     private Message msg;//消息
     private long beginTime; //消息开始处理时间
     private long endTime;//消息处理结束时间
-    private int status=0;//消息处理状态0正在处里;1处理成功;2处理失败;-1处理异常
+    private int status=0;//消息处理状态0正在处里;1处理成功;2被抛弃;3处理失败，由于信息不匹配;-1处理异常
     private String className; //处理消息的类名称
     private String errMsg;//若消息处理失败，这里存储失败的描述
     private Throwable ext;//若消息处理异常，这里存储引起异常的类实例
@@ -28,6 +28,7 @@ public class ProcessedMsg {
         this.msg = msg;
         this.beginTime = beginTime;
         this.className = className;
+        this.status=0;
     }
     public Message getMsg() {
         return msg;
