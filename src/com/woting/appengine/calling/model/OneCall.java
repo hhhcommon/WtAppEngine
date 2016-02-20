@@ -25,13 +25,13 @@ public class OneCall implements Serializable {
     public String getCallId() {
         return callId;
     }
-    private String diallorId;//呼叫者Id
-    public String getDiallorId() {
-        return diallorId;
+    private String callerId;//呼叫者Id
+    public String getCallerId() {
+        return callerId;
     }
-    private String callorId;//被叫者Id
-    public String getCallorId() {
-        return callorId;
+    private String callederId;//被叫者Id
+    public String getCallederId() {
+        return callederId;
     }
     private long createTime;//本对象创建时间
     public long getCreateTime() {
@@ -55,11 +55,15 @@ public class OneCall implements Serializable {
     //以下是两个判断超时的参数，这种方法允许每个不同的通话采用自己的机制处理超时
     private final long it1_expire;//检查是否在线的过期时间
     private final long it2_expire;//检查是否无应答的过期时间
+    private final long it3_expire;//检查通话过期时间
     public long getIt1_expire() {
         return it1_expire;
     }
     public long getIt2_expire() {
         return it2_expire;
+    }
+    public long getIt3_expire() {
+        return it3_expire;
     }
 
     private volatile int status=0; //通话过程的状态10呼叫；这个在写的时候再完善
@@ -105,19 +109,23 @@ public class OneCall implements Serializable {
      * 若要构造此类，必须要知呼叫者，被叫者和通话Id。
      * 构造函数还创建了需要内存结构
      * @param callId 通话Id
-     * @param diallorId 呼叫者Id
-     * @param callorId 被叫者Id
+     * @param callerId 呼叫者Id
+     * @param callederId 被叫者Id
+     * @param it1_expire 占线判断过期时间
+     * @param it2_expire 未应答怕判断过期时间
      */
-    public OneCall(String callId, String diallorId, String callorId, long it1_expire, long it2_expire) {
+    public OneCall(String callId, String callerId, String callederId, long it1_expire, long it2_expire, long it3_expire) {
         super();
         this.callId = callId;
-        this.diallorId = diallorId;
-        this.callorId = callorId;
+        this.callerId = callerId;
+        this.callederId = callederId;
         this.createTime=System.currentTimeMillis();
         this.beginDialTime=-1;//不在使用的情况
+        this.lastUsedTime=System.currentTimeMillis();
 
-        this.it1_expire=(it1_expire<=0?500:it1_expire);
-        this.it2_expire=(it2_expire<=0?30000:it2_expire);
+        this.it1_expire=(it1_expire<=0?10000:it1_expire);
+        this.it2_expire=(it2_expire<=0?60000:it2_expire);
+        this.it3_expire=(it3_expire<=0?120000:it3_expire);
 
         this.status=0;//仅创建，还未处理
 
@@ -125,8 +133,8 @@ public class OneCall implements Serializable {
         this.processedMsgList=new ArrayList<ProcessedMsg>();
         this.sendedMsgList=new ArrayList<Message>();
 
-        this.dialWt=null;
-        this.callWt=null;
+        this.callerWts=new ArrayList<WholeTalk>();
+        this.callederWts=new ArrayList<WholeTalk>();
     }
 
     /**
@@ -160,25 +168,39 @@ public class OneCall implements Serializable {
 
     public String getOtherId(String oneId) {
         String otherId=null;
-        if (this.getCallorId().equals(oneId)) otherId=this.getDiallorId();
-        if (this.getDiallorId().equals(oneId)) otherId=this.getCallorId();
+        if (this.getCallerId().equals(oneId)) otherId=this.callederId;
+        if (this.getCallederId().equals(oneId)) otherId=this.callerId;
         return otherId;
     }
 
     //呼叫者语音信息
-    private WholeTalk dialWt=null;
-    public WholeTalk getDialWt() {
-        return dialWt;
+    private List<WholeTalk> callerWts=null;
+    public void addCallerWt(WholeTalk callerWt) {
+        boolean canAdd=true;
+        for (WholeTalk wt: this.callerWts) {
+            if (wt.getTalkId().equals(callerWt.getTalkId())) {
+                canAdd=false;
+                break;
+            }
+        }
+        if (canAdd) this.callerWts.add(callerWt);
     }
-    public void setDialWt(WholeTalk dialWt) {
-        this.dialWt = dialWt;
+    public List<WholeTalk> getCallerWts() {
+        return this.callerWts;
     }
     //被叫者语音信息
-    private WholeTalk callWt=null;
-    public WholeTalk getCallWt() {
-        return callWt;
+    private List<WholeTalk> callederWts=null;
+    public void addCallederWt(WholeTalk callederWt) {
+        boolean canAdd=true;
+        for (WholeTalk wt: this.callederWts) {
+            if (wt.getTalkId().equals(callederWt.getTalkId())) {
+                canAdd=false;
+                break;
+            }
+        }
+        if (canAdd) this.callederWts.add(callederWt);
     }
-    public void setCallWt(WholeTalk callWt) {
-        this.callWt = callWt;
+    public List<WholeTalk> getCallederWts() {
+        return this.callederWts;
     }
 }

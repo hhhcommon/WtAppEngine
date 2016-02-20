@@ -47,16 +47,14 @@ public class DealMediaflow extends Thread {
                 if (m==null) continue;
 
                 //暂存，解码
-                if (m.getCmdType().equals("TALK")) {
-                    if (m.getCommand().equals("1")) {//收到音频包
-                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-收到音频数据包::(User="+m.getFromAddr()+";TalkId="+((Map)m.getMsgContent()).get("TalkId")+")";
-                        System.out.println(tempStr);
-                        (new ReceiveAudioDatagram("{"+tempStr+"}处理线程", m)).start();
-                    } else if (m.getCommand().equals("-b1")) {//收到回执包
-                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-收到音频回执包::(User="+m.getFromAddr()+";TalkId="+((Map)m.getMsgContent()).get("TalkId")+")";
-                        System.out.println(tempStr);
-                        (new ReceiveAudioAnswer("{"+tempStr+"}处理线程", m)).start();
-                    }
+                if (m.getCommand().equals("1")) {//收到音频包
+                    tempStr="处理消息[MsgId="+m.getMsgId()+"]-收到音频数据包::(User="+m.getFromAddr()+";TalkId="+((Map)m.getMsgContent()).get("TalkId")+")";
+                    System.out.println(tempStr);
+                    (new ReceiveAudioDatagram("{"+tempStr+"}处理线程", m)).start();
+                } else if (m.getCommand().equals("-b1")) {//收到回执包
+                    tempStr="处理消息[MsgId="+m.getMsgId()+"]-收到音频回执包::(User="+m.getFromAddr()+";TalkId="+((Map)m.getMsgContent()).get("TalkId")+")";
+                    System.out.println(tempStr);
+                    (new ReceiveAudioAnswer("{"+tempStr+"}处理线程", m)).start();
                 }
             } catch(Exception e) {
                 e.printStackTrace();
@@ -131,11 +129,9 @@ public class DealMediaflow extends Thread {
                 tmm.addWt(wt);
                 //加入电话控制中
                 if (talkType==2) {
-                    if (talkerId.equals(oc.getDiallorId())) {//呼叫者
-                        if ((oc.getDialWt()==null)||(!oc.getDialWt().getTalkId().equals(wt.getTalkId()))) oc.setDialWt(wt);
-                    } else if (talkerId.equals(oc.getDiallorId())) {//被叫者
-                        if ((oc.getCallWt()==null)||(!oc.getCallWt().getTalkId().equals(wt.getTalkId()))) oc.setCallWt(wt);
-                    }
+                    if (talkerId.equals(oc.getCallerId())) oc.addCallerWt(wt);//呼叫者
+                    else
+                    if (talkerId.equals(oc.getCallederId())) oc.addCallederWt(wt);//被叫者
                 }
             }
             TalkSegment ts = new TalkSegment();
@@ -146,7 +142,7 @@ public class DealMediaflow extends Thread {
                 String userId=oc.getOtherId(talkerId);
                 UserPo u=(UserPo)smm.getUserSessionByUserId(userId).getAttribute("user");
                 Map<String, UserPo> um=new HashMap<String, UserPo>();
-                um.put(userId, u);
+                um.put(smm.getUserSessionByUserId(userId).getKey().toString(), u);
                 ts.setSendUsers(um);
             }
             ts.setSeqNum(seqNum);
@@ -166,7 +162,7 @@ public class DealMediaflow extends Thread {
             bMsg.setMsgType(1);
             bMsg.setAffirm(1);
             bMsg.setMsgBizType("AUDIOFLOW");
-            bMsg.setCmdType("TALK");
+            bMsg.setCmdType(sourceMsg.getCmdType());
             bMsg.setCommand("b1");
             dataMap=new HashMap<String, Object>();
             dataMap.put("TalkId", talkId);

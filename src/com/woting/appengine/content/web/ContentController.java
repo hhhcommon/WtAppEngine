@@ -5,22 +5,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
+import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.model.MobileParam;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.appengine.mobile.session.model.MobileSession;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
 
 @Controller
 @RequestMapping(value="/content/")
 public class ContentController {
     private SessionMemoryManage smm=SessionMemoryManage.getInstance();
+    @Resource
+    private ContentService contentService;
 
     @RequestMapping(value="mainPage.do")
     @ResponseBody
@@ -458,86 +464,134 @@ public class ContentController {
     public Map<String,Object> getSeqMaInfo(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            //0-处理访问
+            //0-获取参数
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
-            if (m!=null&&m.size()>0) {
-                MobileParam mp=MobileUtils.getMobileParam(m);
-                MobileKey sk=(mp==null?null:mp.getMobileKey());
-                if (sk!=null){
-                    map.put("SessionId", sk.getSessionId());
-                    MobileSession ms=smm.getSession(sk);
-                    if (ms!=null) ms.access();
-                }
-                //获得SessionId，从而得到用户信息，获得偏好信息
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+                return map;
             }
-            //1-获取列表
-            List<Map<String, Object>> sl=null;
-            Map<String, Object> bcClass=null, bcItem=null;
-            bcClass=new HashMap<String, Object>();//一个分类
-            bcClass.put("SequId", "001");
-            bcClass.put("ContentName", "观复嘟嘟");
-            bcClass.put("ContentId", "001");
-            bcClass.put("ContentImg", "images/dft_broadcast.png");
-            bcClass.put("Actor", "马未都");//当前节目
-            bcClass.put("PageSize", "3");//当前列表元素个数
-            bcClass.put("AllListSize", "3");//本分类列表元素个数
-            //------------------
-            sl = new ArrayList<Map<String, Object>>();
-            bcItem=new HashMap<String, Object>();
-            bcItem.put("MediaType", "AUDIO");
-            bcItem.put("ContentName", "001说勤");
-            bcItem.put("ContentNum", "系列号");
-            bcItem.put("ContentId", "002");
-            bcItem.put("ContentImg", "images/dft_broadcast.png");
-            bcItem.put("ContentURI", "mms://alive.rbc.cn/fm1073");
-            bcItem.put("Actor", "马未都");//当前节目
-            bcItem.put("Desc", "说明........");//当前节目
-            sl.add(bcItem);
-            bcItem=new HashMap<String, Object>();
-            bcItem.put("MediaType", "AUDIO");
-            bcItem.put("ContentName", "002说悍");
-            bcItem.put("ContentNum", "2");
-            bcItem.put("ContentId", "002");
-            bcItem.put("ContentImg", "images/dft_broadcast.png");
-            bcItem.put("ContentURI", "mms://alive.rbc.cn/fm1073");
-            bcItem.put("Actor", "马未都");//当前节目
-            bcItem.put("Desc", "说明........");//当前节目
-            sl.add(bcItem);
-            bcItem=new HashMap<String, Object>();
-            bcItem.put("MediaType", "AUDIO");
-            bcItem.put("ContentName", "003说禁");
-            bcItem.put("ContentNum", "3");
-            bcItem.put("ContentId", "002");
-            bcItem.put("ContentImg", "images/dft_broadcast.png");
-            bcItem.put("ContentURI", "mms://alive.rbc.cn/fm1073");
-            bcItem.put("Actor", "马未都");//当前节目
-            bcItem.put("Desc", "说明........");//当前节目
-            sl.add(bcItem);
-            bcItem=new HashMap<String, Object>();
-            bcItem.put("MediaType", "AUDIO");
-            bcItem.put("ContentName", "004说堂");
-            bcItem.put("ContentNum", "4");
-            bcItem.put("ContentId", "002");
-            bcItem.put("ContentImg", "images/dft_broadcast.png");
-            bcItem.put("ContentURI", "mms://alive.rbc.cn/fm1073");
-            bcItem.put("Actor", "马未都");//当前节目
-            bcItem.put("Desc", "说明........");//当前节目
-            sl.add(bcItem);
-            bcItem=new HashMap<String, Object>();
-            bcItem.put("MediaType", "AUDIO");
-            bcItem.put("ContentName", "005说颂");
-            bcItem.put("ContentNum", "5");
-            bcItem.put("ContentId", "002");
-            bcItem.put("ContentImg", "images/dft_broadcast.png");
-            bcItem.put("ContentURI", "mms://alive.rbc.cn/fm1073");
-            bcItem.put("Actor", "马未都");//当前节目
-            bcItem.put("Desc", "说明........");//当前节目
-            sl.add(bcItem);
-            bcClass.put("SubList", sl);
-            //------------------
-            map.put("ReturnType", "1001");
-            map.put("ResultList", bcClass);
+            String userId=(String)m.get("UserId");
+            MobileParam mp=MobileUtils.getMobileParam(m);
+            mp.setUserId(userId);
+            MobileKey sk=(mp==null?null:mp.getMobileKey());
+            if (sk==null) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取设备Id(IMEI)");
+                return map;
+            }
+            //1-得到用户，并处理访问
+            map.put("SessionId", sk.getSessionId());
+            MobileSession ms=smm.getSession(sk);
+            if (ms==null) {
+                ms=new MobileSession(sk);
+                smm.addOneSession(ms);
+            } else {
+                ms.access();
+                if (userId==null) {
+                    UserPo u=(UserPo)ms.getAttribute("user");
+                    if (u!=null) userId=u.getUserId();
+                }
+            }
+            //2-得到系列内容的Id
+            String contentId=m.get("ContentId")+"";
+            if (StringUtils.isNullOrEmptyOrSpace(contentId)) {
+                contentId=request.getParameter("ContentId");
+            }
+            if (StringUtils.isNullOrEmptyOrSpace(contentId)) {
+                map.put("ReturnType", "1003");
+                map.put("Message", "无法获得系列内容Id");
+                return map;
+            }
+            Map<String, Object> smInfo=contentService.getSeqMaInfo(contentId);
+            if (smInfo!=null&&smInfo.size()>0) {
+                map.put("ResultList", smInfo);
+                map.put("ReturnType", "1001");
+            } else {
+                map.put("ReturnType", "1011");
+                map.put("Message", "没有查到任何内容");
+            }
             return map;
+//            //0-处理访问
+//            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+//            if (m!=null&&m.size()>0) {
+//                MobileParam mp=MobileUtils.getMobileParam(m);
+//                MobileKey sk=(mp==null?null:mp.getMobileKey());
+//                if (sk!=null){con
+//                    map.put("SessionId", sk.getSessionId());
+//                    MobileSession ms=smm.getSession(sk);
+//                    if (ms!=null) ms.access();
+//                }
+//                //获得SessionId，从而得到用户信息，获得偏好信息
+//            }
+//            //1-获取列表
+//            List<Map<String, Object>> sl=null;
+//            Map<String, Object> bcClass=null, bcItem=null;
+//            bcClass=new HashMap<String, Object>();//一个分类
+//            bcClass.put("SequId", "001");
+//            bcClass.put("ContentName", "观复嘟嘟");
+//            bcClass.put("ContentId", "001");
+//            bcClass.put("ContentImg", "images/dft_broadcast.png");
+//            bcClass.put("Actor", "马未都");//当前节目
+//            bcClass.put("PageSize", "3");//当前列表元素个数
+//            bcClass.put("AllListSize", "3");//本分类列表元素个数
+//            //------------------
+//            sl = new ArrayList<Map<String, Object>>();
+//            bcItem=new HashMap<String, Object>();
+//            bcItem.put("MediaType", "AUDIO");
+//            bcItem.put("ContentName", "001说勤");
+//            bcItem.put("ContentNum", "系列号");
+//            bcItem.put("ContentId", "002");
+//            bcItem.put("ContentImg", "images/dft_broadcast.png");
+//            bcItem.put("ContentURI", "mms://alive.rbc.cn/fm1073");
+//            bcItem.put("Actor", "马未都");//当前节目
+//            bcItem.put("Desc", "说明........");//当前节目
+//            sl.add(bcItem);
+//            bcItem=new HashMap<String, Object>();
+//            bcItem.put("MediaType", "AUDIO");
+//            bcItem.put("ContentName", "002说悍");
+//            bcItem.put("ContentNum", "2");
+//            bcItem.put("ContentId", "002");
+//            bcItem.put("ContentImg", "images/dft_broadcast.png");
+//            bcItem.put("ContentURI", "mms://alive.rbc.cn/fm1073");
+//            bcItem.put("Actor", "马未都");//当前节目
+//            bcItem.put("Desc", "说明........");//当前节目
+//            sl.add(bcItem);
+//            bcItem=new HashMap<String, Object>();
+//            bcItem.put("MediaType", "AUDIO");
+//            bcItem.put("ContentName", "003说禁");
+//            bcItem.put("ContentNum", "3");
+//            bcItem.put("ContentId", "002");
+//            bcItem.put("ContentImg", "images/dft_broadcast.png");
+//            bcItem.put("ContentURI", "mms://alive.rbc.cn/fm1073");
+//            bcItem.put("Actor", "马未都");//当前节目
+//            bcItem.put("Desc", "说明........");//当前节目
+//            sl.add(bcItem);
+//            bcItem=new HashMap<String, Object>();
+//            bcItem.put("MediaType", "AUDIO");
+//            bcItem.put("ContentName", "004说堂");
+//            bcItem.put("ContentNum", "4");
+//            bcItem.put("ContentId", "002");
+//            bcItem.put("ContentImg", "images/dft_broadcast.png");
+//            bcItem.put("ContentURI", "mms://alive.rbc.cn/fm1073");
+//            bcItem.put("Actor", "马未都");//当前节目
+//            bcItem.put("Desc", "说明........");//当前节目
+//            sl.add(bcItem);
+//            bcItem=new HashMap<String, Object>();
+//            bcItem.put("MediaType", "AUDIO");
+//            bcItem.put("ContentName", "005说颂");
+//            bcItem.put("ContentNum", "5");
+//            bcItem.put("ContentId", "002");
+//            bcItem.put("ContentImg", "images/dft_broadcast.png");
+//            bcItem.put("ContentURI", "mms://alive.rbc.cn/fm1073");
+//            bcItem.put("Actor", "马未都");//当前节目
+//            bcItem.put("Desc", "说明........");//当前节目
+//            sl.add(bcItem);
+//            bcClass.put("SubList", sl);
+//            //------------------
+//            map.put("ReturnType", "1001");
+//            map.put("ResultList", bcClass);
+//            return map;
         } catch(Exception e) {
             e.printStackTrace();
             map.put("ReturnType", "T");

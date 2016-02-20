@@ -86,15 +86,16 @@ public class CommonController {
                 }
                 map.put("ReturnType", "1002");
             } else { //上次是登录
-                ms=smm.getUserSession(mu.getUserId(), sk.getMobileId());
+                UserPo u=userService.getUserById(mu.getUserId());
+                if (u!=null) sk.setUserId(u.getUserId());
+                ms=smm.getSession(sk);
                 if (ms==null) { //找不到对应的移动会话
                     ms=new MobileSession(sk);
+                    ms.addAttribute("user", u);
                     smm.addOneSession(ms);
                 } else { //找到了对应的对话，直接应用
                     ms.access();
                 }
-                UserPo u=userService.getUserById(mu.getUserId());
-                ms.addAttribute("user", u);
                 map.put("ReturnType", "1001"); //已登录
                 map.put("ServerStatus", "1"); //服务器状态
                 map.put("UserInfo", u.toHashMap4Mobile());

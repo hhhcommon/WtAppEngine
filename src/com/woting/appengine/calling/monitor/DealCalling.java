@@ -3,23 +3,14 @@ package com.woting.appengine.calling.monitor;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-
-import org.springframework.web.context.support.WebApplicationContextUtils;
-
-import com.spiritdata.framework.FConstants;
-import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.appengine.calling.CallingListener;
 import com.woting.appengine.calling.mem.CallingMemoryManage;
 import com.woting.appengine.calling.model.OneCall;
 import com.woting.appengine.common.util.MobileUtils;
-import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.appengine.mobile.push.model.Message;
-import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
-import com.woting.passport.UGA.service.UserService;
 
 /**
  * 处理电话消息，包括把电话消息分发到每一个具体的处理线程
@@ -77,10 +68,13 @@ public class DealCalling extends Thread {
             OneCall oneCall=null;//通话对象
             MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
             if (sourceMsg.getCommand().equals("1")) {//发起呼叫过程
-                String diallorId=((Map)sourceMsg.getMsgContent()).get("DiallorId")+"";
-                String callorId=((Map)sourceMsg.getMsgContent()).get("CallorId")+"";
+                String callerId=MobileUtils.getMobileKey(sourceMsg).getUserId();
+                String CallederId=((Map)sourceMsg.getMsgContent()).get("CallederId")+"";
                 //创建内存对象
-                oneCall=new OneCall(callId, diallorId, callorId, CallingListener.getCallingConfig().getIT1_EXPIRE(), CallingListener.getCallingConfig().getIT2_EXPIRE());
+                oneCall=new OneCall(callId, callerId, CallederId
+                                  , CallingListener.getCallingConfig().getIT1_EXPIRE()
+                                  , CallingListener.getCallingConfig().getIT2_EXPIRE()
+                                  , CallingListener.getCallingConfig().getIT3_EXPIRE());
                 oneCall.addPreMsg(sourceMsg);//设置第一个消息
                 //加入内存
                 int addFlag=CallingMemoryManage.getInstance().addOneCall(oneCall);
@@ -97,9 +91,10 @@ public class DealCalling extends Thread {
                 oneCall=cmm.getCallData(callId);
                 if (oneCall==null) {//没有对应的内存数据
                     retMsg.setCommand("b3");
-                    retMsg.setMsgType(-1);
+                    retMsg.setMsgType(1);
                     dataMap.put("HangupType", "0");
                     dataMap.put("ServerMsg", "服务器处理进程不存在");
+                    retMsg.setMsgContent(dataMap);
                     pmm.getSendMemory().addMsg2Queue(mk, retMsg);
                     return;
                 }

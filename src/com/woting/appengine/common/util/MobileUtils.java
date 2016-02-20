@@ -5,7 +5,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -16,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
@@ -25,6 +25,7 @@ import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.CacheEle;
@@ -36,6 +37,11 @@ import com.woting.WtAppEngineConstants;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.model.MobileParam;
 import com.woting.appengine.mobile.push.model.Message;
+import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
+import com.woting.appengine.mobile.session.model.MobileSession;
+import com.woting.passport.UGA.service.GroupService;
+import com.woting.passport.login.persistence.pojo.MobileUsedPo;
+import com.woting.passport.login.service.MobileUsedService;
 
 /**
  * 移动的公共处理
@@ -84,6 +90,7 @@ public abstract class MobileUtils {
         }
         return retM;
     }
+
     /**
      * 按类型保存图片
      * @param req
@@ -307,5 +314,57 @@ public abstract class MobileUtils {
             try {in.close();} catch(Exception _e){} finally{in=null;}
         }
         return version;
+    }
+
+    /**
+     * 为消息服务，处理客户端的连接
+     * @param m 消息
+     * @param type 类型：1=注册，第一次进入；2=仅绑定
+     * @return 返回Map，情况如下：1=若参数整体无意义，则返回空；
+     *   ReturnType="2001", Msg="未获得IMEI无法处理";
+     */
+    public static Map<String, Object> dealMobileLinked(Message m, int type) {
+        //若参数整体无意义，则返回空
+        if (m==null) return null;
+        return MobileUtils._dealMobileLinked(MobileUtils.getMobileKey(m), type);
+    }
+
+    /**
+     * 为Web服务，处理客户端的连接
+     * @param m Web服务收到的客户端所传过来的数据的Map
+     * @return 返回Map，情况如下：1=若参数整体无意义，则返回空
+     *   ReturnType="2001", Msg="未获得IMEI无法处理";
+     */
+    public static Map<String, Object> dealMobileLinked(Map<String, Object> m, int type) {
+        if (m==null||m.size()==0) return null;
+        return MobileUtils._dealMobileLinked(MobileUtils.getMobileKey(m), type);
+    }
+
+    private static Map<String, Object> _dealMobileLinked(MobileKey mKey, int type) {
+        Map<String,Object> map=new HashMap<String, Object>();
+        if (mKey==null||StringUtils.isNullOrEmptyOrSpace(mKey.getMobileId())) {//若无IMEI
+            map.put("ReturnType", "2001");
+            map.put("Msg", "未获得IMEI无法处理");
+        } else if (mKey.isMobile()) {//若仅仅是设备
+            if (type==1) {
+                //看之前是否在此设备上有人登录过
+                ServletContext sc = (ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
+                if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                    MobileUsedService muService = (MobileUsedService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("muService");
+                    MobileUsedPo mu=muService.getUsedInfo(mKey.getMobileId());
+                    
+                } else {
+                }
+            } else {
+                
+            }
+            //SessionMemoryManage.getInstance().addOneSession(ms);
+        } else if (mKey.isUser()) {//是用户
+            MobileSession ms=SessionMemoryManage.getInstance().getSession(mKey);
+            if (ms==null) {
+                ms=new MobileSession(mKey);
+            }
+        }
+        return map;
     }
 }

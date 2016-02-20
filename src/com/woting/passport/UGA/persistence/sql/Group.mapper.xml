@@ -213,7 +213,7 @@
     where c.id in (${inIds})
     </if>
   </select>
-  <select id="searchPerson" resultType="java.util.HashMap">
+  <select id="searchPerson" resultType="java.util.HashMap" parameterType="java.util.Map">
     select * from wt_MaPerson_Ref a, wt_Person b
     where a.personId=b.id and (
     <foreach collection="array" index="index" item="tag" open="" separator="or" close="">
@@ -268,6 +268,24 @@
     <if test="maIds!=null">or (resType=2 and resId in (${maIds}))</if>
     <if test="smaIds!=null">or (resType=3 and resId in (${smaIds}))</if>
     </trim></where>
+  </select>
+
+  <!-- 下面是系列内容的获得 -->
+  <select id="getSmById" resultType="java.util.HashMap" parameterType="java.lang.String">
+    select * from wt_SeqMediaAsset where id=#{value,jdbcType=VARCHAR}
+  </select>
+  <select id="getSmSubMedias" resultType="java.util.HashMap" parameterType="java.lang.String">
+    select a.*, b.smType, b.maSource, b.playURI from wt_MediaAsset a
+    left join wt_MaSource b on a.id=b.maId and b.isMain=1
+    join wt_SeqMA_Ref c on a.id=c.mId
+    where c.sId=#{value,jdbcType=VARCHAR}
+  </select>
+  <select id="getCataListByTypeAndIds" resultType="java.util.HashMap" parameterType="java.util.Map">
+    select * from wt_ResCata_Ref where resType=#{resType,jdbcType=INTEGER} and resId in (${ids})
+  </select>
+  <select id="getPersonListByTypeAndIds" resultType="java.util.HashMap" parameterType="java.util.Map">
+    select * from wt_MaPerson_Ref a, wt_Person b
+    where a.personId=b.id and a.resType=#{resType,jdbcType=INTEGER} and a.resId in (${ids})
   </select>
   <!-- ======================================================================================================= -->
 </mapper>

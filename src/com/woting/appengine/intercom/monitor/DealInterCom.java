@@ -292,7 +292,7 @@ public class DealInterCom extends Thread {
                     } else if (_m.containsKey("O")) {
                         retMsg.setReturnType("1004");
                         pmm.getSendMemory().addMsg2Queue(mk, retMsg);
-                    } else if (CallingMemoryManage.getInstance().isTalk(mk.getUserId())) {//电话通话判断 //TODO 这里应该用全局锁
+                    } else if (CallingMemoryManage.getInstance().isTalk(mk.getUserId(),"")) {//电话通话判断 //TODO 这里应该用全局锁
                         retMsg.setReturnType("1005");
                         pmm.getSendMemory().addMsg2Queue(mk, retMsg);
                     } else {//成功可以开始对讲了

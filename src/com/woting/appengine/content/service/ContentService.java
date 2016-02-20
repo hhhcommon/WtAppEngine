@@ -196,6 +196,7 @@ public class ContentService {
         insertIndex=insertIndex==-1?ret.size():insertIndex;
         ret.add(insertIndex, oneM);
     }
+    //转换电台
     private Map<String, Object> convert2MediaMap_1(Map<String, Object> one, List<Map<String, Object>> cataList, List<Map<String, Object>> personList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
@@ -220,7 +221,7 @@ public class ContentService {
 
         return retM;
     }
-
+    //转换单媒体
     private Map<String, Object> convert2MediaMap_2(Map<String, Object> one, List<Map<String, Object>> cataList, List<Map<String, Object>> personList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
@@ -246,6 +247,7 @@ public class ContentService {
 
         return retM;
     }
+    //转换系列媒体
     private Map<String, Object> convert2MediaMap_3(Map<String, Object> one, List<Map<String, Object>> cataList, List<Map<String, Object>> personList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
@@ -258,7 +260,7 @@ public class ContentService {
         retM.put("ContentPub", one.get("smaPublisher"));//P05-公共：发布者，集团名称
         retM.put("ContentPubTime", one.get("smaPublisherTime"));//P06-公共：发布时间
         retM.put("ContentImg", one.get("smaImg"));//P07-公共：相关图片
-        retM.put("ContentURI", "content/getSequnceList.do?seqId="+retM.get("ContentId"));//P08-公共：在此是获得系列节目列表的Url
+        retM.put("ContentURI", "content/getSeqMaInfo.do?ContentId="+retM.get("ContentId"));//P08-公共：在此是获得系列节目列表的Url
         retM.put("ContentDesc", one.get("descn"));//P11-公共：说明
         retM.put("ContentPersons", fetchPersons(personList, 3, retM.get("ContentId")+""));//P12-公共：相关人员列表
         retM.put("ContentCatalogs", fetchCatas(cataList, 3, retM.get("ContentId")+""));//P13-公共：所有分类列表
@@ -307,6 +309,51 @@ public class ContentService {
         // TODO Auto-generated method stub
         return null;
     }
+
+    /**
+     * 获得主页信息
+     * @param userId
+     * @return
+     */
+    public Map<String, Object> getSeqMaInfo(String contentId) {
+        List<Map<String, Object>> cataList=null;//分类
+        List<Map<String, Object>> personList=null;//人员
+        Map<String, Object> paraM=new HashMap<String, Object>();
+
+        //1、得主内容
+        Map<String, Object> tempMap=groupDao.queryForObjectAutoTranform("getSmById", contentId);
+        tempMap=groupDao.queryForObjectAutoTranform("getSmById", contentId);
+        if (tempMap==null||tempMap.size()==0) return null;
+        paraM.put("resType", "3");
+        paraM.put("ids", contentId);
+        cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
+        personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+        Map<String, Object>  retInfo = convert2MediaMap_3(tempMap, cataList, personList);
+
+        //2、得到明细内容
+        List<Map<String, Object>> tempList=groupDao.queryForListAutoTranform("getSmSubMedias", contentId);
+        if (tempList!=null&&tempList.size()>0) {
+            String ids="";
+            for (Map<String, Object> one: tempList) {
+                ids+=",'"+one.get("mId")+"'";
+            }
+            ids=ids.substring(1);
+            paraM.clear();
+            paraM.put("resType", "2");
+            paraM.put("ids", ids);
+            cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
+            personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+
+            List<Map<String, Object>> subList=new ArrayList<Map<String, Object>>();
+            for (Map<String, Object> one: tempList) {
+                subList.add(convert2MediaMap_2(one, cataList, personList));
+            }
+            retInfo.put("SubList", subList);
+            retInfo.put("ContentSubCount", subList.size());
+        } 
+        return retInfo;
+    }
 }
 //测试的消息{"IMEI":"12356","UserId":"107fc906ae0f","ResultType":"0","SearchStr":"罗,电影,安徽"}
 //http://localhost:808/wt/searchByVoice.do
+//http://localhost:808/wt/content/getSeqMaInfo.do

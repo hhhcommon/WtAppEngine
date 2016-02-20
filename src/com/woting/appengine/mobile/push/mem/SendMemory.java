@@ -21,7 +21,7 @@ public class SendMemory {
     }
     //java的占位单例模式===end
 
-    protected ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> msgMap;//将要发送的消息列表
+    protected ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> msgMap;//将要发送的消息列表，String是用户的Key信息
     protected ConcurrentHashMap<String, SendMessageList> msgSendedMap;//已发送的信息情况
 
     /*
@@ -135,6 +135,16 @@ public class SendMemory {
      * @return
      */
     public SendMessageList getSendedMessagList(MobileKey mk) {
-        return this.msgSendedMap.get(mk.toString());
+        if (mk!=null) return this.msgSendedMap.get(mk.toString());
+        return null;
+    }
+    /**
+     * 根据某一移动设备标识，获得发送消息列表
+     * @param mk
+     * @return
+     */
+    public ConcurrentLinkedQueue<Message> getSendQueue(MobileKey mk) {
+        if (mk!=null) return this.msgMap.get(mk.toString());
+        return null;
     }
 }

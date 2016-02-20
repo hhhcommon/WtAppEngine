@@ -77,44 +77,15 @@ public class SessionMemoryManage {
     }
 
     /**
-     * 得到SessionKey对应的Session
-     * @param sk Session的key
+     * 得到MobileKey对应的Session
+     * @param mk MobileKey
      * @return 对应的Session，若没有或者过期，返回null
      */
-    public MobileSession getSession(MobileKey sk) {
-        if (sk==null) return null;
-        MobileSession ms = null;
-        ms = this.sm.mSessionMap.get(sk);
-        if (this.sm.mSessionMap!=null&&this.sm.mSessionMap.size()>0) {
-            for (String sKey: this.sm.mSessionMap.keySet()) {
-                if (sKey.equals(sk.toString())) {
-                    ms=this.sm.mSessionMap.get(sKey);
-                    break;
-                }
-            }
-        }
+    public MobileSession getSession(MobileKey mk) {
+        if (mk==null) return null;
+        MobileSession ms=this.sm.mSessionMap.get(mk.toString());
         if (ms!=null&&ms.expired()) return null;
         return ms;
-    }
-
-    /**
-     * 根据Imei和userId获得
-     * @param userId 用户Id
-     * @param imei 手机串号
-     * @return 对应的Session
-     */
-    public MobileSession getUserSession(String userId, String imei) {
-        if (StringUtils.isNullOrEmptyOrSpace(userId)||StringUtils.isNullOrEmptyOrSpace(imei)) return null;
-        if (this.sm.mSessionMap!=null&&this.sm.mSessionMap.size()>0) {
-            for (String sKey: this.sm.mSessionMap.keySet()) {
-                MobileSession ms = this.sm.mSessionMap.get(sKey);
-                if (ms.getKey().getMobileId().equals(imei)) {
-                    UserPo u = (UserPo)ms.getAttribute("user");
-                    if (u!=null&&u.getUserId().equals(userId)&&!ms.expired()) return ms;
-                }
-            }
-        }
-        return null;
     }
 
     /**
@@ -130,17 +101,9 @@ public class SessionMemoryManage {
                 if (ms.getKey().getUserId().equals(userId)) {
                     UserPo u = (UserPo)ms.getAttribute("user");
                     if (u!=null) return ms;
-                    break;
                 }
             }
         }
         return null;
     }
-    /**
-     * 把内存情况转换为Json串，便于调试
-     * @return
-    public String Mem2Json() {
-        return JsonUtils.objToJson(this.sm.mSessionMap);
-    }
-     */
 }
