@@ -74,6 +74,9 @@ public class DealInterCom extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
+            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
+            if (mk==null) return;
+
             String groupId="";
             try {
                 groupId+=((Map)sourceMsg.getMsgContent()).get("GroupId");
@@ -82,78 +85,63 @@ public class DealInterCom extends Thread {
             Message retMsg=new Message();
             retMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
             retMsg.setReMsgId(sourceMsg.getMsgId());
-
             retMsg.setToAddr(sourceMsg.getFromAddr());
             retMsg.setFromAddr(sourceMsg.getToAddr());
-
             retMsg.setMsgType(-1);
             retMsg.setAffirm(0);
-
             retMsg.setMsgBizType(sourceMsg.getMsgBizType());
             retMsg.setCmdType(sourceMsg.getCmdType());
             retMsg.setCommand("-1");
-
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("GroupId", groupId);
             retMsg.setMsgContent(dataMap);
-            GroupInterCom gic=gmm.getGroupInterCom(groupId);
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
-            if (mk!=null&&gic!=null) {
-                if (mk.isUser()) {
-                    Map<String, Object> retM=gic.insertEntryUser(mk);
-                    String rt = (String)retM.get("returnType");
-                    if (rt.equals("3")) {//该用户不在指定组
-                        retMsg.setReturnType("1002");
-                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
-                    } else if (rt.equals("2")) {//该用户已经在制定组
-                        retMsg.setReturnType("1003");
-                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
-                    } else {//加入成功
-                        retMsg.setReturnType("1001");
-                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
 
-                        if (retM.containsKey("needBroadCast")) {
-                            //广播消息信息组织
-                            Message bMsg=getBroadCastMessage(retMsg);
-                            bMsg.setCommand("b1");
-                            dataMap=new HashMap<String, Object>();
-                            dataMap.put("GroupId", groupId);
-                            List<Map<String, Object>> inGroupUsers=new ArrayList<Map<String,Object>>();
-                            Map<String, Object> um;
-                            UserPo up;
-                            Map<String, UserPo> entryGroupUsers=(Map<String, UserPo>)retM.get("entryGroupUsers");
-                            for (String k: entryGroupUsers.keySet()) {
-                                up=entryGroupUsers.get(k);
-                                um=new HashMap<String, Object>();
-                                //TODO 这里的号码可能还需要处理
-                                um.put("UserId", up.getUserId());
-                                um.put("UserName", up.getLoginName());
-                                um.put("InnerPhoneNum", up.getInnerPhoneNum());
-                                um.put("Portrait", up.getProtraitMini());
-                                um.put("Mail", up.getMailAddress());
-                                um.put("Desc", up.getDescn());
-                                inGroupUsers.add(um);
-                            }
-                            dataMap.put("InGroupUsers", inGroupUsers);
-                            bMsg.setMsgContent(dataMap);
-                            //发送广播消息
-                            for (String k: entryGroupUsers.keySet()) {
-                                String _sp[] = k.split("::");
-                                mk=new MobileKey();
-                                mk.setMobileId(_sp[0]);
-                                mk.setUserId(_sp[1]);
-                                bMsg.setToAddr(MobileUtils.getAddr(mk));
-                                pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
-                            }
-                        }
-                    }
-                } else {
-                    retMsg.setReturnType("1000");
-                    pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+            Map<String, Object> retM=null;
+            GroupInterCom gic=gmm.getGroupInterCom(groupId);
+            if (!mk.isUser()) retMsg.setReturnType("999");
+            else if (gic==null) retMsg.setReturnType("1000");
+            else {
+                retM=gic.insertEntryUser(mk);
+                String rt = (String)retM.get("returnType");
+                if (rt.equals("3")) retMsg.setReturnType("1002");//该用户不在指定组
+                else if (rt.equals("2")) retMsg.setReturnType("1003");//该用户已经在指定组
+                else retMsg.setReturnType("1001");//正确加入组
+            }
+            pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+
+            //广播消息信息组织
+            if (retM!=null&&retM.containsKey("needBroadCast")) {
+                Message bMsg=getBroadCastMessage(retMsg);
+                bMsg.setCommand("b1");
+                dataMap=new HashMap<String, Object>();
+                dataMap.put("GroupId", groupId);
+                List<Map<String, Object>> inGroupUsers=new ArrayList<Map<String,Object>>();
+                Map<String, Object> um;
+                UserPo up;
+                Map<String, UserPo> entryGroupUsers=(Map<String, UserPo>)retM.get("entryGroupUsers");
+                for (String k: entryGroupUsers.keySet()) {
+                    up=entryGroupUsers.get(k);
+                    um=new HashMap<String, Object>();
+                    //TODO 这里的号码可能还需要处理
+                    um.put("UserId", up.getUserId());
+                    um.put("UserName", up.getLoginName());
+                    um.put("InnerPhoneNum", up.getInnerPhoneNum());
+                    um.put("Portrait", up.getProtraitMini());
+                    um.put("Mail", up.getMailAddress());
+                    um.put("Desc", up.getDescn());
+                    inGroupUsers.add(um);
                 }
-            } else {
-                retMsg.setReturnType("1000");
-                pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+                dataMap.put("InGroupUsers", inGroupUsers);
+                bMsg.setMsgContent(dataMap);
+                //发送广播消息
+                for (String k: entryGroupUsers.keySet()) {
+                    String _sp[] = k.split("::");
+                    mk=new MobileKey();
+                    mk.setMobileId(_sp[0]);
+                    mk.setUserId(_sp[1]);
+                    bMsg.setToAddr(MobileUtils.getAddr(mk));
+                    pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
+                }
             }
         }
     }
@@ -165,6 +153,9 @@ public class DealInterCom extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
+            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
+            if (mk==null) return;
+
             String groupId="";
             try {
                 groupId+=((Map)sourceMsg.getMsgContent()).get("GroupId");
@@ -173,81 +164,68 @@ public class DealInterCom extends Thread {
             Message retMsg=new Message();
             retMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
             retMsg.setReMsgId(sourceMsg.getMsgId());
-
             retMsg.setToAddr(sourceMsg.getFromAddr());
             retMsg.setFromAddr(sourceMsg.getToAddr());
-
             retMsg.setMsgType(1);
             retMsg.setAffirm(0);
-
             retMsg.setMsgBizType(sourceMsg.getMsgBizType());
             retMsg.setCmdType(sourceMsg.getCmdType());
             retMsg.setCommand("-2");
-
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("GroupId", groupId);
             retMsg.setMsgContent(dataMap);
-            GroupInterCom gic=gmm.getGroupInterCom(groupId);
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
-            if (mk!=null&&gic!=null) {
-                if (mk.isUser()) {
-                    Map<String, Object> retM=gic.delEntryUser(mk);
-                    String rt = (String)retM.get("returnType");
-                    if (rt.equals("3")) {//该用户不在指定组
-                        retMsg.setReturnType("1002");
-                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
-                    } else if (rt.equals("2")) {//该用户已经在制定组
-                        retMsg.setReturnType("1003");
-                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
-                    } else {//正式加入，这时可以广播了
-                        retMsg.setReturnType("1001");
-                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
 
-                        if (retM.containsKey("needBroadCast")) {
-                            //广播消息信息组织
-                            Message bMsg=getBroadCastMessage(retMsg);
-                            bMsg.setCommand("b1");
-                            dataMap=new HashMap<String, Object>();
-                            dataMap.put("GroupId", groupId);
-                            List<Map<String, Object>> inGroupUsers=new ArrayList<Map<String,Object>>();
-                            Map<String, Object> um;
-                            UserPo up;
-                            Map<String, UserPo> entryGroupUsers=(Map<String, UserPo>)retM.get("entryGroupUsers");
-                            for (String k: entryGroupUsers.keySet()) {
-                                up=entryGroupUsers.get(k);
-                                um=new HashMap<String, Object>();
-                                //TODO 这里的号码可能还需要处理
-                                um.put("UserId", up.getUserId());
-                                um.put("InnerPhoneNum", up.getInnerPhoneNum());
-                                inGroupUsers.add(um);
-                            }
-                            dataMap.put("InGroupUsers", inGroupUsers);
-                            bMsg.setMsgContent(dataMap);
-                            //发送广播消息
-                            for (String k: entryGroupUsers.keySet()) {
-                                String _sp[] = k.split("::");
-                                mk=new MobileKey();
-                                mk.setMobileId(_sp[0]);
-                                mk.setUserId(_sp[1]);
-                                bMsg.setToAddr(MobileUtils.getAddr(mk));
-                                pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
-                            }
-                        }
-                    }
-                } else {
-                    retMsg.setReturnType("1000");
-                    pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+            Map<String, Object> retM=null;
+            GroupInterCom gic=gmm.getGroupInterCom(groupId);
+            if (!mk.isUser()) retMsg.setReturnType("999");
+            else if (gic==null) retMsg.setReturnType("1000");
+            else {
+                retM=gic.insertEntryUser(mk);
+                String rt = (String)retM.get("returnType");
+                if (rt.equals("3")) retMsg.setReturnType("1002");//该用户不在指定组
+                else if (rt.equals("2")) retMsg.setReturnType("1003");//该用户已经在指定组
+                else retMsg.setReturnType("1001");//正确加入组
+            }
+            pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+            
+            //广播消息信息组织
+            if (retM!=null&&retM.containsKey("needBroadCast")) {
+                Message bMsg=getBroadCastMessage(retMsg);
+                bMsg.setCommand("b1");
+                dataMap=new HashMap<String, Object>();
+                dataMap.put("GroupId", groupId);
+                List<Map<String, Object>> inGroupUsers=new ArrayList<Map<String,Object>>();
+                Map<String, Object> um;
+                UserPo up;
+                Map<String, UserPo> entryGroupUsers=(Map<String, UserPo>)retM.get("entryGroupUsers");
+                for (String k: entryGroupUsers.keySet()) {
+                    up=entryGroupUsers.get(k);
+                    um=new HashMap<String, Object>();
+                    //TODO 这里的号码可能还需要处理
+                    um.put("UserId", up.getUserId());
+                    um.put("UserName", up.getLoginName());
+                    um.put("InnerPhoneNum", up.getInnerPhoneNum());
+                    um.put("Portrait", up.getProtraitMini());
+                    um.put("Mail", up.getMailAddress());
+                    um.put("Desc", up.getDescn());
+                    inGroupUsers.add(um);
                 }
-            } else {
-                retMsg.setReturnType("1000");
-                pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+                dataMap.put("InGroupUsers", inGroupUsers);
+                bMsg.setMsgContent(dataMap);
+                //发送广播消息
+                for (String k: entryGroupUsers.keySet()) {
+                    String _sp[] = k.split("::");
+                    mk=new MobileKey();
+                    mk.setMobileId(_sp[0]);
+                    mk.setUserId(_sp[1]);
+                    bMsg.setToAddr(MobileUtils.getAddr(mk));
+                    pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
+                }
             }
         }
     }
 
-    /*
-     * 开始对讲处理
-     */
+    //开始对讲
     class BeginPTT extends Thread {
         private Message sourceMsg;//源消息
         protected BeginPTT(String name, Message sourceMsg) {
@@ -255,6 +233,9 @@ public class DealInterCom extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
+            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
+            if (mk==null) return;
+
             String groupId="";
             try {
                 groupId+=((Map)sourceMsg.getMsgContent()).get("GroupId");
@@ -263,72 +244,56 @@ public class DealInterCom extends Thread {
             Message retMsg=new Message();
             retMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
             retMsg.setReMsgId(sourceMsg.getMsgId());
-
             retMsg.setToAddr(sourceMsg.getFromAddr());
             retMsg.setFromAddr(sourceMsg.getToAddr());
-
             retMsg.setMsgType(-1);
             retMsg.setAffirm(0);
-
             retMsg.setMsgBizType(sourceMsg.getMsgBizType());
             retMsg.setCmdType(sourceMsg.getCmdType());
             retMsg.setCommand("-1");
+            Map<String, Object> dataMap=new HashMap<String, Object>();
+            dataMap.put("GroupId", groupId);
+            retMsg.setMsgContent(dataMap);
 
             GroupInterCom gic=gmm.getGroupInterCom(groupId);
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
-            if (mk!=null) {
-                if (mk.isUser()) {
-                    Map<String, Object> dataMap=new HashMap<String, Object>();
-                    dataMap.put("GroupId", groupId);
-                    retMsg.setMsgContent(dataMap);
+            if (!mk.isUser()) retMsg.setReturnType("999");
+            else if (gic==null) retMsg.setReturnType("1000");
+            else {
+                gic.setLastTalkTime(gic.getSpeaker()==null?null:gic.getSpeaker().getUserId());
+                Map<String, UserPo> _m=gic.setSpeaker(mk);
+                if (_m.containsKey("E")) retMsg.setReturnType("1002");
+                else if (_m.containsKey("O")) retMsg.setReturnType("1003");
+                else if (_m.containsKey("F")) retMsg.setReturnType("2001");
+                else if (CallingMemoryManage.getInstance().isTalk(mk.getUserId(),"")) retMsg.setReturnType("2002");//电话通话判断 //TODO 这里应该用全局锁
+                else retMsg.setReturnType("1001");//成功可以开始对讲了
+            }
+            pmm.getSendMemory().addMsg2Queue(mk, retMsg);
 
-                    Map<String, UserPo> _m=gic.setSpeaker(mk);
-                    if (_m.containsKey("E")) {
-                        retMsg.setReturnType("1003");
-                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
-                    } else if (_m.containsKey("F")) {
-                        retMsg.setReturnType("1002");
-                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
-                    } else if (_m.containsKey("O")) {
-                        retMsg.setReturnType("1004");
-                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
-                    } else if (CallingMemoryManage.getInstance().isTalk(mk.getUserId(),"")) {//电话通话判断 //TODO 这里应该用全局锁
-                        retMsg.setReturnType("1005");
-                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
-                    } else {//成功可以开始对讲了
-                        retMsg.setReturnType("1001");
-                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
-                        //广播开始对讲消息
-                        Message bMsg=getBroadCastMessage(retMsg);
-                        bMsg.setCommand("b1");
-                        dataMap=new HashMap<String, Object>();
-                        dataMap.put("GroupId", groupId);
-                        dataMap.put("GroupPhoneNum", "3000"); //TODO 这个需要修改
-                        dataMap.put("TalkUserId", mk.getUserId());
-                        bMsg.setMsgContent(dataMap);
-                        //发送广播消息
-                        String ptterId=mk.getUserId();
-                        Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
-                        for (String k: entryGroupUsers.keySet()) {
-                            String _sp[] = k.split("::");
-                            if (ptterId.equals(_sp[1])) continue;
-                            mk=new MobileKey();
-                            mk.setMobileId(_sp[0]);
-                            mk.setUserId(_sp[1]);
-                            bMsg.setToAddr(MobileUtils.getAddr(mk));
-                            pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
-                        }
-                    }
-                } else {
-                    retMsg.setReturnType("1000");
-                    pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+            //广播开始对讲消息
+            if (retMsg.getReturnType().equals("1001")) {
+                Message bMsg=getBroadCastMessage(retMsg);
+                bMsg.setCommand("b1");
+                dataMap=new HashMap<String, Object>();
+                dataMap.put("GroupId", groupId);
+                dataMap.put("GroupPhoneNum", "3000"); //TODO 这个需要修改
+                dataMap.put("TalkUserId", mk.getUserId());
+                bMsg.setMsgContent(dataMap);
+                //发送广播消息
+                String ptterId=mk.getUserId();
+                Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
+                for (String k: entryGroupUsers.keySet()) {
+                    String _sp[] = k.split("::");
+                    if (ptterId.equals(_sp[1])) continue;
+                    mk=new MobileKey();
+                    mk.setMobileId(_sp[0]);
+                    mk.setUserId(_sp[1]);
+                    bMsg.setToAddr(MobileUtils.getAddr(mk));
+                    pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                 }
             }
         }
     }
-    /*
-     * 结束对讲处理
-     */
+    //结束对讲
     class EndPTT extends Thread {
         private Message sourceMsg;//源消息
         protected EndPTT(String name, Message sourceMsg) {
@@ -336,6 +301,9 @@ public class DealInterCom extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
+            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
+            if (mk==null) return;
+
             String groupId="";
             try {
                 groupId+=((Map)sourceMsg.getMsgContent()).get("GroupId");
@@ -344,61 +312,50 @@ public class DealInterCom extends Thread {
             Message retMsg=new Message();
             retMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
             retMsg.setReMsgId(sourceMsg.getMsgId());
-
             retMsg.setToAddr(sourceMsg.getFromAddr());
             retMsg.setFromAddr(sourceMsg.getToAddr());
-
             retMsg.setMsgType(-1);
             retMsg.setAffirm(0);
-
             retMsg.setMsgBizType(sourceMsg.getMsgBizType());
             retMsg.setCmdType(sourceMsg.getCmdType());
             retMsg.setCommand("-2");
+            Map<String, Object> dataMap=new HashMap<String, Object>();
+            dataMap.put("GroupId", groupId);
+            retMsg.setMsgContent(dataMap);
 
             GroupInterCom gic=gmm.getGroupInterCom(groupId);
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
-            if (mk!=null) {
-                if (mk.isUser()) {
-                    Map<String, Object> dataMap=new HashMap<String, Object>();
-                    dataMap.put("GroupId", groupId);
-                    retMsg.setMsgContent(dataMap);
+            if (!mk.isUser()) retMsg.setReturnType("999");
+            else if (gic==null) retMsg.setReturnType("1000");
+            else {
+                gic.setLastTalkTime(gic.getSpeaker()==null?null:gic.getSpeaker().getUserId());
+                int _r=gic.endPTT(mk);
+                if (_r==-1) retMsg.setReturnType("1002");
+                else if (_r==0) retMsg.setReturnType("1003");
+                else retMsg.setReturnType("1001");//结束对讲
+            }
+            pmm.getSendMemory().addMsg2Queue(mk, retMsg);
 
-                    gic.setLastTalkTime(gic.getSpeaker()==null?null:gic.getSpeaker().getUserId());
-                    int _r=gic.endPTT(mk);
-                    if (_r==-1) {
-                        retMsg.setReturnType("1002");
-                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
-                    } else if (_r==0) {
-                        retMsg.setReturnType("1003");
-                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
-                    } else {//结束对讲
-                        retMsg.setReturnType("1001");
-                        pmm.getSendMemory().addMsg2Queue(mk, retMsg);
-/**不在这里处理了，在收到所有的包后处理这个逻辑
-                        //广播开始对讲消息，放到收到结束语音包的时候再处理了
-                        Message bMsg=getBroadCastMessage(retMsg);
-                        bMsg.setCommand("b2");
-                        dataMap=new HashMap<String, Object>();
-                        dataMap.put("GroupId", groupId);
-                        dataMap.put("TalkUserId", mk.getUserId());
-                        bMsg.setMsgContent(dataMap);
-                        //发送广播消息
-                        Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
-                        for (String k: entryGroupUsers.keySet()) {
-                            String _sp[] = k.split("::");
-                            mk=new MobileKey();
-                            mk.setMobileId(_sp[0]);
-                            mk.setUserId(_sp[1]);
-                            bMsg.setToAddr(MobileUtils.getAddr(mk));
-                            pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
-                        }
-**/
-                    }
-                } else {
-                    retMsg.setReturnType("1000");
-                    pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+            /**不在这里处理了，在收到所有的包后处理这个逻辑
+            if (retMsg.getReturnType().equals("1001")) {
+                //广播开始对讲消息，放到收到结束语音包的时候再处理了
+                Message bMsg=getBroadCastMessage(retMsg);
+                bMsg.setCommand("b2");
+                dataMap=new HashMap<String, Object>();
+                dataMap.put("GroupId", groupId);
+                dataMap.put("TalkUserId", mk.getUserId());
+                bMsg.setMsgContent(dataMap);
+                //发送广播消息
+                Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
+                for (String k: entryGroupUsers.keySet()) {
+                    String _sp[] = k.split("::");
+                    mk=new MobileKey();
+                    mk.setMobileId(_sp[0]);
+                    mk.setUserId(_sp[1]);
+                    bMsg.setToAddr(MobileUtils.getAddr(mk));
+                    pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                 }
             }
+            **/
         }
     }
 
