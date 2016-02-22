@@ -193,6 +193,7 @@ public class CommonController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
+            MobileSession ms=null;
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
@@ -203,17 +204,19 @@ public class CommonController {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
                 } else {
-                    MobileSession ms=(MobileSession)retM.get("MobileSession");
+                    ms=(MobileSession)retM.get("MobileSession");
                     map.put("SessionId", ms.getKey().getSessionId());
-                    Map<String, Object> cl=contentService.getMainPage(ms.getKey().getUserId());
-                    if (cl!=null&&cl.size()>0) {
-                        map.put("ResultList", cl);
-                        map.put("ReturnType", "1001");
-                    } else {
-                        map.put("ReturnType", "1011");
-                        map.put("Message", "没有查到任何内容");
-                    }
                 }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            Map<String, Object> cl=contentService.getMainPage(ms.getKey().getUserId());
+            if (cl!=null&&cl.size()>0) {
+                map.put("ResultList", cl);
+                map.put("ReturnType", "1001");
+            } else {
+                map.put("ReturnType", "1011");
+                map.put("Message", "没有查到任何内容");
             }
             return map;
         } catch(Exception e) {

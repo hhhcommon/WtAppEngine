@@ -14,12 +14,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
-import com.woting.appengine.mobile.model.MobileKey;
-import com.woting.appengine.mobile.model.MobileParam;
-import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
-import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.friend.service.FriendService;
 
 @Controller
@@ -27,10 +23,6 @@ import com.woting.passport.friend.service.FriendService;
 public class FriendController {
     @Resource
     private FriendService friendService;
-    @Resource
-    private UserService userService;
-
-    private SessionMemoryManage smm=SessionMemoryManage.getInstance();
 
     /**
      * 得到好友列表
@@ -41,40 +33,33 @@ public class FriendController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
+            String userId="";
+            MobileSession ms=null;
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
-                return map;
-            }
-            MobileParam mp=MobileUtils.getMobileParam(m);
-            MobileKey sk=(mp==null?null:mp.getMobileKey());
-            if (sk==null) {
-                map.put("ReturnType", "0000");
-                map.put("Message", "无法获取设备Id(IMEI)");
-                return map;
-            }
-            //1-获取UserId，并处理访问
-            String userId=sk.isUser()?sk.getUserId():null;
-            if (sk!=null) {
-                map.put("SessionId", sk.getSessionId());
-                MobileSession ms=smm.getSession(sk);
-                if (ms==null) {
-                    ms=new MobileSession(sk);
-                    smm.addOneSession(ms);
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                if ((retM.get("ReturnType")+"").equals("2001")) {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取设备Id(IMEI)");
+                } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                    map.put("ReturnType", "200");
+                    map.put("Message", "需要登录");
                 } else {
-                    ms.access();
-                    if (userId==null) {
-                        UserPo u=(UserPo)ms.getAttribute("user");
-                        if (u!=null) userId=u.getUserId();
-                    }
+                    ms=(MobileSession)retM.get("MobileSession");
+                    map.put("SessionId", ms.getKey().getSessionId());
+                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                }
+                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "无法获取用户Id");
                 }
             }
-            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
-                map.put("ReturnType", "1002");
-                map.put("Message", "无法获取用户Id");
-                return map;
-            }
+            if (map.get("ReturnType")!=null) return map;
+
+
             //2-获取搜索条件
             String searchStr=(String)m.get("SearchStr");
             if (StringUtils.isNullOrEmptyOrSpace(searchStr)) {
@@ -117,49 +102,40 @@ public class FriendController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
+            String userId="";
+            MobileSession ms=null;
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
-                return map;
-            }
-            MobileParam mp=MobileUtils.getMobileParam(m);
-            MobileKey sk=(mp==null?null:mp.getMobileKey());
-            if (sk==null) {
-                map.put("ReturnType", "0000");
-                map.put("Message", "无法获取设备Id(IMEI)");
-                return map;
-            }
-            //1-获取UserId，并处理访问
-            String userId=sk.isUser()?sk.getUserId():null;
-            if (sk!=null) {
-                map.put("SessionId", sk.getSessionId());
-                MobileSession ms=smm.getSession(sk);
-                if (ms==null) {
-                    ms=new MobileSession(sk);
-                    smm.addOneSession(ms);
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                if ((retM.get("ReturnType")+"").equals("2001")) {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取设备Id(IMEI)");
+                } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                    map.put("ReturnType", "200");
+                    map.put("Message", "需要登录");
                 } else {
-                    ms.access();
-                    if (userId==null) {
-                        UserPo u=(UserPo)ms.getAttribute("user");
-                        if (u!=null) userId=u.getUserId();
-                    }
+                    ms=(MobileSession)retM.get("MobileSession");
+                    map.put("SessionId", ms.getKey().getSessionId());
+                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                }
+                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "无法获取用户Id");
                 }
             }
-            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
-                map.put("ReturnType", "1002");
-                map.put("Message", "无法获取用户Id");
-                return map;
-            }
+            if (map.get("ReturnType")!=null) return map;
+
             //2-获取被邀请人Id
-            UserPo u=null;
+            UserPo u=(UserPo)ms.getAttribute("user");
             String inviteUserId=(String)m.get("InviteUserId");
             if (StringUtils.isNullOrEmptyOrSpace(inviteUserId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "被邀请人Id为空");
                 return map;
             } else {
-                u=userService.getUserById(inviteUserId);
                 if (u==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户Id为["+inviteUserId+"]的被邀请用户");
@@ -192,40 +168,32 @@ public class FriendController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
+            String userId="";
+            MobileSession ms=null;
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
-                return map;
-            }
-            MobileParam mp=MobileUtils.getMobileParam(m);
-            MobileKey sk=(mp==null?null:mp.getMobileKey());
-            if (sk==null) {
-                map.put("ReturnType", "0000");
-                map.put("Message", "无法获取设备Id(IMEI)");
-                return map;
-            }
-            //1-获取UserId，并处理访问
-            String userId=sk.isUser()?sk.getUserId():null;
-            if (sk!=null) {
-                map.put("SessionId", sk.getSessionId());
-                MobileSession ms=smm.getSession(sk);
-                if (ms==null) {
-                    ms=new MobileSession(sk);
-                    smm.addOneSession(ms);
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                if ((retM.get("ReturnType")+"").equals("2001")) {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取设备Id(IMEI)");
+                } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                    map.put("ReturnType", "200");
+                    map.put("Message", "需要登录");
                 } else {
-                    ms.access();
-                    if (userId==null) {
-                        UserPo u=(UserPo)ms.getAttribute("user");
-                        if (u!=null) userId=u.getUserId();
-                    }
+                    ms=(MobileSession)retM.get("MobileSession");
+                    map.put("SessionId", ms.getKey().getSessionId());
+                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                }
+                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "无法获取用户Id");
                 }
             }
-            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
-                map.put("ReturnType", "1002");
-                map.put("Message", "无法获取用户Id");
-                return map;
-            }
+            if (map.get("ReturnType")!=null) return map;
+
             try {
                 List<Map<String, Object>> ul=friendService.getInvitedMeList(userId);
                 if (ul!=null&&ul.size()>0) {
@@ -267,40 +235,32 @@ public class FriendController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
+            String userId="";
+            MobileSession ms=null;
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
-                return map;
-            }
-            MobileParam mp=MobileUtils.getMobileParam(m);
-            MobileKey sk=(mp==null?null:mp.getMobileKey());
-            if (sk==null) {
-                map.put("ReturnType", "0000");
-                map.put("Message", "无法获取设备Id(IMEI)");
-                return map;
-            }
-            //1-获取UserId，并处理访问
-            String userId=sk.isUser()?sk.getUserId():null;
-            if (sk!=null) {
-                map.put("SessionId", sk.getSessionId());
-                MobileSession ms=smm.getSession(sk);
-                if (ms==null) {
-                    ms=new MobileSession(sk);
-                    smm.addOneSession(ms);
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                if ((retM.get("ReturnType")+"").equals("2001")) {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取设备Id(IMEI)");
+                } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                    map.put("ReturnType", "200");
+                    map.put("Message", "需要登录");
                 } else {
-                    ms.access();
-                    if (userId==null) {
-                        UserPo u=(UserPo)ms.getAttribute("user");
-                        if (u!=null) userId=u.getUserId();
-                    }
+                    ms=(MobileSession)retM.get("MobileSession");
+                    map.put("SessionId", ms.getKey().getSessionId());
+                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                }
+                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "无法获取用户Id");
                 }
             }
-            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
-                map.put("ReturnType", "1002");
-                map.put("Message", "无法获取用户Id");
-                return map;
-            }
+            if (map.get("ReturnType")!=null) return map;
+
             //2-获得处理类型
             String dealType=(String)m.get("DealType");
             if (StringUtils.isNullOrEmptyOrSpace(dealType)) {
@@ -310,13 +270,12 @@ public class FriendController {
             }
             //3-邀请人id
             String inviteUserId=(String)m.get("InviteUserId");
-            UserPo u=null;
+            UserPo u=(UserPo)ms.getAttribute("user");
             if (StringUtils.isNullOrEmptyOrSpace(inviteUserId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "邀请人Id为空");
                 return map;
             } else {
-                u=userService.getUserById(inviteUserId);
                 if (u==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户Id为["+inviteUserId+"]的邀请用户");
@@ -351,40 +310,32 @@ public class FriendController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
+            String userId="";
+            MobileSession ms=null;
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
-                return map;
-            }
-            MobileParam mp=MobileUtils.getMobileParam(m);
-            MobileKey sk=(mp==null?null:mp.getMobileKey());
-            if (sk==null) {
-                map.put("ReturnType", "0000");
-                map.put("Message", "无法获取设备Id(IMEI)");
-                return map;
-            }
-            //1-获取UserId，并处理访问
-            String userId=sk.isUser()?sk.getUserId():null;
-            if (sk!=null) {
-                map.put("SessionId", sk.getSessionId());
-                MobileSession ms=smm.getSession(sk);
-                if (ms==null) {
-                    ms=new MobileSession(sk);
-                    smm.addOneSession(ms);
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                if ((retM.get("ReturnType")+"").equals("2001")) {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取设备Id(IMEI)");
+                } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                    map.put("ReturnType", "200");
+                    map.put("Message", "需要登录");
                 } else {
-                    ms.access();
-                    if (userId==null) {
-                        UserPo u=(UserPo)ms.getAttribute("user");
-                        if (u!=null) userId=u.getUserId();
-                    }
+                    ms=(MobileSession)retM.get("MobileSession");
+                    map.put("SessionId", ms.getKey().getSessionId());
+                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                }
+                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "无法获取用户Id");
                 }
             }
-            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
-                map.put("ReturnType", "1002");
-                map.put("Message", "无法获取用户Id");
-                return map;
-            }
+            if (map.get("ReturnType")!=null) return map;
+
             List<UserPo> ul=friendService.getFriendList(userId);
             if (ul!=null&&ul.size()>0) {
                 List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();

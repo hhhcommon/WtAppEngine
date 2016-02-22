@@ -74,6 +74,13 @@ public class MobileSession implements Serializable {
     }
 
     /**
+     * 删除一个属性
+     */
+    public void remove(String key) {
+        this.body.remove(key);
+    }
+
+    /**
      * 获得一个属性
      */
     public Object getAttribute(String key) {

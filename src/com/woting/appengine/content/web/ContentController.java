@@ -15,16 +15,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.content.service.ContentService;
-import com.woting.appengine.mobile.model.MobileKey;
-import com.woting.appengine.mobile.model.MobileParam;
-import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.appengine.mobile.session.model.MobileSession;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
 
 @Controller
 @RequestMapping(value="/content/")
 public class ContentController {
-    private SessionMemoryManage smm=SessionMemoryManage.getInstance();
     @Resource
     private ContentService contentService;
 

@@ -163,6 +163,10 @@ public abstract class MobileUtils {
         try {ret.setPCDType(Integer.parseInt(__tmp));} catch(Exception e) {}
         o=m.get("UserId");
         __tmp=o==null?"":(String)o;
+        if ("".equals(__tmp)) {
+            o=m.get("SessionId");
+            __tmp=o==null?"":(String)o;
+        }
         ret.setUserId(__tmp);
         return ret;
     }
