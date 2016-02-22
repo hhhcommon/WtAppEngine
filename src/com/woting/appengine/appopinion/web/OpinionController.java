@@ -18,18 +18,13 @@ import com.woting.appengine.appopinion.persistence.pojo.AppOpinionPo;
 import com.woting.appengine.appopinion.persistence.pojo.AppReOpinionPo;
 import com.woting.appengine.appopinion.service.AppOpinionService;
 import com.woting.appengine.common.util.MobileUtils;
-import com.woting.appengine.mobile.model.MobileKey;
-import com.woting.appengine.mobile.model.MobileParam;
-import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.appengine.mobile.session.model.MobileSession;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
 
 @Controller
 @RequestMapping(value="/opinion/app/")
 public class OpinionController {
     @Resource
     private AppOpinionService opinionsService;
-    private SessionMemoryManage smm=SessionMemoryManage.getInstance();
 
     /**
      * 提交所提意见
@@ -42,58 +37,55 @@ public class OpinionController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
+            String userId="";
+            MobileSession ms=null;
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
-                return map;
-            }
-            MobileParam mp=MobileUtils.getMobileParam(m);
-            MobileKey sk=(mp==null?null:mp.getMobileKey());
-            if (sk==null) {
-                map.put("ReturnType", "0000");
-                map.put("Message", "无法获取设备Id(IMEI)");
-                return map;
-            }
-            //1-获取UserId，并处理访问
-            String userId=sk.isUser()?sk.getUserId():null;
-            if (sk!=null) {
-                map.put("SessionId", sk.getSessionId());
-                MobileSession ms=smm.getSession(sk);
-                if (ms==null) {
-                    ms=new MobileSession(sk);
-                    smm.addOneSession(ms);
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                if ((retM.get("ReturnType")+"").equals("2001")) {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取设备Id(IMEI)");
+                } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                    map.put("ReturnType", "200");
+                    map.put("Message", "需要登录");
                 } else {
-                    ms.access();
-                    if (userId==null) {
-                        UserPo u=(UserPo)ms.getAttribute("user");
-                        if (u!=null) userId=u.getUserId();
-                    }
+                    ms=(MobileSession)retM.get("MobileSession");
+                    map.put("SessionId", ms.getKey().getSessionId());
+                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                }
+                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "无法获取用户Id");
                 }
             }
+            if (map.get("ReturnType")!=null) return map;
+
             //2-获取意见
             String opinion=(String)m.get("Opinion");
             if (StringUtils.isNullOrEmptyOrSpace(opinion)) {
-                map.put("ReturnType", "1002");
+                map.put("ReturnType", "1003");
                 map.put("Message", "无法获取意见");
                 return map;
             }
             //3-存储意见
             try {
                 AppOpinionPo po=new AppOpinionPo();
-                po.setImei(sk.getMobileId());
+                po.setImei(ms.getKey().getMobileId());
                 po.setUserId(userId);
                 po.setOpinion(opinion);
                 //是否重复提交意见
                 List<AppOpinionPo> duplicates = opinionsService.getDuplicates(po);
                 if (duplicates!=null&&duplicates.size()>0) {
-                    map.put("ReturnType", "1004");
+                    map.put("ReturnType", "1005");
                     map.put("Message", "该意见已经提交");
                     return map;
                 };
                 opinionsService.insertOpinion(po);
             } catch(Exception ei) {
-                map.put("ReturnType", "1003");
+                map.put("ReturnType", "1004");
                 map.put("Message", ei.getMessage());
                 return map;
             }
@@ -114,36 +106,33 @@ public class OpinionController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
+            String userId="";
+            MobileSession ms=null;
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
-                return map;
-            }
-            MobileParam mp=MobileUtils.getMobileParam(m);
-            MobileKey sk=(mp==null?null:mp.getMobileKey());
-            if (sk==null) {
-                map.put("ReturnType", "0000");
-                map.put("Message", "无法获取设备Id(IMEI)");
-                return map;
-            }
-            //1-获取UserId，并处理访问
-            String userId=sk.isUser()?sk.getUserId():null;
-            if (sk!=null) {
-                map.put("SessionId", sk.getSessionId());
-                MobileSession ms=smm.getSession(sk);
-                if (ms==null) {
-                    ms=new MobileSession(sk);
-                    smm.addOneSession(ms);
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                if ((retM.get("ReturnType")+"").equals("2001")) {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取设备Id(IMEI)");
+                } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                    map.put("ReturnType", "200");
+                    map.put("Message", "还未登录");
                 } else {
-                    ms.access();
-                    if (userId==null) {
-                        UserPo u=(UserPo)ms.getAttribute("user");
-                        if (u!=null) userId=u.getUserId();
-                    }
+                    ms=(MobileSession)retM.get("MobileSession");
+                    map.put("SessionId", ms.getKey().getSessionId());
+                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                }
+                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "无法获取用户Id");
                 }
             }
-            List<AppOpinion> ol = opinionsService.getOpinionsByOnwerId(userId, sk.getMobileId());
+            if (map.get("ReturnType")!=null) return map;
+
+            List<AppOpinion> ol = opinionsService.getOpinionsByOnwerId(userId, ms.getKey().getMobileId());
             if (ol!=null&&ol.size()>0) {
                 map.put("ReturnType", "1001");
                 map.put("OpinionList", convertAppOpinon4View(ol));

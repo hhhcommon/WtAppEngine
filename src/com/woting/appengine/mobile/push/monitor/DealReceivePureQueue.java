@@ -36,7 +36,7 @@ public class DealReceivePureQueue extends Thread {
                 Map<String, Object> m=rm.pollPureQueue(); //执行后，原始消息接收队列中将不再有此消息
                 if (m==null) continue;
                 MobileKey mk=MobileUtils.getMobileKey(m);
-                Map<String, Object> parseM=this.getMsgFromMap4GroupCTL(m);
+                Map<String, Object> parseM=this.getMsgFromMap4CTL(m);
                 Message msg=null;
                 if (parseM.get("err")!=null) {//直接写入发送队列
                     String __tmp=(String)m.get("NeedAffirm");
@@ -62,7 +62,7 @@ public class DealReceivePureQueue extends Thread {
      * @param m 消息原始数据结构的Map
      * @return
      */
-    private Map<String, Object> getMsgFromMap4GroupCTL(Map<String, Object> m) {
+    private Map<String, Object> getMsgFromMap4CTL(Map<String, Object> m) {
         Map<String, Object> retM = new HashMap<String, Object>();
         Message msg=new Message();
         String err=null;

@@ -34,66 +34,58 @@ public class FileUploadController extends AbstractFileUploadController {
     private UserService userService;
     @Resource
     private GroupService groupService;
-    private SessionMemoryManage smm=SessionMemoryManage.getInstance();
 
     @Override
     public Map<String, Object> afterUploadOneFileOnSuccess(Map<String, Object> m, Map<String, Object> a, Map<String, Object> p) {
         String tempFileName=(String)m.get("storeFilename");
         Map<String,Object> retmap=new HashMap<String, Object>();
         Map<String,Object> datamap=new HashMap<String, Object>();
+        //0-获取参数
+        String userId="";
+        MobileSession ms=null;
         if (p==null||p.size()==0) {
             datamap.put("ReturnType", "0000");
             datamap.put("Message", "无法获取需要的参数");
         } else {
-            MobileParam mp=MobileUtils.getMobileParam(p);
-            MobileKey sk=(mp==null?null:mp.getMobileKey());
-            //1-得到用户id
-            String userId=(String)p.get("UserId");
-            UserPo u = null;
-            if (sk!=null) {
-                datamap.put("SessionId", sk.getSessionId());
-                MobileSession ms=smm.getSession(sk);
-                if (ms!=null) {
-                    if (StringUtils.isNullOrEmptyOrSpace(userId)) {
-                        userId=sk.getSessionId();
-                        if (userId.length()!=12) {
-                            userId=null;
-                            u = (UserPo)ms.getAttribute("user");
-                            if (u!=null) userId = u.getUserId();
-                        }
-                    }
-                    ms.access();
-                } else {
-                    ms=new MobileSession(sk);
-                    smm.addOneSession(ms);
-                }
+            Map<String, Object> retM = MobileUtils.dealMobileLinked(p, 0);
+            if ((retM.get("ReturnType")+"").equals("2001")) {
+                datamap.put("ReturnType", "0000");
+                datamap.put("Message", "无法获取设备Id(IMEI)");
+            } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                datamap.put("ReturnType", "200");
+                datamap.put("Message", "需要登录");
+            } else {
+                ms=(MobileSession)retM.get("MobileSession");
+                datamap.put("SessionId", ms.getKey().getSessionId());
+                if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
             }
-
+            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                datamap.put("ReturnType", "1002");
+                datamap.put("Message", "无法获取用户Id，不能保存图片");
+            }
+            datamap.put("SessionId", ms.getKey().getSessionId());
+        }
+        if (datamap.get("ReturnType")==null){
             String fType = (String)p.get("FType");
             String extName = (String)p.get("ExtName");
             if (fType.equals("UserP")) {//========================================处理用户头像
-                if (u==null) u=userService.getUserById(userId);
-                if (u==null) {
-                    datamap.put("ReturnType", "1002");
-                    datamap.put("Message", "无法获取用户Id，不能保存图片");
-                } else {
-                    try {
-                        String bigImgFileName=((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent();
-                        bigImgFileName = "asset"+File.separatorChar+"members"+File.separatorChar+userId+File.separatorChar+"Portrait"+File.separatorChar+"bigImg"+SequenceUUID.getUUIDSubSegment(2)+(extName.startsWith(".")?extName:"."+extName);
-                        FileUtils.copyFile(new File(tempFileName), new File(FileNameUtils.concatPath(((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent(),bigImgFileName)));
-                        //图片文件缩略存储
-                        //文件保存到数据库中
-                        u.setProtraitBig(bigImgFileName);
-                        u.setProtraitMini(bigImgFileName);
-                        userService.updateUser(u);
-                        datamap.put("ReturnType", "1001");
-                        datamap.put("BigUri", bigImgFileName);
-                        datamap.put("MiniUri", bigImgFileName);
-                    } catch (IOException e) {
-                        datamap.put("ReturnType", "1003");
-                        datamap.put("Message", "文件转存失败:"+e.getMessage());
-                        e.printStackTrace();
-                    }
+                try {
+                    String bigImgFileName=((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent();
+                    bigImgFileName = "asset"+File.separatorChar+"members"+File.separatorChar+userId+File.separatorChar+"Portrait"+File.separatorChar+"bigImg"+SequenceUUID.getUUIDSubSegment(2)+(extName.startsWith(".")?extName:"."+extName);
+                    FileUtils.copyFile(new File(tempFileName), new File(FileNameUtils.concatPath(((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent(),bigImgFileName)));
+                    //图片文件缩略存储
+                    //文件保存到数据库中
+                    UserPo u=(UserPo)ms.getAttribute("user");
+                    u.setProtraitBig(bigImgFileName);
+                    u.setProtraitMini(bigImgFileName);
+                    userService.updateUser(u);
+                    datamap.put("ReturnType", "1001");
+                    datamap.put("BigUri", bigImgFileName);
+                    datamap.put("MiniUri", bigImgFileName);
+                } catch (IOException e) {
+                    datamap.put("ReturnType", "1003");
+                    datamap.put("Message", "文件转存失败:"+e.getMessage());
+                    e.printStackTrace();
                 }
             } else if (fType.equals("GroupP")) {
                 String groupId=(String)p.get("GroupId");

@@ -13,6 +13,7 @@ public class MobileKey implements Serializable {
 
     private String mobileId; //设备Id，IMEI
     private String userId; //用户Id，若未登录，则用户Id为IMEI
+    private int PCDType; //设备类型
 
     public String getMobileId() {
         return mobileId;
@@ -27,6 +28,12 @@ public class MobileKey implements Serializable {
     public void setUserId(String userId) {
         this.userId = userId;
     }
+    public int getPCDType() {
+        return PCDType;
+    }
+    public void setPCDType(int PCDType) {
+        this.PCDType = PCDType;
+    }
 
     /**
      * 是否是用户
@@ -40,15 +47,20 @@ public class MobileKey implements Serializable {
     public boolean isMobile() {
         return !MobileUtils.isValidUserId(this.userId);
     }
+    /**
+     * 是否是自制设备
+     */
+    public boolean isWTDevice() {
+        return this.PCDType==2;
+    }
 
     @Override
     public boolean equals(Object obj) {
         if (obj==null||!(obj instanceof MobileKey)) return false;
-        if (this.mobileId.equals(((MobileKey)obj).getMobileId())){
-            if (this.userId==null&&((MobileKey)obj).getUserId()==null) return true;
-            else if (this.userId!=null&&this.userId.equals(((MobileKey)obj).getUserId())) return true;
-            else return false;
-        }
+        try {
+            MobileKey _mk=(MobileKey)obj;
+            if (this.mobileId.equals(_mk.getMobileId())&&this.userId.equals(_mk.getUserId())&&this.PCDType==_mk.getPCDType()) return true;
+        } catch(Exception e) {}
         return false;
     }
 
@@ -65,6 +77,6 @@ public class MobileKey implements Serializable {
      * @return
      */
     public String toString() {
-        return this.mobileId+"::"+this.userId;
+        return this.mobileId+"::"+this.PCDType+"::"+this.userId;
     }
 }

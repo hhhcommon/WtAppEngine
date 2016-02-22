@@ -33,18 +33,18 @@ public class ContentController {
     public Map<String,Object> mainPage(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            //0-处理访问
+            //0-获取参数
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
-            if (m!=null&&m.size()>0) {
-                MobileParam mp=MobileUtils.getMobileParam(m);
-                MobileKey sk=(mp==null?null:mp.getMobileKey());
-                if (sk!=null){
-                    map.put("SessionId", sk.getSessionId());
-                    MobileSession ms=smm.getSession(sk);
-                    if (ms!=null) ms.access();
-                }
-                //获得SessionId，从而得到用户信息，获得偏好信息
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                MobileSession ms=(MobileSession)retM.get("MobileSession");
+                map.put("SessionId", ms.getKey().getSessionId());
             }
+            if (map.get("ReturnType")!=null) return map;
+
             List<Map<String, Object>> ml = new ArrayList<Map<String, Object>>();
             List<Map<String, Object>> sl=null;
             Map<String, Object> bcClass=null, bcItem=null;
@@ -173,18 +173,18 @@ public class ContentController {
     public Map<String,Object> getListByCatelog(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            //0-处理访问
+            //0-获取参数
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
-            if (m!=null&&m.size()>0) {
-                MobileParam mp=MobileUtils.getMobileParam(m);
-                MobileKey sk=(mp==null?null:mp.getMobileKey());
-                if (sk!=null){
-                    map.put("SessionId", sk.getSessionId());
-                    MobileSession ms=smm.getSession(sk);
-                    if (ms!=null) ms.access();
-                }
-                //获得SessionId，从而得到用户信息，获得偏好信息
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                MobileSession ms=(MobileSession)retM.get("MobileSession");
+                map.put("SessionId", ms.getKey().getSessionId());
             }
+            if (map.get("ReturnType")!=null) return map;
+
             String _temp=m.get("CatalogType")+"";
             if (_temp!=null&&_temp.equals("001")) {
                 return getListByZone(request);
@@ -283,18 +283,18 @@ public class ContentController {
     private Map<String,Object> getListByZone(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-//            //0-处理访问
-//            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
-//            if (m!=null&&m.size()>0) {
-//                MobileParam mp=MobileUtils.getMobileParam(m);
-//                MobileKey sk=(mp==null?null:mp.getMobileKey());
-//                if (sk!=null){
-//                    map.put("SessionId", sk.getSessionId());
-//                    MobileSession ms=smm.getSession(sk);
-//                    if (ms!=null) ms.access();
-//                }
-//                //获得SessionId，从而得到用户信息，获得偏好信息
-//            }
+            //0-获取参数
+            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                MobileSession ms=(MobileSession)retM.get("MobileSession");
+                map.put("SessionId", ms.getKey().getSessionId());
+            }
+            if (map.get("ReturnType")!=null) return map;
+
             //1-获取版本
             List<Map<String, Object>> sl=null;
             Map<String, Object> bcClass=null, bcItem=null;
@@ -395,18 +395,18 @@ public class ContentController {
     public Map<String,Object> getLoopImgs(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            //0-处理访问
+            //0-获取参数
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
-            if (m!=null&&m.size()>0) {
-                MobileParam mp=MobileUtils.getMobileParam(m);
-                MobileKey sk=(mp==null?null:mp.getMobileKey());
-                if (sk!=null){
-                    map.put("SessionId", sk.getSessionId());
-                    MobileSession ms=smm.getSession(sk);
-                    if (ms!=null) ms.access();
-                }
-                //获得SessionId，从而得到用户信息，获得偏好信息
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                MobileSession ms=(MobileSession)retM.get("MobileSession");
+                map.put("SessionId", ms.getKey().getSessionId());
             }
+            if (map.get("ReturnType")!=null) return map;
+
             //1-获取列表
             List<Map<String, Object>> sl=null;
             Map<String, Object> bcClass=null, bcItem=null;
@@ -469,30 +469,13 @@ public class ContentController {
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
-                return map;
-            }
-            String userId=(String)m.get("UserId");
-            MobileParam mp=MobileUtils.getMobileParam(m);
-            mp.setUserId(userId);
-            MobileKey sk=(mp==null?null:mp.getMobileKey());
-            if (sk==null) {
-                map.put("ReturnType", "0000");
-                map.put("Message", "无法获取设备Id(IMEI)");
-                return map;
-            }
-            //1-得到用户，并处理访问
-            map.put("SessionId", sk.getSessionId());
-            MobileSession ms=smm.getSession(sk);
-            if (ms==null) {
-                ms=new MobileSession(sk);
-                smm.addOneSession(ms);
             } else {
-                ms.access();
-                if (userId==null) {
-                    UserPo u=(UserPo)ms.getAttribute("user");
-                    if (u!=null) userId=u.getUserId();
-                }
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                MobileSession ms=(MobileSession)retM.get("MobileSession");
+                map.put("SessionId", ms.getKey().getSessionId());
             }
+            if (map.get("ReturnType")!=null) return map;
+
             //2-得到系列内容的Id
             String contentId=m.get("ContentId")+"";
             if (StringUtils.isNullOrEmptyOrSpace(contentId)) {

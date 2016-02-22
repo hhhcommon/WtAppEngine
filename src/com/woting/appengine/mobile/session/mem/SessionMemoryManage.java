@@ -1,5 +1,8 @@
 package com.woting.appengine.mobile.session.mem;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.util.StringUtils;
@@ -44,10 +47,24 @@ public class SessionMemoryManage {
             new CacheEle<String>(WtAppEngineConstants.APP_VERSION, "移动端版本", MobileUtils.getVersion())
         );
         //清除会话
+        List<MobileSession> beRemovedList= new ArrayList<MobileSession>();
         if (this.sm.mSessionMap!=null&&!this.sm.mSessionMap.isEmpty()) {
             for (String sKey: this.sm.mSessionMap.keySet()) {
                 MobileSession ms = this.sm.mSessionMap.get(sKey);
-                if (ms.expired()) this.sm.mSessionMap.remove(sKey);
+                if (ms.expired()) {
+                    beRemovedList.add(this.sm.mSessionMap.remove(sKey));
+                }
+            }
+        }
+        if (!beRemovedList.isEmpty()) {
+            for (MobileSession ms: beRemovedList) {
+                List<MobileSession> ul=this.sm.mUserSessionListMap.get(ms.getKey().getUserId());
+                if (ul!=null&&!ul.isEmpty()) {
+                    for (MobileSession _ms: ul) {
+                        if (_ms.hashCode()==ms.hashCode()) ul.remove(_ms);
+                    }
+                    if (ul.isEmpty()) this.sm.mUserSessionListMap.remove(ms.getKey().getUserId());
+                }
             }
         }
     }
@@ -89,20 +106,24 @@ public class SessionMemoryManage {
     }
 
     /**
-     * 根据IuserId获得
+     * 根据userId获得可用激活的Session。设备优先
      * @param userId 用户Id
      * @return 对应的Session
      */
-    public MobileSession getUserSessionByUserId(String userId) {
+    public MobileSession getActivedUserSessionByUserId(String userId) {
         if (StringUtils.isNullOrEmptyOrSpace(userId)) return null;
-        if (this.sm.mSessionMap!=null&&this.sm.mSessionMap.size()>0) {
-            for (String sKey: this.sm.mSessionMap.keySet()) {
-                MobileSession ms = this.sm.mSessionMap.get(sKey);
-                if (ms.getKey().getUserId().equals(userId)) {
-                    UserPo u = (UserPo)ms.getAttribute("user");
-                    if (u!=null) return ms;
+
+        List<MobileSession> ul=this.sm.mUserSessionListMap.get(userId);
+        if (ul!=null&&!ul.isEmpty()) {
+            MobileSession retMs=ul.get(0);
+            for (int i=1;i<ul.size()-1;i++) {
+                MobileSession ms=ul.get(i);
+                if (ms.getKey().getPCDType()==2&&retMs.getKey().getPCDType()==1) retMs=ms;
+                else if (ms.getKey().getPCDType()==retMs.getKey().getPCDType()) {
+                    if (ms.getLastAccessedTime()>retMs.getLastAccessedTime()) retMs=ms;
                 }
             }
+            return retMs;
         }
         return null;
     }

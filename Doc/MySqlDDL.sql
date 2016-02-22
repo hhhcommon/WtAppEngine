@@ -68,11 +68,12 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='003用户表';
  */
 DROP TABLE IF EXISTS wt_MobileUsed;
 CREATE TABLE wt_MobileUsed (
-  id      varchar(32)   NOT NULL  COMMENT 'uuid',
-  imei    varchar(100)  NOT NULL  COMMENT '手机串号，手机身份码',
-  userId  varchar(32)   NOT NULL  COMMENT '用户Id',
-  status  varchar(1)    NOT NULL  COMMENT '状态：1-登录；2-注销；',
-  lmTime  timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改：每次更新的时间',
+  id       varchar(32)      NOT NULL             COMMENT 'uuid',
+  imei     varchar(100)     NOT NULL             COMMENT '手机串号，手机身份码',
+  pcdType  int(2) unsigned  NOT NULL  DEFAULT 1  COMMENT '设备分类：1=手机；2=设备；3=PC，默认1',
+  userId   varchar(32)      NOT NULL             COMMENT '用户Id',
+  status   varchar(1)       NOT NULL             COMMENT '状态：1-登录；2-注销；',
+  lmTime   timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改：每次更新的时间',
   PRIMARY KEY(id),
   UNIQUE KEY imei(imei) USING BTREE
 

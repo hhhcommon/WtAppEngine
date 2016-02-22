@@ -53,6 +53,13 @@ public class MobileSession implements Serializable {
     }
 
     /**
+     * 得到最后访问时间
+     */
+    public long getLastAccessedTime() {
+        return this.lastAccessedTime;
+    }
+
+    /**
      * 是否过期
      */
     public boolean expired() {

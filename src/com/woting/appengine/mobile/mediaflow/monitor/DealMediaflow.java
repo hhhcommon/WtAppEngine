@@ -19,6 +19,7 @@ import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.appengine.mobile.push.model.CompareMsg;
 import com.woting.appengine.mobile.push.model.Message;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
+import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 
 public class DealMediaflow extends Thread {
@@ -140,10 +141,16 @@ public class DealMediaflow extends Thread {
             if (talkType==1) ts.setSendUsers(gic.getEntryGroupUserMap());
             else {
                 String userId=oc.getOtherId(talkerId);
-                UserPo u=(UserPo)smm.getUserSessionByUserId(userId).getAttribute("user");
-                Map<String, UserPo> um=new HashMap<String, UserPo>();
-                um.put(smm.getUserSessionByUserId(userId).getKey().toString(), u);
-                ts.setSendUsers(um);
+                MobileSession ms=smm.getActivedUserSessionByUserId(userId);
+                UserPo u=null;
+                if (ms!=null) {
+                    u=(UserPo)smm.getActivedUserSessionByUserId(userId).getAttribute("user");
+                }
+                if (u!=null) {
+                    Map<String, UserPo> um=new HashMap<String, UserPo>();
+                    um.put(ms.getKey().toString(), u);
+                    ts.setSendUsers(um);
+                }
             }
             ts.setSeqNum(seqNum);
             wt.addSegment(ts);

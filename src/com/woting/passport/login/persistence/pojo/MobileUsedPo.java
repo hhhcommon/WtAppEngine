@@ -12,6 +12,7 @@ public class MobileUsedPo extends BaseObject {
 
     private String muId; //用户使用ID
     private String imei; //手机串号
+    private int PCDType; //手机串号
     private String userId; //用户ID
     private int status; //状态：1-登录；2-注销；
     private Timestamp lmTime; //最后修改时间:last modify time
@@ -27,6 +28,12 @@ public class MobileUsedPo extends BaseObject {
     }
     public void setImei(String imei) {
         this.imei = imei;
+    }
+    public int getPCDType() {
+        return PCDType;
+    }
+    public void setPCDType(int PCDType) {
+        this.PCDType = PCDType;
     }
     public String getUserId() {
         return userId;

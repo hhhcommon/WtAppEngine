@@ -415,8 +415,7 @@ public class GroupService {
                         bMsg.setToAddr(MobileUtils.getAddr(mk));
                         pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                     }
-                    //若在对讲，也要推出对讲结构
-                    
+                    //若在对讲，也要退出对讲结构// TODO 
                 }
             }
             return 1;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.appengine.calling.mem.CallingMemoryManage;
@@ -180,7 +181,7 @@ public class DealInterCom extends Thread {
             if (!mk.isUser()) retMsg.setReturnType("999");
             else if (gic==null) retMsg.setReturnType("1000");
             else {
-                retM=gic.insertEntryUser(mk);
+                retM=gic.delEntryUser(mk);
                 String rt = (String)retM.get("returnType");
                 if (rt.equals("3")) retMsg.setReturnType("1002");//该用户不在指定组
                 else if (rt.equals("2")) retMsg.setReturnType("1003");//该用户已经在指定组
@@ -220,6 +221,15 @@ public class DealInterCom extends Thread {
                     mk.setUserId(_sp[1]);
                     bMsg.setToAddr(MobileUtils.getAddr(mk));
                     pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
+                }
+            }
+            //删除所有通过这个组发给他的消息
+            ConcurrentLinkedQueue<Message> tempMsgs = pmm.getSendMemory().getSendQueue(mk);
+            if (tempMsgs!=null&&!tempMsgs.isEmpty()) {
+                for (Message m: tempMsgs) {
+                    if (m.getMsgBizType().equals("AUDIOFLOW")&&m.getCmdType().equals("TALK_INTERCOM")&&groupId.equals(((Map)m.getMsgContent()).get("ObjId")+"")) {
+                        tempMsgs.remove(m);
+                    }
                 }
             }
         }

@@ -97,7 +97,7 @@ public class GroupController {
                     return map;
                 }
             }
-            //是否需要用户组
+            //是否需要用户组成员
             boolean needMember=(m.get("NeedMember")+"").equals("1");
             String memNames="";
             List<UserPo> ml=null;
@@ -750,9 +750,9 @@ public class GroupController {
     }
 
     /**
-     * 加入号码组
+     * 加入公开群
      */
-    @RequestMapping(value="num/joininGroup.do")
+    @RequestMapping(value="joinInGroup.do")
     @ResponseBody
     public Map<String,Object> joininGroup(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();

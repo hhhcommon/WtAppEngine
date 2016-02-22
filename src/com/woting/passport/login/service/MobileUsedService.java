@@ -1,5 +1,8 @@
 package com.woting.passport.login.service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
@@ -40,8 +43,12 @@ public class MobileUsedService {
     /**
      * 根据手机串号，获取最后使用情况
      * @param imei 手机串号
+     * @param PCDType 设备类型
      */
-    public MobileUsedPo getUsedInfo(String imei) {
-        return muDao.getInfoObject("getUsedInfo", imei);
+    public MobileUsedPo getUsedInfo(String imei, int PCDType) {
+        Map<String, String> paraM=new HashMap<String, String>();
+        paraM.put("imei", imei);
+        paraM.put("PCDType", PCDType+"");
+        return muDao.getInfoObject("getUsedInfo", paraM);
     }
 }
