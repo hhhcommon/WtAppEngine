@@ -7,7 +7,7 @@
   <resultMap id="BaseResultMap" type="MobileUsed">
     <id      column="id"       property="muId"     jdbcType="VARCHAR"/>
     <result  column="imei"     property="imei"     jdbcType="VARCHAR"/>
-    <result  column="pcdType"  property="PCDType"  dbcType="INTEGER"/>
+    <result  column="pcdType"  property="PCDType"  jdbcType="INTEGER"/>
     <result  column="userId"   property="userId"   jdbcType="VARCHAR"/>
     <result  column="status"   property="status"   jdbcType="INTEGER"/>
     <result  column="lmTime"   property="lmTime"   jdbcType="TIMESTAMP"/>
@@ -24,7 +24,7 @@
       <trim prefix="(" suffix=")" prefixOverrides="and">
         <if test="muId!=null"> and id=#{muId,jdbcType=VARCHAR}</if>
         <if test="imei!=null"> and imei=#{imei,jdbcType=VARCHAR}</if>
-        <if test="PCDType!=null and PCDType!=0""> and pcdType=#{PCDType,jdbcType=INTEGER}</if>
+        <if test="PCDType!=null and PCDType!=0"> and pcdType=#{PCDType,jdbcType=INTEGER}</if>
         <if test="userId!=null"> and userId=#{userId,jdbcType=VARCHAR}</if>
         <if test="status!=null and status!=0"> and status=#{status,jdbcType=INTEGER}</if>
         <if test="lmTime!=null"> and lmTime=#{lmTime,jdbcType=TIMESTAMP}</if>
