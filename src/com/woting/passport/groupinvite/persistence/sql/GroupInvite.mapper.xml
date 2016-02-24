@@ -58,7 +58,7 @@
     <if test="sortByClause!=null">order by ${sortByClause}</if>
   </select>
 
-  <!-- 获得列表 -->
+  <!-- 获得邀请列表-某人对某人 -->
   <select id="getInvitingList" resultMap="inviteMap" parameterType="java.util.Map">
   <![CDATA[
     select <include refid="Base_Column_List"/> from wt_GroupInvite
@@ -66,7 +66,15 @@
   ]]>
   </select>
 
-  <!-- 获得列表 -->
+  <!-- 获得邀请列表-某人对某组 -->
+  <select id="getInvitingGroupList" resultMap="inviteMap" parameterType="java.util.Map">
+  <![CDATA[
+    select <include refid="Base_Column_List"/> from wt_GroupInvite
+    where aUserId=#{aUserId,jdbcType=VARCHAR} and groupId=#{groupId,jdbcType=VARCHAR} and inviteVector>0 and flag=1
+  ]]>
+  </select>
+
+  <!-- 获得申请列表 -->
   <select id="getApplyList" resultMap="inviteMap" parameterType="java.util.Map">
   <![CDATA[
     select <include refid="Base_Column_List"/> from wt_GroupInvite
@@ -150,7 +158,7 @@
   <select id="inviteMeGroupList" resultType="java.util.HashMap" parameterType="java.lang.String">
   <![CDATA[
     select a.inviteMessage, a.inviteVector, b.groupName, b.descn groupDescn,
-      b.groupName, b.descn groupDescn, b.groupImg, b.groupNum,
+      b.groupName, b.descn groupDescn, b.groupImg, b.groupNum, c.id userId,
       c.loginName, c.mailAddress, c.mainPhoneNum, c.descn userDescn, c.protraitBig, c.protraitMini
     from wt_GroupInvite a, plat_Group b, plat_User c
     where a.groupId=b.id and a.aUserId=c.id and a.flag=1 and a.acceptFlag=0 and a.inviteVector>0

@@ -441,21 +441,15 @@ public class GroupController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            String beInviteUserId=(String)m.get("BeInviteUserId");
-            if (StringUtils.isNullOrEmptyOrSpace(beInviteUserId)) {
+            String beInviteUserIds=(String)m.get("BeInviteUserIds");
+            if (StringUtils.isNullOrEmptyOrSpace(beInviteUserIds)) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "被邀请人Id为空");
-            } else {
-                UserPo u=userService.getUserById(beInviteUserId);
-                if (u==null) {
-                    map.put("ReturnType", "1004");
-                    map.put("Message", "无法获取用户Id为["+beInviteUserId+"]的被邀请用户");
-                }
+                return map;
             }
-            if (map.get("ReturnType")!=null) return map;
 
             String inviteMsg=(String)m.get("InviteMsg");
-            map.putAll(groupService.inviteGroup(userId, beInviteUserId, groupId, inviteMsg));
+            map.putAll(groupService.inviteGroup(userId, beInviteUserIds, groupId, inviteMsg));
             return map;
         } catch(Exception e) {
             map.put("ReturnType", "T");
@@ -512,6 +506,7 @@ public class GroupController {
                     imgm.put("GroupDescn", one.get("groupDescn"));
                     imgm.put("InviteMessage", one.get("inviteMessage"));
                     imgm.put("InviteCount", one.get("inviteVector"));
+                    imgm.put("UserId", one.get("userId"));
                     imgm.put("UserName", one.get("loginName"));
                     imgm.put("UserDescn", one.get("userDescn"));
                     imgm.put("Email", one.get("mailAddress"));

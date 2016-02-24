@@ -122,7 +122,7 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='006用户组成员表';
 DROP TABLE IF EXISTS wt_GroupInvite;
 CREATE TABLE wt_GroupInvite (
   id               varchar(32)   NOT NULL                COMMENT 'uuid(主键)',
-  aUserId          varchar(32)   NOT NULL                COMMENT '主请用户Id，此用户必须在GroupId所在的组',
+  aUserId          varchar(32)   NOT NULL                COMMENT '邀请用户Id，此用户必须在GroupId所在的组',
   bUserId          varchar(32)   NOT NULL                COMMENT '被请用户Id，此用户必须不在GroupId所在的组',
   groupId          varchar(32)   NOT NULL                COMMENT '邀请的组Id',
   inviteVector     int(2)        NOT NULL  DEFAULT 0     COMMENT '邀请方向(vector)，正数，邀请次数，邀请一次，则增加1；负数，申请次数',
