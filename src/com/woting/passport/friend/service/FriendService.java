@@ -223,6 +223,35 @@ public class FriendService {
     }
 
     /**
+     * 删除好友关系
+     * @param userId 删除人Id
+     * @param friendUserId 被删除人Id
+     * @return
+     */
+    public Map<String, Object> del(String userId, String friendUserId) {
+        Map<String, Object> ret=new HashMap<String, Object>();
+        Map<String, Object> param=new HashMap<String, Object>();
+        //1-判断是否是好友
+        param.put("aUserId", userId);
+        param.put("bUserId", friendUserId);
+        List<FriendRelPo> fl=friendRelDao.queryForList(param);
+        if (fl==null||fl.isEmpty()) {
+            ret.put("ReturnType", "1005");
+            ret.put("Message", "不是好友，不必删除");
+        } else {//删除好友信息和邀请信息
+            friendRelDao.delete("deleteByParam", param);
+            inviteFriendDao.delete("deleteByParam", param);
+            param.clear();
+            param.put("aUserId", friendUserId);
+            param.put("bUserId", userId);
+            friendRelDao.delete("deleteByParam", param);
+            inviteFriendDao.delete("deleteByParam", param);
+            ret.put("ReturnType", "1001");
+        }
+        return ret;
+    }
+
+    /**
      * 得到好友列表
      * @param userId 我的用户Id
      * @return 好友用户列表，除了用户信息外

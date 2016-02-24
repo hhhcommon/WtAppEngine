@@ -83,7 +83,7 @@
   <delete id="delete" parameterType="java.lang.String">
     delete from wt_Friend_Rel where id=#{id,jdbcType=VARCHAR}
   </delete>
-  <delete id="deleteByEntity" parameterType="java.util.Map">
+  <delete id="deleteByParam" parameterType="java.util.Map">
     delete from wt_Friend_Rel <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </delete>  
 </mapper>
