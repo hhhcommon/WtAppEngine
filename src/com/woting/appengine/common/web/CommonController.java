@@ -69,7 +69,7 @@ public class CommonController {
                         map.put("ReturnType", "1002");
                     } else {
                         map.put("ReturnType", "1001");
-                        map.put("UserInfo", ((UserPo)((MobileSession)retM.get("ms")).getAttribute("user")).toHashMap4Mobile());
+                        map.put("UserInfo", ((UserPo)ms.getAttribute("user")).toHashMap4Mobile());
                     }
                 }
                 map.put("ServerStatus", "1"); //服务器状态

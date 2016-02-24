@@ -16,6 +16,7 @@ import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.friend.service.FriendService;
 
 @Controller
@@ -23,9 +24,11 @@ import com.woting.passport.friend.service.FriendService;
 public class FriendController {
     @Resource
     private FriendService friendService;
+    @Resource
+    private UserService userService;
 
     /**
-     * 得到好友列表
+     * 得到陌生人列表
      */
     @RequestMapping(value="searchStranger.do")
     @ResponseBody
@@ -129,27 +132,21 @@ public class FriendController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-获取被邀请人Id
-            UserPo u=(UserPo)ms.getAttribute("user");
-            String inviteUserId=(String)m.get("InviteUserId");
-            if (StringUtils.isNullOrEmptyOrSpace(inviteUserId)) {
+            String beInviteUserId=(String)m.get("BeInviteUserId");
+            if (StringUtils.isNullOrEmptyOrSpace(beInviteUserId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "被邀请人Id为空");
                 return map;
             } else {
+                UserPo u=userService.getUserById(beInviteUserId);
                 if (u==null) {
                     map.put("ReturnType", "1003");
-                    map.put("Message", "无法获取用户Id为["+inviteUserId+"]的被邀请用户");
+                    map.put("Message", "无法获取用户Id为["+beInviteUserId+"]的被邀请用户");
                     return map;
                 }
             }
             String inviteMsg=(String)m.get("InviteMsg");
-            try {
-                map.putAll(friendService.inviteFriend(userId, inviteUserId, inviteMsg));
-            } catch(Exception ei) {
-                map.put("ReturnType", "1004");
-                map.put("Message", "邀请失败："+ei.getMessage());
-                ei.printStackTrace();
-            }
+            map.putAll(friendService.inviteFriend(userId, beInviteUserId, inviteMsg));
             return map;
         } catch(Exception e) {
             map.put("ReturnType", "T");
@@ -194,28 +191,23 @@ public class FriendController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            try {
-                List<Map<String, Object>> ul=friendService.getInvitedMeList(userId);
-                if (ul!=null&&ul.size()>0) {
-                    List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
-                    Map<String, Object> um;
-                    for (Map<String, Object> u: ul) {
-                        um=new HashMap<String, Object>();
-                        um.put("UserId", u.get("id"));
-                        um.put("UserName", u.get("loginName"));
-                        um.put("InviteMesage", u.get("inviteMessage"));
-                        um.put("Portrait", u.get("protraitMini"));
-                        rul.add(um);
-                    }
-                    map.put("ReturnType", "1001");
-                    map.put("UserList", rul);
-                } else {
-                    map.put("ReturnType", "1011");
-                    map.put("Message", "邀请我的信息都已处理");
+            List<Map<String, Object>> ul=friendService.getInvitedMeList(userId);
+            if (ul!=null&&ul.size()>0) {
+                List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
+                Map<String, Object> um;
+                for (Map<String, Object> u: ul) {
+                    um=new HashMap<String, Object>();
+                    um.put("UserId", u.get("id"));
+                    um.put("UserName", u.get("loginName"));
+                    um.put("InviteMesage", u.get("inviteMessage"));
+                    um.put("Portrait", u.get("protraitMini"));
+                    rul.add(um);
                 }
-            } catch(Exception ei) {
-                map.put("ReturnType", "1003");
-                map.put("Message", ei.getMessage());
+                map.put("ReturnType", "1001");
+                map.put("UserList", rul);
+            } else {
+                map.put("ReturnType", "1011");
+                map.put("Message", "邀请我的信息都已处理");
             }
             return map;
         } catch(Exception e) {
@@ -261,14 +253,7 @@ public class FriendController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            //2-获得处理类型
-            String dealType=(String)m.get("DealType");
-            if (StringUtils.isNullOrEmptyOrSpace(dealType)) {
-                map.put("ReturnType", "1002");
-                map.put("Message", "没有处理类型dealType，无法处理");
-                return map;
-            }
-            //3-邀请人id
+            //2-邀请人id
             String inviteUserId=(String)m.get("InviteUserId");
             UserPo u=(UserPo)ms.getAttribute("user");
             if (StringUtils.isNullOrEmptyOrSpace(inviteUserId)) {
@@ -282,16 +267,17 @@ public class FriendController {
                     return map;
                 }
             }
-            
+            //3-获得处理类型
+            String dealType=(String)m.get("DealType");
+            if (StringUtils.isNullOrEmptyOrSpace(dealType)) {
+                map.put("ReturnType", "1004");
+                map.put("Message", "没有处理类型dealType，无法处理");
+                return map;
+            }
             //4-获得拒绝理由
             String refuseMsg=(String)m.get("RefuseMsg");
             //4-邀请处理
-            try {
-                map.putAll(friendService.deal(userId, inviteUserId, dealType.equals("2"), refuseMsg));
-            } catch(Exception ei) {
-                map.put("ReturnType", "1003");
-                map.put("Message", ei.getMessage());
-            }
+            map.putAll(friendService.deal(userId, inviteUserId, dealType.equals("2"), refuseMsg));
             return map;
         } catch(Exception e) {
             map.put("ReturnType", "T");

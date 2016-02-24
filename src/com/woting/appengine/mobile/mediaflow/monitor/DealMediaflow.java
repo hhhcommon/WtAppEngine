@@ -181,7 +181,8 @@ public class DealMediaflow extends Thread {
                 String _sp[] = k.split("::");
                 mk=new MobileKey();
                 mk.setMobileId(_sp[0]);
-                mk.setUserId(_sp[1]);
+                mk.setPCDType(Integer.parseInt(_sp[1]));
+                mk.setUserId(_sp[2]);
                 bMsg.setToAddr(MobileUtils.getAddr(mk));
                 pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareAudioFlowMsg());
                 //处理流数据

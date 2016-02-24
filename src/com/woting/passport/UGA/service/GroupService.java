@@ -22,7 +22,12 @@ import com.woting.passport.UGA.model.Group;
 import com.woting.passport.UGA.persistence.pojo.GroupPo;
 import com.woting.passport.UGA.persistence.pojo.GroupUserPo;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.groupinvite.persistence.pojo.InviteGroupPo;
 
+/**
+ * 用户组处理，包括创建组，查询组；组邀请等信息
+ * @author wanghui
+ */
 public class GroupService {
     private GroupMemoryManage gmm=GroupMemoryManage.getInstance();
     private PushMemoryManage pmm=PushMemoryManage.getInstance();
@@ -31,11 +36,15 @@ public class GroupService {
     private MybatisDAO<UserPo> userDao;
     @Resource(name="defaultDAO")
     private MybatisDAO<GroupPo> groupDao;
+    @Resource(name="defaultDAO")
+    private MybatisDAO<InviteGroupPo> inviteGroupDao;
+
 
     @PostConstruct
     public void initParam() {
         userDao.setNamespace("WT_USER");
         groupDao.setNamespace("WT_GROUP");
+        inviteGroupDao.setNamespace("WT_GROUPINVITE");
     }
 
     /**
@@ -63,7 +72,7 @@ public class GroupService {
     }
 
     /**
-     * 创建用户用户组关系
+     * 创建用户用户组关系，并向组内在线人广播消息
      * @param g 用户组
      * @param u 用户
      */
@@ -73,6 +82,8 @@ public class GroupService {
         gu.setGroupId(g.getGroupId());
         gu.setUserId(u.getUserId());
         gu.setInviter(isSelfIn==1?u.getUserId():g.getCreateUserId());
+        gu.setGroupAlias(g.getGroupName());
+        gu.setGroupDescn(g.getDescn());
         int i=0;
         try {
             groupDao.insert("insertGroupUser", gu);
@@ -91,21 +102,18 @@ public class GroupService {
                     bMsg.setMsgType(1);
                     bMsg.setAffirm(0);
                     bMsg.setMsgBizType("GROUP_CTL");
-                    bMsg.setCmdType("GROUP");//有人加入组的广播
-                    bMsg.setCommand("b1");//新的组信息
+                    bMsg.setCmdType("GROUP");
+                    bMsg.setCommand("b2");//有人加入组的广播
                     Map<String, Object> dataMap=new HashMap<String, Object>();
                     dataMap.put("GroupId", g.getGroupId());
-                    List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
-                    for (UserPo up: gic.getGroup().getUserList()) {
-                        rul.add(up.toHashMap4Mobile());
-                    }
-                    dataMap.put("UserList", rul);
+                    dataMap.put("UserInfo", u.toHashMap4Mobile());
                     bMsg.setMsgContent(dataMap);
                     for (String k: entryGroupUsers.keySet()) {
                         String _sp[] = k.split("::");
                         MobileKey mk=new MobileKey();
                         mk.setMobileId(_sp[0]);
-                        mk.setUserId(_sp[1]);
+                        mk.setPCDType(Integer.parseInt(_sp[1]));
+                        mk.setUserId(_sp[2]);
                         bMsg.setToAddr(MobileUtils.getAddr(mk));
                         pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                     }
@@ -122,9 +130,9 @@ public class GroupService {
      * @param userId
      * @return 用户组
      */
-    public List<GroupPo> getGroupsByUserId(String userId) {
+    public List<Map<String, Object>> getGroupsByUserId(String userId) {
         try {
-            return groupDao.queryForList("getGroupListByUserId", userId);
+            return groupDao.queryForListAutoTranform("getGroupListByUserId", userId);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -136,9 +144,9 @@ public class GroupService {
      * @param userId
      * @return 用户组
      */
-    public List<GroupPo> getCreateGroupsByUserId(String userId) {
+    public List<Map<String, Object>> getCreateGroupsByUserId(String userId) {
         try {
-            return groupDao.queryForList("getCreateGroupListByUserId", userId);
+            return groupDao.queryForListAutoTranform("getCreateGroupListByUserId", userId);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -184,7 +192,6 @@ public class GroupService {
                 Group _g=null;
                 int i=0;
                 String addGroupId="";
-                boolean inserted=false;
                 while (i<ul.size()) {
                     up=ul.get(i++);
                     _up = new UserPo();
@@ -274,6 +281,12 @@ public class GroupService {
         return null;
     }
 
+    /**
+     * 是否组中存在该用户
+     * @param groupId 组Id
+     * @param userId 用户Id
+     * @return 0不存在，其他存在
+     */
     public int existUserInGroup(String groupId, String userId) {
         try {
             GroupInterCom gic = gmm.getGroupInterCom(groupId);
@@ -321,7 +334,7 @@ public class GroupService {
     }
 
     /**
-     * 退出用户组，并广布组消息。
+     * 退出用户组，并广播组消息。
      * 当用户是管理员时，用户组的管理者自动变为最先进入组的用户。
      * 当用户只剩下一个时，自动删除组
      * @param gp 相关的组
@@ -351,7 +364,8 @@ public class GroupService {
             }
         }
         if (_u==null) return 0;
-        //删除用户组
+
+        //删除组内用户
         Map<String, String> param=new HashMap<String, String>();
         param.put("userId", u.getUserId());
         param.put("groupId", groupId);
@@ -370,9 +384,12 @@ public class GroupService {
         if (upl.size()==1) {//删除组
             gmm.delOneGroup(g);
             groupDao.delete(gp.getGroupId());
+            //删除所有的组内人员信息
             param.clear();
             param.put("groupId", groupId);
             groupDao.delete("deleteGroupUser", param);
+            //处理组邀请信息表，把flag设置为2
+            inviteGroupDao.update("setFlag2", groupId);
             return 2;
         } else {
             if (u.getUserId().equals(gp.getAdminUserIds())) {
@@ -397,30 +414,157 @@ public class GroupService {
                     bMsg.setMsgType(1);
                     bMsg.setAffirm(0);
                     bMsg.setMsgBizType("GROUP_CTL");
-                    bMsg.setCmdType("GROUP");//有人加入组的广播
-                    bMsg.setCommand("b2");//新的组信息
+                    bMsg.setCmdType("GROUP");
+                    bMsg.setCommand("b3");//退组用户消息
                     Map<String, Object> dataMap=new HashMap<String, Object>();
                     dataMap.put("GroupId", g.getGroupId());
-                    List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
-                    for (UserPo up: upl) {
-                        rul.add(up.toHashMap4Mobile());
-                    }
-                    dataMap.put("UserList", rul);
+                    dataMap.put("UserInfo", u.toHashMap4Mobile());
                     bMsg.setMsgContent(dataMap);
                     for (String k: entryGroupUsers.keySet()) {
                         String _sp[] = k.split("::");
                         MobileKey mk=new MobileKey();
                         mk.setMobileId(_sp[0]);
-                        mk.setUserId(_sp[1]);
+                        mk.setPCDType(Integer.parseInt(_sp[1]));
+                        mk.setUserId(_sp[2]);
                         bMsg.setToAddr(MobileUtils.getAddr(mk));
                         pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                     }
-                    //若在对讲，也要退出对讲结构// TODO 
                 }
             }
             return 1;
         }
     }
+
+    /**
+     * 用户邀请
+     * @param userId 邀请用户
+     * @param inviteUserId 被邀请用户
+     * @param groupId 用户组Id
+     * @param inviteMsg 邀请信息
+     * @return
+     */
+    public Map<String, Object> inviteGroup(String userId, String beInviteUserId, String groupId, String inviteMsg) {
+        Map<String, Object> m=new HashMap<String, Object>();
+        Map<String, Object> param=new HashMap<String, Object>();
+        boolean canContinue=true;
+
+        //1、判断是否已经在组
+        List<UserPo> gul = this.getGroupMembers(groupId);
+        boolean find1=false;//被邀请者是否在组
+        boolean find2=false; //邀请者是否在组
+        if (gul!=null&&!gul.isEmpty()) {
+            for (UserPo up: gul) {
+                if (!find1) find1=up.getUserId().equals(beInviteUserId);
+                if (!find2) find2=up.getUserId().equals(userId);
+                if (find1&&find2) break;
+            }
+        }
+        if (!find2) {
+            m.put("ReturnType", "1005");
+            m.put("RefuseMsg", "邀请人不在用户组");
+            canContinue=false;
+        }
+        if (canContinue&&find1) {
+            m.put("ReturnType", "1006");
+            m.put("RefuseMsg", "被邀请人已在用户组");
+            canContinue=false;
+        }
+
+        //2、判断是否已经邀请
+        if (canContinue) {
+            param.put("aUserId", userId);
+            param.put("bUserId", beInviteUserId);
+            param.put("groupId", groupId);
+            List<InviteGroupPo> igl=inviteGroupDao.queryForList("getInvitingList", param);
+            if (igl!=null&&igl.size()>0) {
+                for (InviteGroupPo igp: igl) {
+                    if (igp.getAcceptFlag()==0) {
+                        m.put("ReturnType", "1007");
+                        m.put("RefuseMsg", "此人已被你邀请");
+                        inviteGroupDao.update("againInvite", igp.getId());
+                        m.put("InviteCount", igp.getInviteVector()+1);
+                        canContinue=false;
+                        break;
+                    }
+                }
+            }
+        }
+        if (canContinue) {
+            InviteGroupPo igp= new InviteGroupPo();
+            igp.setaUserId(userId);
+            igp.setbUserId(beInviteUserId);
+            igp.setGroupId(groupId);
+            igp.setInviteMessage(inviteMsg);
+            igp.setInviteVector(1);
+            inviteGroupDao.insert(igp);
+            m.put("InviteCount", 1);
+            m.put("ReturnType", "1001");
+        }
+        return m;
+    }
+
+    /**
+     * 用户申请
+     * @param userId 申请用户
+     * @param groupId 用户组Id
+     * @param adminId 管理者Id，这个管理者已经在这个组中了
+     * @param applyMsg 申请信息
+     * @return
+     */
+    public Map<String, Object> applyGroup(String userId, String groupId, String adminId, String applyMsg) {
+        Map<String, Object> m=new HashMap<String, Object>();
+        Map<String, Object> param=new HashMap<String, Object>();
+        boolean canContinue=true;
+
+        //1、判断是否已经在组
+        List<UserPo> gul = this.getGroupMembers(groupId);
+        boolean find=false;//申请者是否在组
+        if (gul!=null&&!gul.isEmpty()) {
+            for (UserPo up: gul) {
+                if (up.getUserId().equals(userId)) {
+                    find=true;
+                    break;
+                }
+            }
+        }
+        if (find) {
+            m.put("ReturnType", "1005");
+            m.put("RefuseMsg", "申请人已在用户组");
+            canContinue=false;
+        }
+
+        //2、判断是否已经申请
+        if (canContinue) {
+            param.put("aUserId", adminId);
+            param.put("bUserId", userId);
+            param.put("groupId", groupId);
+            List<InviteGroupPo> igl=inviteGroupDao.queryForList("getApplyList", param);
+            if (igl!=null&&igl.size()>0) {
+                for (InviteGroupPo igp: igl) {
+                    if (igp.getAcceptFlag()==0) {
+                        m.put("ReturnType", "1007");
+                        m.put("RefuseMsg", "您已申请");
+                        inviteGroupDao.update("againApply", igp.getId());
+                        m.put("ApplyCount", Math.abs(igp.getInviteVector()-1));
+                        canContinue=false;
+                        break;
+                    }
+                }
+            }
+        }
+        if (canContinue) {
+            InviteGroupPo igp= new InviteGroupPo();
+            igp.setaUserId(adminId);
+            igp.setbUserId(userId);
+            igp.setGroupId(groupId);
+            igp.setInviteMessage(applyMsg);
+            igp.setInviteVector(-1);
+            inviteGroupDao.insert(igp);
+            m.put("ReturnType", "1001");
+        }
+        return m;
+    }
+
     /**
      * 搜索用户组
      * @param searchStr 搜索的字符串
@@ -479,7 +623,100 @@ public class GroupService {
         return ret;
     }
 
-    
+    /**
+     * 获得邀请我的组的列表
+     * @param userId
+     * @return
+     */
+    public List<Map<String, Object>> getInviteGroupList(String userId) {
+        return inviteGroupDao.queryForListAutoTranform("inviteMeGroupList", userId);
+    }
+
+    /**
+     * 获得某用户组的申请人列表信息
+     * @param groupId
+     * @return
+     */
+    public List<Map<String, Object>> getApplyUserList(String groupId) {
+        return inviteGroupDao.queryForListAutoTranform("applyUserList", groupId);
+    }
+
+
+    /**
+     * 得到有未处理申请人的我所管理的用户组
+     * @param userId
+     * @return
+     */
+    public List<Map<String, Object>> getExistApplyUserGroupList(String userId) {
+        return inviteGroupDao.queryForListAutoTranform("existApplyUserGroupList", userId);
+    }
+
+    /**
+     * 处理拒绝或接受
+     * @param userId 被邀请者Id，申请者Id
+     * @param inviteUserId 邀请者Id，或管理员Id
+     * @param groupId 组Id
+     * @param isRefuse 是否拒绝
+     * @param refuseMsg 拒绝理由
+     * @return
+     */
+    public Map<String, Object> dealInvite(String userId, String inviteUserId, String groupId, boolean isRefuse, String refuseMsg) {
+        Map<String, Object> m=new HashMap<String, Object>();
+        Map<String, Object> param=new HashMap<String, Object>();
+
+        param.put("aUserId", inviteUserId);
+        param.put("bUserId", userId);
+        param.put("groupId", groupId);
+        List<InviteGroupPo> igl=inviteGroupDao.queryForList("getInvitingList", param);
+
+        if (igl==null||igl.size()==0) {
+            m.put("ReturnType", "1006");
+            m.put("Message", "没有邀请信息，不能处理");
+        } else {
+            InviteGroupPo igPo=igl.get(0);
+            igPo.setAcceptTime(new Timestamp(System.currentTimeMillis()));
+            if (!isRefuse) { //是接受
+                igPo.setAcceptFlag(1);
+                m.put("DealType", "1");
+                GroupPo gp=this.getGroupById(groupId);
+                //判断是否已是用户，若已是，则不必插入了
+                if (this.existUserInGroup(groupId, userId)==0) {
+                    //插入用户组表
+                    this.insertGroupUser(gp, userDao.getInfoObject("getUserById", userId), 0);
+                    m.put("ReturnType", "1001");
+                } else {
+                    m.put("ReturnType", "10011");
+                }
+            } else { //是拒绝
+                igPo.setRefuseMessage(refuseMsg);
+                igPo.setAcceptFlag(2);
+                m.put("DealType", "2");
+                m.put("ReturnType", "1001");
+            }
+            inviteGroupDao.update(igPo);//更新组邀请信息
+        }
+        return m;
+    }
+
+    /**
+     * 更新用户，更新用户的信息，不对对讲组内存结构进行广播，单要修改
+     * @param userId 修改者id
+     * @param g 所修改的组对象
+     * @param newInfo 所修改的新信息
+     * @return 更新用户成功返回1，否则返回0
+     */
+    public void updateGroup(Map<String, Object> newInfo, String userId, GroupPo g) {
+        if (g.getAdminUserIds().equals(userId)) { //修改组本身信息
+            if (newInfo.get("groupDescn")!=null) g.setDescn(newInfo.get("groupDescn")+"");
+            if (newInfo.get("groupName")!=null) g.setGroupName(newInfo.get("groupName")+"");
+            this.updateGroup(g);
+        }
+        if (newInfo.get("groupName")!=null) newInfo.put("groupAlias", newInfo.get("groupName"));
+        newInfo.put("groupId", g.getGroupId());
+        newInfo.put("userId", userId);
+        groupDao.update("updateGroupUserByUserIdGroupId", newInfo);
+    }
+
     class CompareGroupMsg implements CompareMsg {
         @Override
         public boolean compare(Message msg1, Message msg2) {
@@ -494,5 +731,193 @@ public class GroupService {
             }
             return false;
         }
+    }
+
+    /**
+     * 踢出用户组
+     * @param gp 用户组对象
+     * @param userIds 用户Id，用逗号隔开
+     * @return
+     */
+    public Map<String, Object> kickoutGroup(GroupPo gp, String userIds) {
+        String groupId=gp.getGroupId();
+        GroupInterCom gic = gmm.getGroupInterCom(groupId);
+        Map<String, UserPo> entryGroupUserMapClone=null;//克隆此时组内进行对讲的用户
+        Group g=null;
+        List<UserPo> upl = null;
+        if (gic!=null) {
+            g=gic.getGroup();
+            upl=g.getUserList();
+            Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
+            if (!entryGroupUsers.isEmpty()) {
+                entryGroupUserMapClone=new HashMap<String, UserPo>();
+                for (String k: entryGroupUsers.keySet()) {
+                    entryGroupUserMapClone.put(k, entryGroupUsers.get(k));
+                }
+            }
+        } else {
+            upl=userDao.queryForList("getGroupMembers", groupId);
+            g=new Group();
+            g.buildFromPo(gp);
+        }
+
+        List<UserPo> beKickoutUserList=new ArrayList<UserPo>();//被正式提出用户组的用户信息
+        Map<String, String> param=new HashMap<String, String>();
+
+        Map<String, Object> ret=new HashMap<String, Object>();
+        ret.put("GroupId", groupId);
+        ret.put("DeleteGroup", "0");
+        List<Map<String, String>> resultList=new ArrayList<Map<String, String>>();
+        ret.put("ResultList", resultList);
+        String[] ua=userIds.split(",");
+
+        UserPo up=null;
+        for (String userId: ua) {
+            Map<String, String> oneResult=new HashMap<String, String>();
+            oneResult.put("UserId", userId);
+            resultList.add(oneResult);
+            if (g.getAdminUserIds().equals(userId)) {
+                oneResult.put("DealType", "2");
+                continue;
+            }
+            if (gic!=null&&gic.getSpeaker().getUserId().equals(userId)) {
+                oneResult.put("DealType", "4");
+                continue;
+            }
+            up=null;
+            if (upl!=null&&!upl.isEmpty()) {
+                for (UserPo _up: upl) {
+                    if (_up.getUserId().equals(userId)) {
+                        up=_up;
+                        break;
+                    }
+                }
+            }
+            if (up==null) oneResult.put("DealType", "3");
+            else {//正式踢出某一个用户的操作
+                oneResult.put("DealType", "1");
+                beKickoutUserList.add(up);
+                //删除组内用户
+                param.clear();
+                param.put("userId", up.getUserId());
+                param.put("groupId", groupId);
+                groupDao.delete("deleteGroupUser", param);
+                //删除内存
+                if (gic!=null) {
+                  gic.getGroup().delOneUser(up);
+                  gic.getEntryGroupUserMap().remove(up.getUserId());
+                } else {
+                    for (UserPo _up: upl) {
+                        if (_up.getUserId().equals(up.getUserId())) {
+                            upl.remove(_up);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        //都处理后的处理
+        if (upl.size()==1) {//删除组
+            gmm.delOneGroup(g);
+            groupDao.delete(gp.getGroupId());
+            //删除所有的组内人员信息
+            param.clear();
+            param.put("groupId", groupId);
+            groupDao.delete("deleteGroupUser", param);
+            //处理组邀请信息表，把flag设置为2
+            inviteGroupDao.update("setFlag2", groupId);
+            ret.put("DeleteGroup", "1");//返回值，告诉调用者，由于组内人员只有1人，所以要删除组
+        }
+        //发送广播消息，把退出用户的消息通知大家
+        if (entryGroupUserMapClone!=null) {
+            //生成消息
+            Message bMsg=new Message();
+            bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+            bMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+            bMsg.setMsgType(1);
+            bMsg.setAffirm(0);
+            bMsg.setMsgBizType("GROUP_CTL");
+            bMsg.setCmdType("GROUP");
+            bMsg.setCommand("b3");//退组用户消息
+            Map<String, Object> dataMap=new HashMap<String, Object>();
+            dataMap.put("GroupId", g.getGroupId());
+            List<Map<String, Object>> userMapList=new ArrayList<Map<String, Object>>();
+            for (UserPo _up: beKickoutUserList) userMapList.add(_up.toHashMap4Mobile());
+            dataMap.put("UserList", userMapList);
+            bMsg.setMsgContent(dataMap);
+            for (String k: entryGroupUserMapClone.keySet()) {
+                String _sp[] = k.split("::");
+                MobileKey mk=new MobileKey();
+                mk.setMobileId(_sp[0]);
+                mk.setPCDType(Integer.parseInt(_sp[1]));
+                mk.setUserId(_sp[2]);
+                bMsg.setToAddr(MobileUtils.getAddr(mk));
+                pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * 解散组
+     * @param gp 徐被解散的组
+     * @return
+     */
+    public Map<String, Object> dissolve(GroupPo gp) {
+        String groupId=gp.getGroupId();
+        GroupInterCom gic = gmm.getGroupInterCom(groupId);
+        Map<String, UserPo> entryGroupUserMapClone=null;//克隆此时组内进行对讲的用户
+        Group g=null;
+        if (gic!=null) {
+            g=gic.getGroup();
+            Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
+            if (!entryGroupUsers.isEmpty()) {
+                entryGroupUserMapClone=new HashMap<String, UserPo>();
+                for (String k: entryGroupUsers.keySet()) {
+                    entryGroupUserMapClone.put(k, entryGroupUsers.get(k));
+                }
+            }
+        }
+
+        Map<String, Object> ret=new HashMap<String, Object>();
+        if (gic!=null&&gic.getSpeaker()!=null) ret.put("ReturnType", "1004");
+        else {
+            if (gic!=null) gmm.delOneGroup(g);
+            groupDao.delete(gp.getGroupId());
+            Map<String, String> param=new HashMap<String, String>();
+            //删除所有的组内人员信息
+            param.put("groupId", groupId);
+            groupDao.delete("deleteGroupUser", param);
+            //处理组邀请信息表，把flag设置为2
+            inviteGroupDao.update("setFlag2", groupId);
+
+            //发送广播消息，把退出用户的消息通知大家
+            if (entryGroupUserMapClone!=null) {
+                //生成消息
+                Message bMsg=new Message();
+                bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                bMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+                bMsg.setMsgType(1);
+                bMsg.setAffirm(0);
+                bMsg.setMsgBizType("GROUP_CTL");
+                bMsg.setCmdType("GROUP");
+                bMsg.setCommand("b3");//退组用户消息
+                Map<String, Object> dataMap=new HashMap<String, Object>();
+                dataMap.put("GroupId", g.getGroupId());
+                dataMap.put("Del", "1");
+                bMsg.setMsgContent(dataMap);
+                for (String k: entryGroupUserMapClone.keySet()) {
+                    String _sp[] = k.split("::");
+                    MobileKey mk=new MobileKey();
+                    mk.setMobileId(_sp[0]);
+                    mk.setPCDType(Integer.parseInt(_sp[1]));
+                    mk.setUserId(_sp[2]);
+                    bMsg.setToAddr(MobileUtils.getAddr(mk));
+                    pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
+                }
+            }
+            ret.put("ReturnType", "1001");
+        }
+        return ret;
     }
 }

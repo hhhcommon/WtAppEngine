@@ -278,18 +278,6 @@ public class ContentController {
     private Map<String,Object> getListByZone(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            //0-获取参数
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
-            if (m==null||m.size()==0) {
-                map.put("ReturnType", "0000");
-                map.put("Message", "无法获取需要的参数");
-            } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
-                MobileSession ms=(MobileSession)retM.get("MobileSession");
-                map.put("SessionId", ms.getKey().getSessionId());
-            }
-            if (map.get("ReturnType")!=null) return map;
-
             //1-获取版本
             List<Map<String, Object>> sl=null;
             Map<String, Object> bcClass=null, bcItem=null;

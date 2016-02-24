@@ -414,7 +414,7 @@ public class PassportController {
      */
     @RequestMapping(value="getGroupsAndFriends.do")
     @ResponseBody
-    public Map<String,Object> getGroupsAndUsers(HttpServletRequest request) {
+    public Map<String,Object> getGroupsAndFriends(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
@@ -446,7 +446,7 @@ public class PassportController {
 
             //2-得到用户组及好友
             int size=0;
-            List<GroupPo> gl=groupService.getGroupsByUserId(userId);
+            List<Map<String, Object>> gl=groupService.getGroupsByUserId(userId);
             Map<String, Object> topItem=new HashMap<String, Object>();//一个分类
             if (gl!=null&&gl.size()>0) size=gl.size();
             topItem.put("Type", "group");
@@ -456,18 +456,19 @@ public class PassportController {
             if (size>0) {
                 List<Map<String, Object>> rgl=new ArrayList<Map<String, Object>>();
                 Map<String, Object> gm;
-                for (GroupPo g:gl) {
+                for (Map<String, Object> g:gl) {
                     gm=new HashMap<String, Object>();
-                    gm.put("GroupId", g.getGroupId());
-                    gm.put("GroupNum", g.getGroupNum());
-                    gm.put("GroupType", g.getGroupType()+"");
-                    gm.put("GroupImg", g.getGroupImg());
-                    gm.put("GroupName", g.getGroupName());
-                    gm.put("GroupCreator", g.getCreateUserId());
-                    gm.put("GroupManager", g.getAdminUserIds());
-                    gm.put("GroupCount", g.getGroupCount()+"");
-                    gm.put("GroupDesc", g.getDescn());
-                    gm.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date(g.getCTime().getTime())));
+                    gm.put("GroupId", g.get("id"));
+                    gm.put("GroupNum", g.get("groupNum"));
+                    gm.put("GroupType", g.get("groupType"));
+                    gm.put("GroupImg", g.get("groupImg"));
+                    gm.put("GroupName", g.get("groupName"));
+                    gm.put("GroupCreator", g.get("createUserId"));
+                    gm.put("GroupManager", g.get("adminUserIds"));
+                    gm.put("GroupCount", g.get("groupCound"));
+                    gm.put("GroupOriDesc", g.get("descn"));
+                    gm.put("GroupMyDesc", g.get("groupDescn"));
+                    gm.put("GroupMyAlias", g.get("groupAlias"));
                     rgl.add(gm);
                 }
                 topItem.put("Groups", rgl);

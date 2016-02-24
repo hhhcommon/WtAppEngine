@@ -23,11 +23,13 @@
 
   <!-- 对象定义:组用户信息 -->
   <resultMap id="groupUserMap" type="WtGroupUser">
-    <id      column="id"       property="id"       jdbcType="VARCHAR"/>
-    <result  column="groupId"  property="groupId"  jdbcType="VARCHAR"/>
-    <result  column="userId"   property="userId"   jdbcType="VARCHAR"/>
-    <result  column="inviter"  property="inviter"  jdbcType="VARCHAR"/>
-    <result  column="cTime"    property="CTime"    jdbcType="TIMESTAMP"/>
+    <id      column="id"           property="id"           jdbcType="VARCHAR"/>
+    <result  column="groupId"      property="groupId"      jdbcType="VARCHAR"/>
+    <result  column="userId"       property="userId"       jdbcType="VARCHAR"/>
+    <result  column="inviter"      property="inviter"      jdbcType="VARCHAR"/>
+    <result  column="groupAlias"   property="groupAlias"   jdbcType="VARCHAR"/>
+    <result  column="groupDescn"   property="groupDescn"   jdbcType="VARCHAR"/>
+    <result  column="cTime"        property="CTime"        jdbcType="TIMESTAMP"/>
   </resultMap>
 
   <!-- 所有列 -->
@@ -78,17 +80,18 @@
 
   <!-- 得到某用户所属的用户组 -->
   <select id="getGroupListByUserId" resultMap="groupMap" parameterType="java.lang.String">
-    select a.*, b.groupCount  from plat_Group a,
+    select a.*, b.groupCount, c.* from plat_Group a,
     (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b,
-    (select groupId from plat_GroupUser where userId=#{value, jdbcType=VARCHAR}) c
-    where a.id=b.groupid and a.id=c.groupid
+    (select * from plat_GroupUser where userId=#{value, jdbcType=VARCHAR}) c
+    where a.id=b.groupId and a.id=c.groupId
   </select>
 
   <!-- 得到某用户所创建的用户组 -->
   <select id="getCreateGroupListByUserId" resultMap="groupMap" parameterType="java.lang.String">
-    select a.*, b.groupCount from plat_Group a,
-    (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b
-    where a.id=b.groupid and a.createUserId=#{value, jdbcType=VARCHAR}
+    select a.*, b.groupCount, c.* from plat_Group a,
+    (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b,
+    (select * from plat_GroupUser where userId=#{value, jdbcType=VARCHAR}) c
+    where a.id=b.groupId and a.createUserId=#{value, jdbcType=VARCHAR} and a.id=c.groupId
   </select>
   <!-- 得到某用户所创建的用户组的数量 -->
   <select id="getCreateGroupCount" resultType="java.lang.Integer" parameterType="java.lang.String">
@@ -175,12 +178,16 @@
       <if test="groupId!=null">groupId,</if>
       <if test="userId!=null">userId,</if>
       <if test="inviter!=null">inviter,</if>
+      <if test="groupAlias!=null">groupAlias,</if>
+      <if test="groupDescn!=null">groupDescn,</if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
       <if test="groupId!=null">#{groupId,jdbcType=VARCHAR},</if>
       <if test="userId!=null">#{userId,jdbcType=VARCHAR},</if>
       <if test="inviter!=null">#{inviter,jdbcType=VARCHAR},</if>
+      <if test="groupAlias!=null">#{groupAlias,jdbcType=VARCHAR},</if>
+      <if test="groupDescn!=null">#{groupDescn,jdbcType=VARCHAR},</if>
     </trim>
   </insert>
   <!-- 删除数据 -->
@@ -191,6 +198,17 @@
   <select id="getGroupUserByGroupId" resultMap="groupUserMap" parameterType="java.lang.String">
     select * from plat_GroupUser where groupId=#{groupId, jdbcType=VARCHAR}
   </select>
+  <!-- 根据用户Id和组Id修改用户所在组表 -->
+  <update id="updateGroupUserByUserIdGroupId"  parameterType="java.util.Map">
+    update plat_GroupUser
+    <set>
+      <if test="inviter!=null">inviter=#{inviter,jdbcType=VARCHAR},</if>
+      <if test="groupAlias!=null">groupAlias=#{groupAlias,jdbcType=VARCHAR},</if>
+      <if test="groupPwd!=null">groupPwd=#{groupPwd,jdbcType=VARCHAR},</if>
+      <if test="groupDescn!=null">groupDescn=#{groupDescn,jdbcType=VARCHAR},</if>
+    </set>
+    where groupId=#{groupId,jdbcType=VARCHAR} and userId=#{userId,jdbcType=VARCHAR}
+  </update>
 
   <!-- 以下临时，应该移动到内容中======================================================================================================= -->
   <select id="searchCata" resultType="java.util.HashMap">

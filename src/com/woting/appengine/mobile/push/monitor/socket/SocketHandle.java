@@ -162,11 +162,11 @@ public class SocketHandle extends Thread {
                                     if (m.getMsgBizType().equals("AUDIOFLOW")) {
                                         if (t-m.getSendTime()>60*1000) {
                                             canSend=false;
-                                            System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[放弃发送语音消息]:<"+SocketHandle.this.mk.toString()+">\n\t"+m.toJson());
+                                            System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[放弃发送语音消息]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+m.toJson());
                                         }
                                     }
                                     if (canSend) {
-                                        System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送]:<"+SocketHandle.this.mk.toString()+">\n\t"+m.toJson());
+                                        System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+m.toJson());
                                         out.println(m.toJson());
                                         out.flush();
                                     }
@@ -227,7 +227,7 @@ public class SocketHandle extends Thread {
                         String revMsgStr=in.readLine();
                         if (revMsgStr==null) continue;
                         long t=System.currentTimeMillis();
-                        System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[接收]:<"+SocketHandle.this.mk.toString()+">\n\t"+revMsgStr);
+                        System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[接收]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+revMsgStr);
 
                         SocketHandle.this.lastVisitTime=t;
                         //判断是否是心跳信号

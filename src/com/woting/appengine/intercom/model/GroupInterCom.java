@@ -226,7 +226,8 @@ public class GroupInterCom {
                 String _sp[] = k.split("::");
                 MobileKey mk=new MobileKey();
                 mk.setMobileId(_sp[0]);
-                mk.setUserId(_sp[1]);
+                mk.setPCDType(Integer.parseInt(_sp[1]));
+                mk.setUserId(_sp[2]);
                 exitPttMsg.setToAddr(MobileUtils.getAddr(mk));
                 pmm.getSendMemory().addUniqueMsg2Queue(mk, exitPttMsg, new CompareGroupMsg());
             }

@@ -98,28 +98,28 @@ public abstract class MobileUtils {
         MobileParam mp = new MobileParam();
 
         Object o=m.get("IMEI");
-        String __tmp=o==null?"":(String)o;
+        String __tmp=o==null?"":o+"";
         if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setImei(__tmp);
         o=m.get("PCDType");
-        __tmp=o==null?"":(String)o;
+        __tmp=o==null?"":o+"";
         if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setPCDType(__tmp);
         o=m.get("MobileClass");
-        __tmp=o==null?"":(String)o;
+        __tmp=o==null?"":o+"";
         if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setMClass(__tmp);
         o=m.get("GPS-longitude");
-        __tmp=o==null?"":(String)o;
+        __tmp=o==null?"":o+"";
         if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setGpsLongitude(__tmp);
         o=m.get("GPS-Latitude");
-        __tmp=o==null?"":(String)o;
+        __tmp=o==null?"":o+"";
         if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setGpsLatitude(__tmp);
         o=m.get("ScreenSize");
-        __tmp=o==null?"":(String)o;
+        __tmp=o==null?"":o+"";
         if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setScreenSize(__tmp);
         o=m.get("SessionId");
-        __tmp=o==null?"":(String)o;
+        __tmp=o==null?"":o+"";
         if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setSessionId(__tmp);
         o=m.get("UserId");
-        __tmp=o==null?"":(String)o;
+        __tmp=o==null?"":o+"";
         if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setUserId(__tmp);
 
         if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&
@@ -153,19 +153,19 @@ public abstract class MobileUtils {
         if (m==null||m.size()==0) return null;
 
         Object o=m.get("IMEI");
-        String __tmp=o==null?"":(String)o;
+        String __tmp=o==null?"":o+"";
         if (StringUtils.isNullOrEmptyOrSpace(__tmp)) return null;
 
         MobileKey ret = new MobileKey();
         ret.setMobileId(__tmp);
         o=m.get("PCDType");
-        __tmp=o==null?"1":(String)o;
+        __tmp=o==null?"1":o+"";
         try {ret.setPCDType(Integer.parseInt(__tmp));} catch(Exception e) {}
         o=m.get("UserId");
-        __tmp=o==null?"":(String)o;
+        __tmp=o==null?"":o+"";
         if ("".equals(__tmp)) {
             o=m.get("SessionId");
-            __tmp=o==null?"":(String)o;
+            __tmp=o==null?"":o+"";
         }
         ret.setUserId(__tmp);
         return ret;
@@ -293,7 +293,7 @@ public abstract class MobileUtils {
                 try {
                     u=(UserPo)ms.getAttribute("user");
                 } catch(Exception e) {}
-                if (mKey.isMobile()&&type==1&&(u==null||!_mKey.getUserId().equals(u.getUserId()))) {//实现自动登录
+                if (type==1&&(u==null||!_mKey.getUserId().equals(u.getUserId()))) {//实现自动登录
                     try {
                         ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
                         if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {

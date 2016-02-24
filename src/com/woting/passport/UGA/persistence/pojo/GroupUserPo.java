@@ -11,7 +11,10 @@ public class GroupUserPo extends BaseObject {
     private String groupId;
     private String userId;
     private String inviter;
+    private String groupAlias;
+    private String groupDescn;
     private Timestamp CTime; //记录创建时间
+
     public String getId() {
         return id;
     }
@@ -35,6 +38,18 @@ public class GroupUserPo extends BaseObject {
     }
     public void setInviter(String inviter) {
         this.inviter = inviter;
+    }
+    public String getGroupAlias() {
+        return groupAlias;
+    }
+    public void setGroupAlias(String groupAlias) {
+        this.groupAlias = groupAlias;
+    }
+    public String getGroupDescn() {
+        return groupDescn;
+    }
+    public void setGroupDescn(String groupDescn) {
+        this.groupDescn = groupDescn;
     }
     public Timestamp getCTime() {
         return CTime;

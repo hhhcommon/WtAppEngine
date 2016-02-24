@@ -55,12 +55,12 @@ public class FriendService {
 
     /**
      * 邀请陌生人为好友
-     * @param userId 本人Id
-     * @param inviteUserId 被邀请人IdS
+     * @param userId 本人Id 邀请人
+     * @param beInviteUserId 被邀请人IdS
      * @param inviteMsg 邀请信息
      * @return 陌生人列表或空
      */
-    public Map<String, Object> inviteFriend(String userId, String inviteUserId, String inviteMsg) {
+    public Map<String, Object> inviteFriend(String userId, String beInviteUserId, String inviteMsg) {
         Map<String, Object> m=new HashMap<String, Object>();
         Map<String, Object> param=new HashMap<String, Object>();
         Map<String, Object> info;
@@ -74,7 +74,7 @@ public class FriendService {
         //1-是否已经是好友了
         if (canContinue) {
             param.put("aUserId", userId);
-            param.put("bUserId", inviteUserId);
+            param.put("bUserId", beInviteUserId);
             fl= friendRelDao.queryForList(param);
             if (fl!=null&&fl.size()>0) {
                 m.put("ReturnType", "1004");
@@ -85,7 +85,7 @@ public class FriendService {
         //2-是否已经被对方邀请
         if (canContinue) {
             param.put("bUserId", userId);
-            param.put("aUserId", inviteUserId);
+            param.put("aUserId", beInviteUserId);
             param.put("acceptFlag", "0");
             ifl=inviteFriendDao.queryForList(param);
             if (ifl!=null&&ifl.size()>0) {
@@ -106,7 +106,7 @@ public class FriendService {
         //3-是否是重复邀请，重复邀请，邀请内容相同，邀请间隔在INVITE_INTERVAL_TIME之内
         if (canContinue) {
             param.put("aUserId", userId);
-            param.put("bUserId", inviteUserId);
+            param.put("bUserId", beInviteUserId);
             param.remove("acceptFlag");
             ifl=inviteFriendDao.queryForList(param);
             if (ifl!=null&&ifl.size()>0) {
@@ -140,7 +140,7 @@ public class FriendService {
                 ifPo = new InviteFriendPo();
                 ifPo.setId(SequenceUUID.getUUIDSubSegment(4));
                 ifPo.setaUserId(userId);
-                ifPo.setbUserId(inviteUserId);
+                ifPo.setbUserId(beInviteUserId);
                 ifPo.setInviteVector(1);
             } else {
                 ifPo.setInviteTime(new Timestamp(System.currentTimeMillis()));
