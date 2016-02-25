@@ -110,6 +110,7 @@ public class PassportController {
             map.put("UserInfo", u.toHashMap4Mobile());
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
             map.put("Message", e.getMessage());
@@ -200,7 +201,8 @@ public class PassportController {
         } catch(Exception e) {
             e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -246,8 +248,10 @@ public class PassportController {
             map.put("ReturnType", "1001");
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -307,8 +311,10 @@ public class PassportController {
             }
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -380,8 +386,10 @@ public class PassportController {
             }
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -494,8 +502,10 @@ public class PassportController {
 
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }

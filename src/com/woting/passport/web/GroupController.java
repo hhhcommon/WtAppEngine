@@ -180,6 +180,7 @@ public class GroupController {
             map.put("GroupInfo", groupMap);
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
             map.put("Message", e.getMessage());
@@ -250,8 +251,10 @@ public class GroupController {
             }
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -320,8 +323,10 @@ public class GroupController {
             }
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -382,8 +387,10 @@ public class GroupController {
             }
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -452,8 +459,10 @@ public class GroupController {
             map.putAll(groupService.inviteGroup(userId, beInviteUserIds, groupId, inviteMsg));
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -524,8 +533,10 @@ public class GroupController {
 
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -613,8 +624,10 @@ public class GroupController {
             map.putAll(groupService.dealInvite(userId, inviteUserId, groupId, dealType.equals("2"), refuseMsg));
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -678,8 +691,10 @@ public class GroupController {
             map.putAll(groupService.applyGroup(userId, adminId, groupId, inviteMsg));
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -764,11 +779,12 @@ public class GroupController {
                 map.put("ReturnType", "1011");
                 map.put("Message", "无所属用户组");
             }
-
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -832,11 +848,12 @@ public class GroupController {
                 map.put("ReturnType", "1011");
                 map.put("Message", "无所属用户组");
             }
-
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -928,8 +945,10 @@ public class GroupController {
             map.putAll(groupService.dealInvite(applyUserId, userId, groupId, dealType.equals("2"), refuseMsg));
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -1040,8 +1059,10 @@ public class GroupController {
             gm.put("GroupCount", rul.size()+"");
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -1108,8 +1129,10 @@ public class GroupController {
             }
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -1180,8 +1203,10 @@ public class GroupController {
             map.put("Result", groupService.kickoutGroup(gp, userIds));
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -1243,8 +1268,10 @@ public class GroupController {
             map.putAll(groupService.dissolve(gp));
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -1324,9 +1351,10 @@ public class GroupController {
             }
             return map;
         } catch(Exception e) {
-            map.put("ReturnType", "T");
             e.printStackTrace();
-            map.put("SessionId", e.getMessage());
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }
@@ -1397,8 +1425,10 @@ public class GroupController {
             map.put("ReturnType", "1001");
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
-            map.put("SessionId", e.getMessage());
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
             return map;
         }
     }

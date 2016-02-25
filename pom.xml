@@ -53,22 +53,6 @@
       <artifactId>commons-codec</artifactId>
       <version>1.9</version>
     </dependency>
-    <!-- 引入httpmine -->
-    <dependency>
-      <groupId>org.apache</groupId>
-      <artifactId>http</artifactId>
-      <version>4.1.1</version>
-      <scope>system</scope>
-      <systemPath>${build.webProjectDir}/lib/httpmime-4.1.1.jar</systemPath>
-    </dependency>
-    <!-- 引入android包 -->
-    <dependency>
-      <groupId>android</groupId>
-      <artifactId>android</artifactId>
-      <version>1.0</version>
-      <scope>system</scope>
-      <systemPath>${build.webProjectDir}/lib/android.jar</systemPath>
-    </dependency>
   </dependencies>
   <build>
     <!-- 设置源代码的根目录 -->

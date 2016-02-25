@@ -89,6 +89,7 @@ public class FriendController {
             }
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
             map.put("Message", e.getMessage());
@@ -149,6 +150,7 @@ public class FriendController {
             map.putAll(friendService.inviteFriend(userId, beInviteUserId, inviteMsg));
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
             map.put("Message", e.getMessage());
@@ -211,6 +213,7 @@ public class FriendController {
             }
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
             map.put("Message", e.getMessage());
@@ -280,6 +283,7 @@ public class FriendController {
             map.putAll(friendService.deal(userId, inviteUserId, dealType.equals("2"), refuseMsg));
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
             map.put("Message", e.getMessage());
@@ -341,6 +345,7 @@ public class FriendController {
             map.putAll(friendService.del(userId, friendUserId));
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
             map.put("Message", e.getMessage());
@@ -397,6 +402,7 @@ public class FriendController {
             }
             return map;
         } catch(Exception e) {
+            e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
             map.put("Message", e.getMessage());
