@@ -106,7 +106,7 @@
             <target>1.8</target>
           </configuration>
         </plugin>
-         <!-- m2e插件 -->
+        <!-- m2e插件 -->
         <plugin>
           <groupId>org.eclipse.m2e</groupId>
           <artifactId>lifecycle-mapping</artifactId>

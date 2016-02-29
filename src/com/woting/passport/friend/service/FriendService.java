@@ -69,7 +69,6 @@ public class FriendService {
         List<InviteFriendPo> ifl=null;
         List<FriendRelPo> fl=null;
         InviteFriendPo ifPo=null;
-        
 
         //1-是否已经是好友了
         if (canContinue) {
@@ -187,37 +186,43 @@ public class FriendService {
      */
     public Map<String, Object> deal(String userId, String inviteUserId, boolean isRefuse, String refuseMsg) {
         Map<String, Object> m=new HashMap<String, Object>();
-        Map<String, Object> param=new HashMap<String, Object>();
         InviteFriendPo ifPo=null;
 
+        Map<String, Object> param=new HashMap<String, Object>();
         param.put("aUserId", inviteUserId);
         param.put("bUserId", userId);
-        param.put("acceptFlag", "0");
-        List<InviteFriendPo> ifl=inviteFriendDao.queryForList(param);
-        if (ifl==null||ifl.size()==0) {
+        List<FriendRelPo> fl= friendRelDao.queryForList(param);
+        if (fl!=null&&fl.size()>0) {
             m.put("ReturnType", "1004");
-            m.put("Message", "没有邀请信息，不能处理");
+            m.put("Message", "已经是好友了");
         } else {
-            ifPo=ifl.get(0);
-            ifPo.setAcceptTime(new Timestamp(System.currentTimeMillis()));
-            if (!isRefuse) { //是接受
-                ifPo.setAcceptFlag(1);
-                m.put("DealType", "1");
-                //插入好友表
-                FriendRelPo frPo = new FriendRelPo();
-                frPo.setId(SequenceUUID.getUUIDSubSegment(4));
-                frPo.setaUserId(inviteUserId);
-                frPo.setbUserId(userId);
-                frPo.setInviteTime(ifPo.getAcceptTime());
-                frPo.setInviteVector(ifPo.getInviteVector());
-                friendRelDao.insert(frPo);
-            } else { //是拒绝
-                ifPo.setRefuseMessage(refuseMsg);
-                ifPo.setAcceptFlag(2);
-                m.put("DealType", "2");
+            param.put("acceptFlag", "0");
+            List<InviteFriendPo> ifl=inviteFriendDao.queryForList(param);
+            if (ifl==null||ifl.size()==0) {
+                m.put("ReturnType", "1005");
+                m.put("Message", "没有邀请信息，不能处理");
+            } else {
+                ifPo=ifl.get(0);
+                ifPo.setAcceptTime(new Timestamp(System.currentTimeMillis()));
+                if (!isRefuse) { //是接受
+                    ifPo.setAcceptFlag(1);
+                    m.put("DealType", "1");
+                    //插入好友表
+                    FriendRelPo frPo = new FriendRelPo();
+                    frPo.setId(SequenceUUID.getUUIDSubSegment(4));
+                    frPo.setaUserId(inviteUserId);
+                    frPo.setbUserId(userId);
+                    frPo.setInviteTime(ifPo.getAcceptTime());
+                    frPo.setInviteVector(ifPo.getInviteVector());
+                    friendRelDao.insert(frPo);
+                } else { //是拒绝
+                    ifPo.setRefuseMessage(refuseMsg);
+                    ifPo.setAcceptFlag(2);
+                    m.put("DealType", "2");
+                }
+                inviteFriendDao.update(ifPo);
+                m.put("ReturnType", "1001");
             }
-            inviteFriendDao.update(ifPo);
-            m.put("ReturnType", "1001");
         }
         return m;
     }

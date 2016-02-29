@@ -423,7 +423,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (!(retM.get("ReturnType")+"").equals("2003")&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -995,32 +995,32 @@ public class GroupController {
                 map.put("Message", "无法获取用户组号码");
                 return map;
             }
-            m.clear();
-            m.put("groupNum", groupNum);
-            GroupPo gp=groupService.getGroup(m);
+            Map<String, Object> param=new HashMap<String, Object>();
+            param.put("groupNum", groupNum);
+            GroupPo gp=groupService.getGroup(param);
             if (gp==null) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取用户组号码");
-                return map;
-            }
-            if (gp.getGroupType()==0) {
-                map.put("ReturnType", "1005");
-                map.put("Message", "加入的组需要验证，不能直接加入");
-                return map;
-            }
-            if (gp.getGroupType()==2) {
-                String groupPwd=(String)m.get("GroupPwd");
-                if (StringUtils.isNullOrEmptyOrSpace(groupPwd)) {
-                    map.put("ReturnType", "1006");
-                    map.put("Message", "加入密码组需要提供组密码");
-                    return map;
-                } else {
-                    if (!gp.getGroupPwd().equals(groupPwd)) {
-                        map.put("ReturnType", "1007");
-                        map.put("Message", "组密码不正确，不能加入组");
+            } else {
+                if (gp.getGroupType()==0) {
+                    map.put("ReturnType", "1005");
+                    map.put("Message", "加入的组需要验证，不能直接加入");
+                }
+                if (gp.getGroupType()==2) {
+                    String groupPwd=(String)m.get("GroupPwd");
+                    if (StringUtils.isNullOrEmptyOrSpace(groupPwd)) {
+                        map.put("ReturnType", "1006");
+                        map.put("Message", "加入密码组需要提供组密码");
+                    } else {
+                        if (!gp.getGroupPwd().equals(groupPwd)) {
+                            map.put("ReturnType", "1007");
+                            map.put("Message", "组密码不正确，不能加入组");
+                        }
                     }
                 }
             }
+            if (map.get("ReturnType")!=null) return map;
+
             //检查是否已经在组
             int c=groupService.existUserInGroup(gp.getGroupId(), userId);
             if (c==0&&gp.getGroupCount()>50) {

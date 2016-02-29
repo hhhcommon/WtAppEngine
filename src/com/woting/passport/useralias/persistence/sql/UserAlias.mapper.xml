@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  用户别名
+-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="WT_USERALIAS">
+  <!-- 对象定义:好友邀请 -->
+  <resultMap id="userAliasMap" type="UserAlias">
+    <id      column="id"              property="id"              jdbcType="VARCHAR"/>
+    <result  column="typeId"          property="typeId"          jdbcType="VARCHAR"/>
+    <result  column="mainUserId"      property="mainUserId"      jdbcType="VARCHAR"/>
+    <result  column="aliasUserId"     property="aliasUserId"     jdbcType="VARCHAR"/>
+    <result  column="aliasName"       property="aliasName"       jdbcType="VARCHAR"/>
+    <result  column="aliasDescn"      property="aliasDescn"      jdbcType="VARCHAR"/>
+    <result  column="lastModifyTime"  property="lastModifyTime"  jdbcType="TIMESTAMP"/>
+  </resultMap>
+
+  <!-- 所有列 -->
+  <sql id="Base_Column_List">
+    id, typeId, mainUserId, aliasUserId, aliasName, aliasDescn, lastModifyTime
+  </sql>
+
+  <!-- 条件子句 -->
+  <sql id="WhereClauseByEntiey">
+    <where>
+      <trim prefix="(" suffix=")" prefixOverrides="and">
+        <if test="id!=null"> and id=#{id,jdbcType=VARCHAR}</if>
+        <if test="typeId!=null"> and typeId=#{typeId,jdbcType=VARCHAR}</if>
+        <if test="mainUserId!=null"> and mainUserId=#{mainUserId,jdbcType=VARCHAR}</if>
+        <if test="aliasUserId!=null"> and aliasUserId=#{aliasUserId,jdbcType=VARCHAR}</if>
+        <if test="aliasName!=null"> and aliasName=#{aliasName,jdbcType=VARCHAR}</if>
+        <if test="aliasDescn!=null"> and aliasDescn=#{aliasDescn,jdbcType=VARCHAR}</if>
+        <if test="lastModifyTime!=null"> and lastModifyTime=#{lastModifyTime,jdbcType=TIMESTAMP}</if>
+      </trim>
+    </where>
+  </sql>
+
+  <!-- 获得记录条数-->
+  <select id="count" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select count(*) from wt_PersonAlias <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </select>
+
+  <!-- 获得列表 -->
+  <select id="getList" resultMap="userAliasMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_PersonAlias
+    <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+    <if test="sortByClause!=null">order by ${sortByClause}</if>
+  </select>
+
+  <!-- 新增数据 -->
+  <insert id="insert" parameterType="java.util.Map">
+    insert into wt_PersonAlias
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="typeId!=null">typeId,</if>
+      <if test="mainUserId!=null">mainUserId,</if>
+      <if test="aliasUserId!=null">aliasUserId,</if>
+      <if test="aliasName!=null">aliasName,</if>
+      <if test="aliasDescn!=null">aliasDescn,</if>
+      <if test="lastModifyTime!=null">lastModifyTime,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="typeId!=null">#{typeId,jdbcType=VARCHAR},</if>
+      <if test="mainUserId!=null">#{mainUserId,jdbcType=VARCHAR},</if>
+      <if test="aliasUserId!=null">#{aliasUserId,jdbcType=VARCHAR},</if>
+      <if test="aliasName!=null">#{aliasName,jdbcType=VARCHAR},</if>
+      <if test="aliasDescn!=null">#{aliasDescn,jdbcType=VARCHAR},</if>
+      <if test="lastModifyTime!=null">#{lastModifyTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+
+  <!-- 修改 根据主键-->
+  <update id="update" parameterType="java.util.Map">
+    update wt_PersonAlias
+    <set>
+      <if test="typeId!=null">typeId=#{typeId,jdbcType=VARCHAR},</if>
+      <if test="mainUserId!=null">mainUserId=#{mainUserId,jdbcType=VARCHAR},</if>
+      <if test="aliasUserId!=null">aliasUserId=#{aliasUserId,jdbcType=VARCHAR},</if>
+      <if test="aliasName!=null">aliasName=#{aliasName,jdbcType=VARCHAR},</if>
+      <if test="aliasDescn!=null">aliasDescn=#{aliasDescn,jdbcType=VARCHAR},</if>
+      <if test="lastModifyTime!=null">lastModifyTime=#{lastModifyTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id=#{id,jdbcType=VARCHAR}
+  </update>
+
+  <!-- 删除数据 -->
+  <delete id="delete" parameterType="java.lang.String">
+    delete from wt_PersonAlias where id=#{id,jdbcType=VARCHAR}
+  </delete>
+  <delete id="deleteByEntity" parameterType="java.util.Map">
+    delete from wt_PersonAlias <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </delete>
+</mapper>

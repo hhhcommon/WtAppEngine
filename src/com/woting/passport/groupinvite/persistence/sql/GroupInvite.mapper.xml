@@ -60,24 +60,24 @@
 
   <!-- 获得邀请列表-某人对某人 -->
   <select id="getInvitingList" resultMap="inviteMap" parameterType="java.util.Map">
-  <![CDATA[
     select <include refid="Base_Column_List"/> from wt_GroupInvite
+  <![CDATA[
     where aUserId=#{aUserId,jdbcType=VARCHAR} and bUserId=#{bUserId,jdbcType=VARCHAR} and groupId=#{groupId,jdbcType=VARCHAR} and inviteVector>0 and flag=1
   ]]>
   </select>
 
   <!-- 获得邀请列表-某人对某组 -->
   <select id="getInvitingGroupList" resultMap="inviteMap" parameterType="java.util.Map">
-  <![CDATA[
     select <include refid="Base_Column_List"/> from wt_GroupInvite
+  <![CDATA[
     where aUserId=#{aUserId,jdbcType=VARCHAR} and groupId=#{groupId,jdbcType=VARCHAR} and inviteVector>0 and flag=1
   ]]>
   </select>
 
   <!-- 获得申请列表 -->
   <select id="getApplyList" resultMap="inviteMap" parameterType="java.util.Map">
-  <![CDATA[
     select <include refid="Base_Column_List"/> from wt_GroupInvite
+  <![CDATA[
     where aUserId=#{aUserId,jdbcType=VARCHAR} and bUserId=#{bUserId,jdbcType=VARCHAR} and groupId=#{groupId,jdbcType=VARCHAR} and inviteVector<0 and flag=1
   ]]>
   </select>
@@ -113,8 +113,8 @@
       <if test="groupId!=null">#{groupId,jdbcType=VARCHAR},</if>
       <if test="inviteVector!=null and inviteVector!=0">#{inviteVector,jdbcType=INTEGER},</if>
       <if test="inviteMessage!=null">#{inviteMessage,jdbcType=VARCHAR},</if>
-      <if test="acceptFlag!=null">#{acceptFlag,jdbcType=INTEGER"},</if>
-      <if test="flag!=null and flag!=0">#{flag,jdbcType=INTEGER"},</if>
+      <if test="acceptFlag!=null">#{acceptFlag,jdbcType=INTEGER},</if>
+      <if test="flag!=null and flag!=0">#{flag,jdbcType=INTEGER},</if>
     </trim>
   </insert>
 
@@ -144,6 +144,9 @@
   </update>
   <update id="setFlag2" parameterType="java.lang.String">
     update wt_GroupInvite set flag=2 where groupId=#{value,jdbcType=VARCHAR}
+  </update>
+  <update id="sameUserInviteDea" parameterType="java.util.Map">
+    update wt_GroupInvite set acceptFlag=#{acceptFlag,jdbcType=INTEGER}+2 where groupId=#{groupId,jdbcType=VARCHAR} and bUserId=bUserId=#{bUserId,jdbcType=VARCHAR} and acceptFlag=0 and id!=#{id,jdbcType=VARCHAR}
   </update>
 
   <!-- 删除数据 -->

@@ -9,6 +9,7 @@ import com.woting.WtAppEngineConstants;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.session.mem.SessionMemory;
 import com.woting.appengine.mobile.session.monitor.CleanSessionTask;
+import com.woting.passport.useralias.mem.UserAliasMemoryManage;
 
 /**
  * <pre>会话监听，包括：
@@ -43,6 +44,11 @@ public class SessionListener extends Thread {
             SystemCache.setCache(
                 new CacheEle<String>(WtAppEngineConstants.APP_VERSION, "移动端版本", MobileUtils.getVersion())
             );
+            //加载用户别名内存结构
+            //初始化内存结构
+            UserAliasMemoryManage uamm=UserAliasMemoryManage.getInstance();
+            uamm.initMemory();
+
             //初始化会话的内存结构
             SessionMemory.getInstance();
             startMonitor(); //启动会话监控

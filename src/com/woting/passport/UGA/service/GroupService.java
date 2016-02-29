@@ -502,7 +502,7 @@ public class GroupService {
                     igp=null;
                     if (igl!=null&&!igl.isEmpty()) {
                         for (InviteGroupPo _igp: igl) {
-                            if (igp.getbUserId().equals(beInviteUserId)) {
+                            if (_igp.getbUserId().equals(beInviteUserId)) {
                                 igp=_igp;
                                 break;
                             }
@@ -513,6 +513,7 @@ public class GroupService {
                         oneResult.put("InviteCount", (igp.getInviteVector()+1)+"");
                     } else {
                         igp= new InviteGroupPo();
+                        igp.setId(SequenceUUID.getUUIDSubSegment(4));
                         igp.setaUserId(userId);
                         igp.setbUserId(beInviteUserId);
                         igp.setGroupId(groupId);
@@ -718,6 +719,8 @@ public class GroupService {
                 m.put("DealType", "2");
                 m.put("ReturnType", "1001");
             }
+            //把在同一组邀请同一个人的消息一起都处理掉
+            inviteGroupDao.update("sameUserInviteDeal", igPo);
             inviteGroupDao.update(igPo);//更新组邀请信息
         }
         return m;

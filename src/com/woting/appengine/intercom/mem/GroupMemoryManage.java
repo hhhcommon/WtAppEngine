@@ -48,8 +48,8 @@ public class GroupMemoryManage {
                     this.addOneGroup(g);
                 }
             }
+            this.inited=true;
         }
-        this.inited=true;
     }
 
     //把一个用户组对象加入gicMap
