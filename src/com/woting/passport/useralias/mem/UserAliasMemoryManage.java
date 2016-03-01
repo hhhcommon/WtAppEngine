@@ -41,8 +41,8 @@ public class UserAliasMemoryManage {
         if (this.inited) return;
         ServletContext sc = (ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
         if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-            UserAliasService aliasService = (UserAliasService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("aliasService");
-            List<UserAliasPo> ual = aliasService.getAllAlias();
+            UserAliasService userAliasService = (UserAliasService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("userAliasService");
+            List<UserAliasPo> ual = userAliasService.getAllAlias();
             if (ual!=null&&ual.size()>0) {
                 for (UserAliasPo uaPo: ual) {
                     this.addOneUserAlias(uaPo);

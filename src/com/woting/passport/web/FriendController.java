@@ -353,12 +353,69 @@ public class FriendController {
         }
     }
 
-   /**
+    /**
      * 得到好友列表
      */
     @RequestMapping(value="getList.do")
     @ResponseBody
     public Map<String,Object> getFriendList(HttpServletRequest request) {
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            String userId="";
+            MobileSession ms=null;
+            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                if ((retM.get("ReturnType")+"").equals("2001")) {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取设备Id(IMEI)");
+                } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                    map.put("ReturnType", "200");
+                    map.put("Message", "需要登录");
+                } else {
+                    ms=(MobileSession)retM.get("MobileSession");
+                    map.put("SessionId", ms.getKey().getSessionId());
+                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                }
+                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "无法获取用户Id");
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            List<UserPo> ul=friendService.getFriendList(userId);
+            if (ul!=null&&ul.size()>0) {
+                List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
+                for (UserPo u: ul) {
+                    if (!u.getUserId().equals(userId)) rul.add(u.toHashMap4Mobile());
+                }
+                map.put("ReturnType", "1001");
+                map.put("UserList", rul);
+            } else {
+                map.put("ReturnType", "1011");
+                map.put("Message", "没有好友");
+            }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
+            return map;
+        }
+    }
+
+    /**
+     * 修改好友信息
+     */
+    @RequestMapping(value="updateFriendAlias.do")
+    @ResponseBody
+    public Map<String,Object> updateFriendAlias(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数

@@ -300,6 +300,7 @@ CREATE TABLE wt_SeqMediaAsset (
   smaPublisher      varchar(100)               COMMENT '发布者',
   smaPublisherTime  timestamp                  COMMENT '发布时间',
   smaImg            varchar(100)               COMMENT '媒体图',
+  smaAllCount       int unsigned     NOT NULL  COMMENT '总卷集号，可以为空，这个和总数不同，也可能一样',
   subjectWord       varchar(400)               COMMENT '主题词',
   keyWord           varchar(400)               COMMENT '关键词',
   langDid           varchar(32)                COMMENT '语言字典项Id',
@@ -333,6 +334,7 @@ CREATE TABLE wt_SeqMA_Ref (
   id          varchar(32)    NOT NULL  COMMENT 'uuid(主键)',
   sId         varchar(32)    NOT NULL  COMMENT '系列Id,主表Id',
   mId         varchar(32)    NOT NULL  COMMENT '媒体Id',
+  columnNum   int  unsigned  NOT NULL  COMMENT '卷集号，也是排序号',
   descn       varchar(4000)            COMMENT '关联说明',
   cTime       timestamp      NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
