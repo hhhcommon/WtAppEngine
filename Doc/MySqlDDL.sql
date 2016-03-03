@@ -46,11 +46,11 @@ DROP TABLE IF EXISTS plat_User;
 CREATE TABLE plat_User (
   id             varchar(32)      NOT NULL                COMMENT 'uuid(用户id)',
   userName       varchar(100)               DEFAULT NULL  COMMENT '用户名称——实名',
+  userNum        varchar(32)                              COMMENT '用户号，用于公开的号码，唯一',
   loginName      varchar(15)      NOT NULL                COMMENT '登录账号',
   password       varchar(30)                DEFAULT NULL  COMMENT '密码',
   mailAddress    varchar(100)               DEFAULT NULL  COMMENT '邮箱(非空为一索引)',
   mainPhoneNum   varchar(100)               DEFAULT NULL  COMMENT '用户主手机号码',
-  innerPhoneNum  varchar(100)               DEFAULT NULL  COMMENT '内部通话号码，VOIP',
   userType       int(1) unsigned  NOT NULL                COMMENT '用户分类：1自然人用户，2机构用户',
   userState      int(1)           NOT NULL  DEFAULT '0'   COMMENT '用户状态，0-2,0代表未激活的用户，1代表已激用户，2代表失效用户,3根据邮箱找密码的用户',
   protraitBig    varchar(300)                             COMMENT '用户头像大',
@@ -59,7 +59,8 @@ CREATE TABLE plat_User (
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
   lmTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改：每次更新的时间',
   PRIMARY KEY(id),
-  UNIQUE KEY loginName(loginName) USING BTREE
+  UNIQUE KEY loginName(loginName) USING BTREE,
+  UNIQUE KEY userNum(userNum) USING BTREE
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='003用户表';
 
@@ -99,10 +100,10 @@ CREATE TABLE plat_Group (
   descn          varchar(2000)              DEFAULT NULL  COMMENT '备注',
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
   lmTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改：每次更新的时间',
-  PRIMARY KEY(id)
+  PRIMARY KEY(id),
+  UNIQUE KEY ALTER(groupNum) USING HASH
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='005用户组表';
-ALTER TABLE `plat_group` ADD UNIQUE INDEX `idxGroupNum` (`groupNum`) USING HASH;
 /** 目前和树形组相关的字段pId, sort没有用 */
 
 /**006 PLAT_GROUPUSER(用户组成员)*/
@@ -126,12 +127,12 @@ CREATE TABLE wt_GroupInvite (
   aUserId          varchar(32)   NOT NULL                COMMENT '邀请用户Id，此用户必须在GroupId所在的组',
   bUserId          varchar(32)   NOT NULL                COMMENT '被请用户Id，此用户必须不在GroupId所在的组',
   groupId          varchar(32)   NOT NULL                COMMENT '邀请的组Id',
-  groupManageFlag  int(2)        NOT NULL  DEFAULT 0     COMMENT '组管理员处理类型，只有审核组的邀请需要得到管理员的认可，0未处理,1通过,2拒绝',
   inviteVector     int(2)        NOT NULL  DEFAULT 0     COMMENT '邀请方向(vector)，正数，邀请次数，邀请一次，则增加1；负数，申请次数',
   inviteMessage    varchar(600)                          COMMENT '邀请说明',
   firstInviteTime  timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:首次邀请时间',
   inviteTime       timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '再次邀请时间',
-  acceptFlag       int(1)        NOT NULL  DEFAULT 0     COMMENT '邀请状态：0未处理;1邀请成功;2拒绝邀请，3别人成功，4别人拒绝',
+  acceptFlag       int(1)        NOT NULL  DEFAULT 0     COMMENT '邀请状态：0未处理;1邀请成功;2拒绝邀请，3别人成功，4别人拒绝，5被管理员拒绝',
+  managerFlag      int(2)        NOT NULL  DEFAULT 0     COMMENT '组管理员处理类型，只有审核组的邀请需要得到管理员的认可，0未处理,1通过,2拒绝',
   acceptTime       timestamp               DEFAULT CURRENT_TIMESTAMP  COMMENT '接受/拒绝邀请的时间',
   refuseMessage    varchar(32)                           COMMENT '拒绝邀请理由',
   flag             int(1)       NOT NULL   DEFAULT 1     COMMENT '状态，1=正在用的组；2=组已被删除，这样的记录groupId在Group组中不必有关联主键',
@@ -180,9 +181,11 @@ CREATE TABLE wt_PersonAlias (
   aliasName       varchar(600)           COMMENT '别名名称',
   aliasDescn      varchar(600)           COMMENT '别名用户描述',
   lastModifyTime  timestamp    NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '邀请成功的时间',
-  PRIMARY KEY(id)
+  PRIMARY KEY(id),
+  UNIQUE KEY idxBizKey(typeId, mainUserId, aliasUserId) USING HASH
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='010人员别名列表';
+
 
 
 /**011 vWT_FRIEND_REL(好友关系试图)*/

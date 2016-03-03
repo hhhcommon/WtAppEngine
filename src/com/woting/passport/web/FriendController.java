@@ -18,10 +18,15 @@ import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.friend.service.FriendService;
+import com.woting.passport.useralias.mem.UserAliasMemoryManage;
+import com.woting.passport.useralias.model.UserAliasKey;
+import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
 
 @Controller
 @RequestMapping(value="/passport/friend/")
 public class FriendController {
+    private UserAliasMemoryManage uamm=UserAliasMemoryManage.getInstance();
+
     @Resource
     private FriendService friendService;
     @Resource
@@ -133,21 +138,21 @@ public class FriendController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-获取被邀请人Id
-            String beInviteUserId=(String)m.get("BeInviteUserId");
-            if (StringUtils.isNullOrEmptyOrSpace(beInviteUserId)) {
+            String beInvitedUserId=(String)m.get("BeInvitedUserId");
+            if (StringUtils.isNullOrEmptyOrSpace(beInvitedUserId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "被邀请人Id为空");
                 return map;
             } else {
-                UserPo u=userService.getUserById(beInviteUserId);
+                UserPo u=userService.getUserById(beInvitedUserId);
                 if (u==null) {
                     map.put("ReturnType", "1003");
-                    map.put("Message", "无法获取用户Id为["+beInviteUserId+"]的被邀请用户");
+                    map.put("Message", "无法获取用户Id为["+beInvitedUserId+"]的被邀请用户");
                     return map;
                 }
             }
             String inviteMsg=(String)m.get("InviteMsg");
-            map.putAll(friendService.inviteFriend(userId, beInviteUserId, inviteMsg));
+            map.putAll(friendService.inviteFriend(userId, beInvitedUserId, inviteMsg));
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -392,7 +397,15 @@ public class FriendController {
             if (ul!=null&&ul.size()>0) {
                 List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
                 for (UserPo u: ul) {
-                    if (!u.getUserId().equals(userId)) rul.add(u.toHashMap4Mobile());
+                    Map<String, Object> userViewM=u.toHashMap4Mobile();
+                    //加入别名信息
+                    UserAliasKey uak=new UserAliasKey("FRIEND", userId, u.getUserId());
+                    UserAliasPo uap=uamm.getOneUserAlias(uak);
+                    if (uap!=null) {
+                        userViewM.put("UserAliasName", StringUtils.isNullOrEmptyOrSpace(uap.getAliasName())?u.getLoginName():uap.getAliasName());
+                        userViewM.put("UserAliasDescn", uap.getAliasDescn());
+                    }
+                    if (!u.getUserId().equals(userId)) rul.add(userViewM);
                 }
                 map.put("ReturnType", "1001");
                 map.put("UserList", rul);
@@ -413,9 +426,9 @@ public class FriendController {
     /**
      * 修改好友信息
      */
-    @RequestMapping(value="updateFriendAlias.do")
+    @RequestMapping(value="updateFriendInfo.do")
     @ResponseBody
-    public Map<String,Object> updateFriendAlias(HttpServletRequest request) {
+    public Map<String,Object> updateFriendInfo(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
@@ -440,22 +453,58 @@ public class FriendController {
                 }
                 if (StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
-                    map.put("Message", "无法获取用户Id");
+                    map.put("Message", "无法获取用户");
                 }
             }
             if (map.get("ReturnType")!=null) return map;
 
-            List<UserPo> ul=friendService.getFriendList(userId);
-            if (ul!=null&&ul.size()>0) {
-                List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
-                for (UserPo u: ul) {
-                    if (!u.getUserId().equals(userId)) rul.add(u.toHashMap4Mobile());
-                }
-                map.put("ReturnType", "1001");
-                map.put("UserList", rul);
+
+            //2-好友Id
+            String friendUserId=(String)m.get("FriendUserId");
+            if (StringUtils.isNullOrEmptyOrSpace(friendUserId)) {
+                map.put("ReturnType", "1003");
+                map.put("Message", "好友Id为空");
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            if (friendUserId.equals(userId)) {
+                map.put("ReturnType", "1005");
+                map.put("Message", "好友为自己，无法修改");
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //获得别名和描述
+            String alias=(String)m.get("FriendAliasName");
+            String aliasDescn=(String)m.get("FriendAliasDescn");
+            if (StringUtils.isNullOrEmptyOrSpace(alias)&&StringUtils.isNullOrEmptyOrSpace(aliasDescn)) {
+                map.put("ReturnType", "1005");
+                map.put("Message", "没有可修改信息");
             } else {
-                map.put("ReturnType", "1011");
-                map.put("Message", "没有好友");
+                Map<String, String> updateUserMap=new HashMap<String, String>();
+                updateUserMap.put("mainUserId", userId);
+                updateUserMap.put("friendUserId", friendUserId);
+                updateUserMap.put("alias", alias);
+                updateUserMap.put("aliasDescn", aliasDescn);
+                int retFlag=friendService.updateFriendInfo(updateUserMap);
+                if (retFlag==200) {
+                    map.put("ReturnType", "1007");
+                    map.put("Message", "不是好友无法修改");
+                } else if (retFlag==300||retFlag==-1) {
+                    map.put("ReturnType", "1006");
+                    map.put("Message", "没有可修改信息");
+                } else if (retFlag==-2) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "无法获取用户");
+                } else if (retFlag==-3) {
+                    map.put("ReturnType", "1004");
+                    map.put("Message", "好友不存在");
+                } else if (retFlag==0) {
+                    map.put("ReturnType", "10011");
+                    map.put("Message", "无需修改");
+                } else {
+                    map.put("ReturnType", "1001");
+                    map.put("Message", "修改成功");
+                }
             }
             return map;
         } catch(Exception e) {

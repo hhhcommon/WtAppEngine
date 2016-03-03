@@ -89,4 +89,20 @@ public class UserAliasMemoryManage {
             }
         }
     }
+
+    /**
+     * 删除某一用户组下的某一个用户
+     * @param groupId 用户组Id
+     * @param userId 用户Id
+     */
+    public void delUserAliasInGroup(String groupId, String userId) {
+        if (this.uam.aliasMap!=null&&!this.uam.aliasMap.isEmpty()) {
+            for (String k: this.uam.aliasMap.keySet()) {
+                UserAliasPo uap=this.uam.aliasMap.get(k);
+                if (groupId.equals(uap.getTypeId())&&(uap.getMainUserId().equals(userId)||uap.getAliasUserId().equals(userId))) {
+                    this.uam.aliasMap.remove(k);
+                }
+            }
+        }
+    }
 }

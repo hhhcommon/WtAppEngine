@@ -20,6 +20,7 @@ public class InviteGroupPo extends BaseObject {
     private Timestamp firstInviteTime; //创建时间:首次邀请时间
     private Timestamp inviteTime; //创建时间:本次邀请时间
     private int acceptFlag; //邀请状态：0未处理;1邀请成功;2拒绝邀请
+    private int managerFlag; //组管理员处理类型，只有审核组的邀请需要得到管理员的认可，0未处理,1通过,2拒绝
     private Timestamp acceptTime; //接受/拒绝邀请的时间
     private String refuseMessage; //当前邀请说明文字
     private String flag; //状态，1=正在用的组；2=组已被删除，这样的记录groupId在Group组中不必有关联主键
@@ -77,6 +78,12 @@ public class InviteGroupPo extends BaseObject {
     }
     public void setAcceptFlag(int acceptFlag) {
         this.acceptFlag = acceptFlag;
+    }
+    public int getManagerFlag() {
+        return managerFlag;
+    }
+    public void setManagerFlag(int managerFlag) {
+        this.managerFlag = managerFlag;
     }
     public Timestamp getAcceptTime() {
         return acceptTime;

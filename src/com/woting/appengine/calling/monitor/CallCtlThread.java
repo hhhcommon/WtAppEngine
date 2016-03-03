@@ -180,10 +180,10 @@ public class CallCtlThread extends Thread {
             Map<String, Object> callerInfo=new HashMap<String, Object>();
             UserPo u=(UserPo)smm.getActivedUserSessionByUserId(callerId).getAttribute("user");
             callerInfo.put("UserName", u.getLoginName());
-            callerInfo.put("InnerPhoneNum", u.getInnerPhoneNum());
+            callerInfo.put("UserNum", u.getUserNum());
             callerInfo.put("Portrait", u.getProtraitMini());
             callerInfo.put("Mail", u.getMailAddress());
-            callerInfo.put("Desc", u.getDescn());
+            callerInfo.put("Descn", u.getDescn());
             dataMap.put("CallerInfo", callerInfo);
 
             pmm.getSendMemory().addMsg2Queue(smm.getActivedUserSessionByUserId(callederId).getKey(), toCallederMsg);

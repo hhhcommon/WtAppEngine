@@ -3,10 +3,10 @@ package com.woting.passport.web;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -15,15 +15,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.SequenceUUID;
+import com.spiritdata.framework.util.SpiritRandom;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.model.MobileParam;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.appengine.mobile.session.model.MobileSession;
-import com.woting.passport.UGA.persistence.pojo.GroupPo;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.GroupService;
 import com.woting.passport.UGA.service.UserService;
@@ -292,23 +291,78 @@ public class PassportController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-
             String phoneNum=(String)m.get("PhoneNum");
             String mail=(String)m.get("MailAddr");
-            if (StringUtils.isNullOrEmptyOrSpace(phoneNum)&&StringUtils.isNullOrEmptyOrSpace(mail)) {
+            String userNum=(String)m.get("UserNum");
+            if (StringUtils.isNullOrEmptyOrSpace(phoneNum)&&StringUtils.isNullOrEmptyOrSpace(mail)&&StringUtils.isNullOrEmptyOrSpace(userNum)) {
                 map.put("ReturnType", "1003");
-                map.put("Message", "邮箱或手机号码不能同时为空");
+                map.put("Message", "邮箱、手机号码或用户号不能同时为空");
             } else {
                 UserPo u=(UserPo)ms.getAttribute("user");
+                if (!StringUtils.isNullOrEmptyOrSpace(userNum)) u.setUserNum(userNum);
                 if (!StringUtils.isNullOrEmptyOrSpace(phoneNum)) u.setMainPhoneNum(phoneNum);
                 if (!StringUtils.isNullOrEmptyOrSpace(mail)) u.setMailAddress(mail);
                 int retFlag=userService.updateUser(u);
                 if (retFlag==1) map.put("ReturnType", "1001");
-                else {
+                else if (retFlag==1) {
+                    map.put("ReturnType", "10011");
+                    map.put("Message", "用户号重复，其他信息保存成功");
+                } else {
                     map.put("ReturnType", "1004");
                     map.put("Message", "存储账户绑定信息失败");
                 }
             }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
+            return map;
+        }
+    }
+
+    /**
+     * 随机获得可用的用户号码
+     */
+    @RequestMapping(value="user/getRandomUserNum.do")
+    @ResponseBody
+    public Map<String,Object> getRandomUserNum(HttpServletRequest request) {
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            String userId="";
+            MobileSession ms=null;
+            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                if ((retM.get("ReturnType")+"").equals("2001")) {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取设备Id(IMEI)");
+                } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                    map.put("ReturnType", "200");
+                    map.put("Message", "需要登录");
+                } else {
+                    ms=(MobileSession)retM.get("MobileSession");
+                    map.put("SessionId", ms.getKey().getSessionId());
+                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                }
+                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "无法获取用户Id");
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+            int newUserNum=getNewUserNumber();
+            while (true) {
+                if (userService.getUserByNum("u"+newUserNum)==null) break;
+                newUserNum=getNewUserNumber();
+            }
+            map.put("ReturnType", "1001");
+            map.put("NewUserNum", "u"+newUserNum);
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -471,10 +525,11 @@ public class PassportController {
                     gm.put("GroupType", g.get("groupType"));
                     gm.put("GroupImg", g.get("groupImg"));
                     gm.put("GroupName", g.get("groupName"));
+                    gm.put("groupSignature", g.get("groupSignature"));
                     gm.put("GroupCreator", g.get("createUserId"));
                     gm.put("GroupManager", g.get("adminUserIds"));
                     gm.put("GroupCount", g.get("groupCound"));
-                    gm.put("GroupOriDesc", g.get("descn"));
+                    gm.put("GroupOriDescn", g.get("descn"));
                     gm.put("GroupMyDesc", g.get("groupDescn"));
                     gm.put("GroupMyAlias", g.get("groupAlias"));
                     rgl.add(gm);
@@ -508,6 +563,14 @@ public class PassportController {
             map.put("Message", e.getMessage());
             return map;
         }
+    }
+
+    /*
+     * 获得新的用户编码
+     * @return
+     */
+    private int getNewUserNumber() {
+        return SpiritRandom.getRandom(new Random(), 0, 999999);
     }
 }
 

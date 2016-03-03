@@ -25,6 +25,8 @@ import com.woting.passport.UGA.persistence.pojo.GroupPo;
 import com.woting.passport.UGA.persistence.pojo.GroupUserPo;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.groupinvite.persistence.pojo.InviteGroupPo;
+import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
+import com.woting.passport.useralias.service.UserAliasService;
 
 /**
  * 用户组处理，包括创建组，查询组；组邀请等信息
@@ -41,7 +43,8 @@ public class GroupService {
     private MybatisDAO<GroupPo> groupDao;
     @Resource(name="defaultDAO")
     private MybatisDAO<InviteGroupPo> inviteGroupDao;
-
+    @Resource
+    private UserAliasService userAliasService;
 
     @PostConstruct
     public void initParam() {
@@ -391,7 +394,11 @@ public class GroupService {
                 }
             }
         }
-        if (upl.size()==1) {//删除组
+        //删除组内成员的别名
+        userAliasService.delUserAliasInGroup(groupId, u.getUserId());
+
+        //删除组
+        if (upl.size()==1) {
             gmm.delOneGroup(g);
             groupDao.delete(gp.getGroupId());
             //删除所有的组内人员信息
@@ -400,6 +407,8 @@ public class GroupService {
             groupDao.delete("deleteGroupUser", param);
             //处理组邀请信息表，把flag设置为2
             inviteGroupDao.update("setFlag2", groupId);
+            //删除组内所有成员的别名
+            userAliasService.delAliasInGroup(groupId);
             return 2;
         } else {
             if (u.getUserId().equals(gp.getAdminUserIds())) {
@@ -446,12 +455,13 @@ public class GroupService {
     /**
      * 用户邀请
      * @param userId 邀请用户
-     * @param inviteUserIds 被邀请用户，以逗号隔开
+     * @param invitedUserIds 被邀请用户，以逗号隔开
      * @param groupId 用户组Id
      * @param inviteMsg 邀请信息
+     * @param isManager 是否是管理员
      * @return
      */
-    public Map<String, Object> inviteGroup(String userId, String beInviteUserIds, String groupId, String inviteMsg) {
+    public Map<String, Object> inviteGroup(String userId, String beInvitedUserIds, String groupId, String inviteMsg, int isManaager) {
         Map<String, Object> m=new HashMap<String, Object>();
 
         //1、判断邀请人是否在组
@@ -466,7 +476,7 @@ public class GroupService {
             }
         }
         if (!find) {
-            m.put("ReturnType", "1005");
+            m.put("ReturnType", "1006");
             m.put("RefuseMsg", "邀请人不在用户组");
         } else {
             m.put("ReturnType", "1001");
@@ -483,15 +493,15 @@ public class GroupService {
             resultM.put("ResultList", resultList);
 
             InviteGroupPo igp=null;
-            String[] ua=beInviteUserIds.split(",");
-            for (String beInviteUserId: ua) {
+            String[] ua=beInvitedUserIds.split(",");
+            for (String beInvitedUserId: ua) {
                 Map<String, String> oneResult=new HashMap<String, String>();
-                oneResult.put("UserId", beInviteUserId);
+                oneResult.put("UserId", beInvitedUserId);
                 find=false;
                 //是否已在用户组
                 if (gul!=null&&!gul.isEmpty()) {
                     for (UserPo up: gul) {
-                        if (up.getUserId().equals(beInviteUserId)) {
+                        if (up.getUserId().equals(beInvitedUserId)) {
                             find=true;
                             break;
                         }
@@ -502,7 +512,7 @@ public class GroupService {
                     igp=null;
                     if (igl!=null&&!igl.isEmpty()) {
                         for (InviteGroupPo _igp: igl) {
-                            if (_igp.getbUserId().equals(beInviteUserId)) {
+                            if (_igp.getbUserId().equals(beInvitedUserId)) {
                                 igp=_igp;
                                 break;
                             }
@@ -515,10 +525,13 @@ public class GroupService {
                         igp= new InviteGroupPo();
                         igp.setId(SequenceUUID.getUUIDSubSegment(4));
                         igp.setaUserId(userId);
-                        igp.setbUserId(beInviteUserId);
+                        igp.setbUserId(beInvitedUserId);
                         igp.setGroupId(groupId);
                         igp.setInviteMessage(inviteMsg);
                         igp.setInviteVector(1);
+                        igp.setManagerFlag(0);
+                        //如果是系统管理员，要自动设置为已经管理员审核
+                        if (isManaager==1) igp.setManagerFlag(1);
                         inviteGroupDao.insert(igp);
                         oneResult.put("InviteCount", "1");
                     }
@@ -568,7 +581,7 @@ public class GroupService {
             if (igl!=null&&igl.size()>0) {
                 for (InviteGroupPo igp: igl) {
                     if (igp.getAcceptFlag()==0) {
-                        m.put("ReturnType", "1007");
+                        m.put("ReturnType", "1006");
                         m.put("RefuseMsg", "您已申请");
                         inviteGroupDao.update("againApply", igp.getId());
                         m.put("ApplyCount", Math.abs(igp.getInviteVector()-1));
@@ -633,8 +646,10 @@ public class GroupService {
         int ret=0;
         if (g.getGroupName()!=null&&g.getGroupName().equals(oneWord)) ret+=30;
         if (g.getGroupNum()!=null&&g.getGroupNum().equals(oneWord)) ret+=30;
+        if (g.getGroupSignature()!=null&&g.getGroupSignature().equals(oneWord)) ret+=30;
         if (g.getGroupName()!=null&&g.getGroupName().indexOf(oneWord)>0) ret+=10;
         if (g.getGroupNum()!=null&&g.getGroupNum().indexOf(oneWord)>0) ret+=10;
+        if (g.getGroupSignature()!=null&&g.getGroupSignature().indexOf(oneWord)>0) ret+=10;
         List<UserPo> ul=g.getUserList();
         UserPo up;
         String userName;
@@ -656,6 +671,15 @@ public class GroupService {
      */
     public List<Map<String, Object>> getInviteGroupList(String userId) {
         return inviteGroupDao.queryForListAutoTranform("inviteMeGroupList", userId);
+    }
+
+    /**
+     * 获得邀请我的组的列表
+     * @param userId
+     * @return
+     */
+    public List<Map<String, Object>> getNeedCheckInviteUserGroupList(String userId) {
+        return inviteGroupDao.queryForListAutoTranform("needCheckInviteUserGroupList", userId);
     }
 
     /**
@@ -727,7 +751,65 @@ public class GroupService {
     }
 
     /**
-     * 更新用户，更新用户的信息，不对对讲组内存结构进行广播，单要修改
+     * 审核接收或拒绝
+     * @param inviteUserId 邀请人
+     * @param beInvitedUserId 被邀请人
+     * @param groupId 用户组Id
+     * @param isRefuse 是否拒绝
+     * @param refuseMsg 拒绝理由
+     * @return
+     */
+    public Map<String, Object>  dealCheck(String inviteUserId, String beInvitedUserId, String groupId, boolean isRefuse, String refuseMsg) {
+        Map<String, Object> m=new HashMap<String, Object>();
+        if (userDao.getInfoObject("getUserById", inviteUserId)==null) {
+            m.put("ReturnType", "10041");
+            m.put("Message", "邀请人不存在");
+            return m;
+        }
+        if (userDao.getInfoObject("getUserById", beInvitedUserId)==null) {
+            m.put("ReturnType", "10051");
+            m.put("Message", "被邀请人不存在");
+            return m;
+        }
+        Map<String, Object> param=new HashMap<String, Object>();
+
+        param.put("aUserId", inviteUserId);
+        param.put("bUserId", beInvitedUserId);
+        param.put("groupId", groupId);
+        List<InviteGroupPo> igl=inviteGroupDao.queryForList("getInvitingList", param);
+
+        if (igl==null||igl.size()==0) {
+            m.put("ReturnType", "1006");
+            m.put("Message", "没有邀请信息，不能处理");
+        } else {
+            InviteGroupPo igPo=igl.get(0);
+            if (igPo.getAcceptFlag()!=0) {
+                m.put("ReturnType", "1007");
+                if (igPo.getAcceptFlag()==1||igPo.getAcceptFlag()==3) m.put("Message", "邀请已被接收");
+                if (igPo.getAcceptFlag()==2||igPo.getAcceptFlag()==4) m.put("Message", "邀请已被拒绝");
+            } else {
+                if (igPo.getManagerFlag()!=0) {
+                    m.put("ReturnType", "1007");
+                    if (igPo.getManagerFlag()==1) m.put("Message", "管理员已同意这个申请");
+                    if (igPo.getManagerFlag()==2) m.put("Message", "管理员已拒绝这个申请");
+                } else {//真正的处理
+                    if (isRefuse) {
+                        igPo.setAcceptFlag(5);
+                        igPo.setManagerFlag(2);
+                    } else {
+                        igPo.setManagerFlag(1);
+                    }
+                    igPo.setRefuseMessage(refuseMsg);
+                    inviteGroupDao.update(igPo);//更新组邀请信息
+                }
+                m.put("ReturnType", "1001");
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 更新用户，更新用户的信息，不对对讲组内存结构进行广播，但要修改
      * @param userId 修改者id
      * @param g 所修改的组对象
      * @param newInfo 所修改的新信息
@@ -737,28 +819,13 @@ public class GroupService {
         if (g.getAdminUserIds().equals(userId)) { //修改组本身信息
             if (newInfo.get("groupDescn")!=null) g.setDescn(newInfo.get("groupDescn")+"");
             if (newInfo.get("groupName")!=null) g.setGroupName(newInfo.get("groupName")+"");
+            if (newInfo.get("groupSignature")!=null) g.setGroupSignature(newInfo.get("groupSignature")+"");
             this.updateGroup(g);
         }
         if (newInfo.get("groupName")!=null) newInfo.put("groupAlias", newInfo.get("groupName"));
         newInfo.put("groupId", g.getGroupId());
         newInfo.put("userId", userId);
         groupDao.update("updateGroupUserByUserIdGroupId", newInfo);
-    }
-
-    class CompareGroupMsg implements CompareMsg {
-        @Override
-        public boolean compare(Message msg1, Message msg2) {
-            if (msg1.getFromAddr().equals(msg2.getFromAddr())
-              &&msg1.getToAddr().equals(msg2.getToAddr())
-              &&msg1.getMsgBizType().equals(msg2.getMsgBizType())
-              &&msg1.getCmdType().equals(msg2.getCmdType())
-              &&msg1.getCommand().equals(msg2.getCommand()) ) {
-                if (msg1.getMsgContent()==null&&msg2.getMsgContent()==null) return true;
-                if (((msg1.getMsgContent()!=null&&msg2.getMsgContent()!=null))
-                  &&(((Map)msg1.getMsgContent()).get("GroupId").equals(((Map)msg2.getMsgContent()).get("GroupId")))) return true;
-            }
-            return false;
-        }
     }
 
     /**
@@ -836,6 +903,8 @@ public class GroupService {
                         }
                     }
                 }
+                //删除别名
+                userAliasService.delUserAliasInGroup(groupId, up.getUserId());
             }
         }
         //都处理后的处理
@@ -849,6 +918,8 @@ public class GroupService {
             //处理组邀请信息表，把flag设置为2
             inviteGroupDao.update("setFlag2", groupId);
             ret.put("DeleteGroup", "1");//返回值，告诉调用者，由于组内人员只有1人，所以要删除组
+            //删除组内所有成员的别名
+            userAliasService.delAliasInGroup(groupId);
         }
         //发送广播消息，把退出用户的消息通知大家
         if (oldUpl!=null&&!oldUpl.isEmpty()) {
@@ -912,6 +983,8 @@ public class GroupService {
             groupDao.delete("deleteGroupUser", param);
             //处理组邀请信息表，把flag设置为2
             inviteGroupDao.update("setFlag2", groupId);
+            //删除组内所有成员的别名
+            userAliasService.delAliasInGroup(groupId);
 
             //发送广播消息，把退出用户的消息通知大家
             if (upl!=null&&!upl.isEmpty()) {
@@ -943,5 +1016,133 @@ public class GroupService {
             ret.put("ReturnType", "1001");
         }
         return ret;
+    }
+
+    /**
+     * 移交管理员权限
+     * @param gp 组对象
+     * @param toUserId 被移交用户Id
+     * @return
+     */
+    public Map<String, Object> changGroupAdminner(GroupPo gp, String toUserId) {
+        String groupId=gp.getGroupId();
+        GroupInterCom gic = gmm.getGroupInterCom(groupId);
+        Group g=null;
+        List<UserPo> upl = null;
+        if (gic!=null) {
+            g=gic.getGroup();
+            upl=g.getUserList();
+        } else {
+            upl=userDao.queryForList("getGroupMembers", groupId);
+            g=new Group();
+            g.buildFromPo(gp);
+        }
+
+        Map<String, Object> ret=new HashMap<String, Object>();
+        boolean find=false;
+        if (upl!=null&&!upl.isEmpty()) {
+            for (UserPo _up:upl) {
+                if (_up.getUserId().equals(toUserId)) {
+                    find=true;
+                    break;
+                }
+            }
+        }
+        if (!find) {
+            ret.put("ReturnType", "10041");
+            ret.put("Message", "被移交用户不在该组");
+        } else {
+            Map<String, Object> param=new HashMap<String, Object>();
+            param.put("id", gp.getGroupId());
+            param.put("adminUserIds", toUserId);
+            groupDao.update(param);
+            ret.put("ReturnType", "1001");
+        }
+        return ret;
+    }
+
+    public Map<String, Object>  updateGroupUser(Map<String, String> param, String userId, GroupPo gp) {
+        String groupId=gp.getGroupId();
+        GroupInterCom gic = gmm.getGroupInterCom(groupId);
+        Group g=null;
+        List<UserPo> upl = null;
+        if (gic!=null) {
+            g=gic.getGroup();
+            upl=g.getUserList();
+        } else {
+            upl=userDao.queryForList("getGroupMembers", groupId);
+            g=new Group();
+            g.buildFromPo(gp);
+        }
+        String updateUserId=param.get("udpateUserId");
+
+        Map<String, Object> ret=new HashMap<String, Object>();
+        if (userId.equals(updateUserId)) {
+            ret.put("ReturnType", "1006");
+            ret.put("Message", "修改人和被修改人不能是同一个人");
+        } else {
+            boolean find=false;
+            boolean find2=false;
+            if (upl!=null&&!upl.isEmpty()) {
+                for (UserPo _up:upl) {
+                    if (!find) find=_up.getUserId().equals(updateUserId);
+                    if (!find2) find2=_up.getUserId().equals(userId);
+                    if (find&&find2) break;
+                }
+            }
+            if (!find) {
+                ret.put("ReturnType", "10041");
+                ret.put("Message", "被修改用户不在该组");
+            } else {
+                if (!find2) {
+                    ret.put("ReturnType", "10021");
+                    ret.put("Message", "修改用户不在该组");
+                } else {
+                    UserAliasPo uaPo=new UserAliasPo();
+                    uaPo.setTypeId(gp.getGroupId());
+                    uaPo.setMainUserId(userId);
+                    uaPo.setAliasUserId(updateUserId);
+                    uaPo.setAliasName(param.get("userAliasName"));
+                    uaPo.setAliasDescn(param.get("userAliasDescn"));
+                    int flag=userAliasService.save(uaPo);
+                    if (flag==-1) {
+                        ret.put("ReturnType", "1005");
+                        ret.put("Message", "无法获得修改所需的新信息");
+                    } else if (flag==-2) {
+                        ret.put("ReturnType", "1002");
+                        ret.put("Message", "无法得到修改用户");
+                    } else if (flag==-3) {
+                        ret.put("ReturnType", "1004");
+                        ret.put("Message", "无法得到被修改用户");
+                    } else if (flag==1) {
+                        ret.put("ReturnType", "1001");
+                        ret.put("Message", "新增了用户组内别名");
+                    } else if (flag==2) {
+                        ret.put("ReturnType", "10011");
+                        ret.put("Message", "修改了用户组内别名");
+                    } else {
+                        ret.put("ReturnType", "10012");
+                        ret.put("Message", "无需修改");
+                    }
+                }
+            }
+        }
+        return ret;
+    }
+
+    class CompareGroupMsg implements CompareMsg {
+        @Override
+        public boolean compare(Message msg1, Message msg2) {
+            if (msg1.getFromAddr().equals(msg2.getFromAddr())
+              &&msg1.getToAddr().equals(msg2.getToAddr())
+              &&msg1.getMsgBizType().equals(msg2.getMsgBizType())
+              &&msg1.getCmdType().equals(msg2.getCmdType())
+              &&msg1.getCommand().equals(msg2.getCommand()) ) {
+                if (msg1.getMsgContent()==null&&msg2.getMsgContent()==null) return true;
+                if (((msg1.getMsgContent()!=null&&msg2.getMsgContent()!=null))
+                  &&(((Map)msg1.getMsgContent()).get("GroupId").equals(((Map)msg2.getMsgContent()).get("GroupId")))) return true;
+            }
+            return false;
+        }
     }
 }

@@ -39,7 +39,7 @@ public class UserAliasService {
 
     /**
      * 保存用户别名，包括新增和修改
-     * @return -1别名或别名描述为空,-2主用户不存在;-3别名用户不存在,1新增成功;2修改成功;0不许要保存
+     * @return -1别名或别名描述为空,-2主用户不存在;-3别名用户不存在,1新增成功;2修改成功;0不需要保存
      */
     public int save(UserAliasPo uaPo) {
         if (StringUtils.isNullOrEmptyOrSpace(uaPo.getAliasName())&&StringUtils.isNullOrEmptyOrSpace(uaPo.getAliasDescn())) {
@@ -51,6 +51,7 @@ public class UserAliasService {
         aliasUser=userDao.getInfoObject("getUserById", uaPo.getAliasUserId());
         if (aliasUser==null) return -3;
 
+        
         //检查内存中是否存在
         UserAliasPo _uaPo = uamm.getOneUserAlias(uaPo.getAliasKey());
         if (_uaPo==null) {//加入，插入
@@ -65,11 +66,9 @@ public class UserAliasService {
         //修改
         if (uaPo.equals(_uaPo)) return 0;
         else {
-            if (StringUtils.isNullOrEmptyOrSpace(uaPo.getAliasName())) {
-                uaPo.setAliasName(_uaPo.getAliasName());
-            }
+            if (StringUtils.isNullOrEmptyOrSpace(uaPo.getAliasName())) uaPo.setAliasName(_uaPo.getAliasName());
             uamm.addOneUserAlias(uaPo);
-            userAliasDao.update(uaPo);
+            userAliasDao.update("updateByKey", uaPo);
             return 2;
         }
     }
@@ -87,10 +86,27 @@ public class UserAliasService {
      * 删除某一用户群组下的所有别名
      * @param uaPo
      */
-    public void delAliasInOneGroup(String groupId) {
+    public void delAliasInGroup(String groupId) {
         Map<String, Object> param=new HashMap<String, Object>();
         param.put("typeId", groupId);
         userAliasDao.delete("deleteByEntity", param);
         uamm.delAliasInOneGroup(groupId);
+    }
+
+    /**
+     * 删除某一用户群组下的所有别名
+     * @param uaPo
+     */
+    public void delUserAliasInGroup(String groupId, String userId) {
+        Map<String, Object> param=new HashMap<String, Object>();
+        param.put("typeId", groupId);
+        param.put("mainUserId", userId);
+        userAliasDao.delete("deleteByEntity", param);
+        param.clear();
+        param.put("typeId", groupId);
+        param.put("aliasUserId", userId);
+        userAliasDao.delete("deleteByEntity", param);
+
+        uamm.delUserAliasInGroup(groupId, userId);
     }
 }

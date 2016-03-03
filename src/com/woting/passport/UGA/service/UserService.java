@@ -64,13 +64,20 @@ public class UserService implements UgaUserService {
     /**
      * 更新用户
      * @param user 用户信息
-     * @return 更新用户成功返回1，否则返回0
+     * @return 更新用户成功返回1，否则返回0，返回2说明用户号码重复
      */
     public int updateUser(UserPo user) {
         int i=0;
         try {
+            //看userNum是否重复
+            boolean existUserNum=false;
+            if (!StringUtils.isNullOrEmptyOrSpace(user.getUserNum())) {
+                UserPo _u=userDao.getInfoObject("getUserByNum", user.getUserNum());
+                if (_u!=null) existUserNum=true;
+            }
+            if (existUserNum) user.setUserNum(null);
             userDao.update(user);
-            i=1;
+            return existUserNum?2:1;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -90,5 +97,14 @@ public class UserService implements UgaUserService {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * 根据用户号码获得用户信息
+     * @param userNum 用户号码
+     * @return 用户信息
+     */
+    public UserPo getUserByNum(String userNum) {
+        return userDao.getInfoObject("getUserByNum", userNum);
     }
 }

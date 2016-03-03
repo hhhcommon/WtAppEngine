@@ -123,13 +123,7 @@ public class DealInterCom extends Thread {
                 for (String k: entryGroupUsers.keySet()) {
                     up=entryGroupUsers.get(k);
                     um=new HashMap<String, Object>();
-                    //TODO 这里的号码可能还需要处理
                     um.put("UserId", up.getUserId());
-                    um.put("UserName", up.getLoginName());
-                    um.put("InnerPhoneNum", up.getInnerPhoneNum());
-                    um.put("Portrait", up.getProtraitMini());
-                    um.put("Mail", up.getMailAddress());
-                    um.put("Desc", up.getDescn());
                     inGroupUsers.add(um);
                 }
                 dataMap.put("InGroupUsers", inGroupUsers);
@@ -205,11 +199,6 @@ public class DealInterCom extends Thread {
                     um=new HashMap<String, Object>();
                     //TODO 这里的号码可能还需要处理
                     um.put("UserId", up.getUserId());
-                    um.put("UserName", up.getLoginName());
-                    um.put("InnerPhoneNum", up.getInnerPhoneNum());
-                    um.put("Portrait", up.getProtraitMini());
-                    um.put("Mail", up.getMailAddress());
-                    um.put("Desc", up.getDescn());
                     inGroupUsers.add(um);
                 }
                 dataMap.put("InGroupUsers", inGroupUsers);
@@ -287,7 +276,6 @@ public class DealInterCom extends Thread {
                 bMsg.setCommand("b1");
                 dataMap=new HashMap<String, Object>();
                 dataMap.put("GroupId", groupId);
-                dataMap.put("GroupPhoneNum", "3000"); //TODO 这个需要修改
                 dataMap.put("TalkUserId", mk.getUserId());
                 bMsg.setMsgContent(dataMap);
                 //发送广播消息

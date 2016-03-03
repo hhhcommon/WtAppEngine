@@ -16,6 +16,7 @@
     <result  column="firstInviteTime"  property="firstInviteTime"  jdbcType="TIMESTAMP"/>
     <result  column="inviteTime"       property="inviteTime"       jdbcType="TIMESTAMP"/>
     <result  column="acceptFlag"       property="acceptFlag"       jdbcType="INTEGER"/>
+    <result  column="managerFlag"      property="managerFlag"      jdbcType="INTEGER"/>
     <result  column="acceptTime"       property="acceptTime"       jdbcType="TIMESTAMP"/>
     <result  column="refuseMessage"    property="refuseMessage"    jdbcType="VARCHAR"/>
     <result  column="flag"             property="flag"             jdbcType="INTEGER"/>
@@ -23,7 +24,7 @@
 
   <!-- 所有列 -->
   <sql id="Base_Column_List">
-    id, aUserId, bUserId, groupId, inviteVector, inviteMessage, firstInviteTime, inviteTime, acceptFlag, acceptTime, refuseMessage
+    id, aUserId, bUserId, groupId, inviteVector, inviteMessage, firstInviteTime, inviteTime, acceptFlag, managerFlag, acceptTime, refuseMessage
   </sql>
 
   <!-- 条件子句 -->
@@ -39,6 +40,7 @@
         <if test="firstInviteTime!=null"> and firstInviteTime=#{firstInviteTime,jdbcType=TIMESTAMP}</if>
         <if test="inviteTime!=null"> and inviteTime=#{inviteTime,jdbcType=TIMESTAMP}</if>
         <if test="acceptFlag!=null"> and acceptFlag=#{acceptFlag,jdbcType=INTEGER}</if>
+        <if test="managerFlag!=null"> and managerFlag=#{managerFlag,jdbcType=INTEGER}</if>
         <if test="acceptTime!=null"> and acceptTime=#{acceptTime,jdbcType=TIMESTAMP}</if>
         <if test="refuseMessage!=null"> and refuseMessage=#{refuseMessage,jdbcType=VARCHAR}</if>
         <if test="flag!=null and flag!=0"> and flag=#{flag,jdbcType=VARCHAR}</if>
@@ -104,6 +106,7 @@
       <if test="inviteVector!=null and inviteVector!=0">inviteVector,</if>
       <if test="inviteMessage!=null">inviteMessage,</if>
       <if test="acceptFlag!=null">acceptFlag,</if>
+      <if test="managerFlag!=null">managerFlag,</if>
       <if test="flag!=null and flag!=0">flag,</if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
@@ -114,6 +117,7 @@
       <if test="inviteVector!=null and inviteVector!=0">#{inviteVector,jdbcType=INTEGER},</if>
       <if test="inviteMessage!=null">#{inviteMessage,jdbcType=VARCHAR},</if>
       <if test="acceptFlag!=null">#{acceptFlag,jdbcType=INTEGER},</if>
+      <if test="managerFlagFlag!=null">#{managerFlag,jdbcType=INTEGER},</if>
       <if test="flag!=null and flag!=0">#{flag,jdbcType=INTEGER},</if>
     </trim>
   </insert>
@@ -130,6 +134,7 @@
       <if test="firstInviteTime!=null">firstInviteTime=#{firstInviteTime,jdbcType=TIMESTAMP},</if>
       <if test="inviteTime!=null">inviteTime=#{inviteTime,jdbcType=TIMESTAMP},</if>
       <if test="acceptFlag!=null">acceptFlag=#{acceptFlag,jdbcType=INTEGER},</if>
+      <if test="managerFlagFlag!=null">managerFlag=#{managerFlag,jdbcType=INTEGER},</if>
       <if test="acceptTime!=null">acceptTime=#{acceptTime,jdbcType=TIMESTAMP},</if>
       <if test="refuseMessage!=null">refuseMessage=#{refuseMessage,jdbcType=VARCHAR},</if>
       <if test="flag!=null and flag!=0">flag=#{flag,jdbcType=INTEGER},</if>
@@ -145,7 +150,7 @@
   <update id="setFlag2" parameterType="java.lang.String">
     update wt_GroupInvite set flag=2 where groupId=#{value,jdbcType=VARCHAR}
   </update>
-  <update id="sameUserInviteDea" parameterType="java.util.Map">
+  <update id="sameUserInviteDeal" parameterType="java.util.Map">
     update wt_GroupInvite set acceptFlag=#{acceptFlag,jdbcType=INTEGER}+2 where groupId=#{groupId,jdbcType=VARCHAR} and bUserId=bUserId=#{bUserId,jdbcType=VARCHAR} and acceptFlag=0 and id!=#{id,jdbcType=VARCHAR}
   </update>
 
@@ -159,34 +164,51 @@
 
   <!-- 邀请我的组的列表 -->
   <select id="inviteMeGroupList" resultType="java.util.HashMap" parameterType="java.lang.String">
-  <![CDATA[
-    select a.inviteMessage, a.inviteVector, b.groupName, b.descn groupDescn,
-      b.groupName, b.descn groupDescn, b.groupImg, b.groupNum, c.id userId,
+    select a.inviteMessage, a.inviteVector, b.groupName, b.descn groupDescn, b.groupSignature,
+      b.groupName, b.descn groupDescn, b.groupImg, b.groupNum, c.id userId, a.inviteTime,
       c.loginName, c.mailAddress, c.mainPhoneNum, c.descn userDescn, c.protraitBig, c.protraitMini
     from wt_GroupInvite a, plat_Group b, plat_User c
+  <![CDATA[
     where a.groupId=b.id and a.aUserId=c.id and a.flag=1 and a.acceptFlag=0 and a.inviteVector>0
-    and a.bUserId=#{value,jdbcType=VARCHAR}
   ]]>
+    and (b.groupType!=0 or (b.groupType=0 and a.managerFlag=1))
+    and a.bUserId=#{value,jdbcType=VARCHAR}
+    order by a.inviteTime desc
+  </select>
+
+  <!-- 需审核的用户邀请信息 -->
+  <select id="needCheckInviteUserGroupList" resultType="java.util.HashMap" parameterType="java.lang.String">
+    select a.inviteMessage, a.inviteVector, b.groupName, b.descn groupDescn, b.groupSignature, a.aUserId inviteUserId,
+      b.groupName, b.descn groupDescn, b.groupImg, b.groupNum, c.id userId, a.inviteTime,
+      c.loginName, c.mailAddress, c.mainPhoneNum, c.descn userDescn, c.protraitBig, c.protraitMini
+    from wt_GroupInvite a, plat_Group b, plat_User c
+  <![CDATA[
+    where a.groupId=b.id and a.bUserId=c.id and a.flag=1 and a.acceptFlag=0 and a.inviteVector>0
+  ]]>
+    and b.groupType=0 and a.managerFlag=0
+    and a.groupId=#{value,jdbcType=VARCHAR}
+    order by a.inviteTime desc
   </select>
 
   <!-- 某用户组的申请人列表信息 -->
   <select id="applyUserList" resultType="java.util.HashMap" parameterType="java.lang.String">
-  <![CDATA[
-    select a.inviteMessage, a.inviteVector, b.groupName, b.groupId,
+    select a.inviteMessage, a.inviteVector, b.groupName, b.groupId, b.groupSignature, a.inviteTime,
       c.loginName, c.mailAddress, c.mainPhoneNum, c.descn userDescn, c.protraitBig, c.protraitMini
     from wt_GroupInvite a, plat_Group b, plat_User c
-    where a.groupId=b.id and a.aUserId=c.id and a.flag=1 and a.acceptFlag=0 and a.inviteVector<0
-    and a.groupId=#{value,jdbcType=VARCHAR}
+  <![CDATA[
+    where a.groupId=b.id and a.bUserId=c.id and a.flag=1 and a.acceptFlag=0 and a.inviteVector<0
   ]]>
+    and a.groupId=#{value,jdbcType=VARCHAR}
+    order by a.inviteTime desc
   </select>
 
   <!-- 得到有未处理申请人的我所管理的用户组 -->
   <select id="existApplyUserGroupList" resultType="java.util.HashMap" parameterType="java.lang.String">
-  <![CDATA[
     select a.*, b.groupCount, c.inviteCount from plat_Group a,
     (select groupId, count(id) groupCount from plat_GroupUser group by groupId) b,
+  <![CDATA[
     (select groupId, count(id) inviteCount from wt_GroupInvite where inviteVector<0 and flag=1 and acceptFlag=0 group by groupId) c
-    where a.id=b.groupId and a.id=c.groupId and a.adminUserIds=#{value, jdbcType=VARCHAR}
   ]]>
+    where a.id=b.groupId and a.id=c.groupId and a.adminUserIds=#{value, jdbcType=VARCHAR}
   </select>
 </mapper>

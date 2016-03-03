@@ -15,6 +15,9 @@ import com.spiritdata.framework.util.StringUtils;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.friend.persistence.pojo.FriendRelPo;
 import com.woting.passport.friend.persistence.pojo.InviteFriendPo;
+import com.woting.passport.useralias.model.UserAliasKey;
+import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
+import com.woting.passport.useralias.service.UserAliasService;
 
 public class FriendService {
     static private int INVITE_INTERVAL_TIME=5*60*1000;//毫秒数：5分钟
@@ -25,6 +28,9 @@ public class FriendService {
     private MybatisDAO<InviteFriendPo> inviteFriendDao;
     @Resource(name="defaultDAO")
     private MybatisDAO<FriendRelPo> friendRelDao;
+
+    @Resource
+    private UserAliasService userAliasService;
 
     @PostConstruct
     public void initParam() {
@@ -56,11 +62,11 @@ public class FriendService {
     /**
      * 邀请陌生人为好友
      * @param userId 本人Id 邀请人
-     * @param beInviteUserId 被邀请人IdS
+     * @param beInvitedUserId 被邀请人IdS
      * @param inviteMsg 邀请信息
      * @return 陌生人列表或空
      */
-    public Map<String, Object> inviteFriend(String userId, String beInviteUserId, String inviteMsg) {
+    public Map<String, Object> inviteFriend(String userId, String beInvitedUserId, String inviteMsg) {
         Map<String, Object> m=new HashMap<String, Object>();
         Map<String, Object> param=new HashMap<String, Object>();
         Map<String, Object> info;
@@ -73,8 +79,8 @@ public class FriendService {
         //1-是否已经是好友了
         if (canContinue) {
             param.put("aUserId", userId);
-            param.put("bUserId", beInviteUserId);
-            fl= friendRelDao.queryForList(param);
+            param.put("bUserId", beInvitedUserId);
+            fl=friendRelDao.queryForList(param);
             if (fl!=null&&fl.size()>0) {
                 m.put("ReturnType", "1004");
                 m.put("Message", "已经是好友了");
@@ -84,7 +90,7 @@ public class FriendService {
         //2-是否已经被对方邀请
         if (canContinue) {
             param.put("bUserId", userId);
-            param.put("aUserId", beInviteUserId);
+            param.put("aUserId", beInvitedUserId);
             param.put("acceptFlag", "0");
             ifl=inviteFriendDao.queryForList(param);
             if (ifl!=null&&ifl.size()>0) {
@@ -105,7 +111,7 @@ public class FriendService {
         //3-是否是重复邀请，重复邀请，邀请内容相同，邀请间隔在INVITE_INTERVAL_TIME之内
         if (canContinue) {
             param.put("aUserId", userId);
-            param.put("bUserId", beInviteUserId);
+            param.put("bUserId", beInvitedUserId);
             param.remove("acceptFlag");
             ifl=inviteFriendDao.queryForList(param);
             if (ifl!=null&&ifl.size()>0) {
@@ -139,7 +145,7 @@ public class FriendService {
                 ifPo = new InviteFriendPo();
                 ifPo.setId(SequenceUUID.getUUIDSubSegment(4));
                 ifPo.setaUserId(userId);
-                ifPo.setbUserId(beInviteUserId);
+                ifPo.setbUserId(beInvitedUserId);
                 ifPo.setInviteVector(1);
             } else {
                 ifPo.setInviteTime(new Timestamp(System.currentTimeMillis()));
@@ -191,7 +197,7 @@ public class FriendService {
         Map<String, Object> param=new HashMap<String, Object>();
         param.put("aUserId", inviteUserId);
         param.put("bUserId", userId);
-        List<FriendRelPo> fl= friendRelDao.queryForList(param);
+        List<FriendRelPo> fl=friendRelDao.queryForList(param);
         if (fl!=null&&fl.size()>0) {
             m.put("ReturnType", "1004");
             m.put("Message", "已经是好友了");
@@ -251,6 +257,9 @@ public class FriendService {
             param.put("bUserId", userId);
             friendRelDao.delete("deleteByParam", param);
             inviteFriendDao.delete("deleteByParam", param);
+            //删除好友的别名信息
+            UserAliasKey uak=new UserAliasKey("FRIEND", userId, friendUserId);
+            userAliasService.del(uak);
             ret.put("ReturnType", "1001");
         }
         return ret;
@@ -272,5 +281,34 @@ public class FriendService {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * 修改用户信息
+     * @param updateUserMap 需要的数据
+     * @return 200不是好友；300参数不完整;-1别名或别名描述为空,-2主用户不存在;-3别名用户不存在,1新增成功;2修改成功;0不需要保存
+     */
+    public int updateFriendInfo(Map<String, String> updateUserMap) {
+        String mainUserId=updateUserMap.get("mainUserId");
+        String friendUserId=updateUserMap.get("friendUserId");
+        String alias=updateUserMap.get("alias");
+        String aliasDescn=updateUserMap.get("aliasDescn");
+
+        if (StringUtils.isNullOrEmptyOrSpace(mainUserId)||StringUtils.isNullOrEmptyOrSpace(friendUserId)||(StringUtils.isNullOrEmptyOrSpace(alias)&&StringUtils.isNullOrEmptyOrSpace(aliasDescn))) return 300;
+
+        Map<String, Object> param=new HashMap<String, Object>();
+        param.put("aUserId", mainUserId);
+        param.put("bUserId", friendUserId);
+        List<FriendRelPo> fl=friendRelDao.queryForList(param);
+        if (fl==null||fl.size()==0) return 200;
+
+        //修改或新增
+        UserAliasPo uaPo=new UserAliasPo();
+        uaPo.setTypeId("FRIEND");
+        uaPo.setMainUserId(mainUserId);
+        uaPo.setAliasUserId(friendUserId);
+        uaPo.setAliasName(alias);
+        uaPo.setAliasDescn(aliasDescn);
+        return userAliasService.save(uaPo);
     }
 }
