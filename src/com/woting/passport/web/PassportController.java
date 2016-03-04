@@ -523,15 +523,15 @@ public class PassportController {
                     gm.put("GroupId", g.get("id"));
                     gm.put("GroupNum", g.get("groupNum"));
                     gm.put("GroupType", g.get("groupType"));
-                    gm.put("GroupImg", g.get("groupImg"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupImg"))) gm.put("GroupImg", g.get("groupImg"));
                     gm.put("GroupName", g.get("groupName"));
-                    gm.put("groupSignature", g.get("groupSignature"));
-                    gm.put("GroupCreator", g.get("createUserId"));
-                    gm.put("GroupManager", g.get("adminUserIds"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupSignature"))) gm.put("GroupSignature", g.get("groupSignature"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
                     gm.put("GroupCount", g.get("groupCound"));
-                    gm.put("GroupOriDescn", g.get("descn"));
-                    gm.put("GroupMyDesc", g.get("groupDescn"));
-                    gm.put("GroupMyAlias", g.get("groupAlias"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDescn", g.get("descn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDesc", g.get("groupDescn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));
                     rgl.add(gm);
                 }
                 topItem.put("Groups", rgl);

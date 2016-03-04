@@ -117,7 +117,7 @@
       <if test="inviteVector!=null and inviteVector!=0">#{inviteVector,jdbcType=INTEGER},</if>
       <if test="inviteMessage!=null">#{inviteMessage,jdbcType=VARCHAR},</if>
       <if test="acceptFlag!=null">#{acceptFlag,jdbcType=INTEGER},</if>
-      <if test="managerFlagFlag!=null">#{managerFlag,jdbcType=INTEGER},</if>
+      <if test="managerFlag!=null">#{managerFlag,jdbcType=INTEGER},</if>
       <if test="flag!=null and flag!=0">#{flag,jdbcType=INTEGER},</if>
     </trim>
   </insert>
@@ -134,7 +134,7 @@
       <if test="firstInviteTime!=null">firstInviteTime=#{firstInviteTime,jdbcType=TIMESTAMP},</if>
       <if test="inviteTime!=null">inviteTime=#{inviteTime,jdbcType=TIMESTAMP},</if>
       <if test="acceptFlag!=null">acceptFlag=#{acceptFlag,jdbcType=INTEGER},</if>
-      <if test="managerFlagFlag!=null">managerFlag=#{managerFlag,jdbcType=INTEGER},</if>
+      <if test="managerFlag!=null">managerFlag=#{managerFlag,jdbcType=INTEGER},</if>
       <if test="acceptTime!=null">acceptTime=#{acceptTime,jdbcType=TIMESTAMP},</if>
       <if test="refuseMessage!=null">refuseMessage=#{refuseMessage,jdbcType=VARCHAR},</if>
       <if test="flag!=null and flag!=0">flag=#{flag,jdbcType=INTEGER},</if>
@@ -165,7 +165,7 @@
   <!-- 邀请我的组的列表 -->
   <select id="inviteMeGroupList" resultType="java.util.HashMap" parameterType="java.lang.String">
     select a.inviteMessage, a.inviteVector, b.groupName, b.descn groupDescn, b.groupSignature,
-      b.groupName, b.descn groupDescn, b.groupImg, b.groupNum, c.id userId, a.inviteTime,
+      b.groupName, b.descn groupDescn, b.groupImg, b.groupNum, c.id userId, a.inviteTime, b.id groupId,
       c.loginName, c.mailAddress, c.mainPhoneNum, c.descn userDescn, c.protraitBig, c.protraitMini
     from wt_GroupInvite a, plat_Group b, plat_User c
   <![CDATA[

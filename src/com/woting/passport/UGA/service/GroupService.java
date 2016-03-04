@@ -362,7 +362,7 @@ public class GroupService {
             g.buildFromPo(gp);
         }
         UserPo _u=null;
-        
+
         if (upl.size()>0) {
             for (UserPo _up:upl) {
                 if (_up.getUserId().equals(u.getUserId())) {
@@ -398,13 +398,15 @@ public class GroupService {
         userAliasService.delUserAliasInGroup(groupId, u.getUserId());
 
         //删除组
-        if (upl.size()==1) {
+        if (upl.size()<=1) {
+            if (upl.size()==1) {
+                //删除所有的组内人员信息
+                param.clear();
+                param.put("groupId", groupId);
+                groupDao.delete("deleteGroupUser", param);
+            }
             gmm.delOneGroup(g);
             groupDao.delete(gp.getGroupId());
-            //删除所有的组内人员信息
-            param.clear();
-            param.put("groupId", groupId);
-            groupDao.delete("deleteGroupUser", param);
             //处理组邀请信息表，把flag设置为2
             inviteGroupDao.update("setFlag2", groupId);
             //删除组内所有成员的别名

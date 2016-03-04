@@ -176,11 +176,11 @@ public class GroupController {
             groupMap.put("GroupNum", g.getGroupNum());
             groupMap.put("GroupType", g.getGroupType()+"");
             groupMap.put("GroupName", g.getGroupName());
-            groupMap.put("GroupCreator", g.getCreateUserId());
-            groupMap.put("GroupManager", g.getAdminUserIds());
+            if (!StringUtils.isNullOrEmptyOrSpace(g.getCreateUserId())) groupMap.put("GroupCreator", g.getCreateUserId());
+            if (!StringUtils.isNullOrEmptyOrSpace(g.getAdminUserIds())) groupMap.put("GroupManager", g.getAdminUserIds());
             groupMap.put("GroupCount", ml.size()+"");
-            groupMap.put("GroupDescn", g.getDescn());
-            groupMap.put("GroupImg", g.getGroupImg());
+            if (!StringUtils.isNullOrEmptyOrSpace(g.getDescn())) groupMap.put("GroupDescn", g.getDescn());
+            if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupImg())) groupMap.put("GroupImg", g.getGroupImg());
             groupMap.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date()));
             map.put("GroupInfo", groupMap);
             return map;
@@ -238,15 +238,15 @@ public class GroupController {
                     gm.put("GroupId", g.get("id"));
                     gm.put("GroupNum", g.get("groupNum"));
                     gm.put("GroupType", g.get("groupType"));
-                    gm.put("groupSignature", g.get("groupSignature"));
-                    gm.put("GroupImg", g.get("groupImg"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupSignature"))) gm.put("GroupSignature", g.get("groupSignature"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupImg"))) gm.put("GroupImg", g.get("groupImg"));
                     gm.put("GroupName", g.get("groupName"));
-                    gm.put("GroupCreator", g.get("createUserId"));
-                    gm.put("GroupManager", g.get("adminUserIds"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
                     gm.put("GroupCount", g.get("groupCound"));
-                    gm.put("GroupOriDescn", g.get("descn"));
-                    gm.put("GroupMyDesc", g.get("groupDescn"));
-                    gm.put("GroupMyAlias", g.get("groupAlias"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDescn", g.get("descn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDesc", g.get("groupDescn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));
                     rgl.add(gm);
                 }
                 map.put("ReturnType", "1001");
@@ -313,13 +313,13 @@ public class GroupController {
                     gm.put("GroupType", g.get("groupType"));
                     gm.put("GroupImg", g.get("groupImg"));
                     gm.put("GroupName", g.get("groupName"));
-                    gm.put("groupSignature", g.get("groupSignature"));
-                    gm.put("GroupCreator", g.get("createUserId"));
-                    gm.put("GroupManager", g.get("adminUserIds"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupSignature"))) gm.put("GroupSignature", g.get("groupSignature"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
                     gm.put("GroupCount", g.get("groupCound"));
-                    gm.put("GroupOriDesc", g.get("descn"));
-                    gm.put("GroupMyDesc", g.get("groupDescn"));
-                    gm.put("GroupMyAlias", g.get("groupAlias"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDesc", g.get("descn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDesc", g.get("groupDescn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));
                     rgl.add(gm);
                 }
                 map.put("ReturnType", "1001");
@@ -524,22 +524,23 @@ public class GroupController {
                 Map<String, Object> imgm;
                 for (Map<String, Object> one:imgl) {
                     imgm=new HashMap<String, Object>();
+                    imgm.put("GroupId", one.get("groupId"));
                     imgm.put("GroupName", one.get("groupName"));
-                    imgm.put("GroupSignature", one.get("groupSignature"));
-                    imgm.put("GroupNum", one.get("groupNum"));
-                    imgm.put("GroupImg", one.get("groupImg"));
-                    imgm.put("GroupType", one.get("groupType"));
-                    imgm.put("GroupDescn", one.get("groupDescn"));
-                    imgm.put("InviteMessage", one.get("inviteMessage"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupSignature"))) imgm.put("GroupSignature", one.get("groupSignature"));;
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupNum"))) imgm.put("GroupNum", one.get("groupNum"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupImg"))) imgm.put("GroupImg", one.get("groupImg"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupType"))) imgm.put("GroupType", one.get("groupType"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupDescn"))) imgm.put("GroupDescn", one.get("groupDescn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("inviteMessage"))) imgm.put("InviteMessage", one.get("inviteMessage"));
                     imgm.put("InviteTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", (Date)one.get("inviteTime")));
-                    imgm.put("InviteCount", one.get("inviteVector"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("inviteVector"))) imgm.put("InviteCount", one.get("inviteVector"));
                     imgm.put("UserId", one.get("userId"));
                     imgm.put("UserName", one.get("loginName"));
-                    imgm.put("UserDescn", one.get("userDescn"));
-                    imgm.put("Email", one.get("mailAddress"));
-                    imgm.put("PhoneNum", one.get("mainPhoneNum"));
-                    imgm.put("ProtraitBig", one.get("protraitBig"));
-                    imgm.put("ProtraitMini", one.get("protraitMini"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("userDescn"))) imgm.put("UserDescn", one.get("userDescn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mailAddress"))) imgm.put("Email", one.get("mailAddress"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mainPhoneNum"))) imgm.put("PhoneNum", one.get("mainPhoneNum"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("protraitBig")))  imgm.put("ProtraitBig", one.get("protraitBig"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("protraitMini")))  imgm.put("ProtraitMini", one.get("protraitMini"));
                     rImgl.add(imgm);
                 }
                 map.put("ReturnType", "1001");
@@ -774,17 +775,16 @@ public class GroupController {
                 Map<String, Object> au;
                 for (Map<String, Object> one:aul) {
                     au=new HashMap<String, Object>();
+                    au.put("GroupId", one.get("groupId"));
                     au.put("GroupName", one.get("groupName"));
-                    au.put("GroupId", one.get("groupId"));
-                    au.put("GgroupSignature", one.get("groupSignature"));
-                    au.put("GroupId", one.get("groupId"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupSignature"))) au.put("GgroupSignature", one.get("groupSignature"));
                     au.put("ApplyTime",DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", (Date)one.get("inviteTime")));
                     au.put("UserName", one.get("loginName"));
-                    au.put("UserDescn", one.get("userDescn"));
-                    au.put("Email", one.get("mailAddress"));
-                    au.put("PhoneNum", one.get("mainPhoneNum"));
-                    au.put("ProtraitBig", one.get("protraitBig"));
-                    au.put("ProtraitMini", one.get("protraitMini"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("userDescn"))) au.put("UserDescn", one.get("userDescn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mailAddress"))) au.put("Email", one.get("mailAddress"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mainPhoneNum"))) au.put("PhoneNum", one.get("mainPhoneNum"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("protraitBig"))) au.put("ProtraitBig", one.get("protraitBig"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("protraitMini"))) au.put("ProtraitMini", one.get("protraitMini"));
                     rAul.add(au);
                 }
                 map.put("ReturnType", "1001");
@@ -847,14 +847,14 @@ public class GroupController {
                     gInfo.put("GroupId", one.get("groupId"));
                     gInfo.put("GroupNum", one.get("groupNum"));
                     gInfo.put("GroupType", one.get("groupType"));
-                    gInfo.put("GroupImg", one.get("groupImg"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupImg"))) gInfo.put("GroupImg", one.get("groupImg"));
                     gInfo.put("GroupName", one.get("groupName"));
-                    gInfo.put("GgroupSignature", one.get("groupSignature"));
-                    gInfo.put("GroupCreator", one.get("createUserId"));
-                    gInfo.put("GroupManager", one.get("adminUserIds"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupSignature"))) gInfo.put("GgroupSignature", one.get("groupSignature"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("createUserId"))) gInfo.put("GroupCreator", one.get("createUserId"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("adminUserIds"))) gInfo.put("GroupManager", one.get("adminUserIds"));
                     gInfo.put("GroupCount", one.get("groupCount"));
-                    gInfo.put("InviteCount", one.get("inviteCount"));
-                    gInfo.put("GroupDesc", one.get("descn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("inviteCount"))) gInfo.put("InviteCount", one.get("inviteCount"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("descn"))) gInfo.put("GroupDesc", one.get("descn"));
                     rEauGl.add(gInfo);
                 }
                 map.put("ReturnType", "1001");
@@ -1045,14 +1045,14 @@ public class GroupController {
             Map<String, Object> gm = new HashMap<String, Object>();
             gm.put("GroupId", gp.getGroupId());
             gm.put("GroupNum", gp.getGroupNum());
-            gm.put("GroupSignature", gp.getGroupSignature());
+            if (!StringUtils.isNullOrEmptyOrSpace(gp.getGroupSignature())) gm.put("GroupSignature", gp.getGroupSignature());
             gm.put("GroupType", gp.getGroupType()+"");
-            gm.put("GroupImg", gp.getGroupImg());
+            if (!StringUtils.isNullOrEmptyOrSpace(gp.getGroupImg())) gm.put("GroupImg", gp.getGroupImg());
             gm.put("GroupName", gp.getGroupName());
-            gm.put("GroupCreator", gp.getCreateUserId());
-            gm.put("GroupManager", gp.getAdminUserIds());
+            if (!StringUtils.isNullOrEmptyOrSpace(gp.getCreateUserId())) gm.put("GroupCreator", gp.getCreateUserId());
+            if (!StringUtils.isNullOrEmptyOrSpace(gp.getAdminUserIds())) gm.put("GroupManager", gp.getAdminUserIds());
             gm.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date(gp.getCTime().getTime())));
-            gm.put("GroupDesc", gp.getDescn());
+            if (!StringUtils.isNullOrEmptyOrSpace(gp.getDescn())) gm.put("GroupDesc", gp.getDescn());
 
             //组成员
             List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
@@ -1408,14 +1408,14 @@ public class GroupController {
                     Group _g=gl.get(i);
                     oneGroup.put("GroupId", _g.getGroupId());
                     oneGroup.put("GroupNum", _g.getGroupNum());
-                    oneGroup.put("GroupSignature", _g.getGroupSignature());
+                    if (!StringUtils.isNullOrEmptyOrSpace(_g.getGroupSignature())) oneGroup.put("GroupSignature", _g.getGroupSignature());
                     oneGroup.put("GroupType", _g.getGroupType()+"");
                     oneGroup.put("GroupImg", _g.getGroupImg());
                     oneGroup.put("GroupName", _g.getGroupName());
-                    oneGroup.put("GroupCreator", _g.getCreateUserId());
-                    oneGroup.put("GroupManager", _g.getAdminUserIds());
+                    if (!StringUtils.isNullOrEmptyOrSpace(_g.getCreateUserId())) oneGroup.put("GroupCreator", _g.getCreateUserId());
+                    if (!StringUtils.isNullOrEmptyOrSpace(_g.getAdminUserIds())) oneGroup.put("GroupManager", _g.getAdminUserIds());
                     oneGroup.put("GroupCount", _g.getUserList().size()+"");
-                    oneGroup.put("GroupOriDesc", _g.getDescn());
+                    if (!StringUtils.isNullOrEmptyOrSpace(_g.getDescn())) oneGroup.put("GroupOriDesc", _g.getDescn());
                     oneGroup.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date(_g.getCTime().getTime())));
                     
                     List<UserPo> ul=_g.getUserList();
@@ -1586,17 +1586,17 @@ public class GroupController {
                 Map<String, Object> ium;
                 for (Map<String, Object> one:iuml) {
                     ium=new HashMap<String, Object>();
-                    ium.put("InviteMessage", one.get("inviteMessage"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("inviteMessage"))) ium.put("InviteMessage", one.get("inviteMessage"));
                     ium.put("InviteTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", (Date)one.get("inviteTime")));
                     ium.put("InviteCount", one.get("inviteVector"));
                     ium.put("InviteUserId", one.get("inviteUserId"));
                     ium.put("BeInviteUserId", one.get("userId"));
                     ium.put("UserName", one.get("loginName"));
-                    ium.put("UserDescn", one.get("userDescn"));
-                    ium.put("Email", one.get("mailAddress"));
-                    ium.put("PhoneNum", one.get("mainPhoneNum"));
-                    ium.put("ProtraitBig", one.get("protraitBig"));
-                    ium.put("ProtraitMini", one.get("protraitMini"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("userDescn"))) ium.put("UserDescn", one.get("userDescn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mailAddress"))) ium.put("Email", one.get("mailAddress"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mainPhoneNum"))) ium.put("PhoneNum", one.get("mainPhoneNum"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("protraitBig"))) ium.put("ProtraitBig", one.get("protraitBig"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("protraitMini"))) ium.put("ProtraitMini", one.get("protraitMini"));
                     rul.add(ium);
                 }
                 map.put("ReturnType", "1001");
