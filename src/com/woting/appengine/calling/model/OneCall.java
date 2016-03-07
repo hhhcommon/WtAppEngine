@@ -113,6 +113,7 @@ public class OneCall implements Serializable {
      * @param callederId 被叫者Id
      * @param it1_expire 占线判断过期时间
      * @param it2_expire 未应答怕判断过期时间
+     * @param it3_expire 通话过期时间
      */
     public OneCall(String callId, String callerId, String callederId, long it1_expire, long it2_expire, long it3_expire) {
         super();
