@@ -63,7 +63,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到创建者");
                 }
@@ -221,7 +221,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -293,7 +293,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -366,7 +366,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -437,7 +437,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (!(retM.get("ReturnType")+"").equals("2003")&&StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -511,7 +511,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -533,7 +533,7 @@ public class GroupController {
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupDescn"))) imgm.put("GroupDescn", one.get("groupDescn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("inviteMessage"))) imgm.put("InviteMessage", one.get("inviteMessage"));
                     imgm.put("InviteTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", (Date)one.get("inviteTime")));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("inviteVector"))) imgm.put("InviteCount", one.get("inviteVector"));
+                    imgm.put("InviteCount", one.get("inviteVector"));
                     imgm.put("UserId", one.get("userId"));
                     imgm.put("UserName", one.get("loginName"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("userDescn"))) imgm.put("UserDescn", one.get("userDescn"));
@@ -588,7 +588,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -667,7 +667,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -739,7 +739,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -831,7 +831,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -901,7 +901,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户Id");
                 }
@@ -989,7 +989,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -1103,7 +1103,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -1173,7 +1173,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -1247,7 +1247,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -1312,7 +1312,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -1385,7 +1385,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -1470,7 +1470,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -1548,7 +1548,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }
@@ -1643,7 +1643,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户Id");
                 }
@@ -1740,7 +1740,7 @@ public class GroupController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法得到用户");
                 }

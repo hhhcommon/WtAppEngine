@@ -56,7 +56,7 @@ public class FileUploadController extends AbstractFileUploadController {
                 datamap.put("SessionId", ms.getKey().getSessionId());
                 if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
             }
-            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+            if (datamap.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                 datamap.put("ReturnType", "1002");
                 datamap.put("Message", "无法获取用户Id，不能保存图片");
             }

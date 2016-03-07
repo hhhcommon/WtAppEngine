@@ -151,7 +151,7 @@
     update wt_GroupInvite set flag=2 where groupId=#{value,jdbcType=VARCHAR}
   </update>
   <update id="sameUserInviteDeal" parameterType="java.util.Map">
-    update wt_GroupInvite set acceptFlag=#{acceptFlag,jdbcType=INTEGER}+2 where groupId=#{groupId,jdbcType=VARCHAR} and bUserId=bUserId=#{bUserId,jdbcType=VARCHAR} and acceptFlag=0 and id!=#{id,jdbcType=VARCHAR}
+    update wt_GroupInvite set acceptFlag=#{acceptFlag,jdbcType=INTEGER}+2 where groupId=#{groupId,jdbcType=VARCHAR} and bUserId=#{bUserId,jdbcType=VARCHAR} and acceptFlag=0 and id!=#{id,jdbcType=VARCHAR}
   </update>
 
   <!-- 删除数据 -->

@@ -167,6 +167,7 @@
                 <include>**</include>
               </includes>
               <excludes>
+                <exclude>app.properties</exclude>
                 <exclude>applicationContext.xml</exclude>
                 <exclude>database.properties</exclude>
                 <exclude>log4j.properties</exclude>

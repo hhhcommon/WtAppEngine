@@ -60,7 +60,7 @@ public class FriendController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法获取用户Id");
                 }
@@ -130,7 +130,7 @@ public class FriendController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法获取用户Id");
                 }
@@ -191,7 +191,7 @@ public class FriendController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法获取用户Id");
                 }
@@ -254,7 +254,7 @@ public class FriendController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法获取用户Id");
                 }
@@ -324,7 +324,7 @@ public class FriendController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法获取用户Id");
                 }
@@ -386,7 +386,7 @@ public class FriendController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法获取用户Id");
                 }
@@ -451,7 +451,7 @@ public class FriendController {
                     map.put("SessionId", ms.getKey().getSessionId());
                     if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法获取用户");
                 }
