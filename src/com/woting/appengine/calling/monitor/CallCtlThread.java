@@ -119,7 +119,7 @@ public class CallCtlThread extends Thread {
     private void dial(Message m) {
         System.out.println("处理呼叫信息前==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
         String callId =((Map)m.getMsgContent()).get("CallId")+"";
-        String callerId=MobileUtils.getMobileKey(m).getUserId();
+        String callerId=MobileUtils.getMobileKey(m,1).getUserId();
         String callederId=((Map)m.getMsgContent()).get("CallederId")+"";
 
         Map<String, Object> dataMap=null;
@@ -157,7 +157,7 @@ public class CallCtlThread extends Thread {
         dataMap.put("CallerId", callerId);
         dataMap.put("CallederId", callederId);
         toCallerMsg.setMsgContent(dataMap);
-        pmm.getSendMemory().addMsg2Queue(MobileUtils.getMobileKey(m), toCallerMsg);
+        pmm.getSendMemory().addMsg2Queue(MobileUtils.getMobileKey(m,1), toCallerMsg);
         //记录到已发送列表
         this.callData.addSendedMsg(toCallerMsg);
 
@@ -181,7 +181,7 @@ public class CallCtlThread extends Thread {
             UserPo u=(UserPo)smm.getActivedUserSessionByUserId(callerId).getAttribute("user");
             callerInfo.put("UserName", u.getLoginName());
             callerInfo.put("UserNum", u.getUserNum());
-            callerInfo.put("Portrait", u.getProtraitMini());
+            callerInfo.put("Portrait", u.getPortraitMini());
             callerInfo.put("Mail", u.getMailAddress());
             callerInfo.put("Descn", u.getDescn());
             dataMap.put("CallerInfo", callerInfo);
@@ -210,7 +210,7 @@ public class CallCtlThread extends Thread {
     private int dealAutoDialFeedback(Message m) {
         System.out.println("处理自动应答前==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
         //首先判断这个消息是否符合处理的要求：callid, callerId, callederId是否匹配
-        if (!this.callData.getCallerId().equals(((Map)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m).getUserId())) return 3;
+        if (!this.callData.getCallerId().equals(((Map)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m,1).getUserId())) return 3;
         if (this.callData.getStatus()==1) {//状态正确，如果是其他状态，这个消息抛弃
             //发送给呼叫者的消息
             Message toCallerMsg=new Message();
@@ -241,7 +241,7 @@ public class CallCtlThread extends Thread {
     //处理“被叫者”应答(2)
     private int ackDial(Message m) {
         //首先判断这个消息是否符合处理的要求：callid, callerId, callederId是否匹配
-        if (!this.callData.getCallerId().equals(((Map)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m).getUserId())) return 3;
+        if (!this.callData.getCallerId().equals(((Map)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m,1).getUserId())) return 3;
         if (this.callData.getStatus()==1||this.callData.getStatus()==2) {//状态正确，如果是其他状态，这个消息抛弃
             //应答状态
             int ackType=2; //拒绝
@@ -279,7 +279,7 @@ public class CallCtlThread extends Thread {
     //处理“挂断”(3)
     private int hangup(Message m) {
         //首先判断是那方在进行挂断
-        String hangupperId=MobileUtils.getMobileKey(m).getUserId();
+        String hangupperId=MobileUtils.getMobileKey(m,1).getUserId();
         String otherId=this.callData.getOtherId(hangupperId);
         if (otherId==null) return 3;
         //给另一方发送“挂断传递”消息

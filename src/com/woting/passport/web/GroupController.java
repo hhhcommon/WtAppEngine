@@ -152,6 +152,8 @@ public class GroupController {
                 if (_groupType==1) groupName="新建公开群"+newGroupNum;
                 if (_groupType==2) groupName="新建密码群"+(needMember?memNames:newGroupNum);
             }
+            //获得组描述
+            String groupDescn=(String)m.get("GroupDescn");
 
             //创建组
             if (ml==null) {
@@ -168,6 +170,7 @@ public class GroupController {
             g.setGroupType(_groupType);
             g.setUserList(ml);
             g.setGroupType(_groupType);
+            g.setDescn(groupDescn);
             groupService.insertGroup(g);
             //组织返回值
             map.put("ReturnType", "1001");
@@ -243,7 +246,7 @@ public class GroupController {
                     gm.put("GroupName", g.get("groupName"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
-                    gm.put("GroupCount", g.get("groupCound"));
+                    gm.put("GroupCount", g.get("groupCount"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDescn", g.get("descn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDesc", g.get("groupDescn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));
@@ -316,7 +319,7 @@ public class GroupController {
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupSignature"))) gm.put("GroupSignature", g.get("groupSignature"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
-                    gm.put("GroupCount", g.get("groupCound"));
+                    gm.put("GroupCount", g.get("groupCount"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDesc", g.get("descn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDesc", g.get("groupDescn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));
@@ -414,7 +417,7 @@ public class GroupController {
      */
     @RequestMapping(value="groupInvite.do")
     @ResponseBody
-    public Map<String,Object> inviteGroup(HttpServletRequest request) {
+    public synchronized Map<String,Object> inviteGroup(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
@@ -539,8 +542,8 @@ public class GroupController {
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("userDescn"))) imgm.put("UserDescn", one.get("userDescn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mailAddress"))) imgm.put("Email", one.get("mailAddress"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mainPhoneNum"))) imgm.put("PhoneNum", one.get("mainPhoneNum"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("protraitBig")))  imgm.put("ProtraitBig", one.get("protraitBig"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("protraitMini")))  imgm.put("ProtraitMini", one.get("protraitMini"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("portraitBig")))  imgm.put("PortraitBig", one.get("portraitBig"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("portraitMini")))  imgm.put("PortraitMini", one.get("portraitMini"));
                     rImgl.add(imgm);
                 }
                 map.put("ReturnType", "1001");
@@ -618,7 +621,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //3-获得处理类型
-            String dealType=(String)m.get("DealType");
+            String dealType=""+m.get("DealType");
             if (StringUtils.isNullOrEmptyOrSpace(dealType)) {
                 map.put("ReturnType", "1005");
                 map.put("Message", "没有处理类型dealType，无法处理");
@@ -628,7 +631,7 @@ public class GroupController {
             //4-获得拒绝理由
             String refuseMsg=(String)m.get("RefuseMsg");
             //4-邀请处理
-            map.putAll(groupService.dealInvite(userId, inviteUserId, groupId, dealType.equals("2"), refuseMsg));
+            map.putAll(groupService.dealInvite(userId, inviteUserId, groupId, dealType.equals("2"), refuseMsg, 1));
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -686,7 +689,7 @@ public class GroupController {
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
                 } else {
                     adminId=gp.getAdminUserIds();
-                    if (gp.getGroupType()==2) {
+                    if (gp.getGroupType()==1) {
                         map.put("ReturnType", "10031");
                         map.put("Message", "公开组不必申请！");
                     }
@@ -700,7 +703,7 @@ public class GroupController {
             }
 
             String inviteMsg=(String)m.get("ApplyMsg");
-            map.putAll(groupService.applyGroup(userId, adminId, groupId, inviteMsg));
+            map.putAll(groupService.applyGroup(userId, groupId, adminId, inviteMsg));
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -757,11 +760,14 @@ public class GroupController {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
                 } else {
-                    if (gp.getGroupType()==2) {
+                    if (gp.getGroupType()==1) {
                         map.put("ReturnType", "10031");
-                        map.put("Message", "公开组，不存在申请！");
+                        map.put("Message", "公开群，不存在申请！");
                     }
-                    if (!gp.getAdminUserIds().equals(userId)) {
+                    if (gp.getAdminUserIds()==null) {
+                        map.put("ReturnType", "10032");
+                        map.put("Message", "该群未设置管理员！");
+                    } else if (!gp.getAdminUserIds().equals(userId)) {
                         map.put("ReturnType", "10021");
                         map.put("Message", "用户不是该组的管理员！");
                     }
@@ -779,12 +785,13 @@ public class GroupController {
                     au.put("GroupName", one.get("groupName"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupSignature"))) au.put("GgroupSignature", one.get("groupSignature"));
                     au.put("ApplyTime",DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", (Date)one.get("inviteTime")));
+                    au.put("UserId", one.get("applyUserId"));
                     au.put("UserName", one.get("loginName"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("userDescn"))) au.put("UserDescn", one.get("userDescn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mailAddress"))) au.put("Email", one.get("mailAddress"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mainPhoneNum"))) au.put("PhoneNum", one.get("mainPhoneNum"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("protraitBig"))) au.put("ProtraitBig", one.get("protraitBig"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("protraitMini"))) au.put("ProtraitMini", one.get("protraitMini"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("portraitBig"))) au.put("PortraitBig", one.get("portraitBig"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("portraitMini"))) au.put("PortraitMini", one.get("portraitMini"));
                     rAul.add(au);
                 }
                 map.put("ReturnType", "1001");
@@ -853,7 +860,7 @@ public class GroupController {
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("createUserId"))) gInfo.put("GroupCreator", one.get("createUserId"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("adminUserIds"))) gInfo.put("GroupManager", one.get("adminUserIds"));
                     gInfo.put("GroupCount", one.get("groupCount"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("inviteCount"))) gInfo.put("InviteCount", one.get("inviteCount"));
+                    if (one.get("inviteCount")!=null) gInfo.put("InviteCount", one.get("inviteCount"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("descn"))) gInfo.put("GroupDesc", one.get("descn"));
                     rEauGl.add(gInfo);
                 }
@@ -919,13 +926,16 @@ public class GroupController {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
                 } else {
-                    if (gp.getGroupType()==2) {
+                    if (gp.getGroupType()==1) {
                         map.put("ReturnType", "10031");
                         map.put("Message", "公开组，不存在申请！");
                     }
-                    if (!gp.getAdminUserIds().equals(userId)) {
+                    if (gp.getAdminUserIds()==null) {
+                        map.put("ReturnType", "10032");
+                        map.put("Message", "该群未设置管理员！");
+                    } else if (!gp.getAdminUserIds().equals(userId)) {
                         map.put("ReturnType", "10021");
-                        map.put("Message", "用户不是该组管理员，无法处理！");
+                        map.put("Message", "用户不是该组的管理员！");
                     }
                 }
             }
@@ -940,7 +950,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //3-获得处理类型
-            String dealType=(String)m.get("DealType");
+            String dealType=""+m.get("DealType");
             if (StringUtils.isNullOrEmptyOrSpace(dealType)) {
                 map.put("ReturnType", "1005");
                 map.put("Message", "没有处理类型dealType，无法处理");
@@ -950,7 +960,7 @@ public class GroupController {
             //4-获得拒绝理由
             String refuseMsg=(String)m.get("RefuseMsg");
             //4-邀请处理
-            map.putAll(groupService.dealInvite(applyUserId, userId, groupId, dealType.equals("2"), refuseMsg));
+            map.putAll(groupService.dealInvite(applyUserId, userId, groupId, dealType.equals("2"), refuseMsg, 2));
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -1191,9 +1201,14 @@ public class GroupController {
                 if (gp==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
-                } else if (!gp.getAdminUserIds().equals(userId)) {
-                    map.put("ReturnType", "10021");
-                    map.put("Message", "用户不是该组的管理员！");
+                } else {
+                    if (gp.getAdminUserIds()==null) {
+                        map.put("ReturnType", "10032");
+                        map.put("Message", "该群未设置管理员！");
+                    } else if (!gp.getAdminUserIds().equals(userId)) {
+                        map.put("ReturnType", "10021");
+                        map.put("Message", "用户不是该组的管理员！");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -1265,9 +1280,14 @@ public class GroupController {
                 if (gp==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
-                } else if (!gp.getAdminUserIds().equals(userId)) {
-                    map.put("ReturnType", "10021");
-                    map.put("Message", "用户不是该组的管理员！");
+                } else {
+                    if (gp.getAdminUserIds()==null) {
+                        map.put("ReturnType", "10032");
+                        map.put("Message", "该群未设置管理员！");
+                    } else  if (!gp.getAdminUserIds().equals(userId)) {
+                        map.put("ReturnType", "10021");
+                        map.put("Message", "用户不是该组的管理员！");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -1330,9 +1350,14 @@ public class GroupController {
                 if (gp==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
-                } else if (!gp.getAdminUserIds().equals(userId)) {
-                    map.put("ReturnType", "10021");
-                    map.put("Message", "用户不是该组的管理员！");
+                } else {
+                    if (gp.getAdminUserIds()==null) {
+                        map.put("ReturnType", "10032");
+                        map.put("Message", "该群未设置管理员！");
+                    } if (!gp.getAdminUserIds().equals(userId)) {
+                        map.put("ReturnType", "10021");
+                        map.put("Message", "用户不是该组的管理员！");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -1417,7 +1442,7 @@ public class GroupController {
                     oneGroup.put("GroupCount", _g.getUserList().size()+"");
                     if (!StringUtils.isNullOrEmptyOrSpace(_g.getDescn())) oneGroup.put("GroupOriDesc", _g.getDescn());
                     oneGroup.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date(_g.getCTime().getTime())));
-                    
+
                     List<UserPo> ul=_g.getUserList();
                     String userNames="";
                     for (int j=0;j<ul.size(); j++) {
@@ -1505,10 +1530,104 @@ public class GroupController {
             }
             
             Map<String, Object> param=new HashMap<String, Object>();
-            if (StringUtils.isNullOrEmptyOrSpace(groupName)) param.put("groupName", groupName);
-            if (StringUtils.isNullOrEmptyOrSpace(groupDescn)) param.put("groupDescn", groupDescn);
-            if (StringUtils.isNullOrEmptyOrSpace(groupSignature)&&isManager==1) param.put("groupSignature", groupSignature);//只有管理员才能修改用户组的签名
+            if (!StringUtils.isNullOrEmptyOrSpace(groupName)) param.put("groupName", groupName);
+            if (!StringUtils.isNullOrEmptyOrSpace(groupDescn)) param.put("groupDescn", groupDescn);
+            if (!StringUtils.isNullOrEmptyOrSpace(groupSignature)&&isManager==1) param.put("groupSignature", groupSignature);//只有管理员才能修改用户组的签名
             groupService.updateGroup(param, userId, gp);
+            map.put("ReturnType", "1001");
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
+            return map;
+        }
+    }
+
+    /**
+     * 更改组密码，只有组管理员和密码组，才能调用这个方法
+     */
+    @RequestMapping(value="updatePwd.do")
+    @ResponseBody
+    public Map<String,Object> updatePwd(HttpServletRequest request) {
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            String userId="";
+            MobileSession ms=null;
+            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                if ((retM.get("ReturnType")+"").equals("2001")) {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取设备Id(IMEI)");
+                } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                    map.put("ReturnType", "200");
+                    map.put("Message", "需要登录");
+                } else {
+                    ms=(MobileSession)retM.get("MobileSession");
+                    map.put("SessionId", ms.getKey().getSessionId());
+                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                }
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "无法得到用户");
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //获得用户组
+            GroupPo gp=null;
+            String groupId=(String)m.get("GroupId");
+            if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
+                map.put("ReturnType", "1003");
+                map.put("Message", "无法得到用户组Id");
+            } else {
+                gp=groupService.getGroupById(groupId);
+                if (gp==null) {
+                    map.put("ReturnType", "1003");
+                    map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
+                } else {
+                    if (gp.getGroupType()!=2) {
+                        map.put("ReturnType", "1004");
+                        map.put("Message", "非密码组，无法修改密码");
+                    }
+                    if (gp.getAdminUserIds()==null) {
+                        map.put("ReturnType", "10032");
+                        map.put("Message", "该群未设置管理员！");
+                    } if (!gp.getAdminUserIds().equals(userId)) {
+                        map.put("ReturnType", "1005");
+                        map.put("Message", "不是组管理员，无权修改密码");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //2-获取其他参数
+            String oldPwd=(String)m.get("OldPassword");
+            String newPwd=(String)m.get("NewPassword");
+            String errMsg="";
+            if (StringUtils.isNullOrEmptyOrSpace(oldPwd)) errMsg+=",旧密码为空";
+            if (StringUtils.isNullOrEmptyOrSpace(newPwd)) errMsg+=",新密码为空";
+            if (!StringUtils.isNullOrEmptyOrSpace(errMsg)) {
+                errMsg=errMsg.substring(1);
+                map.put("ReturnType", "1006");
+                map.put("Message", errMsg+",无法需改密码");
+            }
+            if (oldPwd.equals(newPwd)) {
+                map.put("ReturnType", "1007");
+                map.put("Message", "新旧密码不能相同");
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //获得用户更新内容
+            gp.setGroupId(groupId);
+            gp.setGroupPwd(newPwd);
+            groupService.updateGroup(gp);
             map.put("ReturnType", "1001");
             return map;
         } catch(Exception e) {
@@ -1567,13 +1686,16 @@ public class GroupController {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
                 } else {
-                    if (!gp.getAdminUserIds().equals(userId)) {
-                        map.put("ReturnType", "10021");
-                        map.put("Message", "用户不是该组的管理员！");
-                    }
                     if (gp.getGroupType()!=0) {
                         map.put("ReturnType", "10031");
                         map.put("Message", "用户组必须是审核组");
+                    }
+                    if (gp.getAdminUserIds()==null) {
+                        map.put("ReturnType", "10032");
+                        map.put("Message", "该群未设置管理员！");
+                    } else if (!gp.getAdminUserIds().equals(userId)) {
+                        map.put("ReturnType", "10021");
+                        map.put("Message", "用户不是该组的管理员！");
                     }
                 }
             }
@@ -1595,8 +1717,8 @@ public class GroupController {
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("userDescn"))) ium.put("UserDescn", one.get("userDescn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mailAddress"))) ium.put("Email", one.get("mailAddress"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mainPhoneNum"))) ium.put("PhoneNum", one.get("mainPhoneNum"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("protraitBig"))) ium.put("ProtraitBig", one.get("protraitBig"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("protraitMini"))) ium.put("ProtraitMini", one.get("protraitMini"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("portraitBig"))) ium.put("PortraitBig", one.get("portraitBig"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("portraitMini"))) ium.put("PortraitMini", one.get("portraitMini"));
                     rul.add(ium);
                 }
                 map.put("ReturnType", "1001");
@@ -1665,9 +1787,12 @@ public class GroupController {
                         map.put("ReturnType", "10031");
                         map.put("Message", "不在审核组，不能完成此功能！");
                     }
-                    if (!gp.getAdminUserIds().equals(userId)) {
+                    if (gp.getAdminUserIds()==null) {
+                        map.put("ReturnType", "10032");
+                        map.put("Message", "该群未设置管理员！");
+                    } else if (!gp.getAdminUserIds().equals(userId)) {
                         map.put("ReturnType", "10021");
-                        map.put("Message", "用户不是该组管理员，无法处理！");
+                        map.put("Message", "用户不是该组的管理员！");
                     }
                 }
             }
@@ -1690,7 +1815,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //4-获得处理类型
-            String dealType=(String)m.get("DealType");
+            String dealType=""+m.get("DealType");
             if (StringUtils.isNullOrEmptyOrSpace(dealType)) {
                 map.put("ReturnType", "1006");
                 map.put("Message", "没有处理类型dealType，无法处理");
@@ -1763,8 +1888,8 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //获得所修改的用户Id
-            String udpateUserId=(String)m.get("UdpateUserId");
-            if (StringUtils.isNullOrEmptyOrSpace(udpateUserId)) {
+            String updateUserId=(String)m.get("UpdateUserId");
+            if (StringUtils.isNullOrEmptyOrSpace(updateUserId)) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "无法获得被修改用户Id");
                 return map;
@@ -1778,9 +1903,9 @@ public class GroupController {
             }
 
             Map<String, String> param=new HashMap<String, String>();
-            if (StringUtils.isNullOrEmptyOrSpace(udpateUserId)) param.put("udpateUserId", udpateUserId);
-            if (StringUtils.isNullOrEmptyOrSpace(userAliasName)) param.put("userAliasName", userAliasName);
-            if (StringUtils.isNullOrEmptyOrSpace(userAliasDescn)) param.put("userAliasDescn", userAliasDescn);
+            if (!StringUtils.isNullOrEmptyOrSpace(updateUserId)) param.put("updateUserId", updateUserId);
+            if (!StringUtils.isNullOrEmptyOrSpace(userAliasName)) param.put("userAliasName", userAliasName);
+            if (!StringUtils.isNullOrEmptyOrSpace(userAliasDescn)) param.put("userAliasDescn", userAliasDescn);
 
             map.putAll(groupService.updateGroupUser(param, userId, gp));
             map.put("ReturnType", "1001");

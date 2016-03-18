@@ -15,8 +15,8 @@ public class UserPo extends UgaUser {
     private String mailAddress; //用户邮箱
     private int userType; //用户分类：1=普通用户;2=编辑用户
     private int userState;//用户状态，0~2
-    private String protraitBig;//用户头像大
-    private String protraitMini;//用户头像小
+    private String portraitBig;//用户头像大
+    private String portraitMini;//用户头像小
     private String descn; //用户描述
     private Timestamp CTime; //记录创建时间
     private Timestamp lmTime; //最后修改时间:last modify time
@@ -51,17 +51,17 @@ public class UserPo extends UgaUser {
     public void setUserState(int userState) {
         this.userState = userState;
     }
-    public String getProtraitBig() {
-        return protraitBig;
+    public String getPortraitBig() {
+        return portraitBig;
     }
-    public void setProtraitBig(String protraitBig) {
-        this.protraitBig = protraitBig;
+    public void setPortraitBig(String portraitBig) {
+        this.portraitBig = portraitBig;
     }
-    public String getProtraitMini() {
-        return protraitMini;
+    public String getPortraitMini() {
+        return portraitMini;
     }
-    public void setProtraitMini(String protraitMini) {
-        this.protraitMini = protraitMini;
+    public void setPortraitMini(String portraitMini) {
+        this.portraitMini = portraitMini;
     }
     public String getDescn() {
         return descn;
@@ -91,8 +91,8 @@ public class UserPo extends UgaUser {
         if (!StringUtils.isNullOrEmptyOrSpace(this.mainPhoneNum)) retM.put("PhoneNum", this.mainPhoneNum);
         if (!StringUtils.isNullOrEmptyOrSpace(this.mailAddress)) retM.put("Email", this.mailAddress);
         if (!StringUtils.isNullOrEmptyOrSpace(this.descn)) retM.put("Descn", this.descn);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.protraitBig)) retM.put("ProtraitBig", this.protraitBig);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.protraitMini)) retM.put("ProtraitMini", this.protraitMini);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.portraitBig)) retM.put("PortraitBig", this.portraitBig);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.portraitMini)) retM.put("PortraitMini", this.portraitMini);
         return retM;
     }
 }

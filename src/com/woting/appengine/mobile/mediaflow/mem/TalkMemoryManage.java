@@ -7,10 +7,10 @@ import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.intercom.model.GroupInterCom;
+import com.woting.appengine.mobile.mediaflow.model.CompareGroupMsg;
 import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
-import com.woting.appengine.mobile.push.model.CompareMsg;
 import com.woting.appengine.mobile.push.model.Message;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 
@@ -62,14 +62,14 @@ public class TalkMemoryManage {
             MobileKey mk;
 
             PushMemoryManage pmm=PushMemoryManage.getInstance();
-            GroupMemoryManage gmm=GroupMemoryManage.getInstance();
             for (String k: this.tm.talkMap.keySet()) {
                 WholeTalk wt = this.tm.talkMap.get(k);
-                if (wt.getTalkType()==1) {
+                if (wt.getTalkType()==1) {//对讲
+                    GroupMemoryManage gmm=GroupMemoryManage.getInstance();
                     GroupInterCom gic = gmm.getGroupInterCom(wt.getObjId());
                     //判断对讲是否结束
                     boolean talkEnd=false;
-                    talkEnd=wt.isCompleted()||gic==null||gic.getSpeaker()==null;
+                    talkEnd=wt.isSendCompleted()||gic==null||gic.getSpeaker()==null;
                     if (talkEnd) {
                         this.removeWt(wt);//清除语音内存
                         //发广播消息，推出PTT
@@ -99,24 +99,10 @@ public class TalkMemoryManage {
                             }
                         }
                         gic.delSpeaker(gic.getSpeaker()==null?null:gic.getSpeaker().getUserId());
+                        this.removeWt(wt);
                     }
                 }
             }
-        }
-    }
-    class CompareGroupMsg implements CompareMsg {
-        @Override
-        public boolean compare(Message msg1, Message msg2) {
-            if (msg1.getFromAddr().equals(msg2.getFromAddr())
-              &&msg1.getToAddr().equals(msg2.getToAddr())
-              &&msg1.getMsgBizType().equals(msg2.getMsgBizType())
-              &&msg1.getCmdType().equals(msg2.getCmdType())
-              &&msg1.getCommand().equals(msg2.getCommand()) ) {
-                if (msg1.getMsgContent()==null&&msg2.getMsgContent()==null) return true;
-                if (((msg1.getMsgContent()!=null&&msg2.getMsgContent()!=null))
-                  &&(((Map)msg1.getMsgContent()).get("GroupId").equals(((Map)msg2.getMsgContent()).get("GroupId")))) return true;
-            }
-            return false;
         }
     }
 

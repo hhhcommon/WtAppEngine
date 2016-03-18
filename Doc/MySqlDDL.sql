@@ -53,8 +53,8 @@ CREATE TABLE plat_User (
   mainPhoneNum   varchar(100)               DEFAULT NULL  COMMENT '用户主手机号码',
   userType       int(1) unsigned  NOT NULL                COMMENT '用户分类：1自然人用户，2机构用户',
   userState      int(1)           NOT NULL  DEFAULT '0'   COMMENT '用户状态，0-2,0代表未激活的用户，1代表已激用户，2代表失效用户,3根据邮箱找密码的用户',
-  protraitBig    varchar(300)                             COMMENT '用户头像大',
-  protraitMini   varchar(300)                             COMMENT '用户头像小',
+  portraitBig    varchar(300)                             COMMENT '用户头像大',
+  portraitMini   varchar(300)                             COMMENT '用户头像小',
   descn          varchar(2000)              DEFAULT NULL  COMMENT '备注',
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
   lmTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改：每次更新的时间',
@@ -92,7 +92,7 @@ CREATE TABLE plat_Group (
   groupSignature varchar(100)     NOT NULL                COMMENT '组签名，只有管理者可以修改，组内成员都可以看到',
   groupPwd       varchar(100)     NOT NULL                COMMENT '组密码',
   groupImg       varchar(200)                             COMMENT '用户组头像，是指向头像的URL',
-  groupType      int(2) unsigned  NOT NULL  DEFAULT 0     COMMENT '用户组类型,0一般组(由用户根据好友创建);1号码组;2密码组',
+  groupType      int(2) unsigned  NOT NULL  DEFAULT 0     COMMENT '用户组类型:验证群0；公开群1[原来的号码群]；密码群2',
   pId            varchar(32)      NOT NULL  DEFAULT 0     COMMENT '上级用户组名称，默认0，为根',
   sort           int(5) unsigned  NOT NULL  DEFAULT 0     COMMENT '排序,只在本级排序有意义,从大到小排序，越大越靠前',
   createUserId   varchar(32)      NOT NULL                COMMENT '用户组创建者',
@@ -101,7 +101,7 @@ CREATE TABLE plat_Group (
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
   lmTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改：每次更新的时间',
   PRIMARY KEY(id),
-  UNIQUE KEY ALTER(groupNum) USING HASH
+  UNIQUE KEY groupNum(groupNum) USING HASH
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='005用户组表';
 /** 目前和树形组相关的字段pId, sort没有用 */
@@ -132,7 +132,7 @@ CREATE TABLE wt_GroupInvite (
   firstInviteTime  timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:首次邀请时间',
   inviteTime       timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '再次邀请时间',
   acceptFlag       int(1)        NOT NULL  DEFAULT 0     COMMENT '邀请状态：0未处理;1邀请成功;2拒绝邀请，3别人成功，4别人拒绝，5被管理员拒绝',
-  managerFlag      int(2)        NOT NULL  DEFAULT 0     COMMENT '组管理员处理类型，只有审核组的邀请需要得到管理员的认可，0未处理,1通过,2拒绝',
+  managerFlag      int(1)        NOT NULL  DEFAULT 0     COMMENT '组管理员处理类型，只有审核组的邀请需要得到管理员的认可，0未处理,1通过,2拒绝',
   acceptTime       timestamp               DEFAULT CURRENT_TIMESTAMP  COMMENT '接受/拒绝邀请的时间',
   refuseMessage    varchar(32)                           COMMENT '拒绝邀请理由',
   flag             int(1)       NOT NULL   DEFAULT 1     COMMENT '状态，1=正在用的组；2=组已被删除，这样的记录groupId在Group组中不必有关联主键',
@@ -182,7 +182,7 @@ CREATE TABLE wt_PersonAlias (
   aliasDescn      varchar(600)           COMMENT '别名用户描述',
   lastModifyTime  timestamp    NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '邀请成功的时间',
   PRIMARY KEY(id),
-  UNIQUE KEY idxBizKey(typeId, mainUserId, aliasUserId) USING HASH
+  UNIQUE KEY idxBizKey_010(typeId, mainUserId, aliasUserId) USING HASH
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='010人员别名列表';
 
@@ -357,8 +357,8 @@ CREATE TABLE wt_Person (
   phoneNum      varchar(100)               DEFAULT NULL  COMMENT '人员手机',
   email         varchar(100)               DEFAULT NULL  COMMENT 'eMail',
   homepage      varchar(100)                             COMMENT '个人主页',
-  protraitBig   varchar(300)                             COMMENT '用户头像大',
-  protraitMini  varchar(300)                             COMMENT '用户头像小',
+  portraitBig   varchar(300)                             COMMENT '用户头像大',
+  portraitMini  varchar(300)                             COMMENT '用户头像小',
   cTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
   PRIMARY KEY(id)
 )
@@ -373,8 +373,7 @@ CREATE TABLE wt_Organize (
   webPage       varchar(100)               DEFAULT NULL  COMMENT '官网地址',
   orgTypeId     varchar(100)                             COMMENT '组织分类Id，可分为：电台、网站等',
   orgTypeName   varchar(100)                             COMMENT '组织分类名称',
-  protraitBig   varchar(300)                             COMMENT '组织logo大图像',
-  protraitMini  varchar(300)                             COMMENT '组织logo小图像',
+  orgImg        varchar(300)                             COMMENT '组织logo图',
   cTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
   PRIMARY KEY(id)
 )
@@ -470,24 +469,223 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='027栏目内容发布';
 
 /**关于规则，在下一期处理，本期都写死在代码中 **/
 
-
 /*****************************************/
 /**
 CREATE OR REPLACE ALGORITHM=UNDEFINED SQL SECURITY DEFINER
 VIEW vWt_Friend_Rel AS 
-  select a.id, a.aUserId aUserId, b.loginName aUserName, b.protraitMini aProtraitUri,
-    a.bUserId bUserId, c.loginName bUserName, c.protraitMini bProtraitUri,
+  select a.id, a.aUserId aUserId, b.loginName aUserName, b.portraitMini aPortraitUri,
+    a.bUserId bUserId, c.loginName bUserName, c.portraitMini bPortraitUri,
     0+a.inviteVector inviteVector, a.inviteTime
   from wt_Friend_Rel a
   left join plat_User b on a.aUserId=b.id
   left join plat_User c on a.bUserId=c.id
   union all
-  select d.id, d.bUserId aUserId, e.loginName aUserName, e.protraitMini aProtraitUri,
-    d.aUserId bUserId, f.loginName bUserName, f.protraitMini bProtraitUri,
+  select d.id, d.bUserId aUserId, e.loginName aUserName, e.portraitMini aPortraitUri,
+    d.aUserId bUserId, f.loginName bUserName, f.portraitMini bPortraitUri,
     0-d.inviteVector inviteVector, d.inviteTime
   from wt_Friend_Rel d
   left join plat_User e on d.aUserId=e.id
   left join plat_User f on d.bUserId=f.id
 ;
 **/
+/*****************************************/
+
+
+/*****************************************/
+/**以下为抓取内容的设计**/
+/**C000 抓取源[WT_C_SOURCE]*/
+DROP TABLE IF EXISTS wt_c_Source;
+CREATE TABLE wt_c_Source (
+  id          varchar(32)      NOT NULL             COMMENT '表ID(UUID)',
+  sourceName  varchar(32)      NOT NULL             COMMENT '主站名称',
+  sourceWeb   varchar(800)     NOT NULL             COMMENT '主站站点，用空格隔开',
+  cTime       timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY sourceName(sourceName) USING HASH
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='C000抓取源';
+
+/**C001 抓取方案[WT_C_SCHEME]*/
+DROP TABLE IF EXISTS wt_c_Scheme;
+CREATE TABLE wt_c_Scheme (
+  id             varchar(32)   NOT NULL                             COMMENT '表ID(UUID)',
+  sourceId       varchar(32)   NOT NULL                             COMMENT '抓取源Id',
+  schemeType     int unsigned  NOT NULL  DEFAULT 2                  COMMENT '模式类型，1-文件导入；2数据库方式；默认2',
+  fileUrls       varchar(800)                                       COMMENT '若是文件方式，则是文件名称',
+  isValidate     int unsigned  NOT NULL  DEFAULT 1                  COMMENT '是否启用1启用；0不启用',
+  schemeName     varchar(32)   NOT NULL                             COMMENT '方案名称',
+  schemeDescn    varchar(32)   NOT NULL                             COMMENT '方案描述',
+  crawlType      int unsigned  NOT NULL  DEFAULT 0                  COMMENT '抓取循环类型；1=只抓取1次，n抓取n次；0一直循环下去',
+  processNum     int unsigned  NOT NULL  DEFAULT 0                  COMMENT '已执行的次数',
+  intervalTime   int unsigned  NOT NULL  DEFAULT 0                  COMMENT '两次抓取之间的间隔时间，毫秒；<=0上次完成后，立即执行；>0上次执行完间隔的毫秒数',
+  threadNum      int unsigned  NOT NULL  DEFAULT 1                  COMMENT '执行线程数:crawl4j',
+  className      varchar(300)  NOT NULL                             COMMENT '执行的抓取类:crawl4j',
+  origTableName  varchar(100)  NOT NULL                             COMMENT '对应原始数据表名称',
+  fetchSeeds     varchar(800)  NOT NULL                             COMMENT '抓取内容种子URL:crawl4j',
+  tempPath       varchar(300)                                       COMMENT '存储临时数据的本机操作系统路径，若为空，系统自动给出这个地址:crawl4j',
+  isStoreWeb     int unsigned  NOT NULL  DEFAULT 0                  COMMENT '是否存储网页：1存储；2不存储',
+  tempStorePath  varchar(300)                                       COMMENT '当isStoreWeb=1此字段才有意义， 网页内容存储的根路径，若为空，系统自动给出这个地址:crawl4j',
+  cTime          timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='C001抓取方案';
+
+/**C002 抓取批次[WT_C_BATCH]*/
+DROP TABLE IF EXISTS wt_c_Batch;
+CREATE TABLE wt_c_Batch (
+  schemeId     varchar(32)   NOT NULL                                 COMMENT '方案Id',
+  schemeNum    int unsigned  NOT NULL  DEFAULT 0                      COMMENT '该方案下的序号',
+  beginTime    timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP      COMMENT '方案执行开始时间',
+  endTime      timestamp         NULL  DEFAULT '0000-00-00 00:00:00'  COMMENT '方案执行结束时间',
+  duration     int unsigned                                           COMMENT '执行总时间，毫秒数',
+  visitCount   int unsigned                                           COMMENT '总访问网页数',
+  insertCount  int unsigned                                           COMMENT '插入记录数',
+  updateCount  int unsigned                                           COMMENT '更新记录数',
+  delCount     int unsigned                                           COMMENT '删除记录数',
+  flag         int unsigned            DEFAULT 0                      COMMENT '抓取状态：0正在抓取；1抓取完成；2原始数据etl完成',
+  PRIMARY KEY (schemeId, schemeNum)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='C002抓取批次记录';
+
+/**C003 源数据-第一次Etl过程[WT_C_ETL1CONFIG]*/
+DROP TABLE IF EXISTS wt_c_Etl1Config;
+CREATE TABLE wt_c_Etl1 (
+  etlId     varchar(32)   NOT NULL                                 COMMENT '方案Id',
+  etlName     varchar(32)   NOT NULL                                 COMMENT '方案Id',
+  threadNum      int unsigned  NOT NULL  DEFAULT 1                  COMMENT '执行线程数:crawl4j',
+  oneDealClassName    timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP      COMMENT '方案执行开始时间',
+  loadOrigClassName    timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP      COMMENT '方案执行开始时间',
+  PRIMARY KEY (etlId)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='C003抓取批次记录';
+
+/**C004 抓取字典组[WT_C_DICTM]*/
+DROP TABLE IF EXISTS wt_c_DictM;
+CREATE TABLE wt_c_DictM (
+  id         varchar(32)      NOT NULL             COMMENT '字典组表ID(UUID)',
+  sourceId   varchar(32)      NOT NULL             COMMENT '源Id',
+  batchId    varchar(32)      NOT NULL             COMMENT '创建者的抓取批次号',
+  dmName     varchar(200)     NOT NULL             COMMENT '字典组名称',
+  nPy        varchar(800)                          COMMENT '名称拼音',
+  sort       int(5) unsigned  NOT NULL  DEFAULT 0  COMMENT '字典组排序,从大到小排序，越大越靠前',
+  isValidate int(1) unsigned  NOT NULL  DEFAULT 1  COMMENT '是否生效(1-生效,2-无效)',
+  mType      int(1) unsigned  NOT NULL  DEFAULT 3  COMMENT '字典类型(1-系统保留,2-系统,3-自定义)',
+  mRef       varchar(4000)                         COMMENT '创建时间',
+  descn      varchar(500)                          COMMENT '说明',
+  cTime      timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  lmTime     timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='C004抓取字典组';
+
+/**C005 抓取字典项[WT_C_DICTD]*/
+DROP TABLE IF EXISTS wt_c_DictD;
+CREATE TABLE wt_c_DictD (
+  id         varchar(32)      NOT NULL             COMMENT '字典项表ID(UUID)',
+  sourceId   varchar(32)      NOT NULL             COMMENT '源Id',
+  batchId    varchar(32)      NOT NULL             COMMENT '创建者的抓取批次号',
+  mId        varchar(32)      NOT NULL             COMMENT '字典组外键(UUID)',
+  pId        varchar(32)      NOT NULL             COMMENT '父结点ID(UUID)',
+  sort       int(5) unsigned  NOT NULL  DEFAULT 0  COMMENT '字典项排序,只在本级排序有意义,从大到小排序，越大越靠前',
+  isValidate int(1) unsigned  NOT NULL  DEFAULT 1  COMMENT '是否生效(1-生效,2-无效)',
+  ddName     varchar(200)     NOT NULL             COMMENT '字典项名称',
+  nPy        varchar(800)                          COMMENT '名称拼音',
+  aliasName  varchar(200)                          COMMENT '字典项别名',
+  anPy       varchar(800)                          COMMENT '别名拼音',
+  bCode      varchar(50)      NOT NULL             COMMENT '业务编码',
+  dType      int(1) unsigned  NOT NULL  DEFAULT 3  COMMENT '字典类型(1-系统保留,2-系统,3-自定义,4引用-其他字典项ID/**以下为喜马拉雅的抓取-内容**/；)',
+  dRef       varchar(4000)                         COMMENT '创建时间',
+  descn      varchar(500)                          COMMENT '说明',
+  cTime      timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  lmTime     timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='C005抓取字典项';
+
+/**====以下为喜马拉雅的抓取-内容**/
+/**XMLY001抓取源内容[XMLY_Original]**/
+DROP TABLE IF EXISTS XMLY_Original;
+CREATE TABLE XMLY_Original (
+  id         varchar(32)   NOT NULL             COMMENT '表ID(UUID)',
+  schemeId   varchar(32)   NOT NULL             COMMENT '方案Id',
+  schemeNum  int unsigned  NOT NULL  DEFAULT 0  COMMENT '该方案下的序号',
+  visitUrl   varchar(800)  NOT NULL             COMMENT '网页Url',
+  parentUrl  varchar(800)  NOT NULL             COMMENT '父网页Url',
+  assetType  int unsigned                       COMMENT '类型：1专辑；2声音；3主播；4标签',
+  seqId      int unsigned                       COMMENT '系列节目Id',
+  seqName    varchar(300)                       COMMENT '系列节目名称',
+  assetId    int unsigned                       COMMENT '声音内容Id',
+  assetName  varchar(300)                       COMMENT '声音内容名称',
+  playUrl    varchar(300)                       COMMENT '播放Url',
+  person     varchar(200)                       COMMENT '主播',
+  imgUrl     varchar(300)                       COMMENT '对应图片Img',
+  playCount  int unsigned                       COMMENT '访问数量',
+  catalog    varchar(300)                       COMMENT '分类',
+  tags       varchar(300)                       COMMENT '标签/关键词',
+  descript   text                               COMMENT '描述',
+  extInfo    text                               COMMENT '扩展信息，以Json为基础结构',
+  flag       int unsigned                       COMMENT '处理方式：0刚抓取完；1已经处理完',
+  cTime      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='XMLY001喜马拉雅原始内容';
+
+/**XMLY002 关键词[XMLY_Key] **/
+DROP TABLE IF EXISTS XMLY_Key;
+CREATE TABLE XMLY_Key (
+  id         varchar(32)  NOT NULL  COMMENT '表ID(UUID)',
+  schemeId   varchar(32)  NOT NULL  COMMENT '方案Id',
+  schemeNum  varchar(32)  NOT NULL  COMMENT '该方案下的序号',
+  keyWord    varchar(32)  NOT NULL  COMMENT '关键词',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='XMLY002关键词';
+
+/**XMLY003 关键词与分类关系[XMLY_KeyCata_Ref] **/
+DROP TABLE IF EXISTS XMLY_KeyCata_Ref;
+CREATE TABLE XMLY_KeyCata_Ref (
+  id         varchar(32)  NOT NULL  COMMENT '表ID(UUID)',
+  schemeId   varchar(32)  NOT NULL  COMMENT '方案Id',
+  schemeNum  varchar(32)  NOT NULL  COMMENT '该方案下的序号',
+  kwId       varchar(32)  NOT NULL  COMMENT '关键词Id',
+  keyWord    varchar(32)  NOT NULL  COMMENT '关键词',
+  dictMid    varchar(32)  NOT NULL  COMMENT '主表Id',
+  dictDid    varchar(32)  NOT NULL  COMMENT '关键词',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='XMLY003关键词与分类关系';
+
+/**XMLY004 关键词与内容关系[XMLY_KeyAsset_Ref] **/
+DROP TABLE IF EXISTS XMLY_KeyAsset_Ref;
+CREATE TABLE XMLY_KeyAsset_Ref (
+  id         varchar(32)   NOT NULL  COMMENT '表ID(UUID)',
+  schemeId   varchar(32)   NOT NULL  COMMENT '方案Id',
+  schemeNum  varchar(32)   NOT NULL  COMMENT '该方案下的序号',
+  kwId       varchar(32)   NOT NULL  COMMENT '关键词Id',
+  keyWord    varchar(32)   NOT NULL  COMMENT '关键词',
+  assetId    varchar(32)   NOT NULL  COMMENT '内容id',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='XMLY004关键词与内容资产关系';
+
+/**XMLY005 喜马拉雅内容[XMLY_Asset] **/
+DROP TABLE IF EXISTS XMLY_Asset;
+CREATE TABLE XMLY_Asset (
+  id         varchar(32)   NOT NULL  COMMENT '表ID(UUID)',
+  schemeId   varchar(32)   NOT NULL  COMMENT '方案Id',
+  schemeNum  varchar(32)   NOT NULL  COMMENT '该方案下的序号',
+  keyWord    varchar(300)  NOT NULL  COMMENT '关键词',
+  orgId      varchar(32)   NOT NULL  COMMENT '喜马拉雅源Id',
+  assetId    varchar(32)   NOT NULL  COMMENT '内容Id',
+  assetType  int unsigned  NOT NULL  COMMENT '内容类型1单体;2专辑',
+  assetName  varchar(32)   NOT NULL  COMMENT '内容名称',
+  playUrl    varchar(300)            COMMENT '播放Url',
+  playCount  int unsigned            COMMENT '访问数量',
+  imgUrl     varchar(300)            COMMENT '内容对应的Img',
+  descript   text                    COMMENT '描述',
+  parentId   varchar(640)  NOT NULL  COMMENT '父结点Id',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='XMLY005喜马拉雅内容';
+
 /*****************************************/

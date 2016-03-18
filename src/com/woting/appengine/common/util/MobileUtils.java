@@ -187,15 +187,19 @@ public abstract class MobileUtils {
     }
 
     /**
-     * 从Message的消息发送地址，获得MobileKey
+     * 从Message的地址，获得MobileKey
      * @param m 消息数据
+     * @param type =1发送地址FromAddr;=2(!=1)接收地址
      * @return 若合规，返回正常的MobileKey，否则返回空
      */
     //还有问题，没有做全部的解析，先这样
-    public static MobileKey getMobileKey(Message m) {
-        if (m==null||StringUtils.isNullOrEmptyOrSpace(m.getFromAddr())) return null;
+    public static MobileKey getMobileKey(Message m, int type) {
+        if (m==null) return null;
+        if (type==1&&StringUtils.isNullOrEmptyOrSpace(m.getFromAddr())) return null;
+        if (type!=1&&StringUtils.isNullOrEmptyOrSpace(m.getToAddr())) return null;
+
         String _temp, _temp2;
-        _temp=m.getFromAddr();
+        _temp=type==1?m.getFromAddr():m.getToAddr();
         if (_temp.charAt(0)!='{'||_temp.charAt(_temp.length()-1)!='}') return null;
         _temp=_temp.substring(1, _temp.length()-1);
         String[] ss=_temp.split("@@");
@@ -238,7 +242,7 @@ public abstract class MobileUtils {
     public static Map<String, Object> dealMobileLinked(Message m, int type) {
         //若参数整体无意义，则返回空
         if (m==null) return null;
-        return MobileUtils._dealMobileLinked(MobileUtils.getMobileKey(m), type);
+        return MobileUtils._dealMobileLinked(MobileUtils.getMobileKey(m,1), type);
     }
 
     /**

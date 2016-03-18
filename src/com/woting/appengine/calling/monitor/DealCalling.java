@@ -66,9 +66,9 @@ public class DealCalling extends Thread {
             if (callId.equals("")) return;
 
             OneCall oneCall=null;//通话对象
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
+            MobileKey mk=MobileUtils.getMobileKey(sourceMsg,1);
             if (sourceMsg.getCommand().equals("1")) {//发起呼叫过程
-                String callerId=MobileUtils.getMobileKey(sourceMsg).getUserId();
+                String callerId=mk.getUserId();
                 String CallederId=((Map)sourceMsg.getMsgContent()).get("CallederId")+"";
                 //创建内存对象
                 oneCall=new OneCall(callId, callerId, CallederId

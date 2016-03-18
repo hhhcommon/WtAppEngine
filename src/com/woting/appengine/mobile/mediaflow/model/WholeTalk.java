@@ -3,7 +3,13 @@ package com.woting.appengine.mobile.mediaflow.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.spiritdata.framework.util.SequenceUUID;
+import com.woting.appengine.common.util.MobileUtils;
+import com.woting.appengine.intercom.mem.GroupMemoryManage;
+import com.woting.appengine.intercom.model.GroupInterCom;
 import com.woting.appengine.mobile.model.MobileKey;
+import com.woting.appengine.mobile.push.mem.PushMemoryManage;
+import com.woting.appengine.mobile.push.model.Message;
 
 /**
  * 一次完整的通话：
@@ -12,13 +18,15 @@ import com.woting.appengine.mobile.model.MobileKey;
  * @author wanghui
  */
 public class WholeTalk {
-    protected long cycleTime=500;//周期时间，0.5秒
-    private int expiresT=5; //过期周期
+    private Object lock=new Object();
+    protected int maxReSend=10;//最多重传次数
+    protected long oneT=80;//一个周期的毫秒数
+    private int expiresT=10; //过期周期
     //以上是控制时间的周期
 
     public WholeTalk() {
         super();
-        this.talkData = new HashMap<Integer, TalkSegment>();
+        talkData=new HashMap<Integer, TalkSegment>();
     }
 
     private String talkId; //通话的Id
@@ -26,40 +34,42 @@ public class WholeTalk {
     private String objId; //通话所对应的对讲的Id，当为对讲时是groupId，当为电话时是callId
     private MobileKey talkerMk; //讲话人Id
     private int MaxNum=0; //当前通话的最大包数
+    private int lastNum=0; //最后一个包号
     private Map<Integer, TalkSegment> talkData; //通话的完整数据
+    boolean receiveAll=false, sendAll=false;
 
     public String getTalkId() {
         return talkId;
     }
     public void setTalkId(String talkId) {
-        this.talkId = talkId;
+        this.talkId=talkId;
     }
     public int getTalkType() {
         return talkType;
     }
     public void setTalkType(int talkType) {
-        this.talkType = talkType;
+        this.talkType=talkType;
     }
     public String getObjId() {
-        return this.objId;
+        return objId;
     }
     public void setObjId(String objId) {
-        this.objId = objId;
+        this.objId=objId;
     }
     public Map<Integer, TalkSegment> getTalkData() {
         return talkData;
     }
     public void setTalkData(Map<Integer, TalkSegment> talkData) {
-        this.talkData = talkData;
+        this.talkData=talkData;
     }
     public MobileKey getTalkerMk() {
         return talkerMk;
     }
     public void setTalkerMk(MobileKey talkerMk) {
-        this.talkerMk = talkerMk;
+        this.talkerMk=talkerMk;
     }
     public String getTalkerId() {
-        return this.talkerMk.getUserId();
+        return talkerMk.getUserId();
     }
 
     /**
@@ -67,44 +77,155 @@ public class WholeTalk {
      * @param ts
      */
     public void addSegment(TalkSegment ts) {
-        if (ts.getWt()==null||!ts.getWt().getTalkId().equals(this.talkId)) throw new IllegalArgumentException("对话段的主对话与当前对话段不匹配");
-        this.talkData.put(ts.getSeqNum(), ts);
-        if (ts.getSeqNum()>this.MaxNum) this.MaxNum=ts.getSeqNum();
+        if (ts.getWt()==null||!ts.getWt().getTalkId().equals(talkId)) throw new IllegalArgumentException("对话段的主对话与当前对话段不匹配");
+        synchronized(lock) {
+            if (ts.getSeqNum()<0) {
+                if (lastNum>0) return;
+                lastNum=Math.abs(ts.getSeqNum());
+            }
+            talkData.put(Math.abs(ts.getSeqNum()), ts);
+            if (Math.abs(ts.getSeqNum())>MaxNum) MaxNum=Math.abs(ts.getSeqNum());
+        }
     }
 
+    /**
+     * 结束传输
+     */
+    public void completedSend() {
+        this.sendAll=true;
+    }
     /**
      * 是否传输完成
      * @return
      */
-    public boolean isCompleted() {
-        TalkSegment ts=talkData.get(new Integer(-1));
+    public boolean isSendCompleted() {
+        if (sendAll) return sendAll;
+        TalkSegment ts=(lastNum!=0?talkData.get(lastNum):null);
         if (ts==null) return false;
-        for (String k: ts.getSendFlags().keySet()) {
-            if (!ts.getSendFlags().get(k).equals("2")) return false;
-        }
-        int lowIndex=this.MaxNum-expiresT;
-        for (int i=(lowIndex>=0?lowIndex:0); i<this.MaxNum; i++) {
-            ts = talkData.get(i);
+        if (!ts.sendOk()) return false;
+        int lowIndex=MaxNum-expiresT;
+        for (int i=(lowIndex>=0?lowIndex:0); i<MaxNum; i++) {
+            ts=talkData.get(i);
             if (ts==null) return false;
-            for (String k: ts.getSendFlags().keySet()) {
-                if (!ts.getSendFlags().get(k).equals("2")) return false;
-            }
+            if (!ts.sendOk()) return false;
         }
-        return true;
+        sendAll=true;
+        return sendAll;
     }
 
+    /**
+     * 结束接收
+     */
+    public void completedReceive() {
+        this.receiveAll=true;
+    }
     /**
      * 是否接收到了全部的包
      * @return
      */
     public boolean isReceiveCompleted() {
-        TalkSegment ts=talkData.get(new Integer(-1));
+        if (receiveAll) return receiveAll;
+        TalkSegment ts=(lastNum!=0?talkData.get(lastNum):null);
         if (ts==null) return false;
-        int lowIndex=this.MaxNum-expiresT;
-        for (int i=(lowIndex>=0?lowIndex:0); i<this.MaxNum; i++) {//注意，若5个周期前的数据没有收到，则认为还没有全部收到
-            ts = talkData.get(i);
+        int lowIndex=MaxNum-expiresT;
+        for (int i=(lowIndex>=0?lowIndex:0); i<MaxNum; i++) {//注意，若expiresT个周期内的数据没有收到，则认为还没有全部收到
+            ts=talkData.get(i);
             if (ts==null) return false;
         }
-        return true;
+        receiveAll=true;
+        return receiveAll;
+    }
+
+    /**
+     * 开始这个通话的监控线程
+     */
+    public void startMonitor(WholeTalk wt) {
+        new Thread("通话[id="+talkId+"]的监控") {
+            WholeTalk _wt=wt;
+            public void run() {
+                GroupMemoryManage gmm=GroupMemoryManage.getInstance();
+                PushMemoryManage pmm=PushMemoryManage.getInstance();
+                
+                while (!_wt.isSendCompleted()) {
+                    int lowIndex=MaxNum-expiresT;
+                    for (int i=(lowIndex>=0?lowIndex:0); i<MaxNum; i++) {//注意，若expiresT个周期内的数据没有收到，则认为还没有全部收到
+                        try {
+                            TalkSegment ts=talkData.get(i);
+                            if (ts!=null) {
+                                //1-删除已不再组的用户,只涉及对讲
+                                if (wt.getTalkType()==1) {//对讲
+                                    String delKeys="";
+                                    //找到
+                                    for (String k: ts.getSendUserMap().keySet()) {
+                                        GroupInterCom gic=gmm.getGroupInterCom(_wt.getObjId());
+                                        if (gic!=null) {
+                                            if (gic.getEntryGroupUserMap()==null||gic.getEntryGroupUserMap().isEmpty()) {
+                                                _wt.completedReceive();
+                                                _wt.completedSend();
+                                            } else {
+                                                if (gic.getEntryGroupUserMap().get(k)==null) delKeys+=";"+k;
+                                            }
+                                        } else {
+                                            _wt.completedReceive();
+                                            _wt.completedSend();
+                                        }
+                                    }
+                                    //删除
+                                    if (!delKeys.equals("")) {
+                                        String[] _delk=(delKeys.substring(1)).split(";");
+                                        for (int j=0; j<_delk.length; j++) {
+                                            ts.getSendUserMap().remove(_delk[j]);
+                                            ts.getSendFlagMap().remove(_delk[j]);
+                                            ts.getSendTimeMap().remove(_delk[j]);
+                                        }
+                                    }
+                                }
+                                //2-重新发送
+                                for (String k: ts.getSendUserMap().keySet()) {
+                                    if (ts.getSendFlagMap().get(k)==1) {//还未传输成功
+                                        if (ts.getSendTimeMap().get(k).size()>maxReSend) {
+                                            ts.getSendFlagMap().put(k, 3);
+                                        } else {
+                                            long beginTime=ts.getSendTimeMap().get(k).get(0);
+                                            if (System.currentTimeMillis()-beginTime>=oneT*expiresT) {
+                                                ts.getSendFlagMap().put(k, 3);
+                                            }
+                                        }
+                                    }
+                                    if (ts.getSendFlagMap().get(k)==1) {//重新发送
+                                        Message bMsg=new Message();
+                                        bMsg.setFromAddr("{(audioflow)@@(www.woting.fm||S)}");
+                                        bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                                        bMsg.setMsgType(1);
+                                        bMsg.setAffirm(1);
+                                        bMsg.setMsgBizType("AUDIOFLOW");
+                                        bMsg.setCmdType(_wt.getTalkType()==1?"TALK_INTERCOM":"TALK_TELPHONE");
+                                        bMsg.setCommand("b1");
+                                        Map<String, Object> dataMap=new HashMap<String, Object>();
+                                        dataMap.put("TalkId", talkId);
+                                        dataMap.put("ObjId", _wt.getObjId());
+                                        dataMap.put("SeqNum", ts.getSeqNum());
+                                        dataMap.put("AudioData", new String(ts.getData()));
+                                        bMsg.setMsgContent(dataMap);
+
+                                        String _sp[] = k.split("::");
+                                        MobileKey mk=new MobileKey();
+                                        mk.setMobileId(_sp[0]);
+                                        mk.setPCDType(Integer.parseInt(_sp[1]));
+                                        mk.setUserId(_sp[2]);
+                                        bMsg.setToAddr(MobileUtils.getAddr(mk));
+                                        pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareAudioFlowMsg());
+                                        ts.getSendFlagMap().put(k, 0);
+                                        ts.getSendTimeMap().get(k).add(System.currentTimeMillis());
+                                    }
+                                }
+                            }
+                        } catch(Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        };
     }
 }

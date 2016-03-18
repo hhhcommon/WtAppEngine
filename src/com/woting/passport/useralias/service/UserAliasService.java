@@ -79,7 +79,7 @@ public class UserAliasService {
      */
     public void del(UserAliasKey uak) {
         uamm.delUserAlias(uak);
-        userAliasDao.delete("deleteByEntity", uak);
+        userAliasDao.delete("deleteByEntity", uak.toHashMap());
     }
 
     /**

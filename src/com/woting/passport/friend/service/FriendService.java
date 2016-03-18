@@ -103,7 +103,7 @@ public class FriendService {
                 //获得对方信息
                 UserPo u=userDao.getInfoObject("getUserById", ifPo.getaUserId());
                 info.put("InvitorName", u.getLoginName());
-                info.put("InvitorProtrait", u.getProtraitMini());
+                info.put("InvitorPortrait", u.getPortraitMini());
                 m.put("InviteInfo", info);
                 canContinue=false;
             }

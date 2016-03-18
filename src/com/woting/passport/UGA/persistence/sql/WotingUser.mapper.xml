@@ -14,8 +14,8 @@
     <result  column="mailAddress"    property="mailAddress"    jdbcType="VARCHAR"/>
     <result  column="userType"       property="userType"       jdbcType="INTEGER"/>
     <result  column="userState"      property="userState"      jdbcType="INTEGER"/>
-    <result  column="protraitBig"    property="protraitBig"    jdbcType="VARCHAR"/>
-    <result  column="protraitMini"   property="protraitMini"   jdbcType="VARCHAR"/>
+    <result  column="portraitBig"    property="portraitBig"    jdbcType="VARCHAR"/>
+    <result  column="portraitMini"   property="portraitMini"   jdbcType="VARCHAR"/>
     <result  column="descn"          property="descn"          jdbcType="VARCHAR"/>
     <result  column="cTime"          property="CTime"          jdbcType="TIMESTAMP"/>
     <result  column="lmTime"         property="lmTime"         jdbcType="TIMESTAMP"/>
@@ -23,10 +23,10 @@
 
   <!-- 所有列 -->
   <sql id="Base_Column_List">
-    id, loginName, userName, userNum, password, mainPhoneNum, mailAddress, userType, userState, protraitBig, protraitMini, descn, cTime, lmTime
+    id, loginName, userName, userNum, password, mainPhoneNum, mailAddress, userType, userState, portraitBig, portraitMini, descn, cTime, lmTime
   </sql>
   <sql id="Base_Column_List_A">
-    a.id, a.loginName, a.userName, a.userNum, a.password, a.mainPhoneNum, a.mailAddress, a.userType, a.userState, a.protraitBig, a.protraitMini, a.descn, a.cTime, a.lmTime
+    a.id, a.loginName, a.userName, a.userNum, a.password, a.mainPhoneNum, a.mailAddress, a.userType, a.userState, a.portraitBig, a.portraitMini, a.descn, a.cTime, a.lmTime
   </sql>
 
   <!-- 条件子句 -->
@@ -42,8 +42,8 @@
         <if test="mailAddress!=null"> and mailAddress=#{mailAddress,jdbcType=VARCHAR}</if>
         <if test="userType!=null and userType!=0"> and userType=#{userType,jdbcType=INTEGER}</if>
         <if test="userState!=null"> and userState=#{userState,jdbcType=INTEGER}</if>
-        <if test="protraitBig!=null"> and protraitBig=#{protraitBig,jdbcType=VARCHAR}</if>
-        <if test="protraitMini!=null"> and protraitMini=#{protraitMini,jdbcType=VARCHAR}</if>
+        <if test="portraitBig!=null"> and portraitBig=#{portraitBig,jdbcType=VARCHAR}</if>
+        <if test="portraitMini!=null"> and portraitMini=#{portraitMini,jdbcType=VARCHAR}</if>
         <if test="descn!=null"> and descn=#{descn,jdbcType=VARCHAR}</if>
         <if test="CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
         <if test="lmTime!=null"> and lmTime=#{lmTime,jdbcType=TIMESTAMP}</if>
@@ -112,8 +112,8 @@
       <if test="mailAddress!=null">mailAddress,</if>
       <if test="userType!=null and userType!=0">userType,</if>
       <if test="userState!=null">userState,</if>
-      <if test="protraitBig!=null">protraitBig,</if>
-      <if test="protraitMini!=null">protraitMini,</if>
+      <if test="portraitBig!=null">portraitBig,</if>
+      <if test="portraitMini!=null">portraitMini,</if>
       <if test="descn!=null">descn,</if>
       <if test="CTime!=null">cTime,</if>
     </trim>
@@ -127,8 +127,8 @@
       <if test="mailAddress!=null">#{mailAddress,jdbcType=VARCHAR},</if>
       <if test="userType!=null and userType!=0">#{userType,jdbcType=INTEGER},</if>
       <if test="userState!=null">#{userState,jdbcType=INTEGER},</if>
-      <if test="protraitBig!=null">#{protraitBig,jdbcType=VARCHAR},</if>
-      <if test="protraitMini!=null">#{protraitMini,jdbcType=VARCHAR},</if>
+      <if test="portraitBig!=null">#{portraitBig,jdbcType=VARCHAR},</if>
+      <if test="portraitMini!=null">#{portraitMini,jdbcType=VARCHAR},</if>
       <if test="descn!=null">#{descn,jdbcType=VARCHAR},</if>
       <if test="CTime!=null">#{CTime,jdbcType=TIMESTAMP},</if>
     </trim>
@@ -145,8 +145,8 @@
       <if test="mailAddress!=null">mailAddress=#{mailAddress,jdbcType=VARCHAR},</if>
       <if test="userType!=null and userType!=0">userType=#{userType,jdbcType=INTEGER},</if>
       <if test="userState!=null">userState=#{userState,jdbcType=INTEGER},</if>
-      <if test="protraitBig!=null">protraitBig=#{protraitBig,jdbcType=VARCHAR},</if>
-      <if test="protraitMini!=null">protraitMini=#{protraitMini,jdbcType=VARCHAR},</if>
+      <if test="portraitBig!=null">portraitBig=#{portraitBig,jdbcType=VARCHAR},</if>
+      <if test="portraitMini!=null">portraitMini=#{portraitMini,jdbcType=VARCHAR},</if>
       <if test="descn!=null">descn=#{descn,jdbcType=VARCHAR},</if>
       <if test="CTime!=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
     </set>

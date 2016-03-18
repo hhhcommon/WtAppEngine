@@ -595,6 +595,7 @@ public class GroupService {
         }
         if (canContinue) {
             InviteGroupPo igp= new InviteGroupPo();
+            igp.setId(SequenceUUID.getUUIDSubSegment(4));
             igp.setaUserId(adminId);
             igp.setbUserId(userId);
             igp.setGroupId(groupId);
@@ -710,16 +711,17 @@ public class GroupService {
      * @param groupId 组Id
      * @param isRefuse 是否拒绝
      * @param refuseMsg 拒绝理由
+     * @param type 1邀请;2申请
      * @return
      */
-    public Map<String, Object> dealInvite(String userId, String inviteUserId, String groupId, boolean isRefuse, String refuseMsg) {
+    public Map<String, Object> dealInvite(String userId, String inviteUserId, String groupId, boolean isRefuse, String refuseMsg, int type) {
         Map<String, Object> m=new HashMap<String, Object>();
         Map<String, Object> param=new HashMap<String, Object>();
 
         param.put("aUserId", inviteUserId);
         param.put("bUserId", userId);
         param.put("groupId", groupId);
-        List<InviteGroupPo> igl=inviteGroupDao.queryForList("getInvitingList", param);
+        List<InviteGroupPo> igl=(type==1?inviteGroupDao.queryForList("getInvitingList", param):inviteGroupDao.queryForList("getApplyingList", param));
 
         if (igl==null||igl.size()==0) {
             m.put("ReturnType", "1006");
@@ -807,7 +809,7 @@ public class GroupService {
                 m.put("ReturnType", "1001");
             }
         }
-        return null;
+        return m;
     }
 
     /**
@@ -825,6 +827,8 @@ public class GroupService {
             this.updateGroup(g);
         }
         if (newInfo.get("groupName")!=null) newInfo.put("groupAlias", newInfo.get("groupName"));
+
+        if (newInfo.get("groupAlias")==null&&newInfo.get("groupDescn")==null) return;
         newInfo.put("groupId", g.getGroupId());
         newInfo.put("userId", userId);
         groupDao.update("updateGroupUserByUserIdGroupId", newInfo);
@@ -871,7 +875,7 @@ public class GroupService {
                 oneResult.put("DealType", "2");
                 continue;
             }
-            if (gic!=null&&gic.getSpeaker().getUserId().equals(userId)) {
+            if (gic!=null&&gic.getSpeaker()!=null&&gic.getSpeaker().getUserId().equals(userId)) {
                 oneResult.put("DealType", "4");
                 continue;
             }
@@ -1055,9 +1059,10 @@ public class GroupService {
             ret.put("Message", "被移交用户不在该组");
         } else {
             Map<String, Object> param=new HashMap<String, Object>();
-            param.put("id", gp.getGroupId());
+            param.put("groupId", gp.getGroupId());
             param.put("adminUserIds", toUserId);
             groupDao.update(param);
+            g.setAdminUserIds(toUserId);
             ret.put("ReturnType", "1001");
         }
         return ret;
@@ -1076,7 +1081,7 @@ public class GroupService {
             g=new Group();
             g.buildFromPo(gp);
         }
-        String updateUserId=param.get("udpateUserId");
+        String updateUserId=param.get("updateUserId");
 
         Map<String, Object> ret=new HashMap<String, Object>();
         if (userId.equals(updateUserId)) {

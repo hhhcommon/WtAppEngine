@@ -75,7 +75,7 @@ public class DealInterCom extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
+            MobileKey mk=MobileUtils.getMobileKey(sourceMsg,1);
             if (mk==null) return;
 
             String groupId="";
@@ -149,7 +149,7 @@ public class DealInterCom extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
+            MobileKey mk=MobileUtils.getMobileKey(sourceMsg,1);
             if (mk==null) return;
 
             String groupId="";
@@ -234,7 +234,7 @@ public class DealInterCom extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
+            MobileKey mk=MobileUtils.getMobileKey(sourceMsg,1);
             if (mk==null) return;
 
             String groupId="";
@@ -302,7 +302,7 @@ public class DealInterCom extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
+            MobileKey mk=MobileUtils.getMobileKey(sourceMsg,1);
             if (mk==null) return;
 
             String groupId="";

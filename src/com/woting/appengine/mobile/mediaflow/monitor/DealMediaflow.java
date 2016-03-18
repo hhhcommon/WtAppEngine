@@ -1,6 +1,5 @@
 package com.woting.appengine.mobile.mediaflow.monitor;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,11 +11,11 @@ import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.intercom.model.GroupInterCom;
 import com.woting.appengine.mobile.mediaflow.mem.TalkMemoryManage;
+import com.woting.appengine.mobile.mediaflow.model.CompareAudioFlowMsg;
 import com.woting.appengine.mobile.mediaflow.model.TalkSegment;
 import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
-import com.woting.appengine.mobile.push.model.CompareMsg;
 import com.woting.appengine.mobile.push.model.Message;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.appengine.mobile.session.model.MobileSession;
@@ -71,7 +70,7 @@ public class DealMediaflow extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
+            MobileKey mk=MobileUtils.getMobileKey(sourceMsg,1);
             if (!mk.isUser()) return;
             String talkerId=mk.getUserId();
             String talkId=((Map)sourceMsg.getMsgContent()).get("TalkId")+"";
@@ -104,14 +103,14 @@ public class DealMediaflow extends Thread {
 
             GroupInterCom gic=null;
             OneCall oc=null;
-            if (talkType==1) {
+            if (talkType==1) {//组对讲
                 gic=gmm.getGroupInterCom(objId);
                 if (gic==null||gic.getSpeaker()==null||!gic.getSpeaker().getUserId().equals(talkerId)) {
                     retMsg.setReturnType("1002");
                     pmm.getSendMemory().addUniqueMsg2Queue(mk, retMsg, new CompareAudioFlowMsg());
                     return;
                 }
-            } else {
+            } else {//电话
                 oc=cmm.getCallData(objId);
                 if (oc==null) {
                     retMsg.setReturnType("1003");
@@ -128,6 +127,7 @@ public class DealMediaflow extends Thread {
                 wt.setObjId(objId);
                 wt.setTalkType(talkType);
                 tmm.addWt(wt);
+                wt.startMonitor(wt);
                 //加入电话控制中
                 if (talkType==2) {
                     if (talkerId.equals(oc.getCallerId())) oc.addCallerWt(wt);//呼叫者
@@ -138,8 +138,8 @@ public class DealMediaflow extends Thread {
             TalkSegment ts = new TalkSegment();
             ts.setWt(wt);
             ts.setData((((Map)sourceMsg.getMsgContent()).get("AudioData")+"").getBytes());
-            if (talkType==1) ts.setSendUsers(gic.getEntryGroupUserMap());
-            else {
+            if (talkType==1) ts.setSendUserMap(gic.getEntryGroupUserMap());//组对讲
+            else {//电话
                 String userId=oc.getOtherId(talkerId);
                 MobileSession ms=smm.getActivedUserSessionByUserId(userId);
                 UserPo u=null;
@@ -149,7 +149,7 @@ public class DealMediaflow extends Thread {
                 if (u!=null) {
                     Map<String, UserPo> um=new HashMap<String, UserPo>();
                     um.put(ms.getKey().toString(), u);
-                    ts.setSendUsers(um);
+                    ts.setSendUserMap(um);
                 }
             }
             ts.setSeqNum(seqNum);
@@ -177,7 +177,7 @@ public class DealMediaflow extends Thread {
             dataMap.put("SeqNum", seqNum);
             dataMap.put("AudioData", ((Map)sourceMsg.getMsgContent()).get("AudioData"));
             bMsg.setMsgContent(dataMap);
-            for (String k: ts.getSendUsers().keySet()) {
+            for (String k: ts.getSendUserMap().keySet()) {
                 String _sp[] = k.split("::");
                 mk=new MobileKey();
                 mk.setMobileId(_sp[0]);
@@ -186,8 +186,8 @@ public class DealMediaflow extends Thread {
                 bMsg.setToAddr(MobileUtils.getAddr(mk));
                 pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareAudioFlowMsg());
                 //处理流数据
-                ts.getSendFlags().put(k, "1");
-                ts.getSendTime().get(k).add(new Date());
+                ts.getSendFlagMap().put(k, 0);
+                ts.getSendTimeMap().get(k).add(System.currentTimeMillis());
             }
 
             //看是否是结束包
@@ -208,7 +208,7 @@ public class DealMediaflow extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
+            MobileKey mk=MobileUtils.getMobileKey(sourceMsg,1);
             if (!mk.isUser()) return;
             String talkerId=mk.getUserId();
             String talkId=((Map)sourceMsg.getMsgContent()).get("TalkId")+"";
@@ -225,11 +225,10 @@ public class DealMediaflow extends Thread {
             WholeTalk wt = tmm.getWholeTalk(talkId);
             if (wt!=null) {
                 if (sourceMsg.getReturnType().equals("1001")) {
-                    TalkSegment ts = wt.getTalkData().get(seqNum);
-                    String s = ts.getSendFlags().get(mk.toString());
-                    if (s!=null) ts.getSendFlags().put(mk.toString(), "2");
+                    TalkSegment ts = wt.getTalkData().get(Math.abs(seqNum));
+                    if (ts!=null&&ts.getSendFlagMap().get(mk.toString())!=null) ts.getSendFlagMap().put(mk.toString(), 2);
                 }
-                if (wt.isCompleted()) {
+                if (wt.isSendCompleted()) {
                     tmm.removeWt(wt);
                     //发送结束对讲消息
                     if (talkType==1)  {
@@ -241,24 +240,6 @@ public class DealMediaflow extends Thread {
                     }
                 }
             }
-        }
-    }
-
-    class CompareAudioFlowMsg implements CompareMsg {
-        @Override
-        public boolean compare(Message msg1, Message msg2) {
-            if (msg1.getFromAddr().equals(msg2.getFromAddr())
-              &&msg1.getToAddr().equals(msg2.getToAddr())
-              &&msg1.getMsgBizType().equals(msg2.getMsgBizType())
-              &&msg1.getCmdType().equals(msg2.getCmdType())
-              &&msg1.getCommand().equals(msg2.getCommand()) ) {
-                if (msg1.getMsgContent()==null&&msg2.getMsgContent()==null) return true;
-                if (((msg1.getMsgContent()!=null&&msg2.getMsgContent()!=null))
-                  &&(((Map)msg1.getMsgContent()).get("ObjId").equals(((Map)msg2.getMsgContent()).get("ObjId")))
-                  &&(((Map)msg1.getMsgContent()).get("TalkId").equals(((Map)msg2.getMsgContent()).get("TalkId")))
-                  &&(((Map)msg1.getMsgContent()).get("SeqNum").equals(((Map)msg2.getMsgContent()).get("SeqNum")))) return true;
-            }
-            return false;
         }
     }
 }

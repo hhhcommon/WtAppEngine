@@ -67,6 +67,13 @@
     where aUserId=#{aUserId,jdbcType=VARCHAR} and bUserId=#{bUserId,jdbcType=VARCHAR} and groupId=#{groupId,jdbcType=VARCHAR} and inviteVector>0 and flag=1
   ]]>
   </select>
+  <!-- 获得申请人列表-某人对某人 -->
+  <select id="getApplyingList" resultMap="inviteMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_GroupInvite
+  <![CDATA[
+    where aUserId=#{aUserId,jdbcType=VARCHAR} and bUserId=#{bUserId,jdbcType=VARCHAR} and groupId=#{groupId,jdbcType=VARCHAR} and inviteVector<0 and flag=1
+  ]]>
+  </select>
 
   <!-- 获得邀请列表-某人对某组 -->
   <select id="getInvitingGroupList" resultMap="inviteMap" parameterType="java.util.Map">
@@ -166,7 +173,7 @@
   <select id="inviteMeGroupList" resultType="java.util.HashMap" parameterType="java.lang.String">
     select a.inviteMessage, a.inviteVector, b.groupName, b.descn groupDescn, b.groupSignature,
       b.groupName, b.descn groupDescn, b.groupImg, b.groupNum, c.id userId, a.inviteTime, b.id groupId,
-      c.loginName, c.mailAddress, c.mainPhoneNum, c.descn userDescn, c.protraitBig, c.protraitMini
+      c.loginName, c.mailAddress, c.mainPhoneNum, c.descn userDescn, c.portraitBig, c.portraitMini
     from wt_GroupInvite a, plat_Group b, plat_User c
   <![CDATA[
     where a.groupId=b.id and a.aUserId=c.id and a.flag=1 and a.acceptFlag=0 and a.inviteVector>0
@@ -180,7 +187,7 @@
   <select id="needCheckInviteUserGroupList" resultType="java.util.HashMap" parameterType="java.lang.String">
     select a.inviteMessage, a.inviteVector, b.groupName, b.descn groupDescn, b.groupSignature, a.aUserId inviteUserId,
       b.groupName, b.descn groupDescn, b.groupImg, b.groupNum, c.id userId, a.inviteTime,
-      c.loginName, c.mailAddress, c.mainPhoneNum, c.descn userDescn, c.protraitBig, c.protraitMini
+      c.loginName, c.mailAddress, c.mainPhoneNum, c.descn userDescn, c.portraitBig, c.portraitMini
     from wt_GroupInvite a, plat_Group b, plat_User c
   <![CDATA[
     where a.groupId=b.id and a.bUserId=c.id and a.flag=1 and a.acceptFlag=0 and a.inviteVector>0
@@ -192,8 +199,8 @@
 
   <!-- 某用户组的申请人列表信息 -->
   <select id="applyUserList" resultType="java.util.HashMap" parameterType="java.lang.String">
-    select a.inviteMessage, a.inviteVector, b.groupName, b.groupId, b.groupSignature, a.inviteTime,
-      c.loginName, c.mailAddress, c.mainPhoneNum, c.descn userDescn, c.protraitBig, c.protraitMini
+    select a.inviteMessage, a.inviteVector, b.groupName, b.id groupId, b.groupSignature, a.inviteTime,
+      c.loginName, c.mailAddress, c.mainPhoneNum, c.descn userDescn, c.portraitBig, c.portraitMini, c.id applyUserId
     from wt_GroupInvite a, plat_Group b, plat_User c
   <![CDATA[
     where a.groupId=b.id and a.bUserId=c.id and a.flag=1 and a.acceptFlag=0 and a.inviteVector<0

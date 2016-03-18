@@ -12,7 +12,7 @@ public class GroupPo extends BaseObject {
     private String groupSignature; //用户组签名，只有管理员可以修改
     private String groupPwd; //用户组密码，可为空
     private String groupImg; //用户组头像
-    private int groupType; //0一般组，1号码组，进入组不需要验证
+    private int groupType; //验证群0；公开群1[原来的号码群]；密码群2
     private String pId; //上级用户组Id
     private int sort; //用户组排序0
     private String createUserId; //创建者id

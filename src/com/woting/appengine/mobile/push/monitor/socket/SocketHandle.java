@@ -16,6 +16,9 @@ import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
+import com.woting.appengine.mobile.mediaflow.mem.TalkMemoryManage;
+import com.woting.appengine.mobile.mediaflow.model.TalkSegment;
+import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.appengine.mobile.push.model.Message;
@@ -169,6 +172,16 @@ public class SocketHandle extends Thread {
                                         System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+m.toJson());
                                         out.println(m.toJson());
                                         out.flush();
+                                        if (m.getMsgBizType().equals("AUDIOFLOW")&&m.getCommand().equals("b1")) {//对语音广播包做特殊处理
+                                            try {
+                                                String talkId=((Map)m.getMsgContent()).get("TalkId")+"";
+                                                String seqNum=((Map)m.getMsgContent()).get("SeqNum")+"";
+                                                TalkMemoryManage tmm=TalkMemoryManage.getInstance();
+                                                WholeTalk wt=tmm.getWholeTalk(talkId);
+                                                TalkSegment ts=wt.getTalkData().get(Math.abs(Integer.parseInt(seqNum)));
+                                                if (ts.getSendFlagMap().get(mk.toString())!=null) ts.getSendFlagMap().put(mk.toString(), 1);
+                                            } catch(Exception e) {}
+                                        }
                                     }
                                     try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
                                 }

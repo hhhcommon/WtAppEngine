@@ -29,10 +29,10 @@ public class SendMessageList {
      */
     public boolean add(Message m) throws IllegalAccessException {
         if (!m.isAffirm()) throw new IllegalAccessException("消息为不需要确认的消息，无需加入");
-        if (this.mk!=null&&!this.mk.equals(MobileUtils.getMobileKey(m))) throw new IllegalAccessException("不是同一设备的消息，不能加入");
+        if (this.mk!=null&&!this.mk.equals(MobileUtils.getMobileKey(m,1))) throw new IllegalAccessException("不是同一设备的消息，不能加入");
 
         if (this.msgList.size()==0) {
-            if (this.mk==null) this.mk=MobileUtils.getMobileKey(m);
+            if (this.mk==null) this.mk=MobileUtils.getMobileKey(m,1);
             return this.msgList.add(m);
         } else {
             //排序查找，从后向前

@@ -209,7 +209,6 @@
     <set>
       <if test="inviter!=null">inviter=#{inviter,jdbcType=VARCHAR},</if>
       <if test="groupAlias!=null">groupAlias=#{groupAlias,jdbcType=VARCHAR},</if>
-      <if test="groupPwd!=null">groupPwd=#{groupPwd,jdbcType=VARCHAR},</if>
       <if test="groupDescn!=null">groupDescn=#{groupDescn,jdbcType=VARCHAR},</if>
     </set>
     where groupId=#{groupId,jdbcType=VARCHAR} and userId=#{userId,jdbcType=VARCHAR}

@@ -29,6 +29,9 @@ import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.friend.service.FriendService;
 import com.woting.passport.login.persistence.pojo.MobileUsedPo;
 import com.woting.passport.login.service.MobileUsedService;
+import com.woting.passport.useralias.mem.UserAliasMemoryManage;
+import com.woting.passport.useralias.model.UserAliasKey;
+import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
 
 @Controller
 @RequestMapping(value="/passport/")
@@ -43,6 +46,7 @@ public class PassportController {
     private FriendService friendService;
 
     private SessionMemoryManage smm=SessionMemoryManage.getInstance();
+    private UserAliasMemoryManage uamm=UserAliasMemoryManage.getInstance();
 
     /**
      * 用户登录
@@ -527,7 +531,7 @@ public class PassportController {
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupSignature"))) gm.put("GroupSignature", g.get("groupSignature"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
-                    gm.put("GroupCount", g.get("groupCound"));
+                    gm.put("GroupCount", g.get("groupCount"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDescn", g.get("descn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDesc", g.get("groupDescn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));
@@ -548,7 +552,15 @@ public class PassportController {
             if (size>0) {
                 List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
                 for (UserPo u: ul) {
-                    if (!u.getUserId().equals(userId)) rul.add(u.toHashMap4Mobile());
+                    Map<String, Object> userViewM=u.toHashMap4Mobile();
+                    //加入别名信息
+                    UserAliasKey uak=new UserAliasKey("FRIEND", userId, u.getUserId());
+                    UserAliasPo uap=uamm.getOneUserAlias(uak);
+                    if (uap!=null) {
+                        userViewM.put("UserAliasName", StringUtils.isNullOrEmptyOrSpace(uap.getAliasName())?u.getLoginName():uap.getAliasName());
+                        userViewM.put("UserAliasDescn", uap.getAliasDescn());
+                    }
+                    if (!u.getUserId().equals(userId)) rul.add(userViewM);
                 }
                 topItem.put("Friends", rul);
             }

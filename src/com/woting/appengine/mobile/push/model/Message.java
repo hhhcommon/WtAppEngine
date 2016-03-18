@@ -52,7 +52,7 @@ public class Message implements Serializable, Comparable<Message> {
 
     private long receiveTime; //消息收到时间
     private long sendTime; //消息应答发送时间
-    private Object msgContent; //消息内容}
+    private Object msgContent; //消息内容
 
     public String getMsgId() {
         return msgId;

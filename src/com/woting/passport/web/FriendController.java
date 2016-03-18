@@ -207,7 +207,7 @@ public class FriendController {
                     um.put("UserId", u.get("id"));
                     um.put("UserName", u.get("loginName"));
                     um.put("InviteMesage", u.get("inviteMessage"));
-                    um.put("Portrait", u.get("protraitMini"));
+                    um.put("Portrait", u.get("portraitMini"));
                     rul.add(um);
                 }
                 map.put("ReturnType", "1001");
@@ -276,7 +276,7 @@ public class FriendController {
                 }
             }
             //3-获得处理类型
-            String dealType=(String)m.get("DealType");
+            String dealType=""+m.get("DealType");
             if (StringUtils.isNullOrEmptyOrSpace(dealType)) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "没有处理类型dealType，无法处理");

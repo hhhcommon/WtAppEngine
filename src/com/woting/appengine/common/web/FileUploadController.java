@@ -73,8 +73,8 @@ public class FileUploadController extends AbstractFileUploadController {
                     //图片文件缩略存储
                     //文件保存到数据库中
                     UserPo u=(UserPo)ms.getAttribute("user");
-                    u.setProtraitBig(bigImgFileName);
-                    u.setProtraitMini(bigImgFileName);
+                    u.setPortraitBig(bigImgFileName);
+                    u.setPortraitMini(bigImgFileName);
                     userService.updateUser(u);
                     datamap.put("ReturnType", "1001");
                     datamap.put("BigUri", bigImgFileName);
