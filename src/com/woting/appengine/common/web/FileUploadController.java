@@ -77,8 +77,8 @@ public class FileUploadController extends AbstractFileUploadController {
                     u.setPortraitMini(bigImgFileName);
                     userService.updateUser(u);
                     datamap.put("ReturnType", "1001");
-                    datamap.put("BigUri", bigImgFileName);
-                    datamap.put("MiniUri", bigImgFileName);
+                    datamap.put("PortraitBig", bigImgFileName);
+                    datamap.put("PortraitMini", bigImgFileName);
                 } catch (IOException e) {
                     datamap.put("ReturnType", "1003");
                     datamap.put("Message", "文件转存失败:"+e.getMessage());
@@ -100,7 +100,7 @@ public class FileUploadController extends AbstractFileUploadController {
                         g.setGroupImg(bigImgFileName);
                         groupService.updateGroup(g);
                         datamap.put("ReturnType", "1001");
-                        datamap.put("BigUri", bigImgFileName);
+                        datamap.put("GroupImg", bigImgFileName);
                     } catch (IOException e) {
                         datamap.put("ReturnType", "1003");
                         datamap.put("Message", "文件转存失败:"+e.getMessage());

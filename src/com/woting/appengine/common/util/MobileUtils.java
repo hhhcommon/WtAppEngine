@@ -354,100 +354,100 @@ public abstract class MobileUtils {
         }
         return map;
     }
-
-    //=============图片处理
-    /**
-     * 按类型保存图片
-     * @param req
-     * @return
-     * @throws IOException 
-     * @throws UnsupportedEncodingException
-     */
-    public static Map<String, Object> saveTypePictrue(HttpServletRequest req, String ownerId) throws UnsupportedEncodingException, IOException {
-        String appOSPath = ((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent();
-        Map<String, Object> retM = new HashMap<String, Object>();
-        String fType = req.getParameter("PType");
-        String extName = req.getParameter("ExtName");
-        String errMessage = "";
-        if (StringUtils.isNullOrEmptyOrSpace(fType)) {
-            errMessage+=","+"无法获取文件类型，不能保存文件";
-        }
-        if (StringUtils.isNullOrEmptyOrSpace(extName)) {
-            errMessage+=","+"无法获取文件扩展名，不能保存文件";
-        }
-        if (StringUtils.isNullOrEmptyOrSpace(ownerId)) {
-            errMessage+=","+"无法获取文所有者Id，不能保存文件";
-        }
-        if (!StringUtils.isNullOrEmpty(errMessage)) {
-            retM.put("rType", "err");
-            retM.put("Message", errMessage.substring(1));
-            return retM;
-        }
-        if (fType.equals("Portrait")) {//保存头像，不包括数据库存储
-            //获得文件名称
-            String bigUri = "asset\\members\\"+ownerId+"\\Portrait\\bigImg"+(extName.startsWith(".")?extName:"."+extName);
-            if (MobileUtils.savePicture(req,  FileNameUtils.concatPath(appOSPath, bigUri))) {
-                retM.put("rType", "ok");
-                retM.put("bigUri", bigUri);
-                retM.put("miniUri",bigUri);
-            } else {
-                retM.put("rType", "err");
-            }
-            return retM;
-        } else if (fType.equals("Others")) {
-            retM.put("rType", "err");
-            retM.put("Message", "未知的文件处理类型，无法处理");
-            return retM;
-        } else {
-            retM.put("rType", "err");
-            retM.put("Message", "未知的文件处理类型，无法处理");
-            return retM;
-        }
-    }
-    /*
-     * 保存文件
-     * @param isr 输入流
-     * @param fileName 保存的文件名称
-     * @return
-     */
-    private static boolean savePicture(HttpServletRequest req, String fileName) {
-        DataInputStream in = null;
-        DataOutputStream out = null;
-        FileOutputStream fos = null;
-        try {
-            in = new DataInputStream((ServletInputStream)req.getInputStream());
-            String filePath = FileNameUtils.getFilePath(fileName);
-            File dir = new File(filePath);
-            dir.mkdirs();
-            fos = new FileOutputStream(fileName);
-            out = new DataOutputStream(fos);
-            byte[] buffer = new byte[4096];
-            int count = 0;
-            while ((count=in.read(buffer))>0) {
-                out.write(buffer, 0, count);
-            }
-            //处理空文件？
-            out.close();
-            in.close();
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (fos!=null) try {fos.close();} catch(Exception e) {}
-            if (out!=null) try {out.close();} catch(Exception e) {}
-            if (in!=null) try {in.close();} catch(Exception e) {}
-        }
-        FileItemFactory factory = new DiskFileItemFactory();
-        ServletFileUpload upload = new ServletFileUpload(factory);
-        try {
-            List<FileItem> items = upload.parseRequest(req);
-            System.out.println(items);
-            return false;
-        } catch (FileUploadException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
+//
+//    //=============图片处理
+//    /**
+//     * 按类型保存图片
+//     * @param req
+//     * @return
+//     * @throws IOException 
+//     * @throws UnsupportedEncodingException
+//     */
+//    public static Map<String, Object> saveTypePictrue(HttpServletRequest req, String ownerId) throws UnsupportedEncodingException, IOException {
+//        String appOSPath = ((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent();
+//        Map<String, Object> retM = new HashMap<String, Object>();
+//        String fType = req.getParameter("PType");
+//        String extName = req.getParameter("ExtName");
+//        String errMessage = "";
+//        if (StringUtils.isNullOrEmptyOrSpace(fType)) {
+//            errMessage+=","+"无法获取文件类型，不能保存文件";
+//        }
+//        if (StringUtils.isNullOrEmptyOrSpace(extName)) {
+//            errMessage+=","+"无法获取文件扩展名，不能保存文件";
+//        }
+//        if (StringUtils.isNullOrEmptyOrSpace(ownerId)) {
+//            errMessage+=","+"无法获取文所有者Id，不能保存文件";
+//        }
+//        if (!StringUtils.isNullOrEmpty(errMessage)) {
+//            retM.put("rType", "err");
+//            retM.put("Message", errMessage.substring(1));
+//            return retM;
+//        }
+//        if (fType.equals("Portrait")) {//保存头像，不包括数据库存储
+//            //获得文件名称
+//            String bigUri = "asset\\members\\"+ownerId+"\\Portrait\\bigImg"+(extName.startsWith(".")?extName:"."+extName);
+//            if (MobileUtils.savePicture(req,  FileNameUtils.concatPath(appOSPath, bigUri))) {
+//                retM.put("rType", "ok");
+//                retM.put("bigUri", bigUri);
+//                retM.put("miniUri",bigUri);
+//            } else {
+//                retM.put("rType", "err");
+//            }
+//            return retM;
+//        } else if (fType.equals("Others")) {
+//            retM.put("rType", "err");
+//            retM.put("Message", "未知的文件处理类型，无法处理");
+//            return retM;
+//        } else {
+//            retM.put("rType", "err");
+//            retM.put("Message", "未知的文件处理类型，无法处理");
+//            return retM;
+//        }
+//    }
+//    /*
+//     * 保存文件
+//     * @param isr 输入流
+//     * @param fileName 保存的文件名称
+//     * @return
+//     */
+//    private static boolean savePicture(HttpServletRequest req, String fileName) {
+//        DataInputStream in = null;
+//        DataOutputStream out = null;
+//        FileOutputStream fos = null;
+//        try {
+//            in = new DataInputStream((ServletInputStream)req.getInputStream());
+//            String filePath = FileNameUtils.getFilePath(fileName);
+//            File dir = new File(filePath);
+//            dir.mkdirs();
+//            fos = new FileOutputStream(fileName);
+//            out = new DataOutputStream(fos);
+//            byte[] buffer = new byte[4096];
+//            int count = 0;
+//            while ((count=in.read(buffer))>0) {
+//                out.write(buffer, 0, count);
+//            }
+//            //处理空文件？
+//            out.close();
+//            in.close();
+//            return true;
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } finally {
+//            if (fos!=null) try {fos.close();} catch(Exception e) {}
+//            if (out!=null) try {out.close();} catch(Exception e) {}
+//            if (in!=null) try {in.close();} catch(Exception e) {}
+//        }
+//        FileItemFactory factory = new DiskFileItemFactory();
+//        ServletFileUpload upload = new ServletFileUpload(factory);
+//        try {
+//            List<FileItem> items = upload.parseRequest(req);
+//            System.out.println(items);
+//            return false;
+//        } catch (FileUploadException e) {
+//            e.printStackTrace();
+//        }
+//        return false;
+//    }
 
     //==============版本号
     /**

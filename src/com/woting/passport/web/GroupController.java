@@ -154,6 +154,8 @@ public class GroupController {
             }
             //获得组描述
             String groupDescn=(String)m.get("GroupDescn");
+            //获得组描述
+            String groupSignature=(String)m.get("GroupSignature");
 
             //创建组
             if (ml==null) {
@@ -169,8 +171,9 @@ public class GroupController {
             g.setAdminUserIds(userId);
             g.setGroupType(_groupType);
             g.setUserList(ml);
-            g.setGroupType(_groupType);
-            g.setDescn(groupDescn);
+            if (!StringUtils.isNullOrEmptyOrSpace(groupDescn)) g.setDescn(groupDescn);
+            if (!StringUtils.isNullOrEmptyOrSpace(groupSignature)) g.setGroupSignature(groupSignature);
+
             groupService.insertGroup(g);
             //组织返回值
             map.put("ReturnType", "1001");
@@ -183,6 +186,7 @@ public class GroupController {
             if (!StringUtils.isNullOrEmptyOrSpace(g.getAdminUserIds())) groupMap.put("GroupManager", g.getAdminUserIds());
             groupMap.put("GroupCount", ml.size()+"");
             if (!StringUtils.isNullOrEmptyOrSpace(g.getDescn())) groupMap.put("GroupDescn", g.getDescn());
+            if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupSignature())) groupMap.put("GroupSignature", g.getGroupSignature());
             if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupImg())) groupMap.put("GroupImg", g.getGroupImg());
             groupMap.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date()));
             map.put("GroupInfo", groupMap);
