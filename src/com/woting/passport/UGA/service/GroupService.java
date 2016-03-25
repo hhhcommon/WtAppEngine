@@ -63,11 +63,12 @@ public class GroupService {
         try {
             group.setGroupId(SequenceUUID.getUUIDSubSegment(4));
             groupDao.insert(group);
-            //插入用户
+            //插入用户组所属用户
             List<UserPo> ul = group.getUserList();
             if (ul!=null&&ul.size()>0) {
                 for (UserPo u: ul) this.insertGroupUser((GroupPo)group.convert2Po(), u, 0);
             }
+            group.setCTime(new Timestamp(System.currentTimeMillis()));
             i=1;
             //新建组加入对讲组内存
             gmm.addOneGroup(group);
