@@ -76,7 +76,6 @@ public class DealMediaflow extends Thread {
             String talkId=((Map)sourceMsg.getMsgContent()).get("TalkId")+"";
             if (StringUtils.isEmptyOrWhitespaceOnly(talkId)) return;
             int seqNum=Integer.parseInt(((Map)sourceMsg.getMsgContent()).get("SeqNum")+"");
-            if (seqNum<-1) return;
             String objId=((Map)sourceMsg.getMsgContent()).get("ObjId")+"";
             if (StringUtils.isEmptyOrWhitespaceOnly(objId)) return;
 
@@ -118,21 +117,23 @@ public class DealMediaflow extends Thread {
                     return;
                 }
             }
-
-            WholeTalk wt = tmm.getWholeTalk(talkId);
-            if (wt==null) {
-                wt = new WholeTalk();
-                wt.setTalkId(talkId);
-                wt.setTalkerMk(mk);
-                wt.setObjId(objId);
-                wt.setTalkType(talkType);
-                tmm.addWt(wt);
-                wt.startMonitor(wt);
-                //加入电话控制中
-                if (talkType==2) {
-                    if (talkerId.equals(oc.getCallerId())) oc.addCallerWt(wt);//呼叫者
-                    else
-                    if (talkerId.equals(oc.getCallederId())) oc.addCallederWt(wt);//被叫者
+            WholeTalk wt=null;
+            synchronized (tmm) {
+                wt=tmm.getWholeTalk(talkId);
+                if (wt==null) {
+                    wt = new WholeTalk();
+                    wt.setTalkId(talkId);
+                    wt.setTalkerMk(mk);
+                    wt.setObjId(objId);
+                    wt.setTalkType(talkType);
+                    tmm.addWt(wt);
+                    wt.startMonitor(wt);
+                    //加入电话控制中
+                    if (talkType==2) {
+                        if (talkerId.equals(oc.getCallerId())) oc.addCallerWt(wt);//呼叫者
+                        else
+                        if (talkerId.equals(oc.getCallederId())) oc.addCallederWt(wt);//被叫者
+                    }
                 }
             }
             TalkSegment ts = new TalkSegment();

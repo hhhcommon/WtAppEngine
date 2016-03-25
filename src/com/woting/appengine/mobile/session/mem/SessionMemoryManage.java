@@ -10,7 +10,6 @@ import com.woting.WtAppEngineConstants;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.session.model.MobileSession;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
 
 /**
  * 会话管理类，也就是会话的服务类

@@ -180,22 +180,20 @@ public class PassportController {
                 return map;
             }
             //3-注册成功后，自动登陆，及后处理
-            if (ms!=null) {
-                map.put("SessionId", nu.getUserId());
-                //3.1-处理Session
-                smm.expireAllSessionByIMEI(ms.getKey().getMobileId()); //作废所有imei对应的Session
-                MobileKey newMk=ms.getKey();
-                newMk.setUserId(nu.getUserId());
-                ms.addAttribute("user", nu);
-                smm.addOneSession(ms);
-                //3.2-保存使用情况
-                MobileUsedPo mu=new MobileUsedPo();
-                mu.setImei(newMk.getMobileId());
-                mu.setStatus(1);
-                mu.setUserId(nu.getUserId());
-                mu.setPCDType(newMk.getPCDType());
-                muService.saveMobileUsed(mu);
-            }
+            map.put("SessionId", nu.getUserId());
+            //3.1-处理Session
+            smm.expireAllSessionByIMEI(ms.getKey().getMobileId()); //作废所有imei对应的Session
+            MobileKey newMk=ms.getKey();
+            newMk.setUserId(nu.getUserId());
+            ms.addAttribute("user", nu);
+            smm.addOneSession(ms);
+            //3.2-保存使用情况
+            MobileUsedPo mu=new MobileUsedPo();
+            mu.setImei(newMk.getMobileId());
+            mu.setStatus(1);
+            mu.setUserId(nu.getUserId());
+            mu.setPCDType(newMk.getPCDType());
+            muService.saveMobileUsed(mu);
             //4-返回成功，若没有IMEI也返回成功
             map.put("ReturnType", "1001");
             map.put("UserId", nu.getUserId());

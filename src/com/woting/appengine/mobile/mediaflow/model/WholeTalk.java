@@ -22,6 +22,7 @@ public class WholeTalk {
     protected int maxReSend=10;//最多重传次数
     protected long oneT=80;//一个周期的毫秒数
     private int expiresT=10; //过期周期
+    private long lastReceiveTime=System.currentTimeMillis();//最后一次收到数据的时间
     //以上是控制时间的周期
 
     public WholeTalk() {
@@ -71,6 +72,9 @@ public class WholeTalk {
     public String getTalkerId() {
         return talkerMk.getUserId();
     }
+    public int getLastNum() {
+        return this.lastNum;
+    }
 
     /**
      * 加入一段音音频传输
@@ -79,12 +83,14 @@ public class WholeTalk {
     public void addSegment(TalkSegment ts) {
         if (ts.getWt()==null||!ts.getWt().getTalkId().equals(talkId)) throw new IllegalArgumentException("对话段的主对话与当前对话段不匹配");
         synchronized(lock) {
+            if (lastNum!=0&&Math.abs(ts.getSeqNum())>lastNum) return;
             if (ts.getSeqNum()<0) {
                 if (lastNum>0) return;
                 lastNum=Math.abs(ts.getSeqNum());
             }
             talkData.put(Math.abs(ts.getSeqNum()), ts);
             if (Math.abs(ts.getSeqNum())>MaxNum) MaxNum=Math.abs(ts.getSeqNum());
+            lastReceiveTime=System.currentTimeMillis();
         }
     }
 
@@ -100,16 +106,23 @@ public class WholeTalk {
      */
     public boolean isSendCompleted() {
         if (sendAll) return sendAll;
-        TalkSegment ts=(lastNum!=0?talkData.get(lastNum):null);
-        if (ts==null) return false;
-        if (!ts.sendOk()) return false;
-        int lowIndex=MaxNum-expiresT;
-        for (int i=(lowIndex>=0?lowIndex:0); i<MaxNum; i++) {
-            ts=talkData.get(i);
-            if (ts==null) return false;
-            if (!ts.sendOk()) return false;
+
+        if (System.currentTimeMillis()-this.lastReceiveTime>oneT*expiresT*10&&lastNum==0) {
+            receiveAll=true;
+            return receiveAll;
         }
-        sendAll=true;
+
+        int upperFlag=lastNum>0?lastNum:MaxNum;        
+        TalkSegment ts=talkData.get(upperFlag);
+        if (ts==null||!ts.sendOk()) return false;
+
+        int j=0;
+        for (int i=upperFlag; i>=0||j>expiresT; i--) {//注意，若expiresT个周期内的数据没有收到，则认为还没有全部收到
+            ts=talkData.get(i);
+            j++;
+            if (ts==null||!ts.sendOk()) return false;
+        }
+        if (lastNum>0) sendAll=true;
         return sendAll;
     }
 
@@ -125,14 +138,22 @@ public class WholeTalk {
      */
     public boolean isReceiveCompleted() {
         if (receiveAll) return receiveAll;
-        TalkSegment ts=(lastNum!=0?talkData.get(lastNum):null);
-        if (ts==null) return false;
-        int lowIndex=MaxNum-expiresT;
-        for (int i=(lowIndex>=0?lowIndex:0); i<MaxNum; i++) {//注意，若expiresT个周期内的数据没有收到，则认为还没有全部收到
+
+        if (System.currentTimeMillis()-this.lastReceiveTime>oneT*expiresT&&lastNum==0) {
+            receiveAll=true;
+            return receiveAll;
+        }
+
+        int upperFlag=lastNum>0?lastNum:MaxNum;
+        TalkSegment ts;
+        int j=0;
+        for (int i=upperFlag; i>=0||j>expiresT; i--) {//注意，若expiresT个周期内的数据没有收到，则认为还没有全部收到
             ts=talkData.get(i);
+            j++;
             if (ts==null) return false;
         }
-        receiveAll=true;
+        if (lastNum>0) receiveAll=true;
+
         return receiveAll;
     }
 
@@ -145,7 +166,7 @@ public class WholeTalk {
             public void run() {
                 GroupMemoryManage gmm=GroupMemoryManage.getInstance();
                 PushMemoryManage pmm=PushMemoryManage.getInstance();
-                
+                System.out.println("启动通话[id="+talkId+"]监控================================================");
                 while (!_wt.isSendCompleted()) {
                     int lowIndex=MaxNum-expiresT;
                     for (int i=(lowIndex>=0?lowIndex:0); i<MaxNum; i++) {//注意，若expiresT个周期内的数据没有收到，则认为还没有全部收到
@@ -206,6 +227,7 @@ public class WholeTalk {
                                         dataMap.put("ObjId", _wt.getObjId());
                                         dataMap.put("SeqNum", ts.getSeqNum());
                                         dataMap.put("AudioData", new String(ts.getData()));
+                                        System.out.println("======重发[seqNum="+ts.getSeqNum()+"]="+ts.getSendTimeMap().get(k).size()+"次===============================================");
                                         bMsg.setMsgContent(dataMap);
 
                                         String _sp[] = k.split("::");
@@ -220,12 +242,13 @@ public class WholeTalk {
                                     }
                                 }
                             }
+                            sleep(10);//休息10毫秒
                         } catch(Exception e) {
                             e.printStackTrace();
                         }
                     }
                 }
             }
-        };
+        }.start();
     }
 }
