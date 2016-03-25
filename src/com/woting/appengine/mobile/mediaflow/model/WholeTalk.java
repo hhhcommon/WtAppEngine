@@ -19,9 +19,10 @@ import com.woting.appengine.mobile.push.model.Message;
  */
 public class WholeTalk {
     private Object lock=new Object();
-    protected int maxReSend=10;//最多重传次数
+    protected int maxReSend=3;//最多重传次数
     protected long oneT=80;//一个周期的毫秒数
     private int expiresT=10; //过期周期
+    private int reSendContinueExpiresT=3; //持续重转过期周期
     private long lastReceiveTime=System.currentTimeMillis();//最后一次收到数据的时间
     //以上是控制时间的周期
 
@@ -208,7 +209,7 @@ public class WholeTalk {
                                             ts.getSendFlagMap().put(k, 3);
                                         } else {
                                             long beginTime=ts.getSendTimeMap().get(k).get(0);
-                                            if (System.currentTimeMillis()-beginTime>=oneT*expiresT) {
+                                            if (System.currentTimeMillis()-beginTime>=oneT*reSendContinueExpiresT) {
                                                 ts.getSendFlagMap().put(k, 3);
                                             }
                                         }
