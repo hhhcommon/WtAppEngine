@@ -21,7 +21,7 @@ public class WholeTalk {
     private Object lock=new Object();
     protected int maxReSend=3;//最多重传次数
     protected long oneT=80;//一个周期的毫秒数
-    private int expiresT=10; //过期周期
+    private int expiresT=100; //过期周期
     private int reSendContinueExpiresT=3; //持续重转过期周期
     private long lastReceiveTime=System.currentTimeMillis();//最后一次收到数据的时间
     //以上是控制时间的周期
@@ -39,6 +39,9 @@ public class WholeTalk {
     private int lastNum=0; //最后一个包号
     private Map<Integer, TalkSegment> talkData; //通话的完整数据
     boolean receiveAll=false, sendAll=false;
+    public long beginTime=0;
+    public long receiveAllTime=0;
+    public long sendAllTime=0;
 
     public String getTalkId() {
         return talkId;
@@ -92,6 +95,21 @@ public class WholeTalk {
             talkData.put(Math.abs(ts.getSeqNum()), ts);
             if (Math.abs(ts.getSeqNum())>MaxNum) MaxNum=Math.abs(ts.getSeqNum());
             lastReceiveTime=System.currentTimeMillis();
+            //计算是否接收完成
+            if (lastNum>0&&!receiveAll) {
+                boolean _receiveAll=true;
+                for (int i=0; i<lastNum; i++) {
+                    if (talkData.get(i)==null) {
+                        _receiveAll=false;
+                        break;
+                    }
+                }
+                if (_receiveAll) {
+                    receiveAllTime=System.currentTimeMillis();
+                    receiveAll=true;
+                    System.out.println("收到所有的包共用时========================：["+(receiveAllTime-beginTime)+"]毫秒");
+                }
+            }
         }
     }
 
@@ -107,15 +125,40 @@ public class WholeTalk {
      */
     public boolean isSendCompleted() {
         if (sendAll) return sendAll;
-
-        if (System.currentTimeMillis()-this.lastReceiveTime>oneT*expiresT*10&&lastNum==0) {
-            receiveAll=true;
-            return receiveAll;
+        //计算是否发送完成
+        if (lastNum>0&&!sendAll) {
+            boolean _sendAll=true;
+            for (int i=0; i<lastNum-1; i++) {
+                if (talkData.get(i)==null) {
+                    _sendAll=false;
+                    break;
+                }
+                boolean isSendOneAll=true;
+                for (String k: talkData.get(i).sendUserMap.keySet()) {
+                    if (talkData.get(i).sendFlagMap.get(k)<1) {
+                        isSendOneAll=false;
+                        break;
+                    }
+                }
+                if (!isSendOneAll) {
+                    _sendAll=false;
+                    break;
+                }
+            }
+            if (_sendAll) {
+                sendAllTime=System.currentTimeMillis();
+                System.out.println("发送所有的包共用时=====================：["+(sendAllTime-beginTime)+"]毫秒");
+            }
         }
 
-        int upperFlag=lastNum>0?lastNum:MaxNum;        
-        TalkSegment ts=talkData.get(upperFlag);
-        if (ts==null||!ts.sendOk()) return false;
+        if (System.currentTimeMillis()-this.lastReceiveTime>oneT*expiresT*10&&lastNum==0) {
+            System.out.println("==============由于超时，结束了发送包的过程");
+            sendAll=true;
+            return sendAll;
+        }
+
+        int upperFlag=lastNum>0?(lastNum-1):MaxNum;
+        TalkSegment ts=null;
 
         int j=0;
         for (int i=upperFlag; i>=0||j>expiresT; i--) {//注意，若expiresT个周期内的数据没有收到，则认为还没有全部收到
@@ -141,6 +184,7 @@ public class WholeTalk {
         if (receiveAll) return receiveAll;
 
         if (System.currentTimeMillis()-this.lastReceiveTime>oneT*expiresT&&lastNum==0) {
+            System.out.println("==============由于超时，结束了接收包的过程");
             receiveAll=true;
             return receiveAll;
         }
@@ -167,6 +211,7 @@ public class WholeTalk {
             public void run() {
                 GroupMemoryManage gmm=GroupMemoryManage.getInstance();
                 PushMemoryManage pmm=PushMemoryManage.getInstance();
+                _wt.beginTime=System.currentTimeMillis();
                 System.out.println("启动通话[id="+talkId+"]监控================================================");
                 while (!_wt.isSendCompleted()) {
                     int lowIndex=MaxNum-expiresT;
@@ -174,7 +219,7 @@ public class WholeTalk {
                         try {
                             TalkSegment ts=talkData.get(i);
                             if (ts!=null) {
-                                //1-删除已不再组的用户,只涉及对讲
+                                //1-删除已不在组的用户,只涉及对讲
                                 if (wt.getTalkType()==1) {//对讲
                                     String delKeys="";
                                     //找到

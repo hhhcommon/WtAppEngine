@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+  栏目
+-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="A_CHANNELASSET">
+  <!-- 对象定义:栏目 -->
+  <resultMap id="channelAssetMap" type="channelAsset">
+    <id     column="id"            property="id"            jdbcType="VARCHAR"/>
+    <result column="channelId"     property="channelId"     jdbcType="VARCHAR"/>
+    <result column="assetType"     property="assetType"     jdbcType="INTEGER"/>
+    <result column="assetId"       property="assetId"       jdbcType="VARCHAR"/>
+    <result column="publisherId"   property="publisherId"   jdbcType="VARCHAR"/>
+    <result column="checkerId"     property="checkerId"     jdbcType="VARCHAR"/>
+    <result column="isValidate"    property="isValidate"    jdbcType="INTEGER"/>
+    <result column="sort"          property="sort"          jdbcType="INTEGER"/>
+    <result column="pubName"       property="pubName"       jdbcType="VARCHAR"/>
+    <result column="pubImg"        property="pubImg"        jdbcType="VARCHAR"/>
+    <result column="flowFlag"      property="flowFlag"      jdbcType="INTEGER"/>
+    <result column="inRuleIds"     property="inRuleIds"     jdbcType="VARCHAR"/>
+    <result column="checkRuleIds"  property="checkRuleIds"  jdbcType="VARCHAR"/>
+    <result column="pubTime"       property="pubTime"       jdbcType="TIMESTAMP"/>
+    <result column="cTime"         property="CTime"         jdbcType="TIMESTAMP"/>
+  </resultMap>
+
+  <!-- 所有列 -->
+  <sql id="Base_Column_List">
+    id, channelId, assetType, assetId, publisherId, checkerId, isValidate, sort, pubName, pubImg, flowFlag, inRuleIds, checkRuleIds, pubTime, cTime
+  </sql>
+  <sql id="Base_Column_List_A">
+    a.id, a.channelId, a.assetType, a.assetId, a.publisherId, a.checkerId, a.isValidate, a.sort, a.pubName, a.pubImg, a.flowFlag, a.inRuleIds, a.checkRuleIds, a.pubTime, a.cTime
+  </sql>
+
+  <!-- 条件子句 -->
+  <sql id="WhereClauseByEntiey">
+    <where>
+      <trim prefix="(" suffix=")" prefixOverrides="and">
+        <if test="id!=null">and id=#{id,jdbcType=VARCHAR}</if>
+        <if test="channelId!=null">and channelId=#{channelId,jdbcType=VARCHAR}</if>
+        <if test="assetType!=null">and assetType=#{assetType,jdbcType=VARCHAR}</if>
+        <if test="assetId!=null">and assetId=#{assetId,jdbcType=VARCHAR}</if>
+        <if test="publisherId!=null">and publisherId=#{publisherId,jdbcType=VARCHAR}</if>
+        <if test="checkerId!=null">and checkerId=#{checkerId,jdbcType=VARCHAR}</if>
+        <if test="isValidate!=null and isValidate!=0">and isValidate=#{isValidate,jdbcType=INTEGER}</if>
+        <if test="sort!=null and sort!=0">and sort=#{sort,jdbcType=INTEGER}</if>
+        <if test="pubName!=null">and pubName=#{pubName,jdbcType=VARCHAR}</if>
+        <if test="pubImg!=null">and pubImg=#{pubImg,jdbcType=VARCHAR}</if>
+        <if test="flowFlag!=null and flowFlag!=0">and flowFlag=#{flowFlag,jdbcType=VARCHAR}</if>
+        <if test="inRuleIds!=null">and inRuleIds=#{inRuleIds,jdbcType=VARCHAR}</if>
+        <if test="checkRuleIds!=null">and checkRuleIds=#{checkRuleIds,jdbcType=VARCHAR}</if>
+        <if test="pubTime!=null">and pubTime=#{pubTime,jdbcType=TIMESTAMP}</if>
+        <if test="CTime!=null">and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
+      </trim>
+    </where>
+  </sql>
+  <sql id="WhereClauseByEntiey_A">
+    <where>
+      <trim prefix="(" suffix=")" prefixOverrides="and">
+        <if test="id!=null">and a.id=#{id,jdbcType=VARCHAR}</if>
+        <if test="channelId!=null">and a.channelId=#{channelId,jdbcType=VARCHAR}</if>
+        <if test="assetType!=null">and a.assetType=#{assetType,jdbcType=VARCHAR}</if>
+        <if test="assetId!=null">and a.assetId=#{assetId,jdbcType=VARCHAR}</if>
+        <if test="publisherId!=null">and a.publisherId=#{publisherId,jdbcType=VARCHAR}</if>
+        <if test="checkerId!=null">and a.checkerId=#{checkerId,jdbcType=VARCHAR}</if>
+        <if test="isValidate!=null and isValidate!=0">and a.isValidate=#{isValidate,jdbcType=INTEGER}</if>
+        <if test="sort!=null and sort!=0">and a.sort=#{sort,jdbcType=INTEGER}</if>
+        <if test="pubName!=null">and a.pubName=#{pubName,jdbcType=VARCHAR}</if>
+        <if test="pubImg!=null">and a.pubImg=#{pubImg,jdbcType=VARCHAR}</if>
+        <if test="flowFlag!=null and flowFlag!=0">and a.flowFlag=#{flowFlag,jdbcType=VARCHAR}</if>
+        <if test="inRuleIds!=null">and a.inRuleIds=#{inRuleIds,jdbcType=VARCHAR}</if>
+        <if test="checkRuleIds!=null">and a.checkRuleIds=#{checkRuleIds,jdbcType=VARCHAR}</if>
+        <if test="pubTime!=null">and a.pubTime=#{pubTime,jdbcType=TIMESTAMP}</if>
+        <if test="CTime!=null">and a.cTime=#{CTime,jdbcType=TIMESTAMP}</if>
+      </trim>
+    </where>
+  </sql>
+
+  <!-- 获得记录条数-->
+  <select id="count" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select count(*) from wt_ChannelAsset <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </select>
+
+  <!-- 获得列表 -->
+  <select id="getList" resultMap="channelAssetMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/>from wt_ChannelAsset
+  </select>
+
+  <!-- 获得一条数据 -->
+  <select id="getInfo" resultMap="channelAssetMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/>from wt_ChannelAsset <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </select>
+  <select id="getInfoById" resultMap="channelAssetMap" parameterType="java.lang.String">
+    select <include refid="Base_Column_List"/>from wt_ChannelAsset where id=#{id,jdbcType=VARCHAR}
+  </select>
+
+  <!-- 新增数据 -->
+  <insert id="insert" parameterType="java.util.Map">
+    insert into wt_ChannelAsset
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="channelId!=null">channelId,</if>
+      <if test="assetType!=null">assetType,</if>
+      <if test="assetId!=null">assetId,</if>
+      <if test="publisherId!=null">publisherId,</if>
+      <if test="checkerId!=null">checkerId,</if>
+      <if test="isValidate!=null and isValidate!=0">isValidate,</if>
+      <if test="sort!=null and sort!=0">sort,</if>
+      <if test="pubName!=null">pubName,</if>
+      <if test="pubImg!=null">pubImg,</if>
+      <if test="flowFlag!=null and flowFlag!=0">flowFlag,</if>
+      <if test="inRuleIds!=null">inRuleIds,</if>
+      <if test="checkRuleIds!=null">checkRuleIds,</if>
+      <if test="pubTime!=null">pubTime,</if>
+      <if test="CTime!=null">cTime,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="channelId!=null">#{channelId,jdbcType=VARCHAR},</if>
+      <if test="assetType!=null">#{assetType,jdbcType=VARCHAR},</if>
+      <if test="assetId!=null">#{assetId,jdbcType=VARCHAR},</if>
+      <if test="publisherId!=null">#{publisherId,jdbcType=VARCHAR},</if>
+      <if test="checkerId!=null">#{checkerId,jdbcType=VARCHAR},</if>
+      <if test="isValidate!=null and isValidate!=0">#{isValidate,jdbcType=INTEGER},</if>
+      <if test="sort!=null and sort!=0">#{sort,jdbcType=INTEGER},</if>
+      <if test="pubName!=null">#{pubName,jdbcType=VARCHAR},</if>
+      <if test="pubImg!=null">#{pubImg,jdbcType=VARCHAR},</if>
+      <if test="flowFlag!=null and flowFlag!=0">#{flowFlag,jdbcType=VARCHAR},</if>
+      <if test="inRuleIds!=null">#{inRuleIds,jdbcType=VARCHAR},</if>
+      <if test="checkRuleIds!=null">#{checkRuleIds,jdbcType=VARCHAR},</if>
+      <if test="pubTime!=null">#{pubTime,jdbcType=TIMESTAMP},</if>
+      <if test="CTime!=null">#{CTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+
+  <!-- 修改 根据主键-->
+  <update id="update" parameterType="java.util.Map">
+    update wt_ChannelAsset
+    <set>
+      <if test="id!=null">id=#{id,jdbcType=VARCHAR},</if>
+      <if test="channelId!=null">channelId=#{channelId,jdbcType=VARCHAR},</if>
+      <if test="assetType!=null">assetType=#{assetType,jdbcType=VARCHAR},</if>
+      <if test="assetId!=null">assetId=#{assetId,jdbcType=VARCHAR},</if>
+      <if test="publisherId!=null">publisherId=#{publisherId,jdbcType=VARCHAR},</if>
+      <if test="checkerId!=null">checkerId=#{checkerId,jdbcType=VARCHAR},</if>
+      <if test="isValidate!=null and isValidate!=0">isValidate=#{isValidate,jdbcType=INTEGER},</if>
+      <if test="sort!=null and sort!=0">sort=#{sort,jdbcType=INTEGER},</if>
+      <if test="pubName!=null">pubName=#{pubName,jdbcType=VARCHAR},</if>
+      <if test="pubImg!=null">pubImg=#{pubImg,jdbcType=VARCHAR},</if>
+      <if test="flowFlag!=null and flowFlag!=0">flowFlag=#{flowFlag,jdbcType=VARCHAR},</if>
+      <if test="inRuleIds!=null">inRuleIds=#{inRuleIds,jdbcType=VARCHAR},</if>
+      <if test="checkRuleIds!=null">checkRuleIds=#{checkRuleIds,jdbcType=VARCHAR},</if>
+      <if test="pubTime!=null">pubTime=#{pubTime,jdbcType=TIMESTAMP},</if>
+      <if test="CTime!=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id=#{id,jdbcType=VARCHAR}
+  </update>
+
+  <!-- 删除数据 -->
+  <delete id="delete" parameterType="java.lang.String">
+    delete from wt_ChannelAsset where id=#{id,jdbcType=VARCHAR}
+  </delete>
+  <delete id="deleteByEntity" parameterType="java.util.Map">
+    delete from wt_ChannelAsset <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </delete>
+</mapper>

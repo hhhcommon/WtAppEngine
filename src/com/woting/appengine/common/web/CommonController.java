@@ -6,25 +6,38 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.StringUtils;
+import com.woting.WtAppEngineConstants;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.model.MobileParam;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.appengine.mobile.session.model.MobileSession;
+import com.woting.cm.core.channel.mem._CacheChannel;
+import com.woting.cm.core.dict.mem._CacheDictionary;
+import com.woting.cm.core.dict.model.DictDetail;
+import com.woting.cm.core.dict.model.DictModel;
+import com.woting.common.TreeUtils;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.login.service.MobileUsedService;
+import com.spiritdata.framework.core.cache.SystemCache;
+import com.spiritdata.framework.core.model.tree.TreeNode;
+import com.spiritdata.framework.core.model.tree.TreeNodeBean;
+import com.spiritdata.framework.core.cache.CacheEle;
 
+@Lazy(true)
 @Controller
 public class CommonController {
     @Resource
@@ -35,6 +48,15 @@ public class CommonController {
     private ContentService contentService;
 
     private SessionMemoryManage smm=SessionMemoryManage.getInstance();
+    private _CacheDictionary _cd=null;
+    private _CacheChannel _cc=null;
+
+    @PostConstruct
+    public void initParam() {
+        //初始化栏目结构
+        _cd=((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT)).getContent();
+        _cc=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)).getContent();
+    }
 
     /**
      * 进入App
@@ -61,13 +83,15 @@ public class CommonController {
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
-                    return map;
                 } else {
                     MobileSession ms=(MobileSession)retM.get("MobileSession");
                     map.put("SessionId", ms.getKey().getSessionId());
                     if ((retM.get("ReturnType")+"").equals("1002")) {
                         map.put("ReturnType", "1002");
-                    } else {
+                    } if ((retM.get("ReturnType")+"").equals("2002")) {
+                        map.put("ReturnType", "2002");
+                        map.put("Message", "无法找到相应的用户");
+                    }else {
                         map.put("ReturnType", "1001");
                         map.put("UserInfo", ((UserPo)ms.getAttribute("user")).toHashMap4Mobile());
                     }
@@ -284,6 +308,52 @@ public class CommonController {
             }
             if (map.get("ReturnType")!=null) return map;
 
+            //1-得到模式Id
+            String catalogType=(String)m.get("CatalogType");
+            if (StringUtils.isNullOrEmptyOrSpace(catalogType)) {
+                catalogType=request.getParameter("CatalogType");
+            }
+            if (StringUtils.isNullOrEmptyOrSpace(catalogType)) {
+                catalogType="-1";
+            }
+            //2-得到字典项Id或父栏目Id
+            String catalogId=(String)m.get("CatalogId");
+            if (StringUtils.isNullOrEmptyOrSpace(catalogId)) {
+                catalogId=request.getParameter("CatalogId");
+            }
+            if (StringUtils.isNullOrEmptyOrSpace(catalogId)) {
+                catalogId=null;
+            }
+            //3-得到返回类型
+            String resultType=(String)m.get("ResultType");
+            if (StringUtils.isNullOrEmptyOrSpace(resultType)) {
+                resultType=request.getParameter("ResultType");
+            }
+            if (!StringUtils.isNullOrEmptyOrSpace(resultType)) {
+                resultType="2";
+            }
+            //4-得到相对层次
+            String relLevel=(String)m.get("RelLevel");
+            if (StringUtils.isNullOrEmptyOrSpace(relLevel)) {
+                relLevel=request.getParameter("RelLevel");
+            }
+            if (!StringUtils.isNullOrEmptyOrSpace(relLevel)) {
+                relLevel="1";
+            }
+
+            TreeNode<? extends TreeNodeBean> root=null;
+            if (catalogType.equals("-1")) {
+                root=_cc.channelTree;
+            } else {
+                DictModel dm=_cd.getDictModelById(catalogType);
+                if (dm!=null&&dm.dictTree!=null) root=dm.dictTree;
+            }
+            if (root!=null) {
+                if (catalogId!=null) root=root.findNode(catalogId);
+                if (root!=null) {
+                    TreeUtils.getLevelTree(root, Integer.parseInt(relLevel));
+                }
+            }
             map.put("ReturnType", "1001");
             List<Map<String, String>> demoData=new ArrayList<Map<String, String>>();
             Map<String, String> item=new HashMap<String, String>();

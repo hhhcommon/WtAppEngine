@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- 内容资产跟踪日志 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="A_TLOG">
+  <!-- 跟踪日志 -->
+  <resultMap id="tlogMap" type="trackLog">
+    <id      column="id"         property="id"         jdbcType="VARCHAR"/>
+    <result  column="tableName"  property="tableName"  jdbcType="VARCHAR"/>
+    <result  column="objId"      property="objId"      jdbcType="VARCHAR"/>
+    <result  column="ownerType"  property="ownerType"  jdbcType="INTEGER"/>
+    <result  column="ownerId"    property="ownerId"    jdbcType="VARCHAR"/>
+    <result  column="dataClass"  property="dataClass"  jdbcType="INTEGER"/>
+    <result  column="data"       property="data"       jdbcType="VARCHAR"/>
+    <result  column="dataMd5"    property="dataMd5"    jdbcType="VARCHAR"/>
+    <result  column="dealFlag"   property="dealFlag"   jdbcType="INTEGER"/>
+    <result  column="operType"   property="operType"   jdbcType="INTEGER"/>
+    <result  column="operId"     property="operId"     jdbcType="VARCHAR"/>
+    <result  column="rules"      property="rules"      jdbcType="VARCHAR"/>
+    <result  column="cTime"      property="CTime"      jdbcType="TIMESTAMP"/>
+  </resultMap>
+
+  <!-- 所有列 -->
+  <sql id="Base_Column_List">
+    id, tableName, objId, dataClass, ownerType, ownerId, data, dataMd5, dealFlag, operType, operId, rules, cTime
+  </sql>
+  <!-- 条件子句 -->
+  <sql id="WhereClauseByEntiey">
+    <where>
+      <trim prefix="(" suffix=")" prefixOverrides="and">
+        <if test="id!=null"> and id=#{id,jdbcType=VARCHAR}</if>
+        <if test="tableName!=null"> and tableName=#{tableName,jdbcType=VARCHAR}</if>
+        <if test="objId!=null"> and objId=#{objId,jdbcType=VARCHAR}</if>
+        <if test="ownerType!=null and ownerType!=0"> and ownerType=#{ownerType,jdbcType=INTEGER}</if>
+        <if test="ownerId!=null"> and ownerId=#{ownerId,jdbcType=VARCHAR}</if>
+        <if test="dataClass!=null and dataClass!=0"> and dataClass=#{dataClass,jdbcType=INTEGER}</if>
+        <if test="data!=null"> and data=#{data,jdbcType=VARCHAR}</if>
+        <if test="dataMd5!=null"> and dataMd5=#{dataMd5,jdbcType=VARCHAR}</if>
+        <if test="dealFlag!=null and dealFlag!=0"> and dealFlag=#{dealFlag,jdbcType=INTEGER}</if>
+        <if test="operType!=null and operType!=0"> and operType=#{operType,jdbcType=INTEGER}</if>
+        <if test="operId!=null"> and operId=#{operId,jdbcType=VARCHAR}</if>
+        <if test="rules!=null"> and rules=#{rules,jdbcType=VARCHAR}</if>
+        <if test="CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
+      </trim>
+    </where>
+  </sql>
+
+  <!-- 新增数据 -->
+  <insert id="insert" parameterType="java.util.Map">
+    insert into wt_ContentTrackLog
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="tableName!=null">tableName,</if>
+      <if test="objId!=null">objId,</if>
+      <if test="ownerType!=null and ownerType!=0">ownerType,</if>
+      <if test="ownerId!=null">ownerId,</if>
+      <if test="dataClass!=null and dataClass!=0">dataClass,</if>
+      <if test="data!=null">data,</if>
+      <if test="dataMd5!=null">dataMd5,</if>
+      <if test="dealFlag!=null and dealFlag!=0">dealFlag,</if>
+      <if test="operType!=null and operType!=0">operType,</if>
+      <if test="operId!=null">operId,</if>
+      <if test="rules!=null">rules,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="tableName!=null">#{tableName,jdbcType=VARCHAR},</if>
+      <if test="objId!=null">#{objId,jdbcType=VARCHAR},</if>
+      <if test="ownerType!=null and ownerType!=0">#{ownerType,jdbcType=INTEGER},</if>
+      <if test="ownerId!=null">#{ownerId,jdbcType=VARCHAR},</if>
+      <if test="dataClass!=null and dataClass!=0">#{dataClass,jdbcType=INTEGER},</if>
+      <if test="data!=null">#{data,jdbcType=VARCHAR},</if>
+      <if test="dataMd5!=null">#{dataMd5,jdbcType=VARCHAR},</if>
+      <if test="dealFlag!=null and dealFlag!=0">#{dealFlag,jdbcType=INTEGER},</if>
+      <if test="operType!=null and operType!=0">#{operType,jdbcType=INTEGER},</if>
+      <if test="operId!=null">#{operId,jdbcType=VARCHAR},</if>
+      <if test="rules!=null">#{rules,jdbcType=VARCHAR},</if>
+    </trim>
+  </insert>
+
+  <!-- 根据业务键获得对应的最新的日志信息 -->
+  <select id="getByBizKey" resultMap="tlogMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_ContentTrackLog
+    <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+    <if test="sortByClause!=null">order by ${sortByClause}</if>
+  </select>
+</mapper>

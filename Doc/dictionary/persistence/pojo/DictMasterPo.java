@@ -14,7 +14,6 @@ public class DictMasterPo extends BaseObject {
     private int sort; //排序号，越大越靠前
     private int isValidate; //字典组是否可用 1可用，2不可用
     private int MType; //字典组类型：1系统保留；2系统；3定义；
-    private int MClass; //字典分类(1-字典,2-分类,3-栏目)；
     private String MRef; //字典组引用，当mType=3
     private String desc; //说明
     private Timestamp CTime; //记录创建时间
@@ -73,12 +72,6 @@ public class DictMasterPo extends BaseObject {
     }
     public void setMType(int mType) {
         MType = mType;
-    }
-    public int getMClass() {
-        return MClass;
-    }
-    public void setMClass(int mClass) {
-        MClass = mClass;
     }
     public String getMRef() {
         return MRef;

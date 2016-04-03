@@ -4,7 +4,7 @@
   字典组
 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="dMaster">
+<mapper namespace="A_DMASTER">
   <!-- 对象定义:元数据列模式 -->
   <resultMap id="BaseResultMap" type="dictMaster">
     <id     column="id"         property="id"         jdbcType="VARCHAR"/>
@@ -15,7 +15,6 @@
     <result column="sort"       property="sort"       jdbcType="INTEGER"/>
     <result column="isValidate" property="isValidate" jdbcType="INTEGER"/>
     <result column="mType"      property="MType"      jdbcType="INTEGER"/>
-    <result column="mClass"     property="MClass"     jdbcType="INTEGER"/>
     <result column="mRef"       property="MRef"       jdbcType="VARCHAR"/>
     <result column="descn"      property="desc"       jdbcType="VARCHAR"/>
     <result column="cTime"      property="CTime"      jdbcType="TIMESTAMP"/>
@@ -37,7 +36,6 @@
         <if test="sort!=null and sort!=0"> and sort=#{sort,jdbcType=INTEGER}</if>
         <if test="isValidate!=null and isValidate!=0"> and isValidate=#{isValidate,jdbcType=INTEGER}</if>
         <if test="MType!=null and MType!=0"> and mType=#{MType,jdbcType=INTEGER}</if>
-        <if test="MClass!=null and MClass!=0"> and mClass=#{MClass,jdbcType=INTEGER}</if>
         <if test="MRef!=null"> and mRef=#{MRef,jdbcType=VARCHAR}</if>
         <if test="desc!=null"> and descn=#{desc,jdbcType=VARCHAR}</if>
         <if test="CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
@@ -80,7 +78,6 @@
       <if test="sort!=null and sort!=0">sort,</if>
       <if test="isValidate!=null and isValidate!=0">isValidate,</if>
       <if test="MType!=null and MType!=0">mType,</if>
-      <if test="MClass!=null and MClass!=0">mClass,</if>
       <if test="MRef!=null">mRef,</if>
       <if test="desc!=null">descn,</if>
     </trim>
@@ -93,9 +90,24 @@
       <if test="sort!=null and sort!=0">#{sort,jdbcType=INTEGER},</if>
       <if test="isValidate!=null and isValidate!=0">#{isValidate,jdbcType=INTEGER},</if>
       <if test="MType!=null and MType!=0">#{MType,jdbcType=INTEGER},</if>
-      <if test="MClass!=null and MClass!=0">#{MClass,jdbcType=INTEGER},</if>
       <if test="MRef!=null">#{MRef,jdbcType=VARCHAR},</if>
       <if test="desc!=null">#{desc,jdbcType=VARCHAR},</if>
+    </trim>
+  </insert>
+  <!-- 新增数据 -->
+  <insert id="tempXMLY" parameterType="java.util.Map">
+    insert into XMLY_Temp
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="URL!=null">url,</if>
+      <if test="ParentURL!=null">parUrl,</if>
+      <if test="Type!=null">type,</if>
+      <if test="Time!=null">time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="URL!=null">#{URL,jdbcType=VARCHAR},</if>
+      <if test="ParentURL!=null">#{ParentURL,jdbcType=VARCHAR},</if>
+      <if test="Type!=null">#{Type,jdbcType=VARCHAR},</if>
+      <if test="Time!=null">#{Time,jdbcType=TIMESTAMP},</if>
     </trim>
   </insert>
 
@@ -110,7 +122,6 @@
       <if test="sort!=null and sort!=0">sort=#{sort,jdbcType=INTEGER},</if>
       <if test="isValidate!=null and isValidate!=0">isValidate=#{isValidate,jdbcType=INTEGER},</if>
       <if test="MType!=null and MType!=0">mType=#{MType,jdbcType=INTEGER},</if>
-      <if test="MClass!=null and MClass!=0">mClass=#{MClass,jdbcType=INTEGER},</if>
       <if test="MRef!=null">mRef=#{MRef,jdbcType=VARCHAR},</if>
       <if test="desc!=null">descn=#{desc,jdbcType=VARCHAR},</if>
       <if test="CTime!=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>

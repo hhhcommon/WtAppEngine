@@ -1,5 +1,8 @@
 package com.woting.appengine.content.service;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -9,6 +12,7 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.sql.DataSource;
 
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.DateUtils;
@@ -24,6 +28,23 @@ public class ContentService {
         groupDao.setNamespace("WT_GROUP");
     }
 
+    @Resource
+    private DataSource dataSource;
+
+//    private void runSql(Statement _st, effectively ResultSet _rs, String sql) {
+//        new Thread() {
+//            public void run() {
+//                ResultSet res=null;
+//                try {
+//                    res=_st.executeQuery(sql);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                } finally {
+//                    _rs=res;
+//                }
+//            }
+//        }.start();
+//    }
     /**
      * 查找内容，此内容无排序，按照创建时间的先后顺序排序，最新的在最前面
      * @param searchStr 查找串
@@ -42,66 +63,175 @@ public class ContentService {
         Map<String, List<String>> reBuildMap=new HashMap<String, List<String>>();
         Map<String, Object> paraM=new HashMap<String, Object>();
         //0.1-查找分类
-        List<Map<String, Object>> cataList=groupDao.queryForListAutoTranform("searchCata", _s);
+        Connection conn=null;
+        Statement st=null;
+        ResultSet rs=null;
+        String sql="select * from wt_ResDict_Ref where ";
+        for (int k=0; k<_s.length; k++) {
+            if (k==0) sql+=" title like '%"+_s[k]+"%'";
+            else sql+=" or title like '%"+_s[k]+"%'";
+        }
+        List<Map<String, Object>> cataList=null;
+        try {
+            conn=dataSource.getConnection();
+            st=conn.createStatement();
+            rs=st.executeQuery(sql+" limit 0, 10");
+            cataList=new ArrayList<Map<String, Object>>();
+            while (rs!=null&&rs.next()) {
+                Map<String, Object> oneData=new HashMap<String, Object>();
+                oneData.put("id", rs.getString("id"));
+                oneData.put("refName", rs.getString("refName"));
+                oneData.put("resTableName", rs.getString("resTableName"));
+                oneData.put("resId", rs.getString("resId"));
+                cataList.add(oneData);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (rs!=null) try {rs.close();rs=null;} catch(Exception e) {rs=null;} finally {rs=null;};
+            if (st!=null) try {st.close();st=null;} catch(Exception e) {st=null;} finally {st=null;};
+            if (conn!=null) try {conn.close();conn=null;} catch(Exception e) {conn=null;} finally {conn=null;};
+        }
         for (int i=0; i<cataList.size(); i++) {
             Map<String, Object> one=cataList.get(i);
-            String resType=one.get("resType")+"";
-            if (typeMap.get(resType)==null) typeMap.put(resType, new ArrayList<String>());
-            typeMap.get(resType).add(one.get("resId")+"");
+            String resTableName=one.get("resTableName")+"";
+            if (resTableName.equals("1")) resTableName="wt_Broadcast";
+            if (typeMap.get(resTableName)==null) typeMap.put(resTableName, new ArrayList<String>());
+            typeMap.get(resTableName).add(one.get("resId")+"");
         }
         //0.2-查找节目-查人员
         List<Map<String, Object>> personList=groupDao.queryForListAutoTranform("searchPerson", _s);
         for (int i=0; i<personList.size(); i++) {
             Map<String, Object> one=personList.get(i);
-            String resType=one.get("resType")+"";
-            if (typeMap.get(resType)==null) typeMap.put(resType, new ArrayList<String>());
-            typeMap.get(resType).add(one.get("resId")+"");
+            String resTableName=one.get("resTableName")+"";
+            if (typeMap.get(resTableName)==null) typeMap.put(resTableName, new ArrayList<String>());
+            typeMap.get(resTableName).add(one.get("resTableName")+"");
         }
 
         List<Map<String, Object>> tempList=null;
         //1-查找电台
         paraM.put("searchArray", _s);
-        String tempStr=getIds(typeMap.get("1"));
+        String tempStr=getIds(typeMap.get("wt_Broadcast"));
         if (tempStr!=null) paraM.put("inIds", tempStr);
         tempList=groupDao.queryForListAutoTranform("searchBc", paraM);
         for (int i=0; i<tempList.size(); i++) {
             add(ret1, tempList.get(i));
             //为重构做数据准备
-            if (reBuildMap.get("1")==null) reBuildMap.put("1", new ArrayList<String>());
-            reBuildMap.get("1").add(tempList.get(i).get("id")+"");
+            if (reBuildMap.get("wt_Broadcast")==null) reBuildMap.put("wt_Broadcast", new ArrayList<String>());
+            reBuildMap.get("wt_Broadcast").add(tempList.get(i).get("id")+"");
         }
         //2-查找单体节目
-        tempStr=getIds(typeMap.get("2"));
-        if (tempStr!=null) paraM.put("inIds", tempStr);
-        tempList=groupDao.queryForListAutoTranform("searchMa", paraM);
+        tempStr=getIds(typeMap.get("wt_MediaAsset"));
+        sql="select a.* from wt_MediaAsset a where ";
+        for (int k=0; k<_s.length; k++) {
+            if (k==0) sql+=" CONCAT(a.maTitle,'#S#',a.maPublisher,'#S#',a.subjectWords,'#S#',a.keyWords,'#S#',a.descn) like '%"+_s[k]+"%'";
+            else sql+=" or CONCAT(a.maTitle,'#S#',a.maPublisher,'#S#',a.subjectWords,'#S#',a.keyWords,'#S#',a.descn) like '%"+_s[k]+"%'";
+        }
+        sql+=" limit 0, 20";
+        if (tempStr!=null) sql+=" union select c.* from wt_MediaAsset c where c.id in ("+tempStr+") limit 0, 10";
+        try {
+            conn=dataSource.getConnection();
+            st=conn.createStatement();
+            st.setQueryTimeout(600);
+            rs=st.executeQuery(sql);
+            st.cancel();
+            tempList=new ArrayList<Map<String, Object>>();
+            while (rs.next()) {
+                Map<String, Object> oneData=new HashMap<String, Object>();
+                oneData.put("id", rs.getString("id"));
+                oneData.put("maTitle", rs.getString("maTitle"));
+                oneData.put("maPubType", rs.getInt("maPubType"));
+                oneData.put("maPubId", rs.getString("maPubId"));
+                oneData.put("maPublisher", rs.getString("maPublisher"));
+                oneData.put("maPublishTime", rs.getTimestamp("maPublishTime"));
+                oneData.put("maImg", rs.getString("maImg"));
+                oneData.put("maURL", rs.getString("maURL"));
+                oneData.put("subjectWords", rs.getString("subjectWords"));
+                oneData.put("keyWords", rs.getString("keyWords"));
+                oneData.put("timeLong", rs.getString("timeLong"));
+                oneData.put("descn", rs.getString("descn"));
+                oneData.put("pubCount", rs.getInt("pubCount"));
+                oneData.put("cTime", rs.getTimestamp("cTime"));
+                tempList.add(oneData);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (rs!=null) try {rs.close();rs=null;} catch(Exception e) {rs=null;} finally {rs=null;};
+            if (st!=null) try {st.close();st=null;} catch(Exception e) {st=null;} finally {st=null;};
+            if (conn!=null) try {conn.close();conn=null;} catch(Exception e) {conn=null;} finally {conn=null;};
+        }
+
+//        if (tempStr!=null) paraM.put("inIds", tempStr);
+//        tempList=groupDao.queryForListAutoTranform("searchMa", paraM);
         for (int i=0; i<tempList.size(); i++) {
             add(ret2, tempList.get(i));
             //为重构做数据准备
-            if (reBuildMap.get("2")==null) reBuildMap.put("2", new ArrayList<String>());
-            reBuildMap.get("2").add(tempList.get(i).get("id")+"");
+            if (reBuildMap.get("wt_MediaAsset")==null) reBuildMap.put("wt_MediaAsset", new ArrayList<String>());
+            reBuildMap.get("wt_MediaAsset").add(tempList.get(i).get("id")+"");
         }
         //3-查找系列节目
-        tempStr=getIds(typeMap.get("3"));
-        if (tempStr!=null) paraM.put("inIds", tempStr);
-        tempList=groupDao.queryForListAutoTranform("searchSeqMa", paraM);
+        tempStr=getIds(typeMap.get("wt_SeqMediaAsset"));
+        sql="select a.*, case when b.count is null then 0 else b.count end as count from wt_SeqMediaAsset a left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) b on a.id=b.sid where ";
+        for (int k=0; k<_s.length; k++) {
+            if (k==0) sql+="(CONCAT(a.smaTitle,'#S#',a.smaPublisher,'#S#',a.subjectWords,'#S#',a.keyWords,'#S#',a.descn) like '%"+_s[k]+"%'";
+            else sql+=" or CONCAT(a.smaTitle,'#S#',a.smaPublisher,'#S#',a.subjectWords,'#S#',a.keyWords,'#S#',a.descn) like '%"+_s[k]+"%'";
+        }
+        sql+=") and b.count>0 limit 0,10";
+        if (tempStr!=null) sql+=" union select c.*, case when d.count is null then 0 else d.count end as count from wt_SeqMediaAsset c left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) d on c.id=d.sid where c.id in ("+
+                tempStr+")limit 0, 10";
+        try {
+            conn=dataSource.getConnection();
+            st=conn.createStatement();
+            st.setQueryTimeout(100);
+            rs=st.executeQuery(sql);
+            st.cancel();
+            tempList=new ArrayList<Map<String, Object>>();
+            while (rs.next()) {
+                Map<String, Object> oneData=new HashMap<String, Object>();
+                oneData.put("id", rs.getString("id"));
+                oneData.put("smaTitle", rs.getString("smaTitle"));
+                oneData.put("smaPubType", rs.getInt("smaPubType"));
+                oneData.put("smaPubId", rs.getString("smaPubId"));
+                oneData.put("smaPublisher", rs.getString("smaPublisher"));
+                oneData.put("smaPublishTime", rs.getTimestamp("smaPublishTime"));
+                oneData.put("smaImg", rs.getString("smaImg"));
+                oneData.put("smaAllCount", rs.getString("smaAllCount"));
+                oneData.put("subjectWords", rs.getString("subjectWords"));
+                oneData.put("keyWords", rs.getString("keyWords"));
+                oneData.put("count", rs.getString("count"));
+                oneData.put("descn", rs.getString("descn"));
+                oneData.put("pubCount", rs.getInt("pubCount"));
+                oneData.put("cTime", rs.getTimestamp("cTime"));
+                tempList.add(oneData);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (rs!=null) try {rs.close();rs=null;} catch(Exception e) {rs=null;} finally {rs=null;};
+            if (st!=null) try {st.close();st=null;} catch(Exception e) {st=null;} finally {st=null;};
+            if (conn!=null) try {conn.close();conn=null;} catch(Exception e) {conn=null;} finally {conn=null;};
+        }
+//        if (tempStr!=null) paraM.put("inIds", tempStr);
+//        tempList=groupDao.queryForListAutoTranform("searchSeqMa", paraM);
         for (int i=0; i<tempList.size(); i++) {
             add(ret3, tempList.get(i));
             //为重构做数据准备
-            if (reBuildMap.get("3")==null) reBuildMap.put("3", new ArrayList<String>());
-            reBuildMap.get("3").add(tempList.get(i).get("id")+"");
+            if (reBuildMap.get("wt_SeqMediaAsset")==null) reBuildMap.put("wt_SeqMediaAsset", new ArrayList<String>());
+            reBuildMap.get("wt_SeqMediaAsset").add(tempList.get(i).get("id")+"");
         }
         if ((ret1==null||ret1.size()==0)&&(ret2==null||ret2.size()==0)&&(ret3==null||ret3.size()==0)) return null;
 
         //重构人员及分类列表
         paraM.clear();
-        if (reBuildMap.get("1")!=null&&reBuildMap.get("1").size()>0) {
-            paraM.put("bcIds", getIds(reBuildMap.get("1")));
+        if (reBuildMap.get("wt_Broadcast")!=null&&reBuildMap.get("wt_Broadcast").size()>0) {
+            paraM.put("bcIds", getIds(reBuildMap.get("wt_Broadcast")));
         }
-        if (reBuildMap.get("2")!=null&&reBuildMap.get("2").size()>0) {
-            paraM.put("maIds", getIds(reBuildMap.get("2")));
+        if (reBuildMap.get("wt_MediaAsset")!=null&&reBuildMap.get("wt_MediaAsset").size()>0) {
+            paraM.put("maIds", getIds(reBuildMap.get("wt_MediaAsset")));
         }
-        if (reBuildMap.get("3")!=null&&reBuildMap.get("3").size()>0) {
-            paraM.put("smaIds", getIds(reBuildMap.get("3")));
+        if (reBuildMap.get("wt_SeqMediaAsset")!=null&&reBuildMap.get("wt_SeqMediaAsset").size()>0) {
+            paraM.put("smaIds", getIds(reBuildMap.get("wt_SeqMediaAsset")));
         }
         //重构人员
         personList=groupDao.queryForListAutoTranform("refPersonById", paraM);
@@ -206,7 +336,7 @@ public class ContentService {
         retM.put("ContentName", one.get("bcTitle"));//P02-公共：名称
         retM.put("ContentPub", one.get("bcPublisher"));//P03-公共：发布者，集团名称
         retM.put("ContentImg", one.get("bcImg"));//P07-公共：相关图片
-        retM.put("ContentURI", one.get("flowURI"));//P08-公共：主播放Url
+        retM.put("ContentPlay", one.get("flowURI"));//P08-公共：主播放Url
         retM.put("ContentSource", one.get("bcSource"));//P09-公共：来源名称
         retM.put("ContentURIS", null);//P10-公共：其他播放地址列表，目前为空
         retM.put("ContentDesc", one.get("descn"));//P11-公共：说明
@@ -232,11 +362,12 @@ public class ContentService {
         retM.put("ContentSubjectWord", one.get("subjectWord"));//P03-公共：主题词
         retM.put("ContentKeyWord", one.get("keyWord"));//P04-公共：关键字
         retM.put("ContentPub", one.get("maPublisher"));//P05-公共：发布者，集团名称
-        retM.put("ContentPubTime", one.get("maPublisherTime"));//P06-公共：发布时间
+        retM.put("ContentPubTime", one.get("maPublishTime"));//P06-公共：发布时间
         retM.put("ContentImg", one.get("maImg"));//P07-公共：相关图片
-        retM.put("ContentURI", one.get("maURL"));//P08-公共：主播放Url，这个应该从其他地方来，现在先这样//TODO
-        retM.put("ContentSource", one.get("maSource"));//P09-公共：来源名称
-        retM.put("ContentURIS", null);//P10-公共：其他播放地址列表，目前为空
+        retM.put("ContentPlay", one.get("maURL"));//P08-公共：主播放Url，这个应该从其他地方来，现在先这样//TODO
+        retM.put("ContentURI", "content/getContentInfo.do?ContentId="+retM.get("ContentId"));//P08-公共：主播放Url，这个应该从其他地方来，现在先这样//TODO
+//        retM.put("ContentSource", one.get("maSource"));//P09-公共：来源名称
+//        retM.put("ContentURIS", null);//P10-公共：其他播放地址列表，目前为空
         retM.put("ContentDesc", one.get("descn"));//P11-公共：说明
         retM.put("ContentPersons", fetchPersons(personList, 2, retM.get("ContentId")+""));//P12-公共：相关人员列表
         retM.put("ContentCatalogs", fetchCatas(cataList, 2, retM.get("ContentId")+""));//P13-公共：所有分类列表
@@ -258,9 +389,9 @@ public class ContentService {
         retM.put("ContentSubjectWord", one.get("subjectWord"));//P03-公共：主题词
         retM.put("ContentKeyWord", one.get("keyWord"));//P04-公共：关键字
         retM.put("ContentPub", one.get("smaPublisher"));//P05-公共：发布者，集团名称
-        retM.put("ContentPubTime", one.get("smaPublisherTime"));//P06-公共：发布时间
+        retM.put("ContentPubTime", one.get("smaPublishTime"));//P06-公共：发布时间
         retM.put("ContentImg", one.get("smaImg"));//P07-公共：相关图片
-        retM.put("ContentURI", "content/getSeqMaInfo.do?ContentId="+retM.get("ContentId"));//P08-公共：在此是获得系列节目列表的Url
+        retM.put("ContentURI", "content/getContentInfo.do?ContentId="+retM.get("ContentId"));//P08-公共：在此是获得系列节目列表的Url
         retM.put("ContentDesc", one.get("descn"));//P11-公共：说明
         retM.put("ContentPersons", fetchPersons(personList, 3, retM.get("ContentId")+""));//P12-公共：相关人员列表
         retM.put("ContentCatalogs", fetchCatas(cataList, 3, retM.get("ContentId")+""));//P13-公共：所有分类列表
@@ -315,14 +446,13 @@ public class ContentService {
      * @param userId
      * @return
      */
-    public Map<String, Object> getSeqMaInfo(String contentId) {
+    public Map<String, Object> getSeqMaInfo(String contentId, int pageSize, int page) {
         List<Map<String, Object>> cataList=null;//分类
         List<Map<String, Object>> personList=null;//人员
         Map<String, Object> paraM=new HashMap<String, Object>();
 
         //1、得主内容
         Map<String, Object> tempMap=groupDao.queryForObjectAutoTranform("getSmById", contentId);
-        tempMap=groupDao.queryForObjectAutoTranform("getSmById", contentId);
         if (tempMap==null||tempMap.size()==0) return null;
         paraM.put("resType", "3");
         paraM.put("ids", contentId);
@@ -335,7 +465,7 @@ public class ContentService {
         if (tempList!=null&&tempList.size()>0) {
             String ids="";
             for (Map<String, Object> one: tempList) {
-                ids+=",'"+one.get("mId")+"'";
+                if (one.get("id")!=null) ids+=",'"+one.get("id")+"'";
             }
             ids=ids.substring(1);
             paraM.clear();
@@ -345,11 +475,20 @@ public class ContentService {
             personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
 
             List<Map<String, Object>> subList=new ArrayList<Map<String, Object>>();
-            for (Map<String, Object> one: tempList) {
-                subList.add(convert2MediaMap_2(one, cataList, personList));
+            //计算页数
+            int begin=0, end=tempList.size();
+            if (pageSize>0&&page>0) {
+                begin=pageSize*(page-1);
+                end=begin+pageSize;
+                if (end>tempList.size()) end=tempList.size();
+            }
+            for (int i=begin; i<end; i++) {
+                subList.add(convert2MediaMap_2(tempList.get(i), cataList, personList));
             }
             retInfo.put("SubList", subList);
-            retInfo.put("ContentSubCount", subList.size());
+            retInfo.put("PageSize", subList.size());
+            retInfo.put("Page", page);
+            retInfo.put("ContentSubCount", tempList.size());
         } 
         return retInfo;
     }

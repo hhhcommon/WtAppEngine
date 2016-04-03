@@ -105,6 +105,7 @@ public class PassportController {
                 MobileUsedPo mu=new MobileUsedPo();
                 mu.setImei(sk.getMobileId());
                 mu.setStatus(1);
+                mu.setPCDType(sk.getPCDType());
                 mu.setUserId(u.getUserId());
                 muService.saveMobileUsed(mu);
             }
@@ -244,6 +245,14 @@ public class PassportController {
             if (map.get("ReturnType")!=null) return map;
 
             if (ms!=null) ms.remove("user");
+            MobileKey mk=ms.getKey();
+            //3.2-保存使用情况
+            MobileUsedPo mu=new MobileUsedPo();
+            mu.setImei(mk.getMobileId());
+            mu.setStatus(2);
+            mu.setUserId(mk.getUserId());
+            mu.setPCDType(mk.getPCDType());
+            muService.saveMobileUsed(mu);
             //4-返回成功，不管后台处理情况，总返回成功
             map.put("ReturnType", "1001");
             return map;

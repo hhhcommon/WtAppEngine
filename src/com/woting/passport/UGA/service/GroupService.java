@@ -615,25 +615,25 @@ public class GroupService {
      */
     public List<Group> searchGroup(String searchStr) {
         List<Group> ret = new ArrayList<Group>();
-        Map<String, Group> _tempM=new HashMap<String, Group>();
+        Map<String, List<Group>> _tempM=new HashMap<String, List<Group>>();
         //从内存中查找
         Group _g;
-        int max=0;
+        int max=0, min=0;
         Map<String, GroupInterCom> gm = gmm.getAllGroup();
         for (String sKey: gm.keySet()) {
             GroupInterCom gic=gm.get(sKey);
             _g=gic.getGroup();
             int ss = searchScore(searchStr, _g);
             if (ss>0) {
-                _tempM.put(ss+"", _g);
+                if (_tempM.get(ss+"")==null) _tempM.put(ss+"", new ArrayList<Group>());
+                _tempM.get(ss+"").add(_g);
                 max=ss>max?ss:max;
+                min=ss<min?ss:min;
             }
         }
         _g=null;
-        for (int i=max; i>0; i--) {
-            _g=_tempM.get(i+"");
-            if (_g!=null) ret.add(_g);
-            _g=null;
+        for (int i=max; i>=min; i--) {
+            if (_tempM.get(i+"")!=null) ret.addAll(_tempM.get(i+""));
         }
         return ret;
     }
@@ -651,9 +651,9 @@ public class GroupService {
         if (g.getGroupName()!=null&&g.getGroupName().equals(oneWord)) ret+=30;
         if (g.getGroupNum()!=null&&g.getGroupNum().equals(oneWord)) ret+=30;
         if (g.getGroupSignature()!=null&&g.getGroupSignature().equals(oneWord)) ret+=30;
-        if (g.getGroupName()!=null&&g.getGroupName().indexOf(oneWord)>0) ret+=10;
-        if (g.getGroupNum()!=null&&g.getGroupNum().indexOf(oneWord)>0) ret+=10;
-        if (g.getGroupSignature()!=null&&g.getGroupSignature().indexOf(oneWord)>0) ret+=10;
+        if (g.getGroupName()!=null&&g.getGroupName().indexOf(oneWord)!=-1) ret+=10;
+        if (g.getGroupNum()!=null&&g.getGroupNum().indexOf(oneWord)!=-1) ret+=10;
+        if (g.getGroupSignature()!=null&&g.getGroupSignature().indexOf(oneWord)!=-1) ret+=10;
         List<UserPo> ul=g.getUserList();
         UserPo up;
         String userName;
@@ -662,7 +662,7 @@ public class GroupService {
             userName=up.getLoginName();
             if (userName!=null) {
                 if (userName.equals(oneWord)) ret+=3;
-                if (userName.indexOf(oneWord)>0) ret+=1;
+                if (userName.indexOf(oneWord)!=-1) ret+=1;
             }
         }
         return ret;
