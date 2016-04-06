@@ -1,7 +1,6 @@
 package com.woting.common;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +17,7 @@ public abstract class TreeUtils {
             if (level>0) {
                 if (!ret.isLeaf()) {
                     for (TreeNode<? extends TreeNodeBean> tn: ret.getChildren()) {
-                        TreeUtils.cutLevel(tn, level--);
+                        TreeUtils.cutLevel(tn, level-1);
                     }
                 }
             }
@@ -31,12 +30,27 @@ public abstract class TreeUtils {
     private static void cutLevel(TreeNode<? extends TreeNodeBean> t, int level) {
         if (!t.isLeaf()) {
             if (level==0) {
-                t.setChildren(null);
+                (t.getChildren()).clear();
             } else {
                 for (TreeNode<? extends TreeNodeBean> tn: t.getChildren()) {
-                    TreeUtils.cutLevel(tn, level--);
+                    TreeUtils.cutLevel(tn, level-1);
                 }
             }
+        }
+    }
+
+    public static List<TreeNode<? extends TreeNodeBean>> getDeepList(TreeNode<? extends TreeNodeBean> t) {
+        if (t==null) return null;
+        List<TreeNode<? extends TreeNodeBean>> ret=new ArrayList<TreeNode<? extends TreeNodeBean>>();
+        if (!t.isLeaf()) {
+            for (TreeNode<? extends TreeNodeBean> _t: t.getChildren()) {
+                ret.add(_t);
+                List<TreeNode<? extends TreeNodeBean>> _r=getDeepList(_t);
+                if (_r!=null) ret.addAll(_r);
+            }
+            return ret;
+        } else {
+            return null;
         }
     }
 }

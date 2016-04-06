@@ -57,8 +57,8 @@ public class AppEngineCLU extends AbstractCacheLifecycleUnit {
         try {
             System.out.println("开始装载[栏目结构]缓存");
             _CacheChannel _cc=channelService.loadCache();
-            SystemCache.remove(WtAppEngineConstants.CACHE_DICT);
-            SystemCache.setCache(new CacheEle<_CacheChannel>(WtAppEngineConstants.CACHE_DICT, "栏目结构", _cc));
+            SystemCache.remove(WtAppEngineConstants.CACHE_CHANNEL);
+            SystemCache.setCache(new CacheEle<_CacheChannel>(WtAppEngineConstants.CACHE_CHANNEL, "栏目结构", _cc));
         } catch(Exception e) {
             throw new Wtcm1000CException("缓存[栏目结构]失败", e);
         }

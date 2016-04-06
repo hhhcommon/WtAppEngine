@@ -66,8 +66,9 @@ public abstract class MobileUtils {
             line = sb.toString();
             if (line!=null&&line.length()>0) {
                 return (Map<String, Object>)JsonUtils.jsonToObj(sb.toString(), Map.class);
+            } else {
+                return getDataFromRequestParam(req);
             }
-            System.out.println(sb.toString());
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
