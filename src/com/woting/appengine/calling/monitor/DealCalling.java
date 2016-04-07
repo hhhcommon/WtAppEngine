@@ -71,7 +71,7 @@ public class DealCalling extends Thread {
                 String callerId=mk.getUserId();
                 String CallederId=((Map)sourceMsg.getMsgContent()).get("CallederId")+"";
                 //创建内存对象
-                oneCall=new OneCall(callId, callerId, CallederId
+                oneCall=new OneCall(1, callId, callerId, CallederId
                                   , CallingListener.getCallingConfig().getIT1_EXPIRE()
                                   , CallingListener.getCallingConfig().getIT2_EXPIRE()
                                   , CallingListener.getCallingConfig().getIT3_EXPIRE());

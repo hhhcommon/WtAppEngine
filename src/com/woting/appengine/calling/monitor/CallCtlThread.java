@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.spiritdata.framework.util.SequenceUUID;
+import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.calling.mem.CallingMemoryManage;
 import com.woting.appengine.calling.model.OneCall;
 import com.woting.appengine.calling.model.ProcessedMsg;
@@ -96,10 +97,16 @@ public class CallCtlThread extends Thread {
                 int flag=1;
                 ProcessedMsg pMsg=new ProcessedMsg(m, System.currentTimeMillis(), this.getClass().getName());
                 try {
-                    if (m.getCommand().equals("1")) dial(m);//呼叫处理
-                    else if (m.getCommand().equals("-b1")) flag=dealAutoDialFeedback(m); //“被叫者”的自动反馈
-                    else if (m.getCommand().equals("2")) flag=ackDial(m); //“被叫者”的手工应答
-                    else if (m.getCommand().equals("3")) hangup(m); //挂断通话
+                    if (m.getCmdType().equals("CALL")) {
+                        if (m.getCommand().equals("1")) dial(m);//呼叫处理
+                        else if (m.getCommand().equals("-b1")) flag=dealAutoDialFeedback(m); //“被叫者”的自动反馈
+                        else if (m.getCommand().equals("2")) flag=ackDial(m); //“被叫者”的手工应答
+                        else if (m.getCommand().equals("3")) hangup(m); //挂断通话
+                    }
+                    if (m.getCmdType().equals("PTT")) {
+                        if (m.getCommand().equals("1")) beginPTT(m);//开始对讲
+                        else if (m.getCommand().equals("2")) endPTT(m); //结束对讲
+                    }
                     pMsg.setStatus(flag);
                 } catch(Exception e) {
                     pMsg.setStatus(-1);
@@ -115,7 +122,7 @@ public class CallCtlThread extends Thread {
     }
 
     //===========以下是分步处理过程，全部是私有函数
-    //处理呼叫(1)
+    //处理呼叫(CALL:1)
     private void dial(Message m) {
         System.out.println("处理呼叫信息前==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
         String callId =((Map)m.getMsgContent()).get("CallId")+"";
@@ -143,7 +150,7 @@ public class CallCtlThread extends Thread {
         else callorExisted=true;
         //判断是否占线
         if (callorExisted) {
-            //TODO ***占线的判断要用索机制，现在先不进行处理。这个比较复杂，涉及到多线程的问题。
+            //TODO ***占线的判断要用锁机制，现在先不进行处理。这个比较复杂，涉及到多线程的问题。
             if (callerId.equals(callederId))  toCallerMsg.setReturnType("10033");
             else
             if (gmm.isTalk(callederId)) toCallerMsg.setReturnType("10032");
@@ -206,7 +213,7 @@ public class CallCtlThread extends Thread {
         System.out.println("处理呼叫信息后==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
     }
 
-    //处理“被叫者”的自动呼叫反馈(-b1)
+    //处理“被叫者”的自动呼叫反馈(CALL:-b1)
     private int dealAutoDialFeedback(Message m) {
         System.out.println("处理自动应答前==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
         //首先判断这个消息是否符合处理的要求：callid, callerId, callederId是否匹配
@@ -238,7 +245,7 @@ public class CallCtlThread extends Thread {
         } else return 2;//被抛弃
     }
 
-    //处理“被叫者”应答(2)
+    //处理“被叫者”应答(CALL:2)
     private int ackDial(Message m) {
         //首先判断这个消息是否符合处理的要求：callid, callerId, callederId是否匹配
         if (!this.callData.getCallerId().equals(((Map)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m,1).getUserId())) return 3;
@@ -276,7 +283,7 @@ public class CallCtlThread extends Thread {
         } else return 2;//被抛弃
     }
 
-    //处理“挂断”(3)
+    //处理“挂断”(CALL:3)
     private int hangup(Message m) {
         //首先判断是那方在进行挂断
         String hangupperId=MobileUtils.getMobileKey(m,1).getUserId();
@@ -305,6 +312,82 @@ public class CallCtlThread extends Thread {
         this.callData.setStatus_4();//修改状态
         System.out.println("处理挂断消息后==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
         return 1;
+    }
+
+    //处理开始对讲(PTT:1)
+    private void beginPTT(Message m) {
+        Message toSpeakerMsg=new Message();
+        toSpeakerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+        toSpeakerMsg.setReMsgId(m.getMsgId());
+        toSpeakerMsg.setToAddr(m.getFromAddr());
+        toSpeakerMsg.setFromAddr(m.getToAddr());
+        toSpeakerMsg.setMsgType(-1);
+        toSpeakerMsg.setMsgBizType("CALL_CTL");
+        toSpeakerMsg.setCmdType("PTT");
+        toSpeakerMsg.setCommand("-1");
+
+        Map<String, Object> dataMap=new HashMap<String, Object>();
+        String speaker=MobileUtils.getMobileKey(m,1).getUserId();
+        if (StringUtils.isNullOrEmptyOrSpace(null)||smm.getActivedUserSessionByUserId(speaker)==null) {
+            toSpeakerMsg.setReturnType("1000");
+        } else {
+            String ret=this.callData.setSpeaker(speaker);
+            if (ret.equals("1")) {
+                toSpeakerMsg.setReturnType("1001");
+            } else if (ret.equals("0")) {
+                toSpeakerMsg.setReturnType("1003");
+                dataMap.put("ErrMsg", "当前会话为非对讲模式，不用申请独占的通话资源");
+            } else if (ret.startsWith("2::")) {
+                toSpeakerMsg.setReturnType("1002");
+                dataMap.put("Speaker", ret.substring(3));
+            } else {
+                dataMap.put("ErrMsg", ret.startsWith("-")?ret.substring(ret.indexOf("::")+2):"未知问题");
+            }
+
+        }
+        dataMap.put("CallId", this.callData.getCallId());
+        toSpeakerMsg.setMsgContent(dataMap);
+        pmm.getSendMemory().addMsg2Queue(MobileUtils.getMobileKey(m,1), toSpeakerMsg);
+        //记录到已发送列表
+        this.callData.addSendedMsg(toSpeakerMsg);
+    }
+
+    //处理结束对讲(PTT:2)
+    private void endPTT(Message m) {
+        Message toSpeakerMsg=new Message();
+        toSpeakerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+        toSpeakerMsg.setReMsgId(m.getMsgId());
+        toSpeakerMsg.setToAddr(m.getFromAddr());
+        toSpeakerMsg.setFromAddr(m.getToAddr());
+        toSpeakerMsg.setMsgType(-1);
+        toSpeakerMsg.setMsgBizType("CALL_CTL");
+        toSpeakerMsg.setCmdType("PTT");
+        toSpeakerMsg.setCommand("-2");
+
+        Map<String, Object> dataMap=new HashMap<String, Object>();
+        String speaker=MobileUtils.getMobileKey(m,1).getUserId();
+        if (StringUtils.isNullOrEmptyOrSpace(null)||smm.getActivedUserSessionByUserId(speaker)==null) {
+            toSpeakerMsg.setReturnType("1000");
+        } else {
+            String ret=this.callData.cleanSpeaker(speaker);
+            if (ret.equals("1")) {
+                toSpeakerMsg.setReturnType("1001");
+            } else if (ret.equals("0")) {
+                toSpeakerMsg.setReturnType("1003");
+                dataMap.put("ErrMsg", "当前会话为非对讲模式，不用申请独占的通话资源");
+            } else if (ret.startsWith("2::")) {
+                toSpeakerMsg.setReturnType("1002");
+                dataMap.put("Speaker", ret.substring(3));
+            } else {
+                dataMap.put("ErrMsg", ret.startsWith("-")?ret.substring(ret.indexOf("::")+2):"未知问题");
+            }
+
+        }
+        dataMap.put("CallId", this.callData.getCallId());
+        toSpeakerMsg.setMsgContent(dataMap);
+        pmm.getSendMemory().addMsg2Queue(MobileUtils.getMobileKey(m,1), toSpeakerMsg);
+        //记录到已发送列表
+        this.callData.addSendedMsg(toSpeakerMsg);
     }
 
     //=======以下3个超时处理

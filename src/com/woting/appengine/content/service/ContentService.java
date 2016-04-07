@@ -461,7 +461,7 @@ public class ContentService {
                 while (rs!=null&&rs.next()) {
                     sortIdList.add(rs.getString(typeCName)+"::"+rs.getString(resIdCName));
                     if (rs.getString(typeCName).equals("wt_Broadcast")) {
-                        bcSqlSign+=" or id='"+rs.getString(resIdCName)+"'";
+                        bcSqlSign+=" or a.id='"+rs.getString(resIdCName)+"'";
                         bcSqlSign1+=",'"+rs.getString(resIdCName)+"'";
                     } else if (rs.getString(typeCName).equals("wt_MediaAsset")) {
                         maSqlSign+=" or id='"+rs.getString(resIdCName)+"'";
@@ -495,7 +495,7 @@ public class ContentService {
                     rs.close(); rs=null;
                     ps.close(); ps=null;
                     if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {
-                        ps=conn.prepareStatement("select * from wt_Broadcast where "+bcSqlSign);
+                        ps=conn.prepareStatement("select a.*, b.bcSource, b.flowURI from wt_Broadcast a left join wt_BCLiveFlow b on a.id=b.bcId and b.isMain=1 where "+bcSqlSign);
                         rs=ps.executeQuery();
                         while (rs!=null&&rs.next()) {
                             Map<String, Object> oneData=new HashMap<String, Object>();
@@ -508,8 +508,10 @@ public class ContentService {
                             oneData.put("bcURL", rs.getString("bcURL"));
                             oneData.put("descn", rs.getString("descn"));
                             oneData.put("pubCount", rs.getInt("pubCount"));
+                            oneData.put("bcSource", rs.getString("bcSource"));
+                            oneData.put("flowURI", rs.getString("flowURI"));
                             oneData.put("cTime", rs.getTimestamp("cTime"));
-
+                            
                             Map<String, Object> oneMedia=convert2MediaMap_1(oneData, cataList, null);
                             int i=0;
                             for (; i<sortIdList.size(); i++) {
@@ -617,13 +619,14 @@ public class ContentService {
             PreparedStatement psMa=null;
             PreparedStatement psSma=null;
             ResultSet rs=null;
-            String sql="", sqlCount="", sqlBc="select * from wt_Broadcast where SQL", sqlMa="select * from wt_MediaAsset where SQL", sqlSma="select a.*, case when b.count is null then 0 else b.count end as count from wt_SeqMediaAsset a left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) b on a.id=b.sid where SQL";
+            String sql="", sqlCount="", sqlBc="select a.*, b.bcSource, b.flowURI from wt_Broadcast a left join wt_BCLiveFlow b on a.id=b.bcId and b.isMain=1 where SQL"
+                    , sqlMa="select * from wt_MediaAsset where SQL", sqlSma="select a.*, case when b.count is null then 0 else b.count end as count from wt_SeqMediaAsset a left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) b on a.id=b.sid where SQL";
             if (catalogType.equals("-1")) {
-                sql="select * from wt_ChannelAsset where isValidate=1 and flowFlag=2 and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaType+")"))+"order by sort desc, pubTime desc limit "+perSize;
-                sqlCount="select count(*) from wt_ChannelAsset where isValidate=1 and flowFlag=2 and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaType+")"));
+                sql="select * from wt_ChannelAsset where isValidate=1 and flowFlag=2 and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaFilterSql+")"))+"order by sort desc, pubTime desc limit "+perSize;
+                sqlCount="select count(*) from wt_ChannelAsset where isValidate=1 and flowFlag=2 and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaFilterSql+")"));
             } else {
-                sql="select * from wt_ResDict_Ref where dictMid="+catalogType+" and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaType+")"))+"order by cTime desc limit "+perSize;
-                sqlCount="select count(*) from wt_ResDict_Ref where dictMid="+catalogType+" and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaType+")"));
+                sql="select * from wt_ResDict_Ref where dictMid="+catalogType+" and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaFilterSql+")"))+"order by cTime desc limit "+perSize;
+                sqlCount="select count(*) from wt_ResDict_Ref where dictMid="+catalogType+" and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaFilterSql+")"));
             }
             try {
                 conn=dataSource.getConnection();
@@ -665,7 +668,7 @@ public class ContentService {
                         while (rs!=null&&rs.next()) {
                             sortIdList.add(rs.getString(typeCName)+"::"+rs.getString(resIdCName));
                             if (rs.getString(typeCName).equals("wt_Broadcast")) {
-                                bcSqlSign+=" or id='"+rs.getString(resIdCName)+"'";
+                                bcSqlSign+=" or a.id='"+rs.getString(resIdCName)+"'";
                                 bcSqlSign1+=",'"+rs.getString(resIdCName)+"'";
                             } else if (rs.getString(typeCName).equals("wt_MediaAsset")) {
                                 maSqlSign+=" or id='"+rs.getString(resIdCName)+"'";
@@ -711,6 +714,8 @@ public class ContentService {
                                     oneData.put("bcURL", rs.getString("bcURL"));
                                     oneData.put("descn", rs.getString("descn"));
                                     oneData.put("pubCount", rs.getInt("pubCount"));
+                                    oneData.put("bcSource", rs.getString("bcSource"));
+                                    oneData.put("flowURI", rs.getString("flowURI"));
                                     oneData.put("cTime", rs.getTimestamp("cTime"));
 
                                     Map<String, Object> oneMedia=convert2MediaMap_1(oneData, cataList, null);

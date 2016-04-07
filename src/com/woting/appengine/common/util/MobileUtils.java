@@ -187,7 +187,7 @@ public abstract class MobileUtils {
     /**
      * 从Message的地址，获得MobileKey
      * @param m 消息数据
-     * @param type =1发送地址FromAddr;=2(!=1)接收地址
+     * @param type =1发送地址FromAddr;=2(!=1)接收地址ToAddr
      * @return 若合规，返回正常的MobileKey，否则返回空
      */
     //还有问题，没有做全部的解析，先这样
