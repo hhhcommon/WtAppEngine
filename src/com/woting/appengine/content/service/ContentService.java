@@ -63,12 +63,15 @@ public class ContentService {
         List<Map<String, Object>> ret1 = new ArrayList<Map<String, Object>>();
         List<Map<String, Object>> ret2 = new ArrayList<Map<String, Object>>();
         List<Map<String, Object>> ret3 = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> ret4 = new ArrayList<Map<String, Object>>();//只有当pageType=0时，此列表才有用
+
         Map<String, List<String>> typeMap=new HashMap<String, List<String>>();
         Map<String, List<String>> reBuildMap=new HashMap<String, List<String>>();
         Map<String, Object> paraM=new HashMap<String, Object>();
         //0.1-查找分类
         Connection conn=null;
         PreparedStatement ps=null;
+        PreparedStatement ps2=null;
         ResultSet rs=null;
         String sql="select * from wt_ResDict_Ref where ";
         for (int k=0; k<_s.length; k++) {
@@ -136,10 +139,10 @@ public class ContentService {
         try {
             conn=dataSource.getConnection();
             ps=conn.prepareStatement(sql);
-            ps.setQueryTimeout(600);
+            ps.setQueryTimeout(10);
             rs=ps.executeQuery();
             tempList=new ArrayList<Map<String, Object>>();
-            while (rs.next()) {
+            while (rs!=null&&rs.next()) {
                 Map<String, Object> oneData=new HashMap<String, Object>();
                 oneData.put("id", rs.getString("id"));
                 oneData.put("maTitle", rs.getString("maTitle"));
@@ -155,7 +158,9 @@ public class ContentService {
                 oneData.put("descn", rs.getString("descn"));
                 oneData.put("pubCount", rs.getInt("pubCount"));
                 oneData.put("cTime", rs.getTimestamp("cTime"));
-                tempList.add(oneData);
+                add(ret2, oneData);
+                if (reBuildMap.get("wt_MediaAsset")==null) reBuildMap.put("wt_MediaAsset", new ArrayList<String>());
+                reBuildMap.get("wt_MediaAsset").add(oneData.get("id")+"");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -163,15 +168,6 @@ public class ContentService {
             if (rs!=null) try {rs.close();rs=null;} catch(Exception e) {rs=null;} finally {rs=null;};
             if (ps!=null) try {ps.close();ps=null;} catch(Exception e) {ps=null;} finally {ps=null;};
             if (conn!=null) try {conn.close();conn=null;} catch(Exception e) {conn=null;} finally {conn=null;};
-        }
-
-//        if (tempStr!=null) paraM.put("inIds", tempStr);
-//        tempList=groupDao.queryForListAutoTranform("searchMa", paraM);
-        for (int i=0; i<tempList.size(); i++) {
-            add(ret2, tempList.get(i));
-            //为重构做数据准备
-            if (reBuildMap.get("wt_MediaAsset")==null) reBuildMap.put("wt_MediaAsset", new ArrayList<String>());
-            reBuildMap.get("wt_MediaAsset").add(tempList.get(i).get("id")+"");
         }
         //3-查找系列节目
         tempStr=getIds(typeMap.get("wt_SeqMediaAsset"));
@@ -186,12 +182,14 @@ public class ContentService {
         try {
             conn=dataSource.getConnection();
             ps=conn.prepareStatement(sql);
-            ps.setQueryTimeout(100);
+            ps.setQueryTimeout(10);
             rs=ps.executeQuery();
             tempList=new ArrayList<Map<String, Object>>();
-            while (rs.next()) {
+            String _orSql="";
+            while (rs!=null&&rs.next()) {
                 Map<String, Object> oneData=new HashMap<String, Object>();
                 oneData.put("id", rs.getString("id"));
+                if (pageType==0) _orSql+=" or sma."+rs.getString("id");
                 oneData.put("smaTitle", rs.getString("smaTitle"));
                 oneData.put("smaPubType", rs.getInt("smaPubType"));
                 oneData.put("smaPubId", rs.getString("smaPubId"));
@@ -206,16 +204,58 @@ public class ContentService {
                 oneData.put("pubCount", rs.getInt("pubCount"));
                 oneData.put("cTime", rs.getTimestamp("cTime"));
                 tempList.add(oneData);
+                add(ret3, oneData);
+                if (reBuildMap.get("wt_SeqMediaAsset")==null) reBuildMap.put("wt_SeqMediaAsset", new ArrayList<String>());
+                reBuildMap.get("wt_SeqMediaAsset").add(oneData.get("id")+"");
+            }
+            rs.close(); rs=null;
+            if (pageType==0) {//为提升速度，提取单体节目
+                _orSql="select ma.* from wt_MediaAsset as ma, (select * from( select * from  wt_SeqMA_Ref where columnNum=(select b.columnNum from vWt_FirstMaInSequ as b where wt_SeqMA_Ref.sId=b.sId)) as a group by a.sId) as sma"
+                      +"where ma.id=sma.mId and ("+_orSql.substring(4)+")";
+                ps2=conn.prepareStatement(_orSql);
+                ps.setQueryTimeout(10);
+                rs=ps2.executeQuery();
+                while (rs!=null&&rs.next()) {
+                    String maId=rs.getString("id");
+                    boolean find=false;
+                    for (Map<String, Object> _o2: ret2) {
+                        if (maId.equals(_o2.get("id"))) {
+                            find=true;
+                            _o2.put("sId", rs.getString("sId"));
+                            break;
+                        }
+                    }
+                    if (!find) {
+                        Map<String, Object> oneData=new HashMap<String, Object>();
+                        oneData.put("id", rs.getString("id"));
+                        oneData.put("maTitle", rs.getString("maTitle"));
+                        oneData.put("maPubType", rs.getInt("maPubType"));
+                        oneData.put("maPubId", rs.getString("maPubId"));
+                        oneData.put("maPublisher", rs.getString("maPublisher"));
+                        oneData.put("maPublishTime", rs.getTimestamp("maPublishTime"));
+                        oneData.put("maImg", rs.getString("maImg"));
+                        oneData.put("maURL", rs.getString("maURL"));
+                        oneData.put("subjectWords", rs.getString("subjectWords"));
+                        oneData.put("keyWords", rs.getString("keyWords"));
+                        oneData.put("timeLong", rs.getString("timeLong"));
+                        oneData.put("descn", rs.getString("descn"));
+                        oneData.put("pubCount", rs.getInt("pubCount"));
+                        oneData.put("cTime", rs.getTimestamp("cTime"));
+                        oneData.put("sId", rs.getString("sId"));
+                        add(ret4, oneData);
+                        if (reBuildMap.get("wt_MediaAsset")==null) reBuildMap.put("wt_MediaAsset", new ArrayList<String>());
+                        reBuildMap.get("wt_MediaAsset").add(maId+"");
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             if (rs!=null) try {rs.close();rs=null;} catch(Exception e) {rs=null;} finally {rs=null;};
             if (ps!=null) try {ps.close();ps=null;} catch(Exception e) {ps=null;} finally {ps=null;};
+            if (ps2!=null) try {ps2.close();ps2=null;} catch(Exception e) {ps2=null;} finally {ps2=null;};
             if (conn!=null) try {conn.close();conn=null;} catch(Exception e) {conn=null;} finally {conn=null;};
         }
-//        if (tempStr!=null) paraM.put("inIds", tempStr);
-//        tempList=groupDao.queryForListAutoTranform("searchSeqMa", paraM);
         for (int i=0; i<tempList.size(); i++) {
             add(ret3, tempList.get(i));
             //为重构做数据准备
@@ -242,7 +282,6 @@ public class ContentService {
         int i=0;
         if (resultType==0) {//按一个列表获得
             List<Map<String, Object>> allList=new ArrayList<Map<String, Object>>();
-            oneMedia=new HashMap<String, Object>();
             if (ret1!=null||ret1.size()>0) {
                 for (; i<ret1.size(); i++) {
                     oneMedia=convert2MediaMap_1(ret1.get(i), cataList, personList);
@@ -252,24 +291,34 @@ public class ContentService {
             if (ret2!=null||ret2.size()>0) {
                 for (i=0; i<ret2.size(); i++) {
                     oneMedia=convert2MediaMap_2(ret2.get(i), cataList, personList);
+                    if (pageType==0&&ret2.get(i).get("sId")!=null) {
+                        for (int j=0; j<ret3.size(); j++) {
+                            if (ret3.get(j).get("id").equals(ret2.get(i).get("sId"))) {
+                                Map<String, Object> _oneMedia=convert2MediaMap_3(ret3.get(i), cataList, personList);
+                                oneMedia.put("SeqInfo", _oneMedia);
+                            }
+                        }
+                    }
                     add(allList, oneMedia);
                 }
             }
-            if (ret3!=null||ret3.size()>0) {//系列节目
-                for (i=0; i<ret3.size(); i++) {
-                    oneMedia=convert2MediaMap_3(ret3.get(i), cataList, personList);
-                    boolean hasAdd=false;
-                    if (pageType==0) {//提取单体节目
-                        Map<String, Object> _oneM=getSeqMaInfo(oneMedia.get("ContentId")+"", 1, 1);
-                        if (_oneM!=null&&!_oneM.isEmpty()) {
-                            List<Map<String, Object>> l=(List<Map<String, Object>>)_oneM.get("SubList");
-                            _oneM=l.get(0);
-                            _oneM.put("SeqInfo", oneMedia);
-                            add(allList, _oneM);
-                            hasAdd=true;
+            if (pageType==0&&ret4!=null) {
+                for (i=0; i<ret4.size(); i++) {
+                    oneMedia=convert2MediaMap_2(ret4.get(i), cataList, personList);
+                    for (int j=0; j<ret3.size(); j++) {
+                        if (ret3.get(j).get("id").equals(ret4.get(i).get("sId"))) {
+                            Map<String, Object> _oneMedia=convert2MediaMap_3(ret3.get(i), cataList, personList);
+                            oneMedia.put("SeqInfo", _oneMedia);
                         }
                     }
-                    if (!hasAdd) add(allList, oneMedia);
+                    add(allList, oneMedia);
+                }
+            } else {
+                if (ret3!=null||ret3.size()>0) {//系列节目
+                    for (i=0; i<ret3.size(); i++) {
+                        oneMedia=convert2MediaMap_3(ret3.get(i), cataList, personList);
+                        add(allList, oneMedia);
+                    }
                 }
             }
             ret.put("List", allList);
@@ -298,9 +347,38 @@ public class ContentService {
             }
             if (ret3!=null||ret3.size()>0) {//系列节目
                 List<Map<String, Object>> resultList3=new ArrayList<Map<String, Object>>();
-                for (i=0; i<ret3.size(); i++) {
-                    oneMedia=convert2MediaMap_3(ret3.get(i), cataList, personList);
-                    resultList3.add(oneMedia);
+                if (pageType==0) {
+                    if (ret2!=null||ret2.size()>0) {
+                        for (i=0; i<ret2.size(); i++) {
+                            if (pageType==0&&ret2.get(i).get("sId")!=null) {
+                                for (int j=0; j<ret3.size(); j++) {
+                                    if (ret3.get(j).get("id").equals(ret2.get(i).get("sId"))) {
+                                        oneMedia=convert2MediaMap_2(ret2.get(i), cataList, personList);
+                                        Map<String, Object> _oneMedia=convert2MediaMap_3(ret3.get(i), cataList, personList);
+                                        oneMedia.put("SeqInfo", _oneMedia);
+                                        resultList3.add(oneMedia);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (ret4!=null||ret4.size()>0) {
+                        for (i=0; i<ret4.size(); i++) {
+                            oneMedia=convert2MediaMap_2(ret4.get(i), cataList, personList);
+                            for (int j=0; j<ret3.size(); j++) {
+                                if (ret3.get(j).get("id").equals(ret4.get(i).get("sId"))) {
+                                    Map<String, Object> _oneMedia=convert2MediaMap_3(ret3.get(i), cataList, personList);
+                                    oneMedia.put("SeqInfo", _oneMedia);
+                                }
+                            }
+                            resultList3.add(oneMedia);
+                        }
+                    }
+                } else {
+                    for (i=0; i<ret3.size(); i++) {
+                        oneMedia=convert2MediaMap_3(ret3.get(i), cataList, personList);
+                        resultList3.add(oneMedia);
+                    }
                 }
                 Map<String, Object> smResult=new HashMap<String, Object>();
                 smResult.put("Count", ret3.size());

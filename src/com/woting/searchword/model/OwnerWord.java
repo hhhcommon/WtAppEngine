@@ -6,17 +6,16 @@ import java.util.Map;
 import com.woting.cm.core.common.model.Owner;
 
 /**
- * 由WordModel等组成的一个复合结构
+ * 属于某一个所有者的查找此结构
  * 词管理就是通过这个数据来完成的
  * @author wanghui
- *
  */
-public class WordData implements Serializable {
+public class OwnerWord implements Serializable {
     private static final long serialVersionUID = 3456689479976991230L;
 
     private Owner owner; //本组词管理的所有人，目前只有系统所有者
     private int splitLevel; //向下分级的层数，默认值为5
-    private Map<String, WordModel> searchMap; //用于查找热词的结构
+    private Map<String, MiddleWord> middleWordMap; //用于查找热词的结构
     private Map<String, Word> searchFinalMap; //最终查找词的结构
 
     public Owner getOwner() {
@@ -31,10 +30,10 @@ public class WordData implements Serializable {
     public void setSplitLevel(int splitLevel) {
         this.splitLevel = splitLevel;
     }
-    public Map<String, WordModel> getSearchMap() {
+    public Map<String, MiddleWord> getSearchMap() {
         return searchMap;
     }
-    public void setSearchMap(Map<String, WordModel> searchMap) {
+    public void setSearchMap(Map<String, MiddleWord> searchMap) {
         this.searchMap = searchMap;
     }
     public Map<String, Word> getSearchFinalMap() {
