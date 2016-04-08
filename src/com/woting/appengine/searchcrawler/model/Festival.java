@@ -1,4 +1,4 @@
-package com.woting.appengine.search.model;
+package com.woting.appengine.searchcrawler.model;
 
 
 /**

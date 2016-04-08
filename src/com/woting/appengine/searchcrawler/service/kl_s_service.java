@@ -1,4 +1,4 @@
-package com.woting.appengine.search.service;
+package com.woting.appengine.searchcrawler.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,9 +7,9 @@ import java.util.Map;
 import org.junit.Test;
 
 import com.mysql.jdbc.StringUtils;
-import com.woting.appengine.search.model.Festival;
-import com.woting.appengine.search.model.Station;
-import com.woting.appengine.search.utils.SearchUtils;
+import com.woting.appengine.searchcrawler.model.Festival;
+import com.woting.appengine.searchcrawler.model.Station;
+import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 /**
  * 考拉搜索
@@ -22,11 +22,11 @@ public class kl_s_service {
 	private int S_S_T = 2;		//搜索频道的数目
 	private int S_S_F_T = 2;	//搜索频道内节目的数目
 	private int S_F_T = 2;		//搜索节目的数目     以上排列顺序按照搜索到的排列顺序
-	SearchUtils utils = new SearchUtils(5000);	//搜索工具
+	SearchUtils utils = new SearchUtils(2000);	//搜索工具
 	
 	@Test
 	public void test(){
-		String content = utils.utf8TOurl("周小儿");
+		String content = utils.utf8TOurl("周");
 		List<Station> list_station = StationS(content);
 		List<Festival> list_festival = FestivalsS(content);
 		if(list_station.isEmpty() || list_station.equals("")){
@@ -71,12 +71,11 @@ public class kl_s_service {
 				if(list_href2.size()>0){
 					for(int j = 0;j<(list_href2.size()>S_S_F_T?S_S_F_T:list_href2.size());j++){
 						//频道里节目信息采集
-						
 						Festival festival  = new Festival();
 						festival.setAudioName(list_href2.get(j).get("audioName").toString());
-						festival.setAudioPic(utils.ObjIsEmpty(list_href.get(j).get("audioPic")));  //频道里节目信息没有图片链接
-						festival.setAlbumName(list_href2.get(j).get("albumName")==null?"":"".toString());
-						festival.setAlbumPic(utils.ObjIsEmpty(list_href2.get(j).get("albumPic")));
+						festival.setAudioPic(list_href2.get(j).get("audioPic")==null?"":list_href2.get(j).get("audioPic").toString());  //频道里节目信息没有图片链接
+						festival.setAlbumName(list_href2.get(j).get("albumName")==null?"":list_href2.get(j).get("albumName").toString());
+						festival.setAlbumPic(list_href2.get(j).get("albumPic")==null?"":list_href2.get(j).get("albumPic").toString());
 						festival.setMp3PlayUrl((list_href2.get(j).get("mp3PlayUrl").toString()));
 						festival.setFileSize((list_href2.get(j).get("fileSize").toString()));
 						festival.setUpdateTime(((list_href2.get(j).get("updateTime").toString())));
@@ -112,9 +111,9 @@ public class kl_s_service {
 				Map<String, Object> map = utils.jsonTOmap(jsonstr, "result");	
 				Festival festival  = new Festival();
 				festival.setAudioName(map.get("audioName").toString());
-				festival.setAudioPic(utils.ObjIsEmpty(map.get("audioPic"))); 
+				festival.setAudioPic(map.get("audioPic")==null?"":map.get("audioPic").toString()); 
 				festival.setAlbumName(map.get("albumName").toString());
-				festival.setAlbumPic(utils.ObjIsEmpty(map.get("albumPic")));
+				festival.setAlbumPic(map.get("albumPic")==null?"":map.get("albumPic").toString());
 				festival.setMp3PlayUrl((map.get("mp3PlayUrl").toString()));
 				festival.setFileSize((map.get("fileSize").toString()));
 				festival.setUpdateTime(((map.get("updateTime").toString())));

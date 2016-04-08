@@ -1,4 +1,4 @@
-package com.woting.appengine.search.utils;
+package com.woting.appengine.searchcrawler.utils;
 
 import java.io.IOException;
 import java.util.List;
@@ -104,28 +104,5 @@ public class SearchUtils {
 			e.printStackTrace();
 		}
 		return str;
-	}
-	
-	/**
-	 * 检查需要再加的属性值是否为空
-	 * @param obj map返回的属性对应的值
-	 * @return obj为空时返回null，不为空时返回字符串
-	 */
-	public String ObjIsEmpty(Object obj){
-		if(obj == null)
-		{
-			return "null";
-		}else{
-			return obj.toString();
-		}
-	}
-
-	/**
-	 * 检查对象是否为空
-	 * @param obj map返回的属性对应的值
-	 * @return obj为空时返回null，不为空时返回字符串
-	 */
-	public boolean isNull(Object obj){
-		return obj==null;
 	}
 }
