@@ -105,4 +105,15 @@ public class SearchUtils {
 		}
 		return str;
 	}
+	
+	public int findint(String str){
+		char[] s = str.toCharArray();
+		String d = "";
+		for(int i = 0;i<s.length;i++){
+			if(Character.isDigit(s[i])){
+				d+=s[i];
+			}
+		}
+		return Integer.valueOf(d);
+	}
 }
