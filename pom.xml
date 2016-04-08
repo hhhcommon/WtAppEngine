@@ -7,7 +7,7 @@
   <!-- 配置编码格式，与eclpse的IDE环境编码格式匹配 -->
   <!-- D:\workIDE\projects || E:\work\gitworkspace -->
   <properties>
-    <build.webProjectDir>D:\workIDE\projects\WtAppEngine</build.webProjectDir>
+    <build.webProjectDir>D:\WBWorkDir\WtAppEngine</build.webProjectDir>
   </properties>
   <parent>
     <groupId>team.gm</groupId>
