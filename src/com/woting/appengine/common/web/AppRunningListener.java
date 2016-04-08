@@ -33,6 +33,8 @@ public class AppRunningListener implements ServletContextListener {
             MfListener.begin(new MfConfig());
             //启动推送服务
             PushListener.begin(new PushConfig());
+            //启动搜索词服务
+            SearchWordListener.begin(new PushConfig());
         } catch(Exception e) {
             logger.error("Web运行时监听启动异常：",e);
         }

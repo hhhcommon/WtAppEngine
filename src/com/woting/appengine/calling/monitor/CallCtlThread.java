@@ -328,7 +328,7 @@ public class CallCtlThread extends Thread {
 
         Map<String, Object> dataMap=new HashMap<String, Object>();
         String speaker=MobileUtils.getMobileKey(m,1).getUserId();
-        if (StringUtils.isNullOrEmptyOrSpace(null)||smm.getActivedUserSessionByUserId(speaker)==null) {
+        if (StringUtils.isNullOrEmptyOrSpace(speaker)||smm.getActivedUserSessionByUserId(speaker)==null) {
             toSpeakerMsg.setReturnType("1000");
         } else {
             String ret=this.callData.setSpeaker(speaker);
@@ -366,7 +366,7 @@ public class CallCtlThread extends Thread {
 
         Map<String, Object> dataMap=new HashMap<String, Object>();
         String speaker=MobileUtils.getMobileKey(m,1).getUserId();
-        if (StringUtils.isNullOrEmptyOrSpace(null)||smm.getActivedUserSessionByUserId(speaker)==null) {
+        if (StringUtils.isNullOrEmptyOrSpace(speaker)||smm.getActivedUserSessionByUserId(speaker)==null) {
             toSpeakerMsg.setReturnType("1000");
         } else {
             String ret=this.callData.cleanSpeaker(speaker);

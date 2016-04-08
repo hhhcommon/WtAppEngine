@@ -37,7 +37,7 @@ public class DealCalling extends Thread {
                 sleep(10);
                 //读取Receive内存中的typeMsgMap中的内容
                 Message m=pmm.getReceiveMemory().pollTypeQueue("CALL_CTL");
-                if (m==null||!m.getCmdType().equals("CALL")) continue;
+                if (m==null) continue;
 
                 tempStr="电话控制消息[MsgId="+m.getMsgId()+"]";
                 (new ProcessCallMsg("{"+tempStr+"}分发线程", m)).start();
@@ -67,7 +67,7 @@ public class DealCalling extends Thread {
 
             OneCall oneCall=null;//通话对象
             MobileKey mk=MobileUtils.getMobileKey(sourceMsg,1);
-            if (sourceMsg.getCommand().equals("1")) {//发起呼叫过程
+            if (sourceMsg.getCmdType().equals("CALL")&&sourceMsg.getCommand().equals("1")) {//发起呼叫过程
                 String callerId=mk.getUserId();
                 String CallederId=((Map)sourceMsg.getMsgContent()).get("CallederId")+"";
                 //创建内存对象
