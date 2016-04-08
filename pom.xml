@@ -16,6 +16,11 @@
     <relativePath>pom.framework.xml</relativePath>
   </parent>
   <dependencies>
+  	<dependency>
+  	 <groupId>org.jsoup</groupId>
+     <artifactId>jsoup</artifactId>
+     <version>1.8.2</version>
+  	</dependency>
     <!-- dbcp连接池 -->
     <dependency>
       <groupId>commons-dbcp</groupId>

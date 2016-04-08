@@ -1,11 +1,11 @@
-package com.woting.appengine.appopinion.search.pojo;
+package com.woting.appengine.search.model;
 
 import java.util.Arrays;
 
 /**
  * 
  * 考拉FM搜索专辑信息
- * @author WBQ
+ * @author wbq
  *
  */
 public class Station {

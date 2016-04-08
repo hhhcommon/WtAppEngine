@@ -1,9 +1,9 @@
-package com.woting.appengine.appopinion.search.pojo;
+package com.woting.appengine.search.model;
 
 
 /**
  * 考拉FM搜索节目信息
- * @author WBQ
+ * @author wbq
  *
  */
 public class Festival {
