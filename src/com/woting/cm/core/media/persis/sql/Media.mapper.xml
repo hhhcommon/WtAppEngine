@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- 声音资产 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="A_MEDIA">
+  <!-- 单体节目 -->
+  <resultMap id="mediaAssetMap" type="mediaAsset">
+    <id      column="id"             property="id"             jdbcType="VARCHAR"/>
+    <result  column="maTitle"        property="maTitle"        jdbcType="VARCHAR"/>
+    <result  column="maPubType"      property="maPubType"      jdbcType="INTEGER"/>
+    <result  column="maPubId"        property="maPubId"        jdbcType="VARCHAR"/>
+    <result  column="maPublisher"    property="maPublisher"    jdbcType="VARCHAR"/>
+    <result  column="maPublishTime"  property="maPublishTime"  jdbcType="TIMESTAMP"/>
+    <result  column="maImg"          property="maImg"          jdbcType="VARCHAR"/>
+    <result  column="maURL"          property="maURL"          jdbcType="VARCHAR"/>
+    <result  column="subjectWords"   property="subjectWords"   jdbcType="VARCHAR"/>
+    <result  column="keyWords"       property="keyWords"       jdbcType="VARCHAR"/>
+    <result  column="langDid"        property="langDid"        jdbcType="VARCHAR"/>
+    <result  column="language"       property="language"       jdbcType="VARCHAR"/>
+    <result  column="timeLong"       property="timeLong"       jdbcType="VARCHAR"/>
+    <result  column="descn"          property="descn"          jdbcType="VARCHAR"/>
+    <result  column="pubCount"       property="pubCount"       jdbcType="INTEGER"/>
+    <result  column="cTime"          property="CTime"          jdbcType="TIMESTAMP"/>
+  </resultMap>
+
+  <!-- 单体节目播放源 -->
+  <resultMap id="maSourceMap" type="maSource">
+    <id      column="id"         property="id"         jdbcType="VARCHAR"/>
+    <result  column="maId"       property="maId"       jdbcType="VARCHAR"/>
+    <result  column="maSrcType"  property="maSrcType"  jdbcType="INTEGER"/>
+    <result  column="maSrcId"    property="maSrcId"    jdbcType="VARCHAR"/>
+    <result  column="maSource"   property="maSource"   jdbcType="VARCHAR"/>
+    <result  column="smType"     property="smType"     jdbcType="VARCHAR"/>
+    <result  column="playURI"    property="playURI"    jdbcType="VARCHAR"/>
+    <result  column="isMain"     property="isMain"     jdbcType="INTEGER"/>
+    <result  column="descn"      property="descn"      jdbcType="VARCHAR"/>
+    <result  column="cTime"      property="CTime"      jdbcType="TIMESTAMP"/>
+  </resultMap>
+
+  <!-- 专辑 -->
+  <resultMap id="seqMediaAssetMap" type="seqMediaAsset">
+    <id      column="id"              property="id"              jdbcType="VARCHAR"/>
+    <result  column="smaTitle"        property="smaTitle"        jdbcType="VARCHAR"/>
+    <result  column="smaPubType"      property="smaPubType"      jdbcType="INTEGER"/>
+    <result  column="smaPubId"        property="smaPubId"        jdbcType="VARCHAR"/>
+    <result  column="smaPublisher"    property="smaPublisher"    jdbcType="VARCHAR"/>
+    <result  column="smaPublishTime"  property="smaPublishTime"  jdbcType="TIMESTAMP"/>
+    <result  column="smaImg"          property="smaImg"          jdbcType="VARCHAR"/>
+    <result  column="smaAllCount"     property="smaAllCount"     jdbcType="INTEGER"/>
+    <result  column="subjectWords"    property="subjectWords"    jdbcType="VARCHAR"/>
+    <result  column="keyWords"        property="keyWords"        jdbcType="VARCHAR"/>
+    <result  column="langDid"         property="langDid"         jdbcType="VARCHAR"/>
+    <result  column="language"        property="language"        jdbcType="VARCHAR"/>
+    <result  column="descn"           property="descn"           jdbcType="VARCHAR"/>
+    <result  column="pubCount"        property="pubCount"        jdbcType="INTEGER"/>
+    <result  column="cTime"           property="CTime"           jdbcType="TIMESTAMP"/>
+  </resultMap>
+
+  <!-- 专辑和单体节目关系 -->
+  <resultMap id="seqMaRefMap" type="seqMaRef">
+    <id      column="id"         property="id"         jdbcType="VARCHAR"/>
+    <result  column="sId"        property="SId"        jdbcType="VARCHAR"/>
+    <result  column="mId"        property="MId"        jdbcType="VARCHAR"/>
+    <result  column="columnNum"  property="columnNum"  jdbcType="INTEGER"/>
+    <result  column="descn"      property="descn"      jdbcType="VARCHAR"/>
+    <result  column="cTime"      property="CTime"      jdbcType="TIMESTAMP"/>
+  </resultMap>
+
+  <!-- 新增 单体节目 -->
+  <insert id="insertMa" parameterType="java.util.Map">
+    insert into wt_MediaAsset
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="maTitle!=null">maTitle,</if>
+      <if test="maPubType!=null and maPubType!=0">maPubType,</if>
+      <if test="maPubId!=null">maPubId,</if>
+      <if test="maPublisher!=null">maPublisher,</if>
+      <if test="maImg!=null">maImg,</if>
+      <if test="maURL!=null">maURL,</if>
+      <if test="subjectWords!=null">subjectWords,</if>
+      <if test="keyWords!=null">keyWords,</if>
+      <if test="langDid!=null">langDid,</if>
+      <if test="language!=null">language,</if>
+      <if test="timeLong!=null">timeLong,</if>
+      <if test="descn!=null">descn,</if>
+      <if test="pubCount!=null and pubCount>0">pubCount,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="maTitle!=null">#{maTitle,jdbcType=VARCHAR},</if>
+      <if test="maPubType!=null and maPubType!=0">#{maPubType,jdbcType=INTEGER},</if>
+      <if test="maPubId!=null">#{maPubId,jdbcType=VARCHAR},</if>
+      <if test="maPublisher!=null">#{maPublisher,jdbcType=VARCHAR},</if>
+      <if test="maImg!=null">#{maImg,jdbcType=VARCHAR},</if>
+      <if test="maURL!=null">#{maURL,jdbcType=VARCHAR},</if>
+      <if test="subjectWords!=null">#{subjectWords,jdbcType=VARCHAR},</if>
+      <if test="keyWords!=null">#{keyWords,jdbcType=VARCHAR},</if>
+      <if test="langDid!=null">#{langDid,jdbcType=VARCHAR},</if>
+      <if test="language!=null">#{language,jdbcType=VARCHAR},</if>
+      <if test="timeLong!=null">#{timeLong,jdbcType=VARCHAR},</if>
+      <if test="descn!=null">#{descn,jdbcType=VARCHAR},</if>
+      <if test="pubCount!=null and pubCount>0">#{pubCount,jdbcType=VARCHAR},</if>
+    </trim>
+  </insert>
+
+  <!-- 新增 单体节目播放源 -->
+  <insert id="insertMas" parameterType="java.util.Map">
+    insert into wt_MaSource
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="maId!=null">maId,</if>
+      <if test="maSrcType!=null and maSrcType!=0">maSrcType,</if>
+      <if test="maSrcId!=null">maSrcId,</if>
+      <if test="maSource!=null">maSource,</if>
+      <if test="smType!=null">smType,</if>
+      <if test="playURI!=null">playURI,</if>
+      <if test="isMain!=null and isMain!=0">isMain,</if>
+      <if test="descn!=null">descn,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="maId!=null">#{maId,jdbcType=VARCHAR},</if>
+      <if test="maSrcType!=null and maSrcType!=0">#{maSrcType,jdbcType=INTEGER},</if>
+      <if test="maSrcId!=null">#{maSrcId,jdbcType=VARCHAR},</if>
+      <if test="maSource!=null">#{maSource,jdbcType=VARCHAR},</if>
+      <if test="smType!=null">#{smType,jdbcType=VARCHAR},</if>
+      <if test="playURI!=null">#{playURI,jdbcType=VARCHAR},</if>
+      <if test="isMain!=null and isMain!=0">#{isMain,jdbcType=INTEGER},</if>
+      <if test="descn!=null">#{descn,jdbcType=VARCHAR},</if>
+    </trim>
+  </insert>
+
+  <!-- 新增 专辑 -->
+  <insert id="insertSma" parameterType="java.util.Map">
+    insert into wt_SeqMediaAsset
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="smaTitle!=null">smaTitle,</if>
+      <if test="smaPubType!=null and smaPubType!=0">smaPubType,</if>
+      <if test="smaPubId!=null">smaPubId,</if>
+      <if test="smaPublisher!=null">smaPublisher,</if>
+      <if test="smaImg!=null">smaImg,</if>
+      <if test="smaAllCount!=null and smaAllCount!=0">smaAllCount,</if>
+      <if test="subjectWords!=null">subjectWords,</if>
+      <if test="keyWords!=null">keyWords,</if>
+      <if test="langDid!=null">langDid,</if>
+      <if test="language!=null">language,</if>
+      <if test="descn!=null">descn,</if>
+      <if test="pubCount!=null and pubCount>0">pubCount,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="smaTitle!=null">#{smaTitle,jdbcType=VARCHAR},</if>
+      <if test="smaPubType!=null and smaPubType!=0">#{smaPubType,jdbcType=INTEGER},</if>
+      <if test="smaPubId!=null">#{smaPubId,jdbcType=VARCHAR},</if>
+      <if test="smaPublisher!=null">#{smaPublisher,jdbcType=VARCHAR},</if>
+      <if test="smaImg!=null">#{smaImg,jdbcType=VARCHAR},</if>
+      <if test="smaAllCount!=null and smaAllCount!=0">#{smaAllCount,jdbcType=VARCHAR},</if>
+      <if test="subjectWords!=null">#{subjectWords,jdbcType=VARCHAR},</if>
+      <if test="keyWords!=null">#{keyWords,jdbcType=VARCHAR},</if>
+      <if test="langDid!=null">#{langDid,jdbcType=VARCHAR},</if>
+      <if test="language!=null">#{language,jdbcType=VARCHAR},</if>
+      <if test="descn!=null">#{descn,jdbcType=VARCHAR},</if>
+      <if test="pubCount!=null and pubCount>0">#{pubCount,jdbcType=VARCHAR},</if>
+    </trim>
+  </insert>
+
+  <!-- 新增/绑定 单体节目到专辑 -->
+  <insert id="bindMa2Sma" parameterType="java.util.Map">
+    insert into wt_SeqMA_Ref
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="SId!=null">sId,</if>
+      <if test="MId!=null">mId,</if>
+      <if test="columnNum!=null and columnNum>0">columnNum,</if>
+      <if test="descn!=null">descn,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="SId!=null">#{SId,jdbcType=VARCHAR},</if>
+      <if test="MId!=null">#{MId,jdbcType=VARCHAR},</if>
+      <if test="columnNum!=null and columnNum>0">#{columnNum,jdbcType=VARCHAR},</if>
+      <if test="descn!=null">#{descn,jdbcType=VARCHAR},</if>
+    </trim>
+  </insert>
+</mapper>

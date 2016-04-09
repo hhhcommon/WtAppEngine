@@ -216,7 +216,7 @@
 
   <!-- 以下临时，应该移动到内容中======================================================================================================= -->
   <select id="searchCata" resultType="java.util.HashMap">
-    select * from wt_ResCata_Ref where
+    select * from wt_ResDict_Ref where
     <foreach collection="array" index="index" item="tag" open="" separator="or" close="">
     title like '%${tag}%'
     </foreach>
@@ -248,7 +248,7 @@
     left join wt_MaSource b on a.id=b.maId and b.isMain=1
     where
     <foreach collection="searchArray" index="index" item="tag" open="" separator="or" close="">
-    CONCAT(a.maTitle,'#S#',a.maPublisher,'#S#',a.subjectWord,'#S#',a.keyWord,'#S#',a.descn) like '%${tag}%'
+    CONCAT(a.maTitle,'#S#',a.maPublisher,'#S#',a.subjectWords,'#S#',a.keyWords,'#S#',a.descn) like '%${tag}%'
     </foreach>
     <if test="inIds!=null">
     union 
@@ -263,7 +263,7 @@
     left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) b on a.id=b.sid
     <where>
     <foreach collection="searchArray" index="index" item="tag" open="" separator="or" close="">
-    CONCAT(a.smaTitle,'#S#',a.smaPublisher,'#S#',a.subjectWord,'#S#',a.keyWord,'#S#',a.descn) like '%${tag}%'
+    CONCAT(a.smaTitle,'#S#',a.smaPublisher,'#S#',a.subjectWords,'#S#',a.keyWords,'#S#',a.descn) like '%${tag}%'
     </foreach>
     </where>
     <if test="inIds!=null">
@@ -278,17 +278,17 @@
     select * from wt_Person_Ref a, wt_Person b
     where a.personId=b.id
     <trim prefix="and (" suffix=")" prefixOverrides="or">
-    <if test="bcIds!=null">or (a.resType=1 and a.resId in (${bcIds}))</if>
-    <if test="maIds!=null">or (a.resType=2 and a.resId in (${maIds}))</if>
-    <if test="smaIds!=null">or (a.resType=3 and a.resId in (${smaIds}))</if>
+    <if test="bcIds!=null">or (a.resTableName='wt_Broadcast' and a.resId in (${bcIds}))</if>
+    <if test="maIds!=null">or (a.resTableName='wt_MediaAsset' and a.resId in (${maIds}))</if>
+    <if test="smaIds!=null">or (a.resTableName='wt_SeqMediaAsset' and a.resId in (${smaIds}))</if>
     </trim>
   </select>
   <select id="refCataById" resultType="java.util.HashMap" parameterType="java.util.Map">
-    select * from wt_ResCata_Ref
+    select * from wt_ResDict_Ref
     <where><trim prefix="" suffix="" prefixOverrides="or">
-    <if test="bcIds!=null">or (resType=1 and resId in (${bcIds}))</if>
-    <if test="maIds!=null">or (resType=2 and resId in (${maIds}))</if>
-    <if test="smaIds!=null">or (resType=3 and resId in (${smaIds}))</if>
+    <if test="bcIds!=null">or (resTableName='wt_Broadcast' and resId in (${bcIds}))</if>
+    <if test="maIds!=null">or (resTableName='wt_MediaAsset' and resId in (${maIds}))</if>
+    <if test="smaIds!=null">or (resTableName='wt_SeqMediaAsset' and resId in (${smaIds}))</if>
     </trim></where>
   </select>
 
@@ -297,17 +297,15 @@
     select * from wt_SeqMediaAsset where id=#{value,jdbcType=VARCHAR}
   </select>
   <select id="getSmSubMedias" resultType="java.util.HashMap" parameterType="java.lang.String">
-    select a.*, b.smType, b.maSource, b.playURI from wt_MediaAsset a
-    left join wt_MaSource b on a.id=b.maId and b.isMain=1
-    join wt_SeqMA_Ref c on a.id=c.mId
-    where c.sId=#{value,jdbcType=VARCHAR}
+    select a.* from wt_MediaAsset a, wt_SeqMA_Ref b where a.id=b.mId and b.sId=#{value,jdbcType=VARCHAR}
+    group by b.columnNum desc
   </select>
   <select id="getCataListByTypeAndIds" resultType="java.util.HashMap" parameterType="java.util.Map">
-    select * from wt_ResCata_Ref where resType=#{resType,jdbcType=INTEGER} and resId in (${ids})
+    select * from wt_ResDict_Ref where resTableName=#{resTableName,jdbcType=INTEGER} and resId in (${ids})
   </select>
   <select id="getPersonListByTypeAndIds" resultType="java.util.HashMap" parameterType="java.util.Map">
     select * from wt_Person_Ref a, wt_Person b
-    where a.personId=b.id and a.resType=#{resType,jdbcType=INTEGER} and a.resId in (${ids})
+    where a.personId=b.id and a.resTableName=#{resTableName,jdbcType=INTEGER} and a.resId in (${ids})
   </select>
   <!-- ======================================================================================================= -->
 </mapper>

@@ -16,10 +16,14 @@ import com.woting.appengine.mobile.push.model.Message;
  * @author wanghui
  */
 public class OneCall implements Serializable {
-    private static final long serialVersionUID = -2635864824531924446L;
+    private static final long serialVersionUID=-2635864824531924446L;
 
+    private int callType;//=1是对讲模式；=2是电话模式；若是0，则表明未设置，采用默认值0
+
+    private volatile String speakerId;
     private volatile Object preMsglock=new Object();
     private volatile Object statuslock=new Object();
+    private volatile Object speakerlock=new Object();
 
     private String callId;//本次通话的Id
     public String getCallId() {
@@ -108,6 +112,8 @@ public class OneCall implements Serializable {
      * 一次通话的结构，这个构造函数限定：
      * 若要构造此类，必须要知呼叫者，被叫者和通话Id。
      * 构造函数还创建了需要内存结构
+     * @param callType 通话模式
+     * @param callId 通话Id
      * @param callId 通话Id
      * @param callerId 呼叫者Id
      * @param callederId 被叫者Id
@@ -115,11 +121,14 @@ public class OneCall implements Serializable {
      * @param it2_expire 未应答怕判断过期时间
      * @param it3_expire 通话过期时间
      */
-    public OneCall(String callId, String callerId, String callederId, long it1_expire, long it2_expire, long it3_expire) {
+    public OneCall(int callType, String callId, String callerId, String callederId, long it1_expire, long it2_expire, long it3_expire) {
         super();
-        this.callId = callId;
-        this.callerId = callerId;
-        this.callederId = callederId;
+        this.speakerId=null;
+        this.callType=callType;
+        if (this.callType==0) this.callType=1;//设置为对讲模式
+        this.callId=callId;
+        this.callerId=callerId;
+        this.callederId=callederId;
         this.createTime=System.currentTimeMillis();
         this.beginDialTime=-1;//不在使用的情况
         this.lastUsedTime=System.currentTimeMillis();
@@ -174,6 +183,58 @@ public class OneCall implements Serializable {
         return otherId;
     }
 
+    /**
+     * 设置说话者id
+     * @param speakerId 说话者Id
+     * @return 返回值：
+     *  "1"——设置成功
+     *  "0"——由于callType不是对讲模式，不能设置
+     *  "-N::描述"——错误的状态：其中N就是状态值，参考status，只有状态3可以通话
+     *  "2::当前说话人id"——有人在通话
+     */
+    public String setSpeaker(String speakerId) {
+        if (callType!=1) return "0";
+        String ret=null;
+        if (this.status!=3) {
+            ret="-"+this.status+"::目前状态为["+OneCall.convertStatus(this.status)+"],不能对讲通话";
+        } else {
+            synchronized (speakerlock) {
+                if (this.speakerId==null) {
+                    this.speakerId=speakerId;
+                    ret="1";
+                }
+                else ret="2::"+this.speakerId;
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * 清除说话者id
+     * @param speakerId 说话者Id
+     * @return 返回值：
+     *  "1"——清除成功
+     *  "0"——由于callType不是对讲模式，不能设置
+     *  "-N::描述"——错误的状态：其中N就是状态值，参考status，只有状态3可以通话
+     *  "2"——清除人和当前说话者不一致
+     */
+    public String cleanSpeaker(String tobeCleanSpeakerId) {
+        if (callType!=1) return "0";
+        String ret=null;
+        if (this.status!=3) {
+            ret="-"+this.status+"::目前状态为["+OneCall.convertStatus(this.status)+"],不能结束对讲通话";
+        } else {
+            synchronized (speakerlock) {
+                if (this.speakerId.equals(tobeCleanSpeakerId)) {
+                    this.speakerId=null;
+                    ret="1";
+                }
+                else ret="2::"+this.speakerId;
+            }
+        }
+        return ret;
+    }
+
     //呼叫者语音信息
     private List<WholeTalk> callerWts=null;
     public void addCallerWt(WholeTalk callerWt) {
@@ -203,5 +264,14 @@ public class OneCall implements Serializable {
     }
     public List<WholeTalk> getCallederWts() {
         return this.callederWts;
+    }
+
+    private static final String convertStatus(int status) {
+        if (status==0||status==1||status==2) return "正在呼叫，还未建立连接";
+        if (status==3) return "通话中";
+        if (status==4) return "正在挂断";
+        if (status==9) return "通话已结束";
+        
+        return "未知状态";
     }
 }

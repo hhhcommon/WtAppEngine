@@ -6,25 +6,37 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.StringUtils;
+import com.woting.WtAppEngineConstants;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.model.MobileParam;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.appengine.mobile.session.model.MobileSession;
+import com.woting.cm.core.channel.mem._CacheChannel;
+import com.woting.cm.core.dict.mem._CacheDictionary;
+import com.woting.cm.core.dict.model.DictModel;
+import com.woting.common.TreeUtils;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.login.service.MobileUsedService;
+import com.spiritdata.framework.core.cache.SystemCache;
+import com.spiritdata.framework.core.model.tree.TreeNode;
+import com.spiritdata.framework.core.model.tree.TreeNodeBean;
+import com.spiritdata.framework.core.cache.CacheEle;
 
+@Lazy(true)
 @Controller
 public class CommonController {
     @Resource
@@ -35,6 +47,14 @@ public class CommonController {
     private ContentService contentService;
 
     private SessionMemoryManage smm=SessionMemoryManage.getInstance();
+    private _CacheDictionary _cd=null;
+    private _CacheChannel _cc=null;
+
+    @PostConstruct
+    public void initParam() {
+        _cd=((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT)).getContent();
+        _cc=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)).getContent();
+    }
 
     /**
      * 进入App
@@ -61,13 +81,15 @@ public class CommonController {
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
-                    return map;
                 } else {
                     MobileSession ms=(MobileSession)retM.get("MobileSession");
                     map.put("SessionId", ms.getKey().getSessionId());
                     if ((retM.get("ReturnType")+"").equals("1002")) {
                         map.put("ReturnType", "1002");
-                    } else {
+                    } if ((retM.get("ReturnType")+"").equals("2002")) {
+                        map.put("ReturnType", "2002");
+                        map.put("Message", "无法找到相应的用户");
+                    }else {
                         map.put("ReturnType", "1001");
                         map.put("UserInfo", ((UserPo)ms.getAttribute("user")).toHashMap4Mobile());
                     }
@@ -129,64 +151,6 @@ public class CommonController {
         }
     }
 
-    @RequestMapping(value="/common/getZoneList.do")
-    @ResponseBody
-    public Map<String,Object> getZoneList(HttpServletRequest request) {
-        Map<String,Object> map=new HashMap<String, Object>();
-        try {
-            //0-处理访问
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
-            if (m!=null&&m.size()>0) {
-                MobileParam mp=MobileUtils.getMobileParam(m);
-                MobileKey sk=(mp==null?null:mp.getMobileKey());
-                if (sk!=null){
-                    map.put("SessionId", sk.getSessionId());
-                    MobileSession ms=smm.getSession(sk);
-                    if (ms!=null) ms.access();
-                }
-                //获得上级地区分类Id
-            }
-            //1-获取地区信息
-            List<Map<String, Object>> zl=new ArrayList<Map<String, Object>>();
-            Map<String, Object> zone;
-            zone=new HashMap<String, Object>();
-            zone.put("ZoneId", "001");
-            zone.put("ZoneName", "北京");
-            zl.add(zone);
-            zone=new HashMap<String, Object>();
-            zone.put("ZoneId", "001");
-            zone.put("ZoneName", "北京");
-            zl.add(zone);
-            zone.put("ZoneId", "002");
-            zone.put("ZoneName", "天津");
-            zl.add(zone);
-            zone.put("ZoneId", "003");
-            zone.put("ZoneName", "上海");
-            zl.add(zone);
-            zone.put("ZoneId", "004");
-            zone.put("ZoneName", "广州");
-            zl.add(zone);
-            zone.put("ZoneId", "005");
-            zone.put("ZoneName", "深圳");
-            zl.add(zone);
-            zone.put("ZoneId", "006");
-            zone.put("ZoneName", "重庆");
-            zl.add(zone);
-            zone.put("ZoneId", "007");
-            zone.put("ZoneName", "杭州");
-            zl.add(zone);
-            map.put("ReturnType", "1001");
-            map.put("ZoneList", zl);
-            return map;
-        } catch(Exception e) {
-            e.printStackTrace();
-            map.put("ReturnType", "T");
-            map.put("TClass", e.getClass().getName());
-            map.put("Message", e.getMessage());
-            return map;
-        }
-    }
-
     @RequestMapping(value="/mainPage.do")
     @ResponseBody
     public Map<String,Object> mainPage(HttpServletRequest request) {
@@ -210,7 +174,24 @@ public class CommonController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            Map<String, Object> cl=contentService.getMainPage(ms.getKey().getUserId());
+            //获得页面类型
+            String _pageType=(String)m.get("PageType");
+            if (StringUtils.isNullOrEmptyOrSpace(_pageType)) _pageType=request.getParameter("PageType");
+            int pageType=1;
+            if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
+            //得到每页条数
+            String pageSize=(String)m.get("PageSize");
+            if (StringUtils.isNullOrEmptyOrSpace(pageSize)) pageSize=request.getParameter("PageSize");
+            if (StringUtils.isNullOrEmptyOrSpace(pageSize)) pageSize="10";
+            int _pageSize=Integer.parseInt(pageSize);
+            //得到页数
+            String page=(String)m.get("Page");
+            if (StringUtils.isNullOrEmptyOrSpace(page)) page=request.getParameter("Page");
+            if (StringUtils.isNullOrEmptyOrSpace(page)) page="1";
+            int _page=Integer.parseInt(page);
+
+            Map<String, Object> cl=contentService.getMainPage(ms.getKey().getUserId(), pageType, _pageSize, _page);
+
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultList", cl);
                 map.put("ReturnType", "1001");
@@ -262,6 +243,62 @@ public class CommonController {
         }
     }
 
+    private void convert2Data(TreeNode<? extends TreeNodeBean> t, Map<String, Object> retData, String catalogType) {
+        if (retData!=null&&t!=null) {
+            retData.put("CatalogType", catalogType);
+            retData.put("CatalogId", t.getId());
+            retData.put("CatalogName", t.getNodeName());
+            if (!t.isLeaf()) {
+                List<Map<String, Object>> subCata=new ArrayList<Map<String, Object>>();
+                for (TreeNode<? extends TreeNodeBean> _t: t.getChildren()) {
+                    Map<String, Object> m=new HashMap<String, Object>();
+                    convert2Data(_t, m, catalogType);
+                    subCata.add(m);
+                }
+                retData.put("SubCata", subCata);
+            }
+        }
+    }
+    private List<Map<String, Object>> getDeepList(TreeNode<? extends TreeNodeBean> t, String catalogType) {
+        if (t==null) return null;
+        List<Map<String, Object>> ret=new ArrayList<Map<String, Object>>();
+        if (!t.isLeaf()) {
+            for (TreeNode<? extends TreeNodeBean> _t: t.getChildren()) {
+                Map<String, Object> m=new HashMap<String, Object>();
+                m.put("CatalogType", catalogType);
+                m.put("CatalogId", _t.getId());
+                m.put("CatalogName", _t.getNodeName());
+                ret.add(m);
+                List<Map<String, Object>> _r=getDeepList(_t, catalogType);
+                if (_r!=null) ret.addAll(_r);
+            }
+            return ret;
+        } else {
+            return null;
+        }
+    }
+    private List<Map<String, Object>> getLevelNodeList(TreeNode<? extends TreeNodeBean> t, int level, String catalogType) {
+        if (t==null) return null;
+        List<Map<String, Object>> ret=new ArrayList<Map<String, Object>>();
+        if (!t.isLeaf()) {
+            for (TreeNode<? extends TreeNodeBean> _t: t.getChildren()) {
+                if (level==1) {
+                    Map<String, Object> m=new HashMap<String, Object>();
+                    m.put("CatalogType", catalogType);
+                    m.put("CatalogId", _t.getId());
+                    m.put("CatalogName", _t.getNodeName());
+                    ret.add(m);
+                } else {
+                    List<Map<String, Object>> _r=getLevelNodeList(_t, level-1, catalogType);
+                    if (_r!=null) ret.addAll(_r);
+                }
+            }
+            return ret;
+        } else {
+            return null;
+        }
+    }
+
     @RequestMapping(value="/getCatalogInfo.do")
     @ResponseBody
     public Map<String,Object> getCatalogInfo(HttpServletRequest request) {
@@ -284,36 +321,75 @@ public class CommonController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            map.put("ReturnType", "1001");
-            List<Map<String, String>> demoData=new ArrayList<Map<String, String>>();
-            Map<String, String> item=new HashMap<String, String>();
-            item.put("CatalogType", "001");item.put("CatalogId", "001");item.put("CatalogImg", "img/a.jpg");item.put("CatalogName", "段子笑话");demoData.add(item);
-            item=new HashMap<String, String>();
-            item.put("CatalogType", "001");item.put("CatalogId", "002");item.put("CatalogImg", "img/a.jpg");item.put("CatalogName", "心理推理");demoData.add(item);
-            item=new HashMap<String, String>();
-            item.put("CatalogType", "001");item.put("CatalogId", "003");item.put("CatalogImg", "img/a.jpg");item.put("CatalogName", "生活百科");demoData.add(item);
-            item=new HashMap<String, String>();
-            item.put("CatalogType", "001");item.put("CatalogId", "004");item.put("CatalogImg", "img/a.jpg");item.put("CatalogName", "两性情感");demoData.add(item);
-            item=new HashMap<String, String>();
-            item.put("CatalogType", "001");item.put("CatalogId", "005");item.put("CatalogImg", "img/a.jpg");item.put("CatalogName", "星座风水");demoData.add(item);
-            item=new HashMap<String, String>();
-            item.put("CatalogType", "001");item.put("CatalogId", "005");item.put("CatalogImg", "img/a.jpg");item.put("CatalogName", "商业财经");demoData.add(item);
-            item=new HashMap<String, String>();
-            item.put("CatalogType", "001");item.put("CatalogId", "006");item.put("CatalogImg", "img/a.jpg");item.put("CatalogName", "军事前沿");demoData.add(item);
-            item=new HashMap<String, String>();
-            item.put("CatalogType", "001");item.put("CatalogId", "007");item.put("CatalogImg", "img/a.jpg");item.put("CatalogName", "历史地理");demoData.add(item);
-            item=new HashMap<String, String>();
-            item.put("CatalogType", "001");item.put("CatalogId", "008");item.put("CatalogImg", "img/a.jpg");item.put("CatalogName", "儿童亲子");demoData.add(item);
-            item=new HashMap<String, String>();
-            item.put("CatalogType", "001");item.put("CatalogId", "009");item.put("CatalogImg", "img/a.jpg");item.put("CatalogName", "公开课堂");demoData.add(item);
-            item=new HashMap<String, String>();
-            item.put("CatalogType", "001");item.put("CatalogId", "010");item.put("CatalogImg", "img/a.jpg");item.put("CatalogName", "教育学习");demoData.add(item);
-            item=new HashMap<String, String>();
-            item.put("CatalogType", "001");item.put("CatalogId", "011");item.put("CatalogImg", "img/a.jpg");item.put("CatalogName", "女性时尚");demoData.add(item);
-            item=new HashMap<String, String>();
-            item.put("CatalogType", "001");item.put("CatalogId", "012");item.put("CatalogImg", "img/a.jpg");item.put("CatalogName", "体育世界");demoData.add(item);
+            //1-得到模式Id
+            String catalogType=(String)m.get("CatalogType");
+            if (StringUtils.isNullOrEmptyOrSpace(catalogType)) {
+                catalogType=request.getParameter("CatalogType");
+            }
+            if (StringUtils.isNullOrEmptyOrSpace(catalogType)) {
+                catalogType="-1";
+            }
+            //2-得到字典项Id或父栏目Id
+            String catalogId=(String)m.get("CatalogId");
+            if (StringUtils.isNullOrEmptyOrSpace(catalogId)) {
+                catalogId=request.getParameter("CatalogId");
+            }
+            if (StringUtils.isNullOrEmptyOrSpace(catalogId)) {
+                catalogId=null;
+            }
+            //3-得到返回类型
+            String resultType=(String)m.get("ResultType");
+            if (StringUtils.isNullOrEmptyOrSpace(resultType)) {
+                resultType=request.getParameter("ResultType");
+            }
+            if (StringUtils.isNullOrEmptyOrSpace(resultType)) {
+                resultType="2";
+            }
+            //4-得到相对层次
+            String relLevel=(String)m.get("RelLevel");
+            if (StringUtils.isNullOrEmptyOrSpace(relLevel)) {
+                relLevel=request.getParameter("RelLevel");
+            }
+            if (StringUtils.isNullOrEmptyOrSpace(relLevel)) {
+                relLevel="1";
+            }
 
-            map.put("CatalogTree", demoData);
+            //根据分类获得根
+            TreeNode<? extends TreeNodeBean> root=null;
+            if (catalogType.equals("-1")) {
+                root=_cc.channelTree;
+            } else {
+                DictModel dm=_cd.getDictModelById(catalogType);
+                if (dm!=null&&dm.dictTree!=null) root=dm.dictTree;
+            }
+            //获得相应的结点，通过查找
+            if (root!=null) {
+                if (catalogId!=null) root=root.findNode(catalogId);
+            }
+            //根据层级参数，对树进行截取
+            int _relLevel=Integer.parseInt(relLevel);
+            if (root!=null&&_relLevel>0) {
+                root=TreeUtils.getLevelTree(root, _relLevel);
+            }
+            if (root!=null) {
+                Map<String, Object> CatalogData=new HashMap<String, Object>();
+                //返回类型
+                int _resultType=Integer.parseInt(resultType);
+                if (_resultType==1) {//树结构
+                    convert2Data(root, CatalogData, catalogType);
+                    map.put("CatalogData", CatalogData);
+                } else {//列表结构
+                    if (_relLevel<=0) {//所有结点列表
+                        map.put("CatalogData", getDeepList(root, catalogType));
+                    } else { //某层级节点
+                        map.put("CatalogData", getLevelNodeList(root, _relLevel, catalogType));
+                    }
+                }
+                map.put("ReturnType", "1001");
+            } else {
+                map.put("Message", "无符合条件的"+(catalogType.equals("-1")?"栏目":"分类")+"信息");
+                map.put("ReturnType", "1011");
+            }
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -357,10 +433,14 @@ public class CommonController {
             int resultType=0;
             try {
                 resultType=Integer.parseInt(m.get("ResultType")+"");
-            } catch(Exception e) {
-            }
+            } catch(Exception e) {}
+            //获得页面类型
+            String _pageType=(String)m.get("PageType");
+            if (StringUtils.isNullOrEmptyOrSpace(_pageType)) _pageType=request.getParameter("PageType");
+            int pageType=1;
+            if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
 
-            Map<String, Object> cl=contentService.searchAll(searchStr, resultType);
+            Map<String, Object> cl=contentService.searchAll(searchStr, resultType, pageType);
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultType", cl.get("ResultType"));
                 cl.remove("ResultType");
@@ -413,10 +493,14 @@ public class CommonController {
             int resultType=0;
             try {
                 resultType=Integer.parseInt(m.get("ResultType")+"");
-            } catch(Exception e) {
-            }
+            } catch(Exception e) {}
+            //获得页面类型
+            String _pageType=(String)m.get("PageType");
+            if (StringUtils.isNullOrEmptyOrSpace(_pageType)) _pageType=request.getParameter("PageType");
+            int pageType=1;
+            if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
 
-            Map<String, Object> cl=contentService.searchAll(searchStr, resultType);
+            Map<String, Object> cl=contentService.searchAll(searchStr, resultType, pageType);
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultType", cl.get("ResultType"));
                 cl.remove("ResultType");
@@ -427,69 +511,6 @@ public class CommonController {
                 map.put("Message", "没有查到任何内容");
             }
             return map;
-//            List<Map<String, Object>> rl=new ArrayList<Map<String, Object>>();
-//            Map<String, Object> media;
-//            media=new HashMap<String, Object>();
-//            media.put("MediaType", "RES"); //文件资源
-//            media.put("ResType", "mp3");
-//            media.put("ResClass", "评书");
-//            media.put("ResStyle", "文学名著");
-//            media.put("ResActor", "张三");
-//            media.put("ResName", "三打白骨精");
-//            media.put("ResImg", "images/dft_res.png");
-//            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
-//            media.put("ResTime", "14:35");
-//            rl.add(media);
-//            media=new HashMap<String, Object>();
-//            media.put("MediaType", "RADIO"); //电台
-//            media.put("RadioName", "CRI英语漫听电台");
-//            media.put("RadioId", "001");
-//            media.put("RadioImg", "images/dft_broadcast.png");
-//            media.put("RadioURI", "mms://live.cri.cn/english");
-//            media.put("CurrentContent", "路况信息");//当前节目
-//            rl.add(media);
-//            media=new HashMap<String, Object>();
-//            media.put("MediaType", "RES"); //文件资源
-//            media.put("ResType", "mp3");
-//            media.put("ResClass", "歌曲");
-//            media.put("ResStyle", "摇滚");
-//            media.put("ResActor", "李四");
-//            media.put("ResName", "歌曲名称");
-//            media.put("ResImg", "images/dft_actor.png");
-//            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
-//            media.put("ResTime", "4:35");
-//            rl.add(media);
-//            media=new HashMap<String, Object>();
-//            media.put("MediaType", "RADIO"); //电台
-//            media.put("RadioName", "CRI乡村民谣音乐");
-//            media.put("RadioId", "003");
-//            media.put("RadioImg", "images/dft_broadcast.png");
-//            media.put("RadioURI", "mms://live.cri.cn/country");
-//            media.put("CurrentContent", "时政要闻");//当前节目
-//            rl.add(media);
-//            media=new HashMap<String, Object>();
-//            media.put("MediaType", "RES"); //文件资源
-//            media.put("ResType", "mp3");
-//            media.put("ResClass", "脱口秀");
-//            media.put("ResStyle", "文化");
-//            media.put("ResSeries", "逻辑思维");
-//            media.put("ResActor", "罗某某");
-//            media.put("ResName", "逻辑思维001");
-//            media.put("ResImg", "images/dft_actor.png");
-//            media.put("ResURI", "http://www.woting.fm/resource/124osdf3.mp3");
-//            media.put("ResTime", "4:35");
-//            rl.add(media);
-//            media=new HashMap<String, Object>();
-//            media.put("MediaType", "RADIO"); //电台
-//            media.put("RadioName", "CRI肯尼亚调频");
-//            media.put("RadioId", "002");
-//            media.put("RadioImg", "images/dft_broadcast.png");
-//            media.put("RadioURI", "mms://livexwb.cri.com.cn/kenya");
-//            media.put("CurrentContent", "经典回顾");//当前节目
-//            rl.add(media);
-//            map.put("ReturnType", "1001");
-//            map.put("ResultList", rl);
-//            return map;
         } catch(Exception e) {
             e.printStackTrace();
             map.put("ReturnType", "T");

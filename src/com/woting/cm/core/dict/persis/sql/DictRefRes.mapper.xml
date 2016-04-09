@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- 字典与资源对应关系 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="A_DREFRES">
+  <!-- 对应关系 -->
+  <resultMap id="dictRefResMap" type="dictRefRes">
+    <id      column="id"            property="id"            jdbcType="VARCHAR"/>
+    <result  column="refName"       property="refName"       jdbcType="VARCHAR"/>
+    <result  column="resTableName"  property="resTableName"  jdbcType="VARCHAR"/>
+    <result  column="resId"         property="resId"         jdbcType="VARCHAR"/>
+    <result  column="dictMid"       property="dictMid"       jdbcType="VARCHAR"/>
+    <result  column="dictMName"     property="dictMName"     jdbcType="VARCHAR"/>
+    <result  column="dictDid"       property="dictDid"       jdbcType="VARCHAR"/>
+    <result  column="title"         property="title"         jdbcType="VARCHAR"/>
+    <result  column="bCode"         property="BCode"         jdbcType="VARCHAR"/>
+    <result  column="pathNames"     property="pathNames"     jdbcType="VARCHAR"/>
+    <result  column="pathIds"       property="pathIds"       jdbcType="VARCHAR"/>
+    <result  column="cTime"         property="CTime"         jdbcType="TIMESTAMP"/>
+  </resultMap>
+
+  <!-- 新增 对应关系 -->
+  <insert id="insert" parameterType="java.util.Map">
+    insert into wt_ResDict_Ref
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="refName!=null">refName,</if>
+      <if test="resTableName!=null">resTableName,</if>
+      <if test="resId!=null">resId,</if>
+      <if test="dictMid!=null">dictMid,</if>
+      <if test="dictMName!=null">dictMName,</if>
+      <if test="dictDid!=null">dictDid,</if>
+      <if test="title!=null">title,</if>
+      <if test="BCode!=null">bCode,</if>
+      <if test="pathNames!=null">pathNames,</if>
+      <if test="pathIds!=null">pathIds,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="refName!=null">#{refName,jdbcType=VARCHAR},</if>
+      <if test="resTableName!=null">#{resTableName,jdbcType=VARCHAR},</if>
+      <if test="resId!=null">#{resId,jdbcType=VARCHAR},</if>
+      <if test="dictMid!=null">#{dictMid,jdbcType=VARCHAR},</if>
+      <if test="dictMName!=null">#{dictMName,jdbcType=VARCHAR},</if>
+      <if test="dictDid!=null">#{dictDid,jdbcType=VARCHAR},</if>
+      <if test="title!=null">#{title,jdbcType=VARCHAR},</if>
+      <if test="BCode!=null">#{BCode,jdbcType=VARCHAR},</if>
+      <if test="pathNames!=null">#{pathNames,jdbcType=VARCHAR},</if>
+      <if test="pathIds!=null">#{pathIds,jdbcType=VARCHAR},</if>
+    </trim>
+  </insert>
+</mapper>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!-- 核心配置 -->
+<configuration>
+  <!-- 别名设置 -->
+  <typeAliases>
+    <typeAlias alias="dictMaster"    type="com.woting.cm.core.dict.persis.po.DictMasterPo"/>
+    <typeAlias alias="dictDetail"    type="com.woting.cm.core.dict.persis.po.DictDetailPo"/>
+    <typeAlias alias="dictRefRes"    type="com.woting.cm.core.dict.persis.po.DictRefResPo"/>
+    <typeAlias alias="trackLog"      type="com.woting.cm.core.tracklog.persis.po.TrackLogPo"/>
+    <typeAlias alias="mediaAsset"    type="com.woting.cm.core.media.persis.po.MediaAssetPo"/>
+    <typeAlias alias="maSource"      type="com.woting.cm.core.media.persis.po.MaSourcePo"/>
+    <typeAlias alias="seqMediaAsset" type="com.woting.cm.core.media.persis.po.SeqMediaAssetPo"/>
+    <typeAlias alias="seqMaRef"      type="com.woting.cm.core.media.persis.po.SeqMaRefPo"/>
+    <typeAlias alias="channel"       type="com.woting.cm.core.channel.persis.po.ChannelPo"/>
+    <typeAlias alias="channelAsset"  type="com.woting.cm.core.channel.persis.po.ChannelAssetPo"/>
+  </typeAliases>
+  <!-- SQL文件设置 -->
+  <mappers>
+    <mapper resource="com/woting/cm/core/dict/persis/sql/DictMaster.mapper.xml"/>
+    <mapper resource="com/woting/cm/core/dict/persis/sql/DictDetail.mapper.xml"/>
+    <mapper resource="com/woting/cm/core/dict/persis/sql/DictRefRes.mapper.xml"/>
+    <mapper resource="com/woting/cm/core/tracklog/persis/sql/TrackLog.mapper.xml"/>
+    <mapper resource="com/woting/cm/core/media/persis/sql/Media.mapper.xml"/>
+    <mapper resource="com/woting/cm/core/channel/persis/sql/Channel.mapper.xml"/>
+    <mapper resource="com/woting/cm/core/channel/persis/sql/ChannelAsset.mapper.xml"/>
+  </mappers>
+</configuration>

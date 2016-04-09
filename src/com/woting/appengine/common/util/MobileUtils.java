@@ -66,8 +66,9 @@ public abstract class MobileUtils {
             line = sb.toString();
             if (line!=null&&line.length()>0) {
                 return (Map<String, Object>)JsonUtils.jsonToObj(sb.toString(), Map.class);
+            } else {
+                return getDataFromRequestParam(req);
             }
-            System.out.println(sb.toString());
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -104,8 +105,6 @@ public abstract class MobileUtils {
         __tmp=o==null?"":o+"";
         if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setPCDType(__tmp);
         o=m.get("MobileClass");
-        __tmp=o==null?"":o+"";
-        if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setMClass(__tmp);
         o=m.get("GPS-longitude");
         __tmp=o==null?"":o+"";
         if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setGpsLongitude(__tmp);
@@ -124,7 +123,6 @@ public abstract class MobileUtils {
 
         if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&
             StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())&&
-            StringUtils.isNullOrEmptyOrSpace(mp.getMClass())&&
             StringUtils.isNullOrEmptyOrSpace(mp.getGpsLongitude())&&
             StringUtils.isNullOrEmptyOrSpace(mp.getGpsLatitude())&&
             StringUtils.isNullOrEmptyOrSpace(mp.getScreenSize())&&
@@ -189,7 +187,7 @@ public abstract class MobileUtils {
     /**
      * 从Message的地址，获得MobileKey
      * @param m 消息数据
-     * @param type =1发送地址FromAddr;=2(!=1)接收地址
+     * @param type =1发送地址FromAddr;=2(!=1)接收地址ToAddr
      * @return 若合规，返回正常的MobileKey，否则返回空
      */
     //还有问题，没有做全部的解析，先这样
@@ -266,92 +264,86 @@ public abstract class MobileUtils {
         if (_mKey==null||StringUtils.isNullOrEmptyOrSpace(_mKey.getMobileId())) {//若无IMEI
             map.put("ReturnType", "2001");
             map.put("Msg", "未获得IMEI无法处理");
-        } else {
-            if (type==1) {
-                if (_mKey.isMobile()) {//找到上次登录的情况
-                    try {
-                        ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
-                        if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-                            MobileUsedService muService = (MobileUsedService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("mobileUsedService");
-                            MobileUsedPo mu=muService.getUsedInfo(_mKey.getMobileId(), _mKey.getPCDType());
-                            if (mu!=null&&mu.getStatus()==1) {//上次登录
-                                _mKey.setUserId(mu.getUserId());//修改mKey
-                            }
-                        }
-                    } catch(Exception e) {
-                    }
-                }
-            }
-
-            boolean msExist=true;//缓存是否存在
-            MobileSession ms=SessionMemoryManage.getInstance().getSession(_mKey);
-            if (ms==null) {
-                msExist=false;
-                ms=new MobileSession(_mKey);
-            }
-            ms.access();
-
-            boolean needLogin=false;
-            UserPo u=null;
-            if (_mKey.isUser()) {
-                try {
-                    u=(UserPo)ms.getAttribute("user");
-                } catch(Exception e) {}
-                if (type==1&&(u==null||!_mKey.getUserId().equals(u.getUserId()))) {//实现自动登录
-                    try {
-                        ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
-                        if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-                            UserService userService = (UserService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("userService");
-                            u=userService.getUserById(_mKey.getUserId());
-                            if (u!=null) ms.addAttribute("user", u);
-                        }
-                    } catch(Exception e) {}
-                }
-                String userIdInMem=u==null?"":u.getUserId();
-                if (!_mKey.getUserId().equals(userIdInMem)) needLogin=true;//需要登录
-            }
-
-            //准备返回值
-            boolean needInsertMs=false;
-            if (mKey.isMobile()&&_mKey.isUser()) {
-                if (u!=null) {
-                    map.put("ReturnType", "1001");
-                    map.put("Msg", "成功自动登录");
-                    needInsertMs=true;
-                } else {
-                    map.put("ReturnType", "1002");
-                    map.put("Msg", "不能找到相应的用户");
-                    MobileSession _ms=SessionMemoryManage.getInstance().getSession(mKey);
-                    if (_ms==null) {
-                        _ms=new MobileSession(mKey);
-                        _ms.access();
-                        SessionMemoryManage.getInstance().addOneSession(_ms);
-                    }
-                }
-            } else if (mKey.isMobile()&&_mKey.isMobile()) {
-                map.put("ReturnType", "1002");
-                map.put("Msg", "设备成功绑定");
-                needInsertMs=true;
-            } else {
-                if (u!=null) {
-                    map.put("ReturnType", "1001");
-                    map.put("Msg", "成功获得Session");
-                    needInsertMs=true;
-                } else {
-                    map.put("ReturnType", "2002");
-                    map.put("Msg", "不能找到相应的用户");
-                }
-            }
-
-            if (needLogin) {
-                map.put("ReturnType", "2003");
-                map.put("Msg", "请先登录");
-            }
-            if (!msExist&&needInsertMs) SessionMemoryManage.getInstance().addOneSession(ms);
-            ms.access();
-
-            map.put("MobileSession", ms);
+            return map;
         }
+
+        if (type==1) {
+            try {
+                ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
+                if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                    MobileUsedService muService = (MobileUsedService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("mobileUsedService");
+                    MobileUsedPo mu=muService.getUsedInfo(_mKey.getMobileId(), _mKey.getPCDType());
+                    if (mu!=null&&mu.getStatus()==1) {//上次登录
+                        _mKey.setUserId(mu.getUserId());//修改mKey
+                    }
+                }
+            } catch(Exception e) {
+            }
+        }
+
+        boolean msExist=true;//缓存是否存在
+        MobileSession ms=SessionMemoryManage.getInstance().getSession(_mKey);
+        if (ms==null) {
+            msExist=false;
+            ms=new MobileSession(_mKey);
+        }
+
+        boolean needLogin=false;
+        UserPo u=null;
+        if (_mKey.isUser()) {
+            try {
+                u=(UserPo)ms.getAttribute("user");
+            } catch(Exception e) {}
+            if (type==1&&(u==null||!_mKey.getUserId().equals(u.getUserId()))) {//实现自动登录
+                try {
+                    ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
+                    if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                        UserService userService = (UserService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("userService");
+                        u=userService.getUserById(_mKey.getUserId());
+                        if (u!=null) ms.addAttribute("user", u);
+                    }
+                } catch(Exception e) {}
+            }
+            String userIdInMem=u==null?"":u.getUserId();
+            if (!_mKey.getUserId().equals(userIdInMem)) needLogin=true;//需要登录
+        }
+
+        //准备返回值
+        if (mKey.isMobile()&&_mKey.isUser()) {
+            if (u!=null) {
+                map.put("ReturnType", "1001");
+                map.put("Msg", "成功自动登录");
+            } else {
+                map.put("ReturnType", "1002");
+                map.put("Msg", "不能找到相应的用户");
+                ms=SessionMemoryManage.getInstance().getSession(mKey);
+                if (ms==null) {
+                    msExist=false;
+                    ms=new MobileSession(mKey);
+                    SessionMemoryManage.getInstance().addOneSession(ms);
+                }
+            }
+        } else if (mKey.isMobile()&&_mKey.isMobile()) {
+            map.put("ReturnType", "1001");
+            map.put("Msg", "设备成功绑定");
+        } else {
+            if (u!=null) {
+                map.put("ReturnType", "1001");
+                map.put("Msg", "成功获得Session");
+            } else {
+                map.put("ReturnType", "2002");
+                map.put("Msg", "不能找到相应的用户");
+            }
+        }
+
+        if (needLogin) {
+            map.put("ReturnType", "2003");
+            map.put("Msg", "请先登录");
+        }
+        if (!msExist) SessionMemoryManage.getInstance().addOneSession(ms);
+        ms.access();
+
+        map.put("MobileSession", ms);
         return map;
     }
 //

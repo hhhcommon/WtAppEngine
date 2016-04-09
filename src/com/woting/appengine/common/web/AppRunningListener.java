@@ -15,6 +15,7 @@ import com.woting.appengine.mobile.push.PushConfig;
 import com.woting.appengine.mobile.push.PushListener;
 import com.woting.appengine.mobile.session.MobileSessionConfig;
 import com.woting.appengine.mobile.session.SessionListener;
+import com.woting.searchword.SearchWordListener;
 
 public class AppRunningListener implements ServletContextListener {
     private Logger logger = Logger.getLogger(this.getClass());
@@ -23,6 +24,8 @@ public class AppRunningListener implements ServletContextListener {
     //初始化
     public void contextInitialized(ServletContextEvent arg0) {
         try {
+            //启动搜索词服务
+            SearchWordListener.begin();
             //移动会话Session启动
             SessionListener.begin(new MobileSessionConfig());
             //启动对讲处理服务
