@@ -31,10 +31,10 @@ public class OwnerWord implements Serializable {
         this.splitLevel = splitLevel;
     }
     public Map<String, MiddleWord> getSearchMap() {
-        return searchMap;
+        return middleWordMap;
     }
     public void setSearchMap(Map<String, MiddleWord> searchMap) {
-        this.searchMap = searchMap;
+        this.middleWordMap = searchMap;
     }
     public Map<String, Word> getSearchFinalMap() {
         return searchFinalMap;
