@@ -77,6 +77,7 @@ public class kl_s_Service {
 		Festival[] festivals = new Festival[S_F_NUM];
 		String station_id = new String();
 		String jsonstr = utils.jsoupTOstr(station_url);
+		System.out.println(jsonstr);
 		List<Map<String, Object>> list_href = utils.jsonTOlist(jsonstr, "result","dataList");
 		if(!list_href.isEmpty()){
 			for(int i = 0;i<(list_href.size()>S_S_NUM?S_S_NUM:list_href.size());i++){

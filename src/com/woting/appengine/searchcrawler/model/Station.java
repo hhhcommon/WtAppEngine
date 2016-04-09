@@ -17,18 +17,24 @@ public class Station {
 	private String desc;			//专辑内容描述
 	private String pic;				//专辑图片链接
 	private String host;			//主播人
+	private String createTime;
 	private Festival[] festival;	//专辑节目信息
 	
-	
-	
-	
+	public String getCreateTime() {
+		return createTime;
+	}
+
+
+	public void setCreateTime(String createTime) {
+		this.createTime = createTime;
+	}
+
 	@Override
 	public String toString() {
 		return "Station [mediaType=" + mediaType + ", contentPub=" + contentPub + ", id=" + id + ", name=" + name
-				+ ", desc=" + desc + ", pic=" + pic + ", host=" + host + ", festival=" + Arrays.toString(festival)
-				+ "]";
+				+ ", desc=" + desc + ", pic=" + pic + ", host=" + host + ", createTime=" + createTime + ", festival="
+				+ Arrays.toString(festival) + "]";
 	}
-
 
 	public String getContentPub() {
 		return contentPub;
