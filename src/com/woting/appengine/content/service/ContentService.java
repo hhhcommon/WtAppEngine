@@ -551,12 +551,11 @@ public class ContentService {
                 rs.close(); rs=null;
                 ps.close(); ps=null;
                 if (sortIdList!=null&&!sortIdList.isEmpty()) {
-                    String _orSql="select sma.sId, ma.* from wt_MediaAsset as ma, (select * from( select * from  wt_SeqMA_Ref where columnNum=(select b.columnNum from vWt_FirstMaInSequ as b where wt_SeqMA_Ref.sId=b.sId)) as a group by a.sId) as sma"
-                            +" where ma.id=sma.mId and ("+sma2msInsql.substring(4)+")";
                     List<Map<String, Object>> ret4=new ArrayList<Map<String, Object>>();//只有当pageType=0时，此列表才有用
                     boolean samExtractHas=false;
                     if (sma2msInsql.length()>0) {
-                        sma2msInsql=sma2msInsql.substring(4);
+                        String _orSql="select sma.sId, ma.* from wt_MediaAsset as ma, (select * from( select * from  wt_SeqMA_Ref where columnNum=(select b.columnNum from vWt_FirstMaInSequ as b where wt_SeqMA_Ref.sId=b.sId)) as a group by a.sId) as sma"
+                                +" where ma.id=sma.mId and ("+sma2msInsql.substring(4)+")";
                         //获得提取出的单体节目
                         String _smaSqlSign1="";
                         ps1=conn.prepareStatement(_orSql);
@@ -579,7 +578,7 @@ public class ContentService {
                             oneData.put("cTime", rs.getTimestamp("cTime"));
                             oneData.put("sId", rs.getString("sId"));
                             add(ret4, oneData);
-                            if (!(maSqlSign1.indexOf(""+rs.getString("id"))>1)) {
+                            if (maSqlSign1.indexOf(""+rs.getString("id"))>1) {
                                 _smaSqlSign1+=","+rs.getString("id");
                                 int pos=maSqlSign.indexOf(""+rs.getString("id"));
                                 maSqlSign=maSqlSign.substring(0, pos-1)+maSqlSign.substring(pos+(""+rs.getString("id")).length());
@@ -696,9 +695,10 @@ public class ContentService {
                             boolean hasAdd=false;
                             if (pageType==0&&samExtractHas) {
                                 for (Map<String, Object> _o: ret4) {
-                                    if ((""+oneMedia.get("ContentId")).equals(""+_o.get("ContentId"))) {
-                                        _o.put("SeqInfo", oneMedia);
-                                        _ret.set(i, _o);
+                                    if ((""+oneMedia.get("ContentId")).equals(""+_o.get("sId"))) {
+                                        Map<String, Object> newOne=convert2MediaMap_2(_o, cataList, null);
+                                        newOne.put("SeqInfo", oneMedia);
+                                        _ret.set(i, newOne);
                                         hasAdd=true;
                                     }
                                 }
