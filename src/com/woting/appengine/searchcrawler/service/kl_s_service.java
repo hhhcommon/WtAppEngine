@@ -22,22 +22,31 @@ public class kl_s_service {
 	private int S_S_T = 2;		//搜索频道的数目
 	private int S_S_F_T = 2;	//搜索频道内节目的数目
 	private int S_F_T = 2;		//搜索节目的数目     以上排列顺序按照搜索到的排列顺序
-	SearchUtils utils = new SearchUtils(2000);	//搜索工具
+	SearchUtils utils = new SearchUtils();	//搜索工具
 	
 	@Test
 	public void test(){
-		String content = utils.utf8TOurl("周");
+		String content = utils.utf8TOurl("小波");
 		List<Station> list_station = StationS(content);
 		List<Festival> list_festival = FestivalsS(content);
 		if(list_station.isEmpty() || list_station.equals("")){
 			System.out.println("抱歉，频道未搜索到结果！");
 		}else{
 			System.out.println("频道"+list_station.size());
+			for (Station station : list_station) {
+				System.out.println("频道名称："+station.getName().replaceAll("<em>|</em>", ""));
+				System.out.println("频道描述："+station.getDesc());
+			}
 		}
 		if(list_festival.isEmpty() || list_festival.equals("")){
 			System.out.println("抱歉，节目未搜索到结果！");
 		}else {
 			System.out.println("节目"+list_festival.size());
+			for (Festival festival : list_festival) {
+				System.out.println("节目名称："+festival.getAudioName().replaceAll("<em>|</em>", ""));
+				System.out.println("节目图片链接："+festival.getAudioPic());
+				System.out.println("节目mp3链接："+festival.getMp3PlayUrl());
+			}
 		}
 	}
 	
@@ -107,7 +116,7 @@ public class kl_s_service {
 				String festival_id = list.get(i).get("id").toString();
 				//节目音频查询
 				url = "http://www.kaolafm.com/webapi/audiodetail/get?id="+festival_id;
-				jsonstr = utils.jsoupTOstr(url);	//获取网页链接的返回结果
+				jsonstr = utils.jsoupTOstr(url);	//获取网页链接的返回json结果
 				Map<String, Object> map = utils.jsonTOmap(jsonstr, "result");	
 				Festival festival  = new Festival();
 				festival.setAudioName(map.get("audioName").toString());
