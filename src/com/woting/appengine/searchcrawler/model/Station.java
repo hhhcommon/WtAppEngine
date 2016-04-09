@@ -10,24 +10,49 @@ import java.util.Arrays;
  */
 public class Station {
 
+	private String mediaType = "SEQU";//类型
+	private String contentPub;	//发布者
 	private String id;				//专辑ID
 	private String name;			//专辑名称
 	private String desc;			//专辑内容描述
 	private String pic;				//专辑图片链接
+	private String host;			//主播人
 	private Festival[] festival;	//专辑节目信息
 	
 	
+	
+	
+	@Override
+	public String toString() {
+		return "Station [mediaType=" + mediaType + ", contentPub=" + contentPub + ", id=" + id + ", name=" + name
+				+ ", desc=" + desc + ", pic=" + pic + ", host=" + host + ", festival=" + Arrays.toString(festival)
+				+ "]";
+	}
+
+
+	public String getContentPub() {
+		return contentPub;
+	}
+
+
+	public void setContentPub(String contentPub) {
+		this.contentPub = contentPub;
+	}
+
+
 	public String getId() {
 		return id;
 	}
 	
 
-	@Override
-	public String toString() {
-		return "Station  [id=" + id + ", name=" + name + ", desc=" + desc + ", pic=" + pic + ", festival="
-				+ Arrays.toString(festival) + "]";
+	public String getHost() {
+		return host;
 	}
 
+
+	public void setHost(String host) {
+		this.host = host;
+	}
 
 	public String getPic() {
 		return pic;
@@ -46,7 +71,7 @@ public class Station {
 		return name;
 	}
 	public void setName(String name) {
-		this.name = name;
+		this.name = name.replaceAll("<em>|</em>", "");
 	}
 	public String getDesc() {
 		return desc;
