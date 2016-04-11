@@ -47,7 +47,7 @@ public class Festival {
 	}
 	
 	public String getAudioDes() {
-		return audioDes;
+		return audioDes.replaceAll("\n", "").replaceAll("\r", "");
 	}
 	public void setAudioDes(String audioDes) {
 		this.audioDes = audioDes;

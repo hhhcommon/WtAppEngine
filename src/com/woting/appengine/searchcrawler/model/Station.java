@@ -10,29 +10,34 @@ import java.util.Arrays;
  */
 public class Station {
 
-	private String mediaType = "SEQU";//类型
+	
+	private String MediaType = "SEQU";//类型
 	private String contentPub;	//发布者
 	private String id;				//专辑ID
 	private String name;			//专辑名称
 	private String desc;			//专辑内容描述
 	private String pic;				//专辑图片链接
 	private String host;			//主播人
-	private String createTime;
+	private String CTime;
+	public String getCTime() {
+		return CTime;
+	}
+
+	public void setCTime(String cTime) {
+		CTime = cTime;
+	}
 	private Festival[] festival;	//专辑节目信息
 	
-	public String getCreateTime() {
-		return createTime;
+	public String getMediaType() {
+		return MediaType;
 	}
 
 
-	public void setCreateTime(String createTime) {
-		this.createTime = createTime;
-	}
 
 	@Override
 	public String toString() {
-		return "Station [mediaType=" + mediaType + ", contentPub=" + contentPub + ", id=" + id + ", name=" + name
-				+ ", desc=" + desc + ", pic=" + pic + ", host=" + host + ", createTime=" + createTime + ", festival="
+		return "Station [MediaType=" + MediaType + ", contentPub=" + contentPub + ", id=" + id + ", name=" + name
+				+ ", desc=" + desc + ", pic=" + pic + ", host=" + host + ", createTime=" + CTime + ", festival="
 				+ Arrays.toString(festival) + "]";
 	}
 
@@ -80,7 +85,7 @@ public class Station {
 		this.name = name.replaceAll("<em>|</em>", "");
 	}
 	public String getDesc() {
-		return desc;
+		return desc.replaceAll("\n", "").replaceAll("\r", "");
 	}
 	public void setDesc(String desc) {
 		this.desc = desc;

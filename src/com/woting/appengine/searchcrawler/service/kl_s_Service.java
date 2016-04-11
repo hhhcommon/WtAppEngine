@@ -19,7 +19,7 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 public class kl_s_Service {
 
-	private int S_S_NUM = 1;		//搜索频道的数目
+	private int S_S_NUM = 2;		//搜索频道的数目
 	private int S_F_NUM = 2;	//搜索频道内节目的数目
 	private int F_NUM = 2;		//搜索节目的数目     以上排列顺序按照搜索到的排列顺序
 	SearchUtils utils = new SearchUtils(5000);	//搜索工具
@@ -35,16 +35,16 @@ public class kl_s_Service {
 		List<Station> list_station = StationS(str);
 		List<Festival> list_festival = FestivalsS(str);
 		Map<String, Object> map = new HashMap<>();
-		map.put("KL_Sl", list_station);
-		map.put("KL_Fl", list_festival);
-		if(list_station.isEmpty() || list_station.equals("")){
+		map.put("KL_S", list_station);
+		map.put("KL_F", list_festival);
+/*		if(list_station.isEmpty() || list_station.equals("")){
 			System.out.println("抱歉，频道未搜索到结果！");
 		}else{
 			System.out.println("频道"+list_station.size());
 			for (Station station : list_station) {
-			/*	System.out.println(System.currentTimeMillis());
+				System.out.println(System.currentTimeMillis());
 				System.out.println("频道名称："+station.getName().replaceAll("<em>|</em>", ""));
-				System.out.println("频道描述："+station.getDesc());*/
+				System.out.println("频道描述："+station.getDesc());
 				System.out.println(station.toString());
 			}
 		}
@@ -53,14 +53,15 @@ public class kl_s_Service {
 		}else {
 			System.out.println("节目"+list_festival.size());
 			for (Festival festival : list_festival) {
-			/*	System.out.println(System.currentTimeMillis());
+				System.out.println(System.currentTimeMillis());
 				System.out.println("节目名称："+festival.getAudioName().replaceAll("<em>|</em>", ""));
 				System.out.println("节目图片链接："+festival.getAudioPic());
 				System.out.println("节目时长:"+festival.getDuration());
-				System.out.println("节目mp3链接："+festival.getMp3PlayUrl());*/
+				System.out.println("节目mp3链接："+festival.getMp3PlayUrl());
 				System.out.println(festival.toString());
 			}
-		}
+		}*/
+		
 		return map;
 	}
 	
@@ -74,14 +75,13 @@ public class kl_s_Service {
 		String station_url = "http://www.kaolafm.com/webapi/resource/search?words=" + content +
 				"&rtype=20000&pagesize=20&pagenum=1";
 		List<Station> list_station = new  ArrayList<Station>();
-		Festival[] festivals = new Festival[S_F_NUM];
 		String station_id = new String();
 		String jsonstr = utils.jsoupTOstr(station_url);
-		System.out.println(jsonstr);
 		List<Map<String, Object>> list_href = utils.jsonTOlist(jsonstr, "result","dataList");
 		if(!list_href.isEmpty()){
 			for(int i = 0;i<(list_href.size()>S_S_NUM?S_S_NUM:list_href.size());i++){
 				//频道信息采集
+				Festival[] festivals = new Festival[S_F_NUM];
 				String S_host_name = "";		//频道主播人名称
 				Station station = new Station();
 				station.setContentPub("考拉FM");
@@ -102,7 +102,6 @@ public class kl_s_Service {
 						"&pagesize=20&pagenum=1&sorttype=1";
 				jsonstr = utils.jsoupTOstr(festival_url);
 				List<Map<String, Object>> list_href2=utils.jsonTOlist(jsonstr, "result","dataList");
-		
 				if(list_href2.size()>0){
 					for(int j = 0;j<(list_href2.size()>S_F_NUM?S_F_NUM:list_href2.size());j++){
 						//频道里节目信息采集
@@ -132,8 +131,8 @@ public class kl_s_Service {
 						festivals[j] = festival;
 					}
 					station.setFestival(festivals);
-					list_station.add(station);
 				}
+				list_station.add(station);
 			}
 		}else {
 			list_station.clear();
