@@ -8,19 +8,52 @@ import java.io.Serializable;
  * @author wanghui
  */
 public class Word implements Serializable {
-    private static final long serialVersionUID = 337488994588099867L;
+    private static final long serialVersionUID=337488994588099867L;
     private String word; //被检索的词
     private long count; //被检索的次数
+
     public String getWord() {
         return word;
     }
     public void setWord(String word) {
-        this.word = word;
+        this.word=word;
     }
     public long getCount() {
         return count;
     }
     public void setCount(long count) {
-        this.count = count;
+        this.count=count;
+    }
+
+    /**
+     * 构造函数
+     * @param word
+     */
+    public Word(String word) {
+        super();
+        this.word=word;
+        count=0;
+    }
+
+    /**
+     * 把检索数加1
+     * 注意：这里不考虑并发的情况
+     */
+    public void incream() {
+        count++;
+    }
+
+    @Override
+    public String toString() {
+        return word;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this==o) return true;
+        if (o==null||!(o instanceof Word)) return false;
+
+        Word _o=(Word)o;
+        return _o.getWord().equals(this.getWord());
     }
 }
