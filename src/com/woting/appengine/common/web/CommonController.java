@@ -243,6 +243,49 @@ public class CommonController {
         }
     }
 
+    @RequestMapping(value="/searchHotKeys.do")
+    @ResponseBody
+    public Map<String,Object> searchHotKeys(HttpServletRequest request) {
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                if ((retM.get("ReturnType")+"").equals("2001")) {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取设备Id(IMEI)");
+                } else {
+                    MobileSession ms=(MobileSession)retM.get("MobileSession");
+                    map.put("SessionId", ms.getKey().getSessionId());
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //获得查找词
+            String searchStr=(String)m.get("SearchStr");
+            if (StringUtils.isNullOrEmptyOrSpace(searchStr)) searchStr=request.getParameter("SearchStr");
+            if (StringUtils.isNullOrEmptyOrSpace(searchStr)) {
+                map.put("ReturnType", "1002");
+                map.put("Message", "无法得到查询串");
+                return map;
+            }
+
+            map.put("ReturnType", "1001");
+            map.put("KeyList", searchStr+",逻辑思维,郭德纲,芈月传奇,数学,恐怖主义,鬼吹灯,盗墓笔记,老梁说事");
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
+            return map;
+        }
+    }
+
     private void convert2Data(TreeNode<? extends TreeNodeBean> t, Map<String, Object> retData, String catalogType) {
         if (retData!=null&&t!=null) {
             retData.put("CatalogType", catalogType);

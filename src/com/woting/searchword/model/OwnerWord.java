@@ -2,8 +2,10 @@ package com.woting.searchword.model;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import com.spiritdata.framework.util.ChineseCharactersUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.searchword.WordUtils;
@@ -94,17 +96,40 @@ public class OwnerWord implements Serializable {
             MiddleWord tempMw=middleWordMap.get(splitWords);
             if (tempMw!=null) {
                 Word finalWord=tempMw.getWord(w);
-                if (finalWord==null) {
-                    tempMw.addWord(w);
-                } else { //进行排序：精华
-                    tempMw.sortAfterIncream(w);
-                }
+                if (finalWord==null) tempMw.addWord(w);
+                else tempMw.sortAfterIncream(w);//进行排序：精华
             } else {
-                
+                tempMw=new MiddleWord(splitWords);
+                tempMw.addWord(w);
+                middleWordMap.put(splitWords, tempMw);
+            }
+            //处理拼音
+            String swPy=ChineseCharactersUtils.getFullSpellFirstUp(splitWords);
+            tempMw=pyMiddleWordMap.get(swPy);
+            if (tempMw!=null) {
+                Word finalWord=tempMw.getWord(w);
+                if (finalWord==null) tempMw.addWord(w);
+                else tempMw.sortAfterIncream(w);//进行排序：精华
+            } else {
+                tempMw=new MiddleWord(splitWords);
+                tempMw.addWord(w);
+                pyMiddleWordMap.put(splitWords, tempMw);
             }
 
             hasChar=(notSplitWords.length()>0);
             hasSplit++;
         }
+    }
+
+    /**
+     * 根据middleWord，获得前topNum个最终搜索词
+     * @param middleWord 中间搜索词
+     * @param topNum 
+     * @return
+     */
+    public List<String> findWord(String middleWord, int topNum) {
+        MiddleWord tempMw=middleWordMap.get(middleWord);
+        if (tempMw==null) return null;
+        return tempMw.getFirstWords(topNum);
     }
 }

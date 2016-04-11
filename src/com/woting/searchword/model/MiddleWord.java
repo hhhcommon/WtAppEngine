@@ -28,9 +28,9 @@ public class MiddleWord implements Serializable {
     /**
      * 构造函数
      */
-    public MiddleWord() {
+    public MiddleWord(String middleWord) {
         super();
-        middleWord=null;
+        this.middleWord=middleWord;
         searchWordSortList=new ArrayList<Word>();
         searchWordMap=new HashMap<String, Word>();
     }
@@ -59,26 +59,55 @@ public class MiddleWord implements Serializable {
         }
     }
 
+    /**
+     * 获取前topNum个最终搜索词
+     * @param topNum
+     * @return 前topNum个最终搜索词列表
+     */
+    public List<String> getFirstWords(int topNum) {
+        if (topNum<1) return null;
+        List<String> ret=new ArrayList<String>();
+        for (int i=0; i<(topNum>searchWordSortList.size()?searchWordSortList.size():topNum); i++) {
+            ret.add(searchWordSortList.get(i).getWord());
+        }
+        return ret;
+    }
+
+    /**
+     * 在增加访问数后，调整此顺序
+     * @param w
+     */
     public void sortAfterIncream(Word w) {
         //先找到:二查法
         if (searchWordSortList!=null&&!searchWordSortList.isEmpty()) return;
         int findIndex=_find(w, 0, searchWordSortList.size());
-        int find=-1;
-        
+        if (findIndex!=-1) { //查到了，排序
+            _sortIndex(w, findIndex);
+        }
     }
-
-    private int _find(Word w, int begiPos, int endPos) {
-        if (begiPos==endPos) {
+    private int _find(Word w, int beginPos, int endPos) {
+        if (beginPos==endPos) {
             if (searchWordMap.get(endPos).equals(w)) return endPos;
             return -1;
         }
-        if (searchWordMap.get(begiPos).equals(w)) return begiPos;
+        if (searchWordMap.get(beginPos).equals(w)) return beginPos;
         if (searchWordMap.get(endPos).equals(w)) return endPos;
-        
+        int halfIndex=(endPos+beginPos)/2;
+        if (halfIndex==beginPos||halfIndex==endPos) return -1;
 
-        halfIndex=(endPos+beginPos)/2
-        Word first=searchWordSortList.get(0);
-        Word edn=searchWordSortList.get(searchWordSortList.size());
-        return 1;
+        Word halfWord=searchWordMap.get(halfIndex);
+        if (halfWord.equals(w)) return halfIndex;
+        if (halfWord.getCount()>w.getCount()) return _find(w, halfIndex, endPos);
+        else return _find(w, beginPos, halfIndex);
+    }
+    private void _sortIndex(Word w, int pos) {
+        int upperIndex=pos-1;
+        if (upperIndex<0) return;
+        Word priorW=searchWordSortList.get(upperIndex);
+        if (w.getCount()>priorW.getCount()) {//交换
+            searchWordSortList.set(upperIndex, w);
+            searchWordSortList.set(pos, priorW);
+            _sortIndex(w, upperIndex);
+        }
     }
 }
