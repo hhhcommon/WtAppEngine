@@ -79,10 +79,10 @@ public class Station {
 		this.id = id;
 	}
 	public String getName() {
-		return name;
+		return name.replaceAll("<em>|</em>", "");
 	}
 	public void setName(String name) {
-		this.name = name.replaceAll("<em>|</em>", "");
+		this.name = name;
 	}
 	public String getDesc() {
 		return desc.replaceAll("\n", "").replaceAll("\r", "");

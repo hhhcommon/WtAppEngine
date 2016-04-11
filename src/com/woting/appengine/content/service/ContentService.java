@@ -56,6 +56,25 @@ public class ContentService {
         _cc=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)).getContent();
     }
 
+    public Map<String, Object> searchByCrawl(String searchStr, int resultType, int pageType) {
+        String __s[]=searchStr.split(",");
+        String _s[]=new String[__s.length];
+        for (int i=0; i<__s.length; i++) _s[i]=__s[i].trim();
+        //wbq 考拉搜索        
+        Map<String, Object> map_kl = new HashMap<String,Object>();
+
+        //按照0::0处理
+        for(int i = 0;i<_s.length;i++){
+        	Map<String, Object> map_kl_s =  kl_s.kaolaService(_s[i]);
+	        List<Festival> list_kl_festival = (List<Festival>) map_kl_s.get("KL_F");
+	        List<Station> list_kl_station = (List<Station>) map_kl_s.get("KL_S");
+	        map_kl.put("AllCount", list_kl_festival.size()+list_kl_station.size());
+	        map_kl.put("List", dataT.datas2Audio(list_kl_festival,list_kl_station,0));
+	        map_kl.put("ResultType", resultType);
+        }
+   
+        return map_kl;
+    }
     /**
      * 查找内容，此内容无排序，按照创建时间的先后顺序排序，最新的在最前面
      * @param searchStr 查找串
@@ -75,22 +94,7 @@ public class ContentService {
         Map<String, List<String>> typeMap=new HashMap<String, List<String>>();
         Map<String, List<String>> reBuildMap=new HashMap<String, List<String>>();
         Map<String, Object> paraM=new HashMap<String, Object>();
-        
-        //wbq 考拉搜索        
-        Map<String, Object> map_kl = new HashMap<String,Object>();
 
-        //按照0::0处理
-        for(int i = 0;i<_s.length;i++){
-        	Map<String, Object> map_kl_s =  kl_s.kaolaService(_s[i]);
-	        List<Festival> list_kl_festival = (List<Festival>) map_kl_s.get("KL_F");
-	        List<Station> list_kl_station = (List<Station>) map_kl_s.get("KL_S");
-	        map_kl.put("AllCount", list_kl_festival.size()+list_kl_station.size());
-	        map_kl.put("List", dataT.datas2Audio(list_kl_festival,list_kl_station,0));
-	        map_kl.put("ResultType", resultType);
-        }
-   
-        return map_kl;
-        /*   
         //0.1-查找分类
         Connection conn=null;
         PreparedStatement ps=null;
@@ -407,7 +411,7 @@ public class ContentService {
         }
         //对返回信息中的专辑进行处理
         
-        return ret;*/
+        return ret;
     }
     /**
      * 获得主页信息

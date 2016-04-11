@@ -440,7 +440,8 @@ public class CommonController {
             int pageType=1;
             if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
 
-            Map<String, Object> cl=contentService.searchAll(searchStr, resultType, pageType);
+//            Map<String, Object> cl=contentService.searchAll(searchStr, resultType, pageType);
+            Map<String, Object> cl=contentService.searchByCrawl(searchStr, resultType, pageType);
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultType", cl.get("ResultType"));
                 cl.remove("ResultType");
