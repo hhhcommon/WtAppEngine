@@ -101,7 +101,7 @@ public class DataTransform {
 		map.put("ContentName", festival.getAudioName());
 		map.put("ContentURI", "content/getContentInfo.do?MediaType=AUDIO&ContentId="+festival.getAudioId());
 		map.put("ContentImg", festival.getAudioPic());
-		map.put("ContentPlay", festival.getMp3PlayUrl());
+		map.put("ContentPlay", festival.getPlayUrl());
 		map.put("ContentImg", festival.getAudioPic());
 		map.put("ContentPersons", festival.getHost());
 		map.put("ContentTimes", festival.getDuration());//以ms为计量单位

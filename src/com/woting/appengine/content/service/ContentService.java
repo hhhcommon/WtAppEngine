@@ -88,8 +88,9 @@ public class ContentService {
 	        map_kl.put("List", dataT.datas2Audio(list_kl_festival,list_kl_station,0));
 	        map_kl.put("ResultType", resultType);
         }
-        
-  
+   
+        return map_kl;
+        /*   
         //0.1-查找分类
         Connection conn=null;
         PreparedStatement ps=null;
@@ -406,7 +407,7 @@ public class ContentService {
         }
         //对返回信息中的专辑进行处理
         
-        return ret;
+        return ret;*/
     }
     /**
      * 获得主页信息

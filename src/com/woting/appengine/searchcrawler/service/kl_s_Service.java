@@ -114,7 +114,7 @@ public class kl_s_Service {
 						festival.setAudioDes(list_href2.get(j).get("audioDes").toString());
 						festival.setAlbumName(list_href2.get(j).get("albumName")==null?"":list_href2.get(j).get("albumName").toString());
 						festival.setAlbumPic(list_href2.get(j).get("albumPic")==null?"":list_href2.get(j).get("albumPic").toString());
-						festival.setMp3PlayUrl((list_href2.get(j).get("mp3PlayUrl").toString()));
+						festival.setPlayUrl((list_href2.get(j).get("mp3PlayUrl").toString()));
 						festival.setFileSize((list_href2.get(j).get("fileSize").toString()));
 						festival.setDuration(((list_href2.get(j).get("duration").toString())));
 						festival.setUpdateTime(((list_href2.get(j).get("updateTime").toString())));
@@ -167,7 +167,7 @@ public class kl_s_Service {
 				festival.setAudioDes(map.get("audioDes").toString());
 				festival.setAlbumName(map.get("albumName").toString());
 				festival.setAlbumPic(map.get("albumPic")==null?"":map.get("albumPic").toString());
-				festival.setMp3PlayUrl(map.get("mp3PlayUrl").toString());
+				festival.setPlayUrl(map.get("mp3PlayUrl").toString());
 				festival.setFileSize(map.get("fileSize").toString());
 				festival.setDuration(map.get("duration").toString());
 				festival.setUpdateTime(map.get("updateTime").toString());

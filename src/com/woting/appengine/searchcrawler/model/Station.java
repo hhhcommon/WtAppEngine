@@ -62,7 +62,7 @@ public class Station {
 
 
 	public void setHost(String host) {
-		this.host = host;
+		this.host = host.replaceAll("<em>|</em>", "");
 	}
 
 	public String getPic() {

@@ -16,7 +16,7 @@ public class Festival {
 	private String audioDes;	//节目描述
 	private String albumName;	//专辑名称
 	private String albumPic;	//专辑图片
-	private String mp3PlayUrl;	//节目mp3格式音频链接地址
+	private String PlayUrl;		//节目音频链接地址
 	private String fileSize;	//音频文件大小
 	private String duration;	//音频时长
 	private String updateTime;	//发布时间
@@ -28,7 +28,7 @@ public class Festival {
 	public String toString() {
 		return "Festival [mediaType=" + mediaType + ", contentPub=" + contentPub + ", audioId=" + audioId
 				+ ", audioName=" + audioName + ", audioPic=" + audioPic + ", audioDes=" + audioDes + ", albumName="
-				+ albumName + ", albumPic=" + albumPic + ", mp3PlayUrl=" + mp3PlayUrl + ", fileSize=" + fileSize
+				+ albumName + ", albumPic=" + albumPic + ", mp3PlayUrl=" + PlayUrl + ", fileSize=" + fileSize
 				+ ", duration=" + duration + ", updateTime=" + updateTime + ", listenNum=" + listenNum + ", createTime="
 				+ createTime + ", host=" + host + "]";
 	}
@@ -37,7 +37,7 @@ public class Festival {
 		return host;
 	}
 	public void setHost(String host) {
-		this.host = host;
+		this.host = host.replaceAll("<em>|</em>", "");
 	}
 	public String getCreateTime() {
 		return createTime;
@@ -101,11 +101,11 @@ public class Festival {
 		this.albumName = albumName.replaceAll("<em>|</em>", "");
 	}
 
-	public String getMp3PlayUrl() {
-		return mp3PlayUrl;
+	public String getPlayUrl() {
+		return PlayUrl;
 	}
-	public void setMp3PlayUrl(String mp3PlayUrl) {
-		this.mp3PlayUrl = mp3PlayUrl;
+	public void setPlayUrl(String PlayUrl) {
+		this.PlayUrl = PlayUrl;
 	}
 	public String getFileSize() {
 		return fileSize;

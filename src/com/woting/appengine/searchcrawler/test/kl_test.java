@@ -20,7 +20,7 @@ public class kl_test {
 	public void test_1(){
 		 //wbq 考拉搜索        
         Map<String, Object> map_kl = new HashMap<String,Object>();
-        Map<String, Object> map_kl_s =  kl_s.kaolaService("成十六");
+        Map<String, Object> map_kl_s =  kl_s.kaolaService("周星驰");
 	    List<Festival> list_kl_festival = (List<Festival>) map_kl_s.get("KL_F");
 	    List<Station> list_kl_station = (List<Station>) map_kl_s.get("KL_S");
 	    map_kl.put("AllCount", list_kl_festival.size()+list_kl_station.size());
