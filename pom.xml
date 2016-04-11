@@ -5,7 +5,7 @@
   <version>0.0.1</version>
   <packaging>war</packaging>
   <!-- 配置编码格式，与eclpse的IDE环境编码格式匹配 -->
-  <!-- D:\workIDE\projects || E:\work\gitworkspace -->
+  <!-- D:\workIDE\projects\WtAppEngine || E:\work\gitworkspace || D:\WBWorkDir\WtAppEngine-->
   <properties>
     <build.webProjectDir>D:\workIDE\projects\WtAppEngine</build.webProjectDir>
   </properties>
@@ -16,6 +16,11 @@
     <relativePath>pom.framework.xml</relativePath>
   </parent>
   <dependencies>
+  	<dependency>
+  	 <groupId>org.jsoup</groupId>
+     <artifactId>jsoup</artifactId>
+     <version>1.8.2</version>
+  	</dependency>
     <!-- dbcp连接池 -->
     <dependency>
       <groupId>commons-dbcp</groupId>
