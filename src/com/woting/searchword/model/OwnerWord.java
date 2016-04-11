@@ -11,7 +11,7 @@ import com.woting.cm.core.common.model.Owner;
 import com.woting.searchword.WordUtils;
 
 /**
- * 属于某一个所有者的查找此结构
+ * 属于某一个所有者的查找词结构
  * 词管理就是通过这个数据来完成的
  * @author wanghui
  */

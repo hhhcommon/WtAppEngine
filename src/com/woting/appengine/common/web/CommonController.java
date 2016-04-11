@@ -266,8 +266,8 @@ public class CommonController {
             if (map.get("ReturnType")!=null) return map;
 
             //获得查找词
-            String searchStr=(String)m.get("SearchStr");
-            if (StringUtils.isNullOrEmptyOrSpace(searchStr)) searchStr=request.getParameter("SearchStr");
+            String searchStr=(String)m.get("KeyWord");
+            if (StringUtils.isNullOrEmptyOrSpace(searchStr)) searchStr=request.getParameter("KeyWord");
             if (StringUtils.isNullOrEmptyOrSpace(searchStr)) {
                 map.put("ReturnType", "1002");
                 map.put("Message", "无法得到查询串");
@@ -316,9 +316,7 @@ public class CommonController {
                 if (_r!=null) ret.addAll(_r);
             }
             return ret;
-        } else {
-            return null;
-        }
+        } else return null;
     }
     private List<Map<String, Object>> getLevelNodeList(TreeNode<? extends TreeNodeBean> t, int level, String catalogType) {
         if (t==null) return null;
@@ -337,9 +335,7 @@ public class CommonController {
                 }
             }
             return ret;
-        } else {
-            return null;
-        }
+        } else return null;
     }
 
     @RequestMapping(value="/getCatalogInfo.do")
