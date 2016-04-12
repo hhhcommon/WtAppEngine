@@ -32,6 +32,7 @@ import com.woting.passport.login.service.MobileUsedService;
 import com.woting.passport.useralias.mem.UserAliasMemoryManage;
 import com.woting.passport.useralias.model.UserAliasKey;
 import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
+import com.woting.plugins.sms.SendSMS;
 
 @Controller
 @RequestMapping(value="/passport/")
@@ -80,6 +81,7 @@ public class PassportController {
                 return map;
             }
             UserPo u=userService.getUserByLoginName(ln);
+            if (u==null) u=userService.getUserByPhoneNum(ln);
             //1-判断是否存在用户
             if (u==null) { //无用户
                 map.put("ReturnType", "1002");
@@ -153,6 +155,8 @@ public class PassportController {
             String pwd=(String)m.get("Password");
             String errMsg="";
             if (StringUtils.isNullOrEmptyOrSpace(ln)) errMsg+=",用户名为空";
+            char[] c=ln.toCharArray();
+            if (c[0]>='0' && c[0]<='9') errMsg+=",登录名第一个字符不能是数字";
             if (StringUtils.isNullOrEmptyOrSpace(pwd)) errMsg+=",密码为空";
             if (!StringUtils.isNullOrEmptyOrSpace(errMsg)) {
                 errMsg=errMsg.substring(1);
@@ -187,6 +191,7 @@ public class PassportController {
             MobileKey newMk=ms.getKey();
             newMk.setUserId(nu.getUserId());
             ms.addAttribute("user", nu);
+            ms.remove("phoneCheckInfo");//去掉之前的验证信息
             smm.addOneSession(ms);
             //3.2-保存使用情况
             MobileUsedPo mu=new MobileUsedPo();
@@ -255,6 +260,143 @@ public class PassportController {
             muService.saveMobileUsed(mu);
             //4-返回成功，不管后台处理情况，总返回成功
             map.put("ReturnType", "1001");
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
+            return map;
+        }
+    }
+
+    /**
+     * 修改密码
+     */
+    @RequestMapping(value="user/updatePwd.do")
+    @ResponseBody
+    public Map<String,Object> updatePwd(HttpServletRequest request) {
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            String userId="";
+            MobileSession ms=null;
+            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                if ((retM.get("ReturnType")+"").equals("2001")) {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取设备Id(IMEI)");
+                } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                    map.put("ReturnType", "200");
+                    map.put("Message", "需要登录");
+                } else {
+                    ms=(MobileSession)retM.get("MobileSession");
+                    map.put("SessionId", ms.getKey().getSessionId());
+                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                }
+                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "无法获取用户Id");
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //2-获取其他参数
+            String oldPwd=(String)m.get("OldPassword");
+            String newPwd=(String)m.get("NewPassword");
+            String errMsg="";
+            if (StringUtils.isNullOrEmptyOrSpace(oldPwd)) errMsg+=",旧密码为空";
+            if (StringUtils.isNullOrEmptyOrSpace(newPwd)) errMsg+=",新密码为空";
+            if (!StringUtils.isNullOrEmptyOrSpace(errMsg)) {
+                errMsg=errMsg.substring(1);
+                map.put("ReturnType", "1003");
+                map.put("Message", errMsg+",无法需改密码");
+                return map;
+            }
+            if (oldPwd.equals(newPwd)) {
+                map.put("ReturnType", "1004");
+                map.put("Message", "新旧密码不能相同");
+                return map;
+            }
+            UserPo u=(UserPo)ms.getAttribute("user");
+            if (u.getPassword().equals(oldPwd)) {
+                u.setPassword(newPwd);
+                int retFlag=userService.updateUser(u);
+                if (retFlag==1) map.put("ReturnType", "1001");
+                else {
+                    map.put("ReturnType", "1006");
+                    map.put("Message", "存储新密码失败");
+                }
+            } else {
+                map.put("ReturnType", "1005");
+                map.put("Message", "旧密码不匹配");
+            }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
+            return map;
+        }
+    }
+
+    /**
+     * 修改密码，在通过手机号码找回密码时
+     */
+    @RequestMapping(value="user/updatePwd_AfterCheckPhoneOK.do")
+    @ResponseBody
+    public Map<String,Object> updatePwd_AfterCheckPhoneOK(HttpServletRequest request) {
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            MobileSession ms=null;
+            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                ms=(MobileSession)retM.get("MobileSession");
+                map.put("SessionId", ms.getKey().getSessionId());
+            }
+            if (ms==null) {
+                map.put("ReturnType", "1000");
+                map.put("Message", "无法获取会话信息");
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //1-获取其他参数
+            String newPwd=(String)m.get("NewPassword");
+            String errMsg="";
+            if (StringUtils.isNullOrEmptyOrSpace(newPwd)) errMsg+=",新密码为空";
+            if (!StringUtils.isNullOrEmptyOrSpace(errMsg)) {
+                errMsg=errMsg.substring(1);
+                map.put("ReturnType", "1003");
+                map.put("Message", errMsg+",无法修改密码");
+                return map;
+            }
+            UserPo up=userService.getUserById(m.get("UserId")+"");
+            String info=ms.getAttribute("phoneCheckInfo")+"";
+            if (info.equals("OK")) {
+                up.setPassword(newPwd);
+                int retFlag=userService.updateUser(up);
+                if (retFlag==1) {
+                    map.put("ReturnType", "1001");
+                    ms.remove("phoneCheckInfo");
+                }
+                else {
+                    map.put("ReturnType", "1004");
+                    map.put("Message", "存储新密码失败");
+                }
+            } else {
+                map.put("ReturnType", "1005");
+                map.put("Message", "状态错误");
+            }
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -384,15 +526,14 @@ public class PassportController {
     }
 
     /**
-     * 修改密码
+     * 用手机号注册
      */
-    @RequestMapping(value="user/updatePwd.do")
+    @RequestMapping(value="user/registerByPhoneNum.do")
     @ResponseBody
-    public Map<String,Object> updatePwd(HttpServletRequest request) {
+    public Map<String,Object> registerByPhoneNum(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            String userId="";
             MobileSession ms=null;
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
@@ -400,53 +541,268 @@ public class PassportController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
-                if ((retM.get("ReturnType")+"").equals("2001")) {
-                    map.put("ReturnType", "0000");
-                    map.put("Message", "无法获取设备Id(IMEI)");
-                } else if ((retM.get("ReturnType")+"").equals("2003")) {
-                    map.put("ReturnType", "200");
-                    map.put("Message", "需要登录");
-                } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
-                }
-                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
-                    map.put("ReturnType", "1002");
-                    map.put("Message", "无法获取用户Id");
-                }
+                ms=(MobileSession)retM.get("MobileSession");
+                map.put("SessionId", ms.getKey().getSessionId());
+            }
+            if (ms==null) {
+                map.put("ReturnType", "1003");
+                map.put("Message", "无法获取会话信息");
             }
             if (map.get("ReturnType")!=null) return map;
 
-            //2-获取其他参数
-            String oldPwd=(String)m.get("OldPassword");
-            String newPwd=(String)m.get("NewPassword");
-            String errMsg="";
-            if (StringUtils.isNullOrEmptyOrSpace(oldPwd)) errMsg+=",旧密码为空";
-            if (StringUtils.isNullOrEmptyOrSpace(newPwd)) errMsg+=",新密码为空";
-            if (!StringUtils.isNullOrEmptyOrSpace(errMsg)) {
-                errMsg=errMsg.substring(1);
-                map.put("ReturnType", "1003");
-                map.put("Message", errMsg+",无法需改密码");
-                return map;
+            //1-获取电话号码
+            String phoneNum=(String)m.get("PhoneNum");
+            if (StringUtils.isNullOrEmptyOrSpace(phoneNum)) phoneNum=request.getParameter("PhoneNum");
+            if (StringUtils.isNullOrEmptyOrSpace(phoneNum)) {
+                map.put("ReturnType", "1000");
+                map.put("Message", "无法获取手机号");
             }
-            if (oldPwd.equals(newPwd)) {
-                map.put("ReturnType", "1004");
-                map.put("Message", "新旧密码不能相同");
-                return map;
-            }
-            UserPo u=(UserPo)ms.getAttribute("user");
-            if (u.getPassword().equals(oldPwd)) {
-                u.setPassword(newPwd);
-                int retFlag=userService.updateUser(u);
-                if (retFlag==1) map.put("ReturnType", "1001");
-                else {
-                    map.put("ReturnType", "1006");
-                    map.put("Message", "存储新密码失败");
-                }
+            if (map.get("ReturnType")!=null) return map;
+
+            //验证重复的手机号
+            UserPo u=userService.getUserByPhoneNum(phoneNum);
+            if (u==null) { //正确
+                map.put("ReturnType", "1001");
+                int random=SpiritRandom.getRandom(new Random(), 1000000, 1999999);
+                String checkNum=(random+"").substring(1);
+                SendSMS.sendSms(phoneNum, checkNum, "通过手机号注册用户");
+                //向Session中加入验证信息
+                ms.addAttribute("phoneCheckInfo", System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum);
             } else {
+                map.put("ReturnType", "1002");
+            }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
+            return map;
+        }
+    }
+
+    /**
+     * 通过手机号找回密码
+     */
+    @RequestMapping(value="user/retrieveByPhoneNum.do")
+    @ResponseBody
+    public Map<String,Object> retrieveByPhoneNum(HttpServletRequest request) {
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            MobileSession ms=null;
+            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                ms=(MobileSession)retM.get("MobileSession");
+                map.put("SessionId", ms.getKey().getSessionId());
+            }
+            if (ms==null) {
+                map.put("ReturnType", "1003");
+                map.put("Message", "无法获取会话信息");
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //1-获取电话号码
+            String phoneNum=(String)m.get("PhoneNum");
+            if (StringUtils.isNullOrEmptyOrSpace(phoneNum)) phoneNum=request.getParameter("PhoneNum");
+            if (StringUtils.isNullOrEmptyOrSpace(phoneNum)) {
+                map.put("ReturnType", "1000");
+                map.put("Message", "无法获取手机号");
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //验证重复的手机号
+            UserPo u=userService.getUserByPhoneNum(phoneNum);
+            if (u!=null) { //正确
+                map.put("ReturnType", "1001");
+                int random=SpiritRandom.getRandom(new Random(), 1000000, 1999999);
+                String checkNum=(random+"").substring(1);
+                SendSMS.sendSms(phoneNum, checkNum, "通过绑定手机号找回密码");
+                //向Session中加入验证信息
+                ms.addAttribute("phoneCheckInfo", System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum);
+            } else {
+                map.put("ReturnType", "1002");//该手机未绑定任何账户
+            }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
+            return map;
+        }
+    }
+
+    /**
+     * 根据手机号码发送验证码
+     */
+    @RequestMapping(value="user/reSendPhoneCheckCode.do")
+    @ResponseBody
+    public Map<String,Object> reSendPhoneCheckCode(HttpServletRequest request) {
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            MobileSession ms=null;
+            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                ms=(MobileSession)retM.get("MobileSession");
+                map.put("SessionId", ms.getKey().getSessionId());
+            }
+            if (ms==null) {
+                map.put("ReturnType", "1003");
+                map.put("Message", "无法获取会话信息");
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //1-获取电话号码
+            String phoneNum=(String)m.get("PhoneNum");
+            if (StringUtils.isNullOrEmptyOrSpace(phoneNum)) phoneNum=request.getParameter("PhoneNum");
+            if (StringUtils.isNullOrEmptyOrSpace(phoneNum)) {
+                map.put("ReturnType", "1000");
+                map.put("Message", "无法获取手机号");
+            }
+            if (map.get("ReturnType")!=null) return map;
+            //2-获取过程码
+            String operType=(String)m.get("OperType");
+            int _operType=-1;
+            if (StringUtils.isNullOrEmptyOrSpace(operType)) operType=request.getParameter("OperType");
+            if (StringUtils.isNullOrEmptyOrSpace(operType)) {
+                map.put("ReturnType", "1000");
+                map.put("Message", "无法获取过程码");
+            }
+            try {
+                _operType=Integer.parseInt(operType);
+                if (_operType==-1) {
+                    map.put("ReturnType", "1000");
+                    map.put("Message", "无法获取过程码");
+                }
+            } catch(Exception e) {
+                map.put("ReturnType", "1000");
+                map.put("Message", "无法获取过程码");
+            }
+            if (map.get("ReturnType")!=null) return map;
+            
+
+            String info=ms.getAttribute("phoneCheckInfo")+"";
+            if (info==null||info.equals("null")||info.equals("OK")) {//错误
+                map.put("ReturnType", "1002");
+                map.put("Message", "状态错误，无法重发");
+            } else {//正确
+                String[] _info=info.split("::");
+                if (_info.length!=3) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "状态错误，数据格式不正确");
+                } else {
+                    String _phoneNum=_info[1];
+                    if (!_phoneNum.equals(phoneNum)) {
+                        map.put("ReturnType", "1002");
+                        map.put("Message", "状态错误，手机号不匹配");
+                    } else {
+                        int random=SpiritRandom.getRandom(new Random(), 1000000, 1999999);
+                        String checkNum=(random+"").substring(1);
+                        SendSMS.sendSms(phoneNum, checkNum, _operType==1?"通过手机号注册用户":"通过绑定手机号找回密码");
+                        //向Session中加入验证信息
+                        ms.addAttribute("phoneCheckInfo", System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum);
+                    }
+                }
+            }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
+            return map;
+        }
+    }
+
+    /**
+     * 验证验证码
+     */
+    @RequestMapping(value="user/checkPhoneCheckCode.do")
+    @ResponseBody
+    public Map<String,Object> checkPhoneCheckCode(HttpServletRequest request) {
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            MobileSession ms=null;
+            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                ms=(MobileSession)retM.get("MobileSession");
+                map.put("SessionId", ms.getKey().getSessionId());
+            }
+            if (ms==null) {
+                map.put("ReturnType", "1000");
+                map.put("Message", "无法获取会话信息");
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //1-获取电话号码
+            String phoneNum=(String)m.get("PhoneNum");
+            if (StringUtils.isNullOrEmptyOrSpace(phoneNum)) phoneNum=request.getParameter("PhoneNum");
+            if (StringUtils.isNullOrEmptyOrSpace(phoneNum)) {
+                map.put("ReturnType", "1000");
+                map.put("Message", "无法获取手机号");
+            }
+            if (map.get("ReturnType")!=null) return map;
+            //2-获取验证码
+            String checkNum=(String)m.get("CheckNum");
+            if (StringUtils.isNullOrEmptyOrSpace(checkNum)) checkNum=request.getParameter("CheckNum");
+            if (StringUtils.isNullOrEmptyOrSpace(checkNum)) {
+                map.put("ReturnType", "1000");
+                map.put("Message", "无法获取手机号");
+            }
+            if (map.get("ReturnType")!=null) return map;
+            //3-获取是否需要得到用户id，只有在找回密码时才有用
+            String needUserId=(String)m.get("NeedUserId");
+            if (StringUtils.isNullOrEmptyOrSpace(needUserId)) needUserId=request.getParameter("NeedUserId");
+            boolean _neddUserId=false;
+            if (!StringUtils.isNullOrEmptyOrSpace(needUserId)) _neddUserId=needUserId.toUpperCase().equals("TRUE");
+
+            //验证验证码
+            String info=ms.getAttribute("phoneCheckInfo")+"";
+            if (info==null||info.equals("null")) {
                 map.put("ReturnType", "1005");
-                map.put("Message", "旧密码不匹配");
+                map.put("Message", "状态错误");
+            } else {
+                String[] _info=info.split("::");
+                if (_info.length!=3) {
+                    map.put("ReturnType", "1005");
+                    map.put("Message", "状态错误，数据格式不正确");
+                } else {
+                    long time=Long.parseLong(_info[0]);
+                    String _phoneNum=_info[1];
+                    String _checkNum=_info[2];
+                    if (System.currentTimeMillis()-time>(100*1000)) {
+                        map.put("ReturnType", "1004");
+                        map.put("Message", "超时");
+                    } else if (!_phoneNum.equals(phoneNum)) {
+                        map.put("ReturnType", "1003");
+                        map.put("Message", "手机号不匹配");
+                    } else if (!_checkNum.equals(checkNum)) {
+                        map.put("ReturnType", "1002");
+                        map.put("Message", "验证码不匹配");
+                    } else {
+                        ms.addAttribute("phoneCheckInfo", "OK");
+                        if (_neddUserId) {
+                            UserPo u=userService.getUserByPhoneNum(phoneNum);
+                            if (u!=null) map.put("UserId", u.getUserId());
+                        }
+                        map.put("ReturnType", "1001");
+                    }
+                }
             }
             return map;
         } catch(Exception e) {
@@ -591,30 +947,3 @@ public class PassportController {
         return SpiritRandom.getRandom(new Random(), 0, 999999);
     }
 }
-
-//
-//List<Map<String, Object>> ul = new ArrayList<Map<String, Object>>();
-//Map<String, Object> u = new HashMap<String, Object>();
-//u.put("UserId", "123456");
-//u.put("UserName", "张先生1");
-//u.put("Portrait", "images/person.png");
-//ul.add(u);
-//u = new HashMap<String, Object>();
-//u.put("UserId", "334455");
-//u.put("UserName", "张先生2");
-//u.put("Portrait", "images/person.png");
-//ul.add(u);
-//u = new HashMap<String, Object>();
-//u.put("UserId", "336655");
-//u.put("UserName", "张先生3");
-//u.put("Portrait", "images/person.png");
-//ul.add(u);
-//u = new HashMap<String, Object>();
-//u.put("UserId", "333sd5");
-//u.put("UserName", "张先生4");
-//u.put("Portrait", "images/person.png");
-//ul.add(u);
-//map.put("ReturnType", "1001");
-//map.put("SessionId", SequenceUUID.getUUIDSubSegment(4));
-//map.put("UserList", ul);
-//

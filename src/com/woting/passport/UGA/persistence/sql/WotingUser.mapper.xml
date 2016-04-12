@@ -99,6 +99,9 @@
   <select id="getUserByNum" resultMap="userMap" parameterType="java.lang.String">
     select <include refid="Base_Column_List"/> from plat_User where userNum=#{userNum,jdbcType=VARCHAR}
   </select>
+  <select id="getUserByPhoneNum" resultMap="userMap" parameterType="java.lang.String">
+    select <include refid="Base_Column_List"/> from plat_User where mainPhoneNum=#{mainPhoneNum,jdbcType=VARCHAR}
+  </select>
 
   <!-- 新增数据 -->
   <insert id="insertUser" parameterType="java.util.Map"> insert into plat_User
