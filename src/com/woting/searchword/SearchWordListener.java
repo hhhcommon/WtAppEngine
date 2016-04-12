@@ -20,7 +20,8 @@ public class SearchWordListener extends Thread {
             SearchWordMemory swm=SearchWordMemory.getInstance();
             swm.init();
             System.out.println("启动搜索词处理监控");
-            while (true) {
+
+            while (true) {//每隔一段时间处理一次检索词
                 sleep(50);
             }
         } catch (InterruptedException e) {
