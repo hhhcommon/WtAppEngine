@@ -110,10 +110,10 @@ public class DataTransform {
 		map.put("ContentDesc", festival.getAudioDes());
 		map.put("CTime", festival.getCreateTime());
 		map.put("MediaType", festival.getMediaType());
-		map.put("ContentCatalogs", "");
-		map.put("ContentKeyWord", "");
-		map.put("ContentSubjectWord", "");
-		map.put("PlayCount", "");
+		map.put("ContentCatalogs", null);
+		map.put("ContentKeyWord", null);
+		map.put("ContentSubjectWord", null);
+		map.put("PlayCount", null);
 		return map;
 	}
 	
@@ -136,10 +136,10 @@ public class DataTransform {
 		map.put("ContentId", station.getId());
 		map.put("ContentDesc", station.getDesc());
 		map.put("ContentImg", station.getPic());
-		map.put("ContentCatalogs", "");
-		map.put("ContentKeyWord", "");
-		map.put("ContentSubjectWord", "");
-		map.put("PlayCount", "");
+		map.put("ContentCatalogs", null);
+		map.put("ContentKeyWord", null);
+		map.put("ContentSubjectWord", null);
+		map.put("PlayCount", null);
 		return map;
 	}
 }

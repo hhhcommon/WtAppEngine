@@ -2,6 +2,7 @@ package com.woting.appengine.searchcrawler.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,8 +10,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.junit.Test;
-import org.springframework.dao.support.DaoSupport;
 
 import com.spiritdata.framework.util.JsonUtils;
 import com.woting.appengine.searchcrawler.model.Festival;
@@ -22,8 +21,9 @@ public class qt_s_service {
 	SearchUtils utils = new SearchUtils();
 	
 	//电台搜索链接请求
-		public void qt_S(String url){
+		public Map<String, Object> qt_S(String url){
 			url = utils.utf8TOurl(url);
+			Map<String, Object> map = new HashMap<String,Object>();
 			String station_url = "http://www.qingting.fm/s/search/" + url;
 			List<Festival> list_festival = new ArrayList<Festival>();
 			List<Station> list_station = new ArrayList<Station>();
@@ -38,30 +38,25 @@ public class qt_s_service {
 				String festival_num = elements_festivals.select("a[href]").html();
 				String station_num = elements_stations.select("a[href]").html();
 				String radio_num = elements_radios.select("a[href]").html();
-				int r_num = utils.findint(radio_num);
-				int s_num = utils.findint(station_num);
-				int f_num = utils.findint(festival_num);
-				System.out.println(f_num+"##"+s_num+"##"+r_num);
+				int r_num = utils.findint(radio_num);	//电台数量
+				int s_num = utils.findint(station_num);	//频道数量
+				int f_num = utils.findint(festival_num);//节目数量
 				elements = doc.select("li[class=playable clearfix]");
-				System.out.println(elements.size());
 				for (int i = r_num;i<r_num+s_num+2;i++ ) {
-					String title = elements.get(i).select("a[href]").get(0).select("span").html();
-					String href = "http://www.qingting.fm"+elements.get(i).select("a[href]").get(0).attr("data-switch-url");
-					System.out.println(title+"##"+href);
-					
+					String title = elements.get(i).select("a[href]").get(0).select("span").get(0).html();
+					String href = "http://www.qingting.fm"+elements.get(i).select("a[href]").get(0).attr("data-switch-url");					
 					if(i<r_num+s_num){
 						Station station = new Station();
+						station.setId(href.replaceAll("http://www.qingting.fm/s/vchannels/", ""));
 						station = stationS(href);
 						station.setName(title);
 						list_station.add(station);
-			//			System.out.println(list_station);
 					}
 					if (i>=r_num+s_num) {
 						Festival festival = new Festival();
 						festival = festivalS(href);
 						festival.setAudioName(title);
 						list_festival.add(festival);
-			//			System.out.println(festival.toString());
 					}
 					if (i==r_num+1) {
 						i = r_num+s_num-1;
@@ -70,8 +65,16 @@ public class qt_s_service {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			map.put("QT_S", list_station);
+			map.put("QT_F", list_festival);
+			return map;
 		}
 		
+		/**
+		 * 节目信息转换
+		 * @param url
+		 * @return
+		 */
 		public Festival festivalS(String url){
 			Document doc =null;
 			Festival festival = new Festival();
@@ -89,13 +92,16 @@ public class qt_s_service {
 				String m4aurl = "http://od.qingting.fm"+list_urls.get(0).toString();
 				festival.setPlayUrl(m4aurl);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			return festival;
 		}
 		
-		
+		/**
+		 * 频道信息转换
+		 * @param url
+		 * @return
+		 */
 		public Station stationS(String url){
 			Document doc = null;
 			Station station = new Station();
@@ -119,10 +125,9 @@ public class qt_s_service {
 				festivals[0] = festival;
 				station.setFestival(festivals);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			return null;
+			return station;
 			
 		}
 }
