@@ -14,7 +14,7 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
  *
  */
 
-public class kl_s_Service {
+public class KaoLaService {
 
 	private int S_S_NUM = 2;		//搜索频道的数目
 	private int S_F_NUM = 2;	//搜索频道内节目的数目
@@ -34,31 +34,6 @@ public class kl_s_Service {
 		Map<String, Object> map = new HashMap<>();
 		map.put("KL_S", list_station);
 		map.put("KL_F", list_festival);
-/*		if(list_station.isEmpty() || list_station.equals("")){
-			System.out.println("抱歉，频道未搜索到结果！");
-		}else{
-			System.out.println("频道"+list_station.size());
-			for (Station station : list_station) {
-				System.out.println(System.currentTimeMillis());
-				System.out.println("频道名称："+station.getName().replaceAll("<em>|</em>", ""));
-				System.out.println("频道描述："+station.getDesc());
-				System.out.println(station.toString());
-			}
-		}
-		if(list_festival.isEmpty() || list_festival.equals("")){
-			System.out.println("抱歉，节目未搜索到结果！");
-		}else {
-			System.out.println("节目"+list_festival.size());
-			for (Festival festival : list_festival) {
-				System.out.println(System.currentTimeMillis());
-				System.out.println("节目名称："+festival.getAudioName().replaceAll("<em>|</em>", ""));
-				System.out.println("节目图片链接："+festival.getAudioPic());
-				System.out.println("节目时长:"+festival.getDuration());
-				System.out.println("节目mp3链接："+festival.getMp3PlayUrl());
-				System.out.println(festival.toString());
-			}
-		}*/
-		
 		return map;
 	}
 	

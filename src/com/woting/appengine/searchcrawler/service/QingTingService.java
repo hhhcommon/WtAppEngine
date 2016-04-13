@@ -16,7 +16,7 @@ import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
-public class qt_s_service {
+public class QingTingService {
 	
 	SearchUtils utils = new SearchUtils();
 	

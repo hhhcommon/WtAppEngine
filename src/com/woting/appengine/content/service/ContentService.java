@@ -27,7 +27,7 @@ import com.spiritdata.framework.util.StringUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
-import com.woting.appengine.searchcrawler.service.kl_s_Service;
+import com.woting.appengine.searchcrawler.service.KaoLaService;
 import com.woting.appengine.searchcrawler.utils.DataTransform;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.dict.mem._CacheDictionary;
@@ -43,7 +43,7 @@ public class ContentService {
     @Resource
     private DataSource dataSource;
 
-    kl_s_Service kl_s = new kl_s_Service();  //wbq 考拉搜索
+    KaoLaService kl_s = new KaoLaService();  //wbq 考拉搜索
     DataTransform dataT = new DataTransform();//wbq 数据类型转换
     
     private _CacheDictionary _cd=null;
