@@ -98,6 +98,7 @@ public class SearchUtils {
 			//获取频道json数据
 			str = doc.select("body").html().toString();
 			str=str.replaceAll("\n", "");
+			str=str.replaceAll("&quot;", "\"");
 			str=str.replaceAll("\r", "");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
