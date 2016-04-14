@@ -565,9 +565,10 @@ public class PassportController {
                 map.put("ReturnType", "1001");
                 int random=SpiritRandom.getRandom(new Random(), 1000000, 1999999);
                 String checkNum=(random+"").substring(1);
-                SendSMS.sendSms(phoneNum, checkNum, "通过手机号注册用户");
+                String smsRetNum=SendSMS.sendSms(phoneNum, checkNum, "通过手机号注册用户");
                 //向Session中加入验证信息
                 ms.addAttribute("phoneCheckInfo", System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum);
+                map.put("SmsRetNum", smsRetNum);
             } else {
                 map.put("ReturnType", "1002");
             }
@@ -621,9 +622,10 @@ public class PassportController {
                 map.put("ReturnType", "1001");
                 int random=SpiritRandom.getRandom(new Random(), 1000000, 1999999);
                 String checkNum=(random+"").substring(1);
-                SendSMS.sendSms(phoneNum, checkNum, "通过绑定手机号找回密码");
+                String smsRetNum=SendSMS.sendSms(phoneNum, checkNum, "通过绑定手机号找回密码");
                 //向Session中加入验证信息
                 ms.addAttribute("phoneCheckInfo", System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum);
+                map.put("SmsRetNum", smsRetNum);
             } else {
                 map.put("ReturnType", "1002");//该手机未绑定任何账户
             }
@@ -694,7 +696,7 @@ public class PassportController {
             String info=ms.getAttribute("phoneCheckInfo")+"";
             if (info==null||info.equals("null")||info.equals("OK")) {//错误
                 map.put("ReturnType", "1002");
-                map.put("Message", "状态错误，无法重发");
+                map.put("Message", "状态错误，未有之前的发送数据，无法重发");
             } else {//正确
                 String[] _info=info.split("::");
                 if (_info.length!=3) {
@@ -708,9 +710,11 @@ public class PassportController {
                     } else {
                         int random=SpiritRandom.getRandom(new Random(), 1000000, 1999999);
                         String checkNum=(random+"").substring(1);
-                        SendSMS.sendSms(phoneNum, checkNum, _operType==1?"通过手机号注册用户":"通过绑定手机号找回密码");
+                        String smsRetNum=SendSMS.sendSms(phoneNum, checkNum, _operType==1?"通过手机号注册用户":"通过绑定手机号找回密码");
                         //向Session中加入验证信息
                         ms.addAttribute("phoneCheckInfo", System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum);
+                        map.put("ReturnType", "1001");
+                        map.put("SmsRetNum", smsRetNum);
                     }
                 }
             }
@@ -758,11 +762,11 @@ public class PassportController {
             }
             if (map.get("ReturnType")!=null) return map;
             //2-获取验证码
-            String checkNum=(String)m.get("CheckNum");
-            if (StringUtils.isNullOrEmptyOrSpace(checkNum)) checkNum=request.getParameter("CheckNum");
+            String checkNum=(String)m.get("CheckCode");
+            if (StringUtils.isNullOrEmptyOrSpace(checkNum)) checkNum=request.getParameter("CheckCode");
             if (StringUtils.isNullOrEmptyOrSpace(checkNum)) {
                 map.put("ReturnType", "1000");
-                map.put("Message", "无法获取手机号");
+                map.put("Message", "无法获取手机验证码");
             }
             if (map.get("ReturnType")!=null) return map;
             //3-获取是否需要得到用户id，只有在找回密码时才有用
