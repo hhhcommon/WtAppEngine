@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
@@ -14,7 +16,7 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
  *
  */
 
-public class kl_s_Service {
+public class KaoLaService implements Callable<Map<String, Object>> {
 
 	private int S_S_NUM = 2;		//搜索频道的数目
 	private int S_F_NUM = 2;	//搜索频道内节目的数目
@@ -26,6 +28,16 @@ public class kl_s_Service {
 	 * "KL_Sl":list_station
 	 * 
 	 */
+	private String constr;
+	
+	public KaoLaService(String constr) {
+		this.constr = constr;
+	}
+	
+	public KaoLaService() {
+		// TODO Auto-generated constructor stub
+	}
+	
 	
 	public Map<String, Object> kaolaService(String content){
 		String str = utils.utf8TOurl(content);
@@ -34,31 +46,6 @@ public class kl_s_Service {
 		Map<String, Object> map = new HashMap<>();
 		map.put("KL_S", list_station);
 		map.put("KL_F", list_festival);
-/*		if(list_station.isEmpty() || list_station.equals("")){
-			System.out.println("抱歉，频道未搜索到结果！");
-		}else{
-			System.out.println("频道"+list_station.size());
-			for (Station station : list_station) {
-				System.out.println(System.currentTimeMillis());
-				System.out.println("频道名称："+station.getName().replaceAll("<em>|</em>", ""));
-				System.out.println("频道描述："+station.getDesc());
-				System.out.println(station.toString());
-			}
-		}
-		if(list_festival.isEmpty() || list_festival.equals("")){
-			System.out.println("抱歉，节目未搜索到结果！");
-		}else {
-			System.out.println("节目"+list_festival.size());
-			for (Festival festival : list_festival) {
-				System.out.println(System.currentTimeMillis());
-				System.out.println("节目名称："+festival.getAudioName().replaceAll("<em>|</em>", ""));
-				System.out.println("节目图片链接："+festival.getAudioPic());
-				System.out.println("节目时长:"+festival.getDuration());
-				System.out.println("节目mp3链接："+festival.getMp3PlayUrl());
-				System.out.println(festival.toString());
-			}
-		}*/
-		
 		return map;
 	}
 	
@@ -115,7 +102,6 @@ public class kl_s_Service {
 						festival.setFileSize((list_href2.get(j).get("fileSize").toString()));
 						festival.setDuration(((list_href2.get(j).get("duration").toString())));
 						festival.setUpdateTime(((list_href2.get(j).get("updateTime").toString())));
-						festival.setCreateTime(((list_href2.get(j).get("createTime").toString())));
 						festival.setListenNum(((list_href2.get(j).get("listenNum").toString())));
 						List<Map<String, Object>> F_list_host =  (List<Map<String, Object>>) list_href2.get(j).get("host");
 						for (Map<String, Object> map : list_host) {
@@ -169,7 +155,6 @@ public class kl_s_Service {
 				festival.setDuration(map.get("duration").toString());
 				festival.setUpdateTime(map.get("updateTime").toString());
 				festival.setListenNum(map.get("listenNum").toString());
-				festival.setCreateTime(map.get("createTime").toString());
 				for (Map<String, Object> map2 : list_host) {
 					host_name += ","+map2.get("name").toString();
 				}
@@ -183,6 +168,13 @@ public class kl_s_Service {
 			list_festival.clear();
 		}
 		return list_festival;
+	}
+
+
+	@Override
+	public Map<String, Object> call() throws Exception {
+		// TODO Auto-generated method stub
+		return kaolaService(constr);
 	}
 	
 }

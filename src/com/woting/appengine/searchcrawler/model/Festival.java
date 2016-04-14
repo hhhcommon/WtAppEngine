@@ -21,16 +21,35 @@ public class Festival {
 	private String duration;	//音频时长
 	private String updateTime;	//发布时间
 	private String listenNum;	//听众人数
-	private String createTime;	//创建时间
 	private String host;		//主播人
+	private String playnum;		//播放次数 
+	private String category;	//分类
 	
+
+
 	@Override
 	public String toString() {
 		return "Festival [mediaType=" + mediaType + ", contentPub=" + contentPub + ", audioId=" + audioId
 				+ ", audioName=" + audioName + ", audioPic=" + audioPic + ", audioDes=" + audioDes + ", albumName="
-				+ albumName + ", albumPic=" + albumPic + ", mp3PlayUrl=" + PlayUrl + ", fileSize=" + fileSize
-				+ ", duration=" + duration + ", updateTime=" + updateTime + ", listenNum=" + listenNum + ", createTime="
-				+ createTime + ", host=" + host + "]";
+				+ albumName + ", albumPic=" + albumPic + ", PlayUrl=" + PlayUrl + ", fileSize=" + fileSize
+				+ ", duration=" + duration + ", updateTime=" + updateTime + ", listenNum=" + listenNum + ", host="
+				+ host + ", playnum=" + playnum + ", category=" + category + "]";
+	}
+
+	public String getCategory() {
+		return category;
+	}
+
+	public void setCategory(String category) {
+		this.category = category;
+	}
+
+	public String getPlaynum() {
+		return playnum;
+	}
+
+	public void setPlaynum(String playnum) {
+		this.playnum = playnum;
 	}
 	
 	public String getHost() {
@@ -39,15 +58,10 @@ public class Festival {
 	public void setHost(String host) {
 		this.host = host.replaceAll("<em>|</em>", "");
 	}
-	public String getCreateTime() {
-		return createTime;
-	}
-	public void setCreateTime(String createTime) {
-		this.createTime = createTime;
-	}
 	
 	public String getAudioDes() {
-		return audioDes.replaceAll("\n", "").replaceAll("\r", "");
+		
+		return audioDes==null?null:audioDes.replaceAll("\n", "").replaceAll("\r", "");
 	}
 	public void setAudioDes(String audioDes) {
 		this.audioDes = audioDes;
