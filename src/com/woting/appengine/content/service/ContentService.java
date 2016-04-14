@@ -29,6 +29,7 @@ import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.service.KaoLaService;
 import com.woting.appengine.searchcrawler.service.QingTingService;
+import com.woting.appengine.searchcrawler.service.ThreadService;
 import com.woting.appengine.searchcrawler.service.XiMaLaYaService;
 import com.woting.appengine.searchcrawler.utils.DataTransform;
 import com.woting.cm.core.channel.mem._CacheChannel;
@@ -45,9 +46,10 @@ public class ContentService {
     @Resource
     private DataSource dataSource;
 
-    KaoLaService kl_s = new KaoLaService();  //wbq 考拉搜索
+    ThreadService threadService = new ThreadService();
+  /*  KaoLaService kl_s = new KaoLaService();  //wbq 考拉搜索
     QingTingService qt_s = new QingTingService();
-    XiMaLaYaService xmly_s = new XiMaLaYaService();
+    XiMaLaYaService xmly_s = new XiMaLaYaService();*/
     DataTransform dataT = new DataTransform();//wbq 数据类型转换
     
     private _CacheDictionary _cd=null;
@@ -68,9 +70,10 @@ public class ContentService {
         Map<String, Object> map = new HashMap<String,Object>();
         //按照0::0处理
         for(int i = 0;i<_s.length;i++){
-        	Map<String, Object> mapkl = kl_s.kaolaService(_s[i]);
-        	Map<String, Object> mapqt = qt_s.QingTingService(_s[i]);
-        	Map<String, Object> mapxmly = xmly_s.XiMaLaYaService(_s[i]);
+        	List<Map<String, Object>> lists = threadService.threadService(_s[i]);
+        	Map<String, Object> mapkl = lists.get(0);
+        	Map<String, Object> mapqt = lists.get(1);
+        	Map<String, Object> mapxmly = lists.get(2);
 	        List<Festival> list_kl_festival = (List<Festival>) mapkl.get("KL_F");
 	        List<Station> list_kl_station = (List<Station>) mapkl.get("KL_S");
 	        List<Festival> list_qt_festival = (List<Festival>) mapqt.get("QT_F");

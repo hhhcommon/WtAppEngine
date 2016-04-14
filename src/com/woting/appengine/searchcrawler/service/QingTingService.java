@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,9 +17,18 @@ import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
-public class QingTingService {
+public class QingTingService implements Callable<Map<String, Object >> {
 	
 	SearchUtils utils = new SearchUtils();
+	String constr = "";
+	
+	public QingTingService(String constr) {
+		this.constr = constr;
+	}
+	
+	public QingTingService() {
+		// TODO Auto-generated constructor stub
+	}
 	
 	//电台搜索链接请求
 		public Map<String, Object> QingTingService(String url){
@@ -132,5 +142,10 @@ public class QingTingService {
 				e.printStackTrace();
 			}
 			return station;
+		}
+
+		@Override
+		public Map<String, Object> call() throws Exception {
+			return QingTingService(constr);
 		}
 }

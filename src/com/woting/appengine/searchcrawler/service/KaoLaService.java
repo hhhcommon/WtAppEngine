@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
@@ -14,7 +16,7 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
  *
  */
 
-public class KaoLaService {
+public class KaoLaService implements Callable<Map<String, Object>> {
 
 	private int S_S_NUM = 2;		//搜索频道的数目
 	private int S_F_NUM = 2;	//搜索频道内节目的数目
@@ -26,6 +28,16 @@ public class KaoLaService {
 	 * "KL_Sl":list_station
 	 * 
 	 */
+	private String constr;
+	
+	public KaoLaService(String constr) {
+		this.constr = constr;
+	}
+	
+	public KaoLaService() {
+		// TODO Auto-generated constructor stub
+	}
+	
 	
 	public Map<String, Object> kaolaService(String content){
 		String str = utils.utf8TOurl(content);
@@ -156,6 +168,13 @@ public class KaoLaService {
 			list_festival.clear();
 		}
 		return list_festival;
+	}
+
+
+	@Override
+	public Map<String, Object> call() throws Exception {
+		// TODO Auto-generated method stub
+		return kaolaService(constr);
 	}
 	
 }

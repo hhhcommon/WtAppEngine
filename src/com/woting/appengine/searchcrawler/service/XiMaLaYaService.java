@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -15,12 +16,20 @@ import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
-public class XiMaLaYaService {
+public class XiMaLaYaService implements Callable<Map<String, Object>> {
 	
 	private int S_S_NUM = 2;		//搜索频道的数目
 	private int S_F_NUM = 2;	//搜索频道内节目的数目
 	private int F_NUM = 2;		//搜索节目的数目     以上排列顺序按照搜索到的排列顺序
 	SearchUtils utils = new SearchUtils();
+	private String constr;
+	
+	public XiMaLaYaService(String constr) {
+		this.constr = constr;
+	}
+	public XiMaLaYaService() {
+		// TODO Auto-generated constructor stub
+	}
 	
 	public Map<String, Object> XiMaLaYaService(String content){
 		Map<String, Object> map = new HashMap<String,Object>();
@@ -127,5 +136,11 @@ public class XiMaLaYaService {
 			e.printStackTrace();
 		}
 		return listfestival;
+	}
+
+	@Override
+	public Map<String, Object> call() throws Exception {
+		
+		return XiMaLaYaService(constr);
 	}
 }
