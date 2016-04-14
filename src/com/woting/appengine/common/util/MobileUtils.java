@@ -55,15 +55,15 @@ public abstract class MobileUtils {
      * @return 返回参数
      */
     public static Map<String, Object> getDataFromRequest(ServletRequest req) {
-        InputStreamReader isr = null;
-        BufferedReader br = null;
+        InputStreamReader isr=null;
+        BufferedReader br=null;
         try {
-            isr = new InputStreamReader((ServletInputStream)req.getInputStream(), "UTF-8");
-            br = new BufferedReader(isr);
-            String line = null;
-            StringBuilder sb = new StringBuilder();
+            isr=new InputStreamReader((ServletInputStream)req.getInputStream(), "UTF-8");
+            br=new BufferedReader(isr);
+            String line=null;
+            StringBuilder sb=new StringBuilder();
             while ((line=br.readLine())!=null) sb.append(line);
-            line = sb.toString();
+            line=sb.toString();
             if (line!=null&&line.length()>0) {
                 return (Map<String, Object>)JsonUtils.jsonToObj(sb.toString(), Map.class);
             } else {
@@ -84,7 +84,7 @@ public abstract class MobileUtils {
      * @return 返回参数
      */
     public static Map<String, Object> getDataFromRequestParam(ServletRequest req) {
-        Map<String, Object> retM = new HashMap<String, Object>();
+        Map<String, Object> retM=new HashMap<String, Object>();
         Enumeration<String> enu=req.getParameterNames();
         while(enu.hasMoreElements()) {
             String name=(String)enu.nextElement();
@@ -96,7 +96,7 @@ public abstract class MobileUtils {
     public static MobileParam getMobileParam(Map<String, Object> m) {
         if (m==null||m.size()==0) return null;
 
-        MobileParam mp = new MobileParam();
+        MobileParam mp=new MobileParam();
 
         Object o=m.get("IMEI");
         String __tmp=o==null?"":o+"";
@@ -154,7 +154,7 @@ public abstract class MobileUtils {
         String __tmp=o==null?"":o+"";
         if (StringUtils.isNullOrEmptyOrSpace(__tmp)) return null;
 
-        MobileKey ret = new MobileKey();
+        MobileKey ret=new MobileKey();
         ret.setMobileId(__tmp);
         o=m.get("PCDType");
         __tmp=o==null?"1":o+"";
@@ -202,7 +202,7 @@ public abstract class MobileUtils {
         _temp=_temp.substring(1, _temp.length()-1);
         String[] ss=_temp.split("@@");
         _temp=ss[0]; _temp2=ss[1];
-        MobileKey mk = new MobileKey();
+        MobileKey mk=new MobileKey();
         //获得IMEI
         if (_temp2.charAt(0)=='('&&_temp2.charAt(_temp2.length()-1)==')') {
             _temp2=_temp2.substring(1, _temp2.length()-1);
@@ -271,11 +271,11 @@ public abstract class MobileUtils {
             try {
                 ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
                 if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-                    MobileUsedService muService = (MobileUsedService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("mobileUsedService");
+                    MobileUsedService muService=(MobileUsedService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("mobileUsedService");
                     MobileUsedPo mu=muService.getUsedInfo(_mKey.getMobileId(), _mKey.getPCDType());
                     if (mu!=null&&mu.getStatus()==1) {//上次登录
                         _mKey.setUserId(mu.getUserId());//修改mKey
-                    }
+                    } //未登录
                 }
             } catch(Exception e) {
             }
@@ -298,7 +298,7 @@ public abstract class MobileUtils {
                 try {
                     ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
                     if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-                        UserService userService = (UserService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("userService");
+                        UserService userService=(UserService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("userService");
                         u=userService.getUserById(_mKey.getUserId());
                         if (u!=null) ms.addAttribute("user", u);
                     }
@@ -356,11 +356,11 @@ public abstract class MobileUtils {
 //     * @throws UnsupportedEncodingException
 //     */
 //    public static Map<String, Object> saveTypePictrue(HttpServletRequest req, String ownerId) throws UnsupportedEncodingException, IOException {
-//        String appOSPath = ((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent();
-//        Map<String, Object> retM = new HashMap<String, Object>();
-//        String fType = req.getParameter("PType");
-//        String extName = req.getParameter("ExtName");
-//        String errMessage = "";
+//        String appOSPath=((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent();
+//        Map<String, Object> retM=new HashMap<String, Object>();
+//        String fType=req.getParameter("PType");
+//        String extName=req.getParameter("ExtName");
+//        String errMessage="";
 //        if (StringUtils.isNullOrEmptyOrSpace(fType)) {
 //            errMessage+=","+"无法获取文件类型，不能保存文件";
 //        }
@@ -377,7 +377,7 @@ public abstract class MobileUtils {
 //        }
 //        if (fType.equals("Portrait")) {//保存头像，不包括数据库存储
 //            //获得文件名称
-//            String bigUri = "asset\\members\\"+ownerId+"\\Portrait\\bigImg"+(extName.startsWith(".")?extName:"."+extName);
+//            String bigUri="asset\\members\\"+ownerId+"\\Portrait\\bigImg"+(extName.startsWith(".")?extName:"."+extName);
 //            if (MobileUtils.savePicture(req,  FileNameUtils.concatPath(appOSPath, bigUri))) {
 //                retM.put("rType", "ok");
 //                retM.put("bigUri", bigUri);
@@ -403,18 +403,18 @@ public abstract class MobileUtils {
 //     * @return
 //     */
 //    private static boolean savePicture(HttpServletRequest req, String fileName) {
-//        DataInputStream in = null;
-//        DataOutputStream out = null;
-//        FileOutputStream fos = null;
+//        DataInputStream in=null;
+//        DataOutputStream out=null;
+//        FileOutputStream fos=null;
 //        try {
-//            in = new DataInputStream((ServletInputStream)req.getInputStream());
-//            String filePath = FileNameUtils.getFilePath(fileName);
-//            File dir = new File(filePath);
+//            in=new DataInputStream((ServletInputStream)req.getInputStream());
+//            String filePath=FileNameUtils.getFilePath(fileName);
+//            File dir=new File(filePath);
 //            dir.mkdirs();
-//            fos = new FileOutputStream(fileName);
-//            out = new DataOutputStream(fos);
-//            byte[] buffer = new byte[4096];
-//            int count = 0;
+//            fos=new FileOutputStream(fileName);
+//            out=new DataOutputStream(fos);
+//            byte[] buffer=new byte[4096];
+//            int count=0;
 //            while ((count=in.read(buffer))>0) {
 //                out.write(buffer, 0, count);
 //            }
@@ -429,10 +429,10 @@ public abstract class MobileUtils {
 //            if (out!=null) try {out.close();} catch(Exception e) {}
 //            if (in!=null) try {in.close();} catch(Exception e) {}
 //        }
-//        FileItemFactory factory = new DiskFileItemFactory();
-//        ServletFileUpload upload = new ServletFileUpload(factory);
+//        FileItemFactory factory=new DiskFileItemFactory();
+//        ServletFileUpload upload=new ServletFileUpload(factory);
 //        try {
-//            List<FileItem> items = upload.parseRequest(req);
+//            List<FileItem> items=upload.parseRequest(req);
 //            System.out.println(items);
 //            return false;
 //        } catch (FileUploadException e) {
@@ -455,13 +455,13 @@ public abstract class MobileUtils {
      */
     public static String getVersion() {
         String version="0.0.0.0.0000";
-        Properties prop = new Properties();
-        FileInputStream in = null;
+        Properties prop=new Properties();
+        FileInputStream in=null;
         try {
             String appPfileName= ((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent()+"/WEB-INF/app.properties";
-            in = new FileInputStream(appPfileName);
+            in=new FileInputStream(appPfileName);
             prop.load(in);
-            version = prop.getProperty("appVersion").trim()+","+prop.getProperty("publishTime").trim()+","+prop.getProperty("patchInfo").trim();
+            version=prop.getProperty("appVersion").trim()+","+prop.getProperty("publishTime").trim()+","+prop.getProperty("patchInfo").trim();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {

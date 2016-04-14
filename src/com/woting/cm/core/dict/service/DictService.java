@@ -4,18 +4,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-
 import org.springframework.stereotype.Service;
-
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.util.TreeUtils;
-
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictDetail;
 import com.woting.cm.core.dict.model.DictMaster;
@@ -88,13 +84,13 @@ public class DictService {
                 param.put("ownerId", "cm");
                 param.put("ownerType", "100");
                 int i=1;
-                Page<DictDetailPo> ddPage=dictDDao.pageQuery("getListByOnwer", param, i++, 10000);
+                Page<DictDetailPo> ddPage=dictDDao.pageQuery("getListByOnwerDemo", param, i++, 10000);
                 List<DictDetailPo> ddpol=new ArrayList<DictDetailPo>();
                 boolean hasDD=!ddPage.getResult().isEmpty();
                 //分页处理
                 while (hasDD) {
                     ddpol.addAll(ddPage.getResult());
-                    ddPage=dictDDao.pageQuery("getListByOnwer", param, i++,10000);
+                    ddPage=dictDDao.pageQuery("getListByOnwerDemo", param, i++,10000);
                     hasDD=!ddPage.getResult().isEmpty();
                 }
                 if (ddpol==null||ddpol.size()==0) return null;

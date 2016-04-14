@@ -9,7 +9,7 @@ import com.woting.searchword.mem.SearchWordMemory;
 public class SearchWordListener extends Thread {
 
     public static void begin() {
-        SearchWordListener swl = new SearchWordListener();
+        SearchWordListener swl=new SearchWordListener();
         swl.start();
     }
 

@@ -2,6 +2,7 @@ package com.woting.appengine.mobile.model;
 
 import java.io.Serializable;
 
+import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
 
 /**
@@ -69,7 +70,7 @@ public class MobileKey implements Serializable {
      * @return
      */
     public String getSessionId() {
-        return this.userId;
+        return StringUtils.isNullOrEmptyOrSpace(this.userId)?this.mobileId:this.userId;
     }
 
     /**

@@ -20,8 +20,6 @@ import com.spiritdata.framework.util.StringUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.content.service.ContentService;
-import com.woting.appengine.mobile.model.MobileKey;
-import com.woting.appengine.mobile.model.MobileParam;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.cm.core.channel.mem._CacheChannel;
@@ -77,7 +75,7 @@ public class CommonController {
                 map.put("Message", "无法获取需要的参数");
                 return map;
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 1);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 1);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -91,7 +89,7 @@ public class CommonController {
                         map.put("Message", "无法找到相应的用户");
                     }else {
                         map.put("ReturnType", "1001");
-                        map.put("UserInfo", ((UserPo)ms.getAttribute("user")).toHashMap4Mobile());
+                        if ((UserPo)ms.getAttribute("user")!=null) map.put("UserInfo", ((UserPo)ms.getAttribute("user")).toHashMap4Mobile());
                     }
                 }
                 map.put("ServerStatus", "1"); //服务器状态
@@ -113,7 +111,7 @@ public class CommonController {
         try {
             Map<String, Object> m=MobileUtils.getDataFromRequest(request);
             if (m!=null&&m.size()>0) {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 MobileSession ms=(MobileSession)retM.get("MobileSession");
                 try {
                     map.put("SessionId", ms.getKey().getSessionId());
@@ -163,7 +161,7 @@ public class CommonController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -220,7 +218,7 @@ public class CommonController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -254,7 +252,7 @@ public class CommonController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -349,7 +347,7 @@ public class CommonController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -450,7 +448,7 @@ public class CommonController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -511,7 +509,7 @@ public class CommonController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
