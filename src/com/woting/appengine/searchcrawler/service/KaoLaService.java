@@ -90,7 +90,6 @@ public class KaoLaService {
 						festival.setFileSize((list_href2.get(j).get("fileSize").toString()));
 						festival.setDuration(((list_href2.get(j).get("duration").toString())));
 						festival.setUpdateTime(((list_href2.get(j).get("updateTime").toString())));
-						festival.setCreateTime(((list_href2.get(j).get("createTime").toString())));
 						festival.setListenNum(((list_href2.get(j).get("listenNum").toString())));
 						List<Map<String, Object>> F_list_host =  (List<Map<String, Object>>) list_href2.get(j).get("host");
 						for (Map<String, Object> map : list_host) {
@@ -144,7 +143,6 @@ public class KaoLaService {
 				festival.setDuration(map.get("duration").toString());
 				festival.setUpdateTime(map.get("updateTime").toString());
 				festival.setListenNum(map.get("listenNum").toString());
-				festival.setCreateTime(map.get("createTime").toString());
 				for (Map<String, Object> map2 : list_host) {
 					host_name += ","+map2.get("name").toString();
 				}

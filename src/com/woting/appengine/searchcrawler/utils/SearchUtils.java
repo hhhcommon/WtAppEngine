@@ -3,10 +3,8 @@ package com.woting.appengine.searchcrawler.utils;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-
 import com.spiritdata.framework.util.JsonUtils;
 
 public class SearchUtils {
@@ -73,7 +71,7 @@ public class SearchUtils {
 	
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> jsonTOmap(String jsonstr,String... strings){
-		if(strings.length==0 || jsonstr.isEmpty() ||jsonstr.equals("")){
+		if(jsonstr.isEmpty() ||jsonstr.equals("")){
 			return null;
 		}else{
 			Map<String, Object> testmap =  (Map<String, Object>) JsonUtils.jsonToObj(jsonstr, Map.class);

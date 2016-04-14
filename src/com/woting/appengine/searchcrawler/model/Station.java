@@ -62,7 +62,7 @@ public class Station {
 
 
 	public void setHost(String host) {
-		this.host = host.replaceAll("<em>|</em>", "");
+		this.host = (host==null?null:host.replaceAll("<em>|</em>", ""));
 	}
 
 	public String getPic() {
@@ -87,7 +87,7 @@ public class Station {
 	}
 
 	public String getDesc() {
-		return desc.replaceAll("\n", "").replaceAll("\r", "");
+		return desc==null?null:desc.replaceAll("\n", "").replaceAll("\r", "");
 	}
 	public void setDesc(String desc) {
 		this.desc = desc;

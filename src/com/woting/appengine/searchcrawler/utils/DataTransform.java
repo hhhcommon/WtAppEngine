@@ -5,9 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.woting.appengine.searchcrawler.model.AudioData;
 import com.woting.appengine.searchcrawler.model.Festival;
-import com.woting.appengine.searchcrawler.model.SequData;
 import com.woting.appengine.searchcrawler.model.Station;
 
 
@@ -37,6 +35,9 @@ public class DataTransform {
 	 * @return 返回处理好的audio信息
 	 */
 	public List<Map<String, Object>> datas2Audio(List<Festival> list_Festival,List<Station> list_Station,int PageType){
+		if(list_Festival==null ||list_Station==null){
+			return null;
+		}
 		List<Map<String, Object>> list_AudioData = new ArrayList<Map<String,Object>>();
 			if(list_Festival.size()>0){
 				for (Festival festival : list_Festival) {
@@ -63,6 +64,9 @@ public class DataTransform {
 	 * @return
 	 */
 	public List<Map<String, Object>> datas2Sequ(List<Station>... list_Stations){
+		if(list_Stations==null){
+			return null;
+		}
 		List<Map<String, Object>> list_SequData = new ArrayList<Map<String,Object>>();
 		for (List<Station> list_Station : list_Stations) {
 			if(list_Station.size()>0){
@@ -83,6 +87,9 @@ public class DataTransform {
 	 * @return
 	 */
 	public Map<String, Object> datas2Sequ_Audio(Station station){
+		if (station==null) {
+			return null;
+		}
 		Festival festival =  station.getFestival()[0];
 		Map<String, Object> map = festival2Audio(festival);
 		map.put("SeqInfo",station2Sequ(station));
@@ -96,6 +103,9 @@ public class DataTransform {
 	 */
 	public Map<String, Object> festival2Audio(Festival festival){
 		//ContentCatalogs内容分类、ContentKeyWord关键词、ContentSubjectWord主题词和PlayCount播放次数未定义参数
+		if(festival==null){
+			return null;
+		}
 		Map<String, Object> map = new HashMap<String,Object>();
 		map.put("ContentId", festival.getAudioId());
 		map.put("ContentName", festival.getAudioName());
@@ -105,10 +115,10 @@ public class DataTransform {
 		map.put("ContentImg", festival.getAudioPic());
 		map.put("ContentPersons", festival.getHost());
 		map.put("ContentTimes", festival.getDuration());//以ms为计量单位
-		map.put("ContentPubTime", festival.getCreateTime());
+		map.put("ContentPubTime", festival.getUpdateTime());
 		map.put("ContentPub", festival.getContentPub());
 		map.put("ContentDesc", festival.getAudioDes());
-		map.put("CTime", festival.getCreateTime());
+		map.put("CTime", null);
 		map.put("MediaType", festival.getMediaType());
 		map.put("ContentCatalogs", null);
 		map.put("ContentKeyWord", null);
@@ -125,6 +135,9 @@ public class DataTransform {
 	 */
 	public Map<String, Object> station2Sequ(Station station){
 		//ContentCatalogs内容分类、ContentKeyWord关键词、ContentSubjectWord主题词和PlayCount播放次数
+		if(station==null){
+			return null;
+		}
 		Map<String, Object> map = new HashMap<String,Object>();
 		map.put("ContentSubCount", (station.getFestival().length)+"");
 		map.put("ContentURI", "content/getContentInfo.do?MediaType=SEQU&ContentId="+station.getId());

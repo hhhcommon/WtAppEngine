@@ -28,6 +28,8 @@ import com.woting.WtAppEngineConstants;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.service.KaoLaService;
+import com.woting.appengine.searchcrawler.service.QingTingService;
+import com.woting.appengine.searchcrawler.service.XiMaLaYaService;
 import com.woting.appengine.searchcrawler.utils.DataTransform;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.dict.mem._CacheDictionary;
@@ -44,6 +46,8 @@ public class ContentService {
     private DataSource dataSource;
 
     KaoLaService kl_s = new KaoLaService();  //wbq 考拉搜索
+    QingTingService qt_s = new QingTingService();
+    XiMaLaYaService xmly_s = new XiMaLaYaService();
     DataTransform dataT = new DataTransform();//wbq 数据类型转换
     
     private _CacheDictionary _cd=null;
@@ -61,19 +65,32 @@ public class ContentService {
         String _s[]=new String[__s.length];
         for (int i=0; i<__s.length; i++) _s[i]=__s[i].trim();
         //wbq 考拉搜索        
-        Map<String, Object> map_kl = new HashMap<String,Object>();
-
+        Map<String, Object> map = new HashMap<String,Object>();
         //按照0::0处理
         for(int i = 0;i<_s.length;i++){
-        	Map<String, Object> map_kl_s =  kl_s.kaolaService(_s[i]);
-	        List<Festival> list_kl_festival = (List<Festival>) map_kl_s.get("KL_F");
-	        List<Station> list_kl_station = (List<Station>) map_kl_s.get("KL_S");
-	        map_kl.put("AllCount", list_kl_festival.size()+list_kl_station.size());
-	        map_kl.put("List", dataT.datas2Audio(list_kl_festival,list_kl_station,0));
-	        map_kl.put("ResultType", resultType);
+        	Map<String, Object> mapkl = kl_s.kaolaService(_s[i]);
+        	Map<String, Object> mapqt = qt_s.QingTingService(_s[i]);
+        	Map<String, Object> mapxmly = xmly_s.XiMaLaYaService(_s[i]);
+	        List<Festival> list_kl_festival = (List<Festival>) mapkl.get("KL_F");
+	        List<Station> list_kl_station = (List<Station>) mapkl.get("KL_S");
+	        List<Festival> list_qt_festival = (List<Festival>) mapqt.get("QT_F");
+	        List<Station> list_qt_station = (List<Station>) mapqt.get("QT_S");
+	        List<Festival> list_xmly_festival = (List<Festival>) mapxmly.get("XMLY_F");
+	        List<Station> list_xmly_station = (List<Station>) mapxmly.get("XMLY_S");
+	        List<Station> liststation = new ArrayList<Station>();
+	        List<Festival> listfestival = new ArrayList<Festival>();
+	        liststation.addAll(list_kl_station);
+	        liststation.addAll(list_qt_station);
+	        liststation.addAll(list_xmly_station);
+	        listfestival.addAll(list_kl_festival);
+	        listfestival.addAll(list_qt_festival);
+	        listfestival.addAll(list_xmly_festival);
+	        map.put("AllCount", listfestival.size()+liststation.size());
+	        map.put("List", dataT.datas2Audio(listfestival,liststation,0));
+	        map.put("ResultType", resultType);
         }
    
-        return map_kl;
+        return map;
     }
     /**
      * 查找内容，此内容无排序，按照创建时间的先后顺序排序，最新的在最前面
