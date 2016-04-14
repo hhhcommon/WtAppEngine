@@ -478,7 +478,9 @@ public class CommonController {
             if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
 
 //            Map<String, Object> cl=contentService.searchAll(searchStr, resultType, pageType);
+            long a=System.currentTimeMillis();
             Map<String, Object> cl=contentService.searchByCrawl(searchStr, resultType, pageType);
+            a=System.currentTimeMillis()-a;
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultType", cl.get("ResultType"));
                 cl.remove("ResultType");
@@ -488,6 +490,7 @@ public class CommonController {
                 map.put("ReturnType", "1011");
                 map.put("Message", "没有查到任何内容");
             }
+            map.put("TestDuration", a);
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -537,8 +540,11 @@ public class CommonController {
             if (StringUtils.isNullOrEmptyOrSpace(_pageType)) _pageType=request.getParameter("PageType");
             int pageType=1;
             if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
-
+            
+            long a=System.currentTimeMillis();//*********************************************
+            
             Map<String, Object> cl=contentService.searchAll(searchStr, resultType, pageType);
+            a=System.currentTimeMillis()-a;//***********************
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultType", cl.get("ResultType"));
                 cl.remove("ResultType");
@@ -548,6 +554,7 @@ public class CommonController {
                 map.put("ReturnType", "1011");
                 map.put("Message", "没有查到任何内容");
             }
+            map.put("TestDuration", a);
             return map;
         } catch(Exception e) {
             e.printStackTrace();
