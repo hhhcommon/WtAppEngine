@@ -19,8 +19,12 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 public class QingTingService implements Callable<Map<String, Object >> {
 	
+	private int S_S_NUM = 2;		//搜索频道的数目
+	private int S_F_NUM = 2;	//搜索频道内节目的数目
+	private int F_NUM = 2;		//搜索节目的数目     以上排列顺序按照搜索到的排列顺序
+	private int T = 3000;
 	SearchUtils utils = new SearchUtils();
-	String constr = "";
+	private String constr = "";
 	
 	public QingTingService(String constr) {
 		this.constr = constr;
@@ -39,7 +43,7 @@ public class QingTingService implements Callable<Map<String, Object >> {
 			List<Station> list_station = new ArrayList<Station>();
 			Document doc = null;
 			try {
-				doc = Jsoup.connect(station_url).ignoreContentType(true).timeout(5000).get();
+				doc = Jsoup.connect(station_url).ignoreContentType(true).timeout(T).get();
 				//获取频道json数据
 				Elements elements = doc.select("ul[class=nav]");
 				Elements elements_festivals = elements.get(0).select("li[jump-to=search-virtualprograms]");
@@ -52,8 +56,7 @@ public class QingTingService implements Callable<Map<String, Object >> {
 				int s_num = utils.findint(station_num);	//频道数量
 				int f_num = utils.findint(festival_num);//节目数量
 				elements = doc.select("li[class=playable clearfix]");
-				for (int i = r_num;i<r_num+s_num+2;i++ ) {
-					
+				for (int i = r_num;i<r_num+s_num+F_NUM;i++ ) {
 					String title = elements.get(i).select("a[href]").get(0).select("span").get(0).html();
 					String href = "http://www.qingting.fm"+elements.get(i).select("a[href]").get(0).attr("data-switch-url");					
 					if (i>=r_num+s_num) {
@@ -69,8 +72,8 @@ public class QingTingService implements Callable<Map<String, Object >> {
 						station.setName(title);
 						station.setContentPub("蜻蜓FM");
 						list_station.add(station);
-						if (i==r_num+(s_num>2?2:s_num)) {
-							i = r_num+s_num;
+						if (i==r_num+(s_num>(S_S_NUM-1)?(S_S_NUM-1):s_num) && (r_num+s_num)>0) {
+							i = r_num+s_num-1;
 						}
 					}
 				}
@@ -122,7 +125,7 @@ public class QingTingService implements Callable<Map<String, Object >> {
 			Festival[] festivals = new Festival[1];
 			Festival festival = new Festival();
 			try {
-				doc = Jsoup.connect(url).timeout(3000).get();
+				doc = Jsoup.connect(url).timeout(T).get();
 				Element element = doc.select("li[class=playable clearfix]").get(0);
 				String descstr = doc.select("div[class=channel-info clearfix]").get(0).select("div[class=content]").get(0).html();
 				station.setDesc(descstr);

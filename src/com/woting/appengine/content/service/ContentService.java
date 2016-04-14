@@ -70,10 +70,10 @@ public class ContentService {
         Map<String, Object> map = new HashMap<String,Object>();
         //按照0::0处理
         for(int i = 0;i<_s.length;i++){
-        	List<Map<String, Object>> lists = threadService.threadService(_s[i]);
-        	Map<String, Object> mapkl = lists.get(0);
-        	Map<String, Object> mapqt = lists.get(1);
-        	Map<String, Object> mapxmly = lists.get(2);
+        	Map<String, Object> maps = threadService.threadService(_s[i]);
+        	Map<String, Object> mapkl = (Map<String, Object>) maps.get("KL");
+         	Map<String, Object> mapqt = (Map<String, Object>) maps.get("QT");
+        	Map<String, Object> mapxmly = (Map<String, Object>) maps.get("XMLY");
 	        List<Festival> list_kl_festival = (List<Festival>) mapkl.get("KL_F");
 	        List<Station> list_kl_station = (List<Station>) mapkl.get("KL_S");
 	        List<Festival> list_qt_festival = (List<Festival>) mapqt.get("QT_F");
