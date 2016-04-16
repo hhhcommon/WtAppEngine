@@ -54,9 +54,7 @@ public abstract class SendSMS {
             int status=res.getStatusLine().getStatusCode();
             if (status==HttpStatus.SC_OK) {
                 HttpEntity entity=res.getEntity();
-                if (entity!=null) {
-                    return EntityUtils.toString(entity, "GBK");
-                }
+                if (entity!=null) return EntityUtils.toString(entity, "GBK");
             } else {
                 int count=0;
                 while (count++<3) {
@@ -65,9 +63,7 @@ public abstract class SendSMS {
                     status=res.getStatusLine().getStatusCode();
                     if (status==HttpStatus.SC_OK) {
                         HttpEntity entity=res.getEntity();
-                        if (entity!=null) {
-                            return EntityUtils.toString(entity, "GBK");
-                        }
+                        if (entity!=null) return EntityUtils.toString(entity, "GBK");
                     }
                 }
             }

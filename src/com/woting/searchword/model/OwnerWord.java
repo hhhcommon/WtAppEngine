@@ -60,8 +60,9 @@ public class OwnerWord implements Serializable {
      * 构造函数，要设置分字级别
      * @param splitLevel
      */
-    public OwnerWord(int splitLevel) {
+    public OwnerWord(Owner o, int splitLevel) {
         super();
+        owner=o;
         this.splitLevel = splitLevel;
         searchFinalMap=new HashMap<String, Word>();
         middleWordMap=new HashMap<String, MiddleWord>();
@@ -76,7 +77,7 @@ public class OwnerWord implements Serializable {
         if (StringUtils.isNullOrEmptyOrSpace(word)) return;
         //查查看是否已经有了这个词
         Word w=searchFinalMap.get(word);
-        if (w!=null) w.incream();//这里加完，所有的相关的就都修改了？？？
+        if (w!=null) w.incream();//这里加完，所有的相关的就都修改了
         else {
             w=new Word(word);
             searchFinalMap.put(word, w);
@@ -127,9 +128,9 @@ public class OwnerWord implements Serializable {
      * @param topNum 
      * @return
      */
-    public List<String> findWord(String middleWord, int topNum) {
+    public List<Word> findWord(String middleWord, int topSize) {
         MiddleWord tempMw=middleWordMap.get(middleWord);
         if (tempMw==null) return null;
-        return tempMw.getFirstWords(topNum);
+        return tempMw.getTopWords(topSize);
     }
 }

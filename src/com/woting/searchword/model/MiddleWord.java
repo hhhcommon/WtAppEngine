@@ -64,11 +64,11 @@ public class MiddleWord implements Serializable {
      * @param topNum
      * @return 前topNum个最终搜索词列表
      */
-    public List<String> getFirstWords(int topNum) {
-        if (topNum<1) return null;
-        List<String> ret=new ArrayList<String>();
-        for (int i=0; i<(topNum>searchWordSortList.size()?searchWordSortList.size():topNum); i++) {
-            ret.add(searchWordSortList.get(i).getWord());
+    public List<Word> getTopWords(int topSize) {
+        if (topSize<1) return null;
+        List<Word> ret=new ArrayList<Word>();
+        for (int i=0; i<(topSize>searchWordSortList.size()?searchWordSortList.size():topSize); i++) {
+            ret.add(searchWordSortList.get(i));
         }
         return ret;
     }

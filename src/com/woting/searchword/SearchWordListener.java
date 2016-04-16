@@ -23,6 +23,7 @@ public class SearchWordListener extends Thread {
 
             while (true) {//每隔一段时间处理一次检索词
                 sleep(50);
+                swm.dealOneWord();
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
