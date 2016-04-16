@@ -22,6 +22,7 @@ import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.appengine.mobile.session.model.MobileSession;
+import com.woting.appengine.searchcrawler.service.ThreadService;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
@@ -43,6 +44,8 @@ public class CommonController {
     private MobileUsedService muService;
     @Resource
     private ContentService contentService;
+    
+    ThreadService threadService = new ThreadService();
 
     private SessionMemoryManage smm=SessionMemoryManage.getInstance();
     private _CacheDictionary _cd=null;
@@ -479,7 +482,7 @@ public class CommonController {
 
 //            Map<String, Object> cl=contentService.searchAll(searchStr, resultType, pageType);
             long a=System.currentTimeMillis();
-            Map<String, Object> cl=contentService.searchByCrawl(searchStr, resultType, pageType);
+            Map<String, Object> cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
             a=System.currentTimeMillis()-a;
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultType", cl.get("ResultType"));
@@ -541,10 +544,10 @@ public class CommonController {
             int pageType=1;
             if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
             
-            long a=System.currentTimeMillis();//*********************************************
+            long a=System.currentTimeMillis();
+            Map<String, Object> cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
+            a=System.currentTimeMillis()-a;
             
-            Map<String, Object> cl=contentService.searchAll(searchStr, resultType, pageType);
-            a=System.currentTimeMillis()-a;//***********************
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultType", cl.get("ResultType"));
                 cl.remove("ResultType");

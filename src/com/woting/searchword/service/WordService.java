@@ -15,6 +15,7 @@ import com.woting.searchword.model.Word;
 public class WordService {
 
     SearchWordMemory swm=SearchWordMemory.getInstance();
+
     /**
      * 加入属于某一用户的一个搜索词
      * @param oneWord 搜索词
@@ -83,6 +84,7 @@ public class WordService {
             return wordsList;
         }
     }
+
     private void insertWord2OwnerWordList(List<Word> ownerWordList, Word word) {
         int insertIndex=-1, flag=0;
         for (int i=ownerWordList.size()-1; i>=0; i--) {

@@ -46,11 +46,11 @@ public class ContentService {
     @Resource
     private DataSource dataSource;
 
-    ThreadService threadService = new ThreadService();
+ //   ThreadService threadService = new ThreadService();
   /*  KaoLaService kl_s = new KaoLaService();  //wbq 考拉搜索
     QingTingService qt_s = new QingTingService();
     XiMaLaYaService xmly_s = new XiMaLaYaService();*/
-    DataTransform dataT = new DataTransform();//wbq 数据类型转换
+ //   DataTransform dataT = new DataTransform();//wbq 数据类型转换
     
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
@@ -62,7 +62,7 @@ public class ContentService {
         _cc=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)).getContent();
     }
 
-    public Map<String, Object> searchByCrawl(String searchStr, int resultType, int pageType) {
+ /*   public Map<String, Object> searchByCrawl(String searchStr, int resultType, int pageType) {
         String __s[]=searchStr.split(",");
         String _s[]=new String[__s.length];
         for (int i=0; i<__s.length; i++) _s[i]=__s[i].trim();
@@ -94,7 +94,7 @@ public class ContentService {
         }
    
         return map;
-    }
+    }			*/
     /**
      * 查找内容，此内容无排序，按照创建时间的先后顺序排序，最新的在最前面
      * @param searchStr 查找串
