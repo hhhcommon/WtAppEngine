@@ -682,8 +682,8 @@ public class GroupService {
      * @param userId
      * @return
      */
-    public List<Map<String, Object>> getNeedCheckInviteUserGroupList(String userId) {
-        return inviteGroupDao.queryForListAutoTranform("needCheckInviteUserGroupList", userId);
+    public List<Map<String, Object>> getNeedCheckInviteUserGroupList(String groupId) {
+        return inviteGroupDao.queryForListAutoTranform("needCheckInviteUserGroupList", groupId);
     }
 
     /**

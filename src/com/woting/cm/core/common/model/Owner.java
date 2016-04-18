@@ -19,7 +19,7 @@ import com.spiritdata.framework.core.model.BaseObject;
  * @author wh
  */
 public class Owner extends BaseObject {
-    private static final long serialVersionUID = -1970271589243412626L;
+    private static final long serialVersionUID=-1970271589243412626L;
 
     private int ownerType;
     private String ownerId;
@@ -34,33 +34,33 @@ public class Owner extends BaseObject {
 
     public Owner(int ownerType, String ownerId) {
         super();
-        this.ownerType = ownerType;
-        this.ownerId = ownerId;
+        this.ownerType=ownerType;
+        this.ownerId=ownerId;
     }
 
     public Owner(String ownerId, int ownerType) {
         super();
-        this.ownerType = ownerType;
-        this.ownerId = ownerId;
+        this.ownerType=ownerType;
+        this.ownerId=ownerId;
     }
     
     public void setOwnerType(int ownerType) {
-        this.ownerType = ownerType;
+        this.ownerType=ownerType;
     }
     public String getOwnerId() {
         return ownerId;
     }
     public void setOwnerId(String ownerId) {
-        this.ownerId = ownerId;
+        this.ownerId=ownerId;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
+        if (this==obj) return true;
+        if (obj==null) return false;
         if (getClass() != obj.getClass()) return false;
 
-        Owner other = (Owner)obj;
+        Owner other=(Owner)obj;
         if (ownerId==null&&other.ownerId!=null) return false;
         else if (!ownerId.equals(other.ownerId)) return false;
         if (ownerType!=other.ownerType) return false;
@@ -77,10 +77,10 @@ public class Owner extends BaseObject {
 
     @Override
 	public int hashCode() {
-		int retInt = 0;
-		String str = this.ownerId+":"+this.ownerType;
+		int retInt=0;
+		String str=this.ownerId+":"+this.ownerType;
 		for(int i=0;i<str.length();i++){
-			char achar = str.charAt(i);
+			char achar=str.charAt(i);
 			retInt += achar;
 		}
 		return retInt;

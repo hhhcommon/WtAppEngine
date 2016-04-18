@@ -80,6 +80,7 @@ public class PassportController {
                 map.put("Message", errMsg+",无法登陆");
                 return map;
             }
+
             UserPo u=userService.getUserByLoginName(ln);
             if (u==null) u=userService.getUserByPhoneNum(ln);
             //1-判断是否存在用户
@@ -173,6 +174,11 @@ public class PassportController {
                 map.put("ReturnType", "1003");
                 map.put("Message", "登录名重复,无法注册.");
                 return map;
+            }
+            //1.5-手机号码注册
+            String info=ms.getAttribute("phoneCheckInfo")+"";
+            if (info.startsWith("OK")) {
+                nu.setMainPhoneNum(info.substring(4));
             }
             //2-保存用户
             nu.setCTime(new Timestamp(System.currentTimeMillis()));
@@ -380,9 +386,9 @@ public class PassportController {
                 map.put("Message", errMsg+",无法修改密码");
                 return map;
             }
-            UserPo up=userService.getUserById(m.get("UserId")+"");
+            UserPo up=userService.getUserById(m.get("RetrieveUserId")+"");
             String info=ms.getAttribute("phoneCheckInfo")+"";
-            if (info.equals("OK")) {
+            if (info.startsWith("OK")) {
                 up.setPassword(newPwd);
                 int retFlag=userService.updateUser(up);
                 if (retFlag==1) {
@@ -694,7 +700,7 @@ public class PassportController {
             
 
             String info=ms.getAttribute("phoneCheckInfo")+"";
-            if (info==null||info.equals("null")||info.equals("OK")) {//错误
+            if (info==null||info.equals("null")||info.startsWith("OK")) {//错误
                 map.put("ReturnType", "1002");
                 map.put("Message", "状态错误，未有之前的发送数据，无法重发");
             } else {//正确
@@ -799,7 +805,7 @@ public class PassportController {
                         map.put("ReturnType", "1002");
                         map.put("Message", "验证码不匹配");
                     } else {
-                        ms.addAttribute("phoneCheckInfo", "OK");
+                        ms.addAttribute("phoneCheckInfo", "OK::"+_phoneNum);
                         if (_neddUserId) {
                             UserPo u=userService.getUserByPhoneNum(phoneNum);
                             if (u!=null) map.put("UserId", u.getUserId());
