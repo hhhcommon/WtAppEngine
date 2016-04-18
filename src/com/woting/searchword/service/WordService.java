@@ -2,10 +2,8 @@ package com.woting.searchword.service;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-
 import com.woting.cm.core.common.model.Owner;
 import com.woting.searchword.mem.SearchWordMemory;
 import com.woting.searchword.model.Word;
@@ -18,11 +16,20 @@ public class WordService {
 
     /**
      * 加入属于某一用户的一个搜索词
-     * @param oneWord 搜索词
+     * @param oneWord 搜索词的字符串
      * @param o 所属用户
      */
     public void addOneWord(String oneWord, Owner o) {
         swm.addWord2Queue(o.getOwnerId()+"::"+o.getOwnerType()+"::"+oneWord);
+    }
+
+    /**
+     * 加入属于某一用户的一个搜索词。此方法用于加载已统计的敏感词
+     * @param oneWord 搜索词对象
+     * @param o 所属用户
+     */
+    public void addOneWord(Word oneWord, Owner o) {
+        swm.addWord2Queue(o.getOwnerId()+"::"+o.getOwnerType()+"::"+oneWord.getWord()+"::"+oneWord.getCount());
     }
 
     /**
@@ -84,7 +91,6 @@ public class WordService {
             return wordsList;
         }
     }
-
     private void insertWord2OwnerWordList(List<Word> ownerWordList, Word word) {
         int insertIndex=-1, flag=0;
         for (int i=ownerWordList.size()-1; i>=0; i--) {

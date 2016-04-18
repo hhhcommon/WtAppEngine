@@ -250,6 +250,7 @@ public class SocketHandle extends Thread {
                                 if (out==null) out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
                                 out.println("B");
                                 out.flush();
+                                System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送回执心跳]");
                                 try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
                             }
                             //以下设置lastTime.要删除掉
