@@ -44,8 +44,9 @@ public class CommonController {
     private MobileUsedService muService;
     @Resource
     private ContentService contentService;
+    @Resource
+    private ThreadService threadService;
     
-    ThreadService threadService = new ThreadService();
 
     private SessionMemoryManage smm=SessionMemoryManage.getInstance();
     private _CacheDictionary _cd=null;
@@ -480,9 +481,13 @@ public class CommonController {
             int pageType=1;
             if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
 
-//            Map<String, Object> cl=contentService.searchAll(searchStr, resultType, pageType);
+            Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
-            Map<String, Object> cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
+            if(resultType==0 && pageType==0){
+            	 cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
+            }else{
+            	 cl=contentService.searchAll(searchStr, resultType, pageType);
+            }
             a=System.currentTimeMillis()-a;
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultType", cl.get("ResultType"));
@@ -544,8 +549,13 @@ public class CommonController {
             int pageType=1;
             if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
             
+            Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
-            Map<String, Object> cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
+            if(resultType==0 && pageType==0){
+            	 cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
+            }else{
+            	 cl=contentService.searchAll(searchStr, resultType, pageType);
+            }
             a=System.currentTimeMillis()-a;
             
             if (cl!=null&&cl.size()>0) {
