@@ -20,16 +20,17 @@ import com.spiritdata.framework.util.StringUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.content.service.ContentService;
-import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.appengine.searchcrawler.service.ThreadService;
 import com.woting.cm.core.channel.mem._CacheChannel;
+import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
 import com.woting.common.TreeUtils;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.login.service.MobileUsedService;
+import com.woting.searchword.service.WordService;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
@@ -44,10 +45,11 @@ public class CommonController {
     private MobileUsedService muService;
     @Resource
     private ContentService contentService;
+    @Resource
+    private WordService wordService;
     
     ThreadService threadService = new ThreadService();
 
-    private SessionMemoryManage smm=SessionMemoryManage.getInstance();
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
 
@@ -244,6 +246,9 @@ public class CommonController {
         }
     }
 
+    /**
+     * 目前不处理群组查找热词
+     */
     @RequestMapping(value="/searchHotKeys.do")
     @ResponseBody
     public Map<String,Object> searchHotKeys(HttpServletRequest request) {
@@ -275,8 +280,18 @@ public class CommonController {
                 return map;
             }
 
+            Owner o=new Owner(201, map.get("SessionId")+"");
+            List<String>[] retls=wordService.getHotWords(searchStr, o, 0, 10);
+            List<String> allWords=retls[0];
+            if (allWords==null||allWords.isEmpty()) {
+                map.put("ReturnType", "1011");
+                return map;
+            }
+            String ret="";
+            for (String word: allWords) ret+=","+word;
             map.put("ReturnType", "1001");
-            map.put("KeyList", searchStr+",逻辑思维,郭德纲,芈月传奇,数学,恐怖主义,鬼吹灯,盗墓笔记,老梁说事");
+            map.put("KeyList", ret.substring(1));
+//            map.put("KeyList", searchStr+",逻辑思维,郭德纲,芈月传奇,数学,恐怖主义,鬼吹灯,盗墓笔记,老梁说事");
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -469,6 +484,11 @@ public class CommonController {
                 map.put("Message", "无法得到查询串");
                 return map;
             }
+            //敏感词处理
+            Owner o=new Owner(201, map.get("SessionId")+"");
+            String _s[]=searchStr.split(",");
+            for (int i=0; i<_s.length; i++) wordService.addOneWord(_s[i].trim(), o);
+
             //获得结果类型，0获得一个列表，1获得分类列表，这个列表根据content字段处理，这个字段目前没有用到
             int resultType=0;
             try {
@@ -533,6 +553,11 @@ public class CommonController {
                 map.put("Message", "无法得到查询串");
                 return map;
             }
+            //敏感词处理
+            Owner o=new Owner(201, map.get("SessionId")+"");
+            String _s[]=searchStr.split(",");
+            for (int i=0; i<_s.length; i++) wordService.addOneWord(_s[i].trim(), o);
+
             //获得结果类型，0获得一个列表，1获得分类列表，这个列表根据content字段处理，这个字段目前没有用到
             int resultType=0;
             try {

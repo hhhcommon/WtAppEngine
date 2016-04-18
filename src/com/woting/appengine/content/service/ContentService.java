@@ -25,13 +25,6 @@ import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.WtAppEngineConstants;
-import com.woting.appengine.searchcrawler.model.Festival;
-import com.woting.appengine.searchcrawler.model.Station;
-import com.woting.appengine.searchcrawler.service.KaoLaService;
-import com.woting.appengine.searchcrawler.service.QingTingService;
-import com.woting.appengine.searchcrawler.service.ThreadService;
-import com.woting.appengine.searchcrawler.service.XiMaLaYaService;
-import com.woting.appengine.searchcrawler.utils.DataTransform;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
@@ -61,8 +54,8 @@ public class ContentService {
         _cd=((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT)).getContent();
         _cc=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)).getContent();
     }
-
- /*   public Map<String, Object> searchByCrawl(String searchStr, int resultType, int pageType) {
+    /*
+    public Map<String, Object> searchByCrawl(String searchStr, int resultType, int pageType) {
         String __s[]=searchStr.split(",");
         String _s[]=new String[__s.length];
         for (int i=0; i<__s.length; i++) _s[i]=__s[i].trim();
@@ -94,7 +87,9 @@ public class ContentService {
         }
    
         return map;
-    }			*/
+    }
+    */
+
     /**
      * 查找内容，此内容无排序，按照创建时间的先后顺序排序，最新的在最前面
      * @param searchStr 查找串
@@ -470,7 +465,7 @@ public class ContentService {
             }
             ids=ids.substring(1);
             paraM.clear();
-            paraM.put("resType", "2");
+            paraM.put("resTableName", "wt_MediaAsset");
             paraM.put("ids", ids);
             cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
             personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);

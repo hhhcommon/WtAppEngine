@@ -24,6 +24,7 @@ public class OwnerWord implements Serializable {
     private Map<String, MiddleWord> middleWordMap; //汉字热词查找结构
     private Map<String, MiddleWord> pyMiddleWordMap; //汉语拼音热词查找结构
     private Map<String, Word> searchFinalMap; //最终查找词的结构
+    private List<Word> searchFinalSortList; //最终查找词列表，此列表是按照词的频度进行排列的
 
     public Owner getOwner() {
         return owner;

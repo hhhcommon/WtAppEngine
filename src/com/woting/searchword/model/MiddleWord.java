@@ -15,8 +15,8 @@ public class MiddleWord implements Serializable {
 
     private Object dealLock=new Object();
     private String middleWord;//中间过度词
-    private List<Word> searchWordSortList; //最终的查找词列表，词列表是按照词的频度进行排列的
-    private Map<String, Word> searchWordMap; //最终的查找词列表，词列表是按照词的频度进行排列的
+    private List<Word> searchWordSortList; //最终的查找词列表，此列表是按照词的频度进行排列的
+    private Map<String, Word> searchWordMap; //最终的查找词Map，便于查找
 
     public String getMiddleWord() {
         return middleWord;
