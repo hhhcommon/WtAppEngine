@@ -5,9 +5,10 @@ import java.sql.Timestamp;
 import com.spiritdata.framework.core.model.BaseObject;
 
 public class UserWordPo extends BaseObject {
-    private static final long serialVersionUID = -8406881716350334538L;
+    private static final long serialVersionUID=-8406881716350334538L;
 
     private String id; //用户词Id
+    private int ownerType; //所有者类型
     private String ownerId; //所有者Id,可能是用户也可能是设备
     private String word; //搜索词
     private String wordLang; //搜索词语言类型，系统自动判断，可能是混合类型
@@ -20,48 +21,54 @@ public class UserWordPo extends BaseObject {
         return id;
     }
     public void setId(String id) {
-        this.id = id;
+        this.id=id;
     }
     public String getOwnerId() {
         return ownerId;
     }
     public void setOwnerId(String ownerId) {
-        this.ownerId = ownerId;
+        this.ownerId=ownerId;
+    }
+    public int getOwnerType() {
+        return ownerType;
+    }
+    public void setOwnerType(int ownerType) {
+        this.ownerType=ownerType;
     }
     public String getWord() {
         return word;
     }
     public void setWord(String word) {
-        this.word = word;
+        this.word=word;
     }
     public String getWordLang() {
         return wordLang;
     }
     public void setWordLang(String wordLang) {
-        this.wordLang = wordLang;
+        this.wordLang=wordLang;
     }
     public Timestamp getTime1() {
         return time1;
     }
     public void setTime1(Timestamp time1) {
-        this.time1 = time1;
+        this.time1=time1;
     }
     public Timestamp getTime2() {
         return time2;
     }
     public void setTime2(Timestamp time2) {
-        this.time2 = time2;
+        this.time2=time2;
     }
     public int getSumNum() {
         return sumNum;
     }
     public void setSumNum(int sumNum) {
-        this.sumNum = sumNum;
+        this.sumNum=sumNum;
     }
     public Timestamp getCTime() {
         return CTime;
     }
     public void setCTime(Timestamp cTime) {
-        CTime = cTime;
+        CTime=cTime;
     }
 }

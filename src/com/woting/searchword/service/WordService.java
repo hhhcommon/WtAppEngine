@@ -1,21 +1,39 @@
 package com.woting.searchword.service;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
+import com.spiritdata.framework.core.model.Page;
+import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.searchword.mem.SearchWordMemory;
 import com.woting.searchword.model.OwnerWord;
 import com.woting.searchword.model.Word;
+import com.woting.searchword.persis.po.UserWordPo;
 
 @Lazy(true)
 @Service
 public class WordService {
-
     SearchWordMemory swm=SearchWordMemory.getInstance();
+
+    @Resource(name="defaultDAO")
+    private MybatisDAO<UserWordPo> userWordDao;
+
+    @PostConstruct
+    public void initParam() {
+        userWordDao.setNamespace("DA_USERWORD");
+    }
 
     //======================================================================================================
     //以下为内存管理部分
@@ -57,6 +75,7 @@ public class WordService {
                     ow.addWord(_split[2]);
                 }
                 //数据库处理
+                updateWordDb(o, _split[2]);
             }
         }
     }
@@ -148,6 +167,29 @@ public class WordService {
     }
 
     /**
+     * 从数据库表获得数据，并加入装载队列
+     */
+    public void loadUserWord() {
+        Map<String, Object> param=new HashMap<String, Object>();
+        param.put("sortByClause", "sumNum");
+
+        int i=1;//页数
+        Page<UserWordPo> uwPage=userWordDao.pageQuery("count", "getList", param, i++, 10000);
+        boolean hasDD=!uwPage.getResult().isEmpty();
+        //分页处理
+        while (hasDD) {
+            List<UserWordPo> l=new ArrayList<UserWordPo>();
+            l.addAll(uwPage.getResult());
+            for (UserWordPo uwPo: l) {
+                swm.addWord2LoadQueue(uwPo.getOwnerId()+"::"+uwPo.getOwnerType()+"::"+uwPo.getWord()+"::"+uwPo.getSumNum());
+            }
+            uwPage=userWordDao.pageQuery("count", "getList", param, i++,10000);
+            hasDD=!uwPage.getResult().isEmpty();
+        }
+        
+    }
+
+    /**
      * 根据中间次查找某一用户的搜索热词
      * 有历史记录功能
      * @param middleWord 搜索词
@@ -232,10 +274,27 @@ public class WordService {
             ownerWordList.add(insertIndex, word);
         }
     }
-
-    public void loadUserWord() {
-        // TODO Auto-generated method stub
-        
+    private void updateWordDb(Owner o, String word) {
+        Map<String, Object> param=new HashMap<String, Object>();
+        param.put("ownerId", o.getOwnerId());
+        param.put("ownerType", o.getOwnerType());
+        param.put("word", word);
+        UserWordPo uwp=userWordDao.getInfoObject(param);
+        if (uwp==null) {
+            uwp=new UserWordPo();
+            uwp.setId(SequenceUUID.getPureUUID());
+            uwp.setOwnerId(o.getOwnerId());
+            uwp.setOwnerType(o.getOwnerType());
+            uwp.setWord(word);
+            uwp.setWordLang("中文");
+            uwp.setTime1(new Timestamp(System.currentTimeMillis()));
+            uwp.setTime2(new Timestamp(System.currentTimeMillis()));
+            uwp.setSumNum(1);
+            userWordDao.insert(uwp);
+        } else {
+            uwp.setSumNum(uwp.getSumNum()+1);
+            uwp.setTime2(new Timestamp(System.currentTimeMillis()));
+            userWordDao.update(uwp);
+        }
     }
-
 }

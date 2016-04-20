@@ -6,7 +6,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="WT_APPREOPINION">
   <!-- 对象定义:意见反馈 -->
-  <resultMap id="reOpinionMap" type="wtAppReOpinion">
+  <resultMap id="reOpinionMap" type="WtAppReOpinion">
     <id      column="id"         property="id"         jdbcType="VARCHAR"/>
     <result  column="opinionId"  property="opinionId"  jdbcType="VARCHAR"/>
     <result  column="userId"     property="userId"     jdbcType="VARCHAR"/>

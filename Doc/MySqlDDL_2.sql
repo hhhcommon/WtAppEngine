@@ -42,6 +42,7 @@ CREATE TABLE da_UserSearchWord (
   time2      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '本词本用户最后搜索的时间',
   sumNum     int unsigned  NOT NULL                             COMMENT '搜索次数',
   cTime      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  INDEX bizIdx (ownerType, ownerId, word) USING HASH,
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='DA001用户搜索词统计';

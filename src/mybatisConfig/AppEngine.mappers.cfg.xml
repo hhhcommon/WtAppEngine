@@ -6,12 +6,16 @@
   <typeAliases>
     <!-- 用户意见 -->
     <typeAlias alias="WtAppOpinion"   type="com.woting.appengine.appopinion.persistence.pojo.AppOpinionPo"/>
-    <typeAlias alias="wtAppReOpinion" type="com.woting.appengine.appopinion.persistence.pojo.AppReOpinionPo"/>
+    <typeAlias alias="WtAppReOpinion" type="com.woting.appengine.appopinion.persistence.pojo.AppReOpinionPo"/>
+    <!-- 搜索词 -->
+    <typeAlias alias="Da_UserWord"   type="com.woting.searchword.persis.po.UserWordPo"/>
   </typeAliases>
   <!-- SQL配置 -->
   <mappers>
     <!-- 用户意见 -->
     <mapper resource="com/woting/appengine/appopinion/persistence/sql/AppOpinion.mapper.xml"/>
     <mapper resource="com/woting/appengine/appopinion/persistence/sql/AppReOpinion.mapper.xml"/>
+    <!-- 搜索词 -->
+    <mapper resource="com/woting/searchword/persis/sql/UserWord.mapper.xml"/>
   </mappers>
 </configuration>
