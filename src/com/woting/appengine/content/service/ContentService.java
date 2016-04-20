@@ -39,12 +39,6 @@ public class ContentService {
     private MybatisDAO<GroupPo> groupDao;
     @Resource
     private DataSource dataSource;
-
- //   ThreadService threadService = new ThreadService();
-  /*  KaoLaService kl_s = new KaoLaService();  //wbq 考拉搜索
-    QingTingService qt_s = new QingTingService();
-    XiMaLaYaService xmly_s = new XiMaLaYaService();*/
- //   DataTransform dataT = new DataTransform();//wbq 数据类型转换
     
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
@@ -55,41 +49,6 @@ public class ContentService {
         _cd=((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT)).getContent();
         _cc=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)).getContent();
     }
-    /*
-    public Map<String, Object> searchByCrawl(String searchStr, int resultType, int pageType) {
-        String __s[]=searchStr.split(",");
-        String _s[]=new String[__s.length];
-        for (int i=0; i<__s.length; i++) _s[i]=__s[i].trim();
-        //wbq 考拉搜索        
-        Map<String, Object> map = new HashMap<String,Object>();
-        //按照0::0处理
-        for(int i = 0;i<_s.length;i++){
-        	Map<String, Object> maps = threadService.threadService(_s[i]);
-        	Map<String, Object> mapkl = (Map<String, Object>) maps.get("KL");
-         	Map<String, Object> mapqt = (Map<String, Object>) maps.get("QT");
-        	Map<String, Object> mapxmly = (Map<String, Object>) maps.get("XMLY");
-	        List<Festival> list_kl_festival = (List<Festival>) mapkl.get("KL_F");
-	        List<Station> list_kl_station = (List<Station>) mapkl.get("KL_S");
-	        List<Festival> list_qt_festival = (List<Festival>) mapqt.get("QT_F");
-	        List<Station> list_qt_station = (List<Station>) mapqt.get("QT_S");
-	        List<Festival> list_xmly_festival = (List<Festival>) mapxmly.get("XMLY_F");
-	        List<Station> list_xmly_station = (List<Station>) mapxmly.get("XMLY_S");
-	        List<Station> liststation = new ArrayList<Station>();
-	        List<Festival> listfestival = new ArrayList<Festival>();
-	        liststation.addAll(list_kl_station);
-	        liststation.addAll(list_qt_station);
-	        liststation.addAll(list_xmly_station);
-	        listfestival.addAll(list_kl_festival);
-	        listfestival.addAll(list_qt_festival);
-	        listfestival.addAll(list_xmly_festival);
-	        map.put("AllCount", listfestival.size()+liststation.size());
-	        map.put("List", dataT.datas2Audio(listfestival,liststation,0));
-	        map.put("ResultType", resultType);
-        }
-   
-        return map;
-    }
-    */
 
     /**
      * 查找内容，此内容无排序，按照创建时间的先后顺序排序，最新的在最前面
@@ -126,6 +85,7 @@ public class ContentService {
             conn=dataSource.getConnection();
             ps=conn.prepareStatement(sql+" limit 0, 10");
             rs=ps.executeQuery();
+            
             cataList=new ArrayList<Map<String, Object>>();
             while (rs!=null&&rs.next()) {
                 Map<String, Object> oneData=new HashMap<String, Object>();
