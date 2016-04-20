@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.StringUtils;
+import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.content.service.ContentService;
@@ -26,7 +27,6 @@ import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
-import com.woting.common.TreeUtils;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.login.service.MobileUsedService;
@@ -212,6 +212,11 @@ public class CommonController {
         }
     }
 
+    /**
+     * 得到当前的活跃的热词
+     * @param request
+     * @return
+     */
     @RequestMapping(value="/getHotKeys.do")
     @ResponseBody
     public Map<String,Object> getHotKeys(HttpServletRequest request) {
@@ -234,8 +239,74 @@ public class CommonController {
             }
             if (map.get("ReturnType")!=null) return map;
 
+            //1-获取功能类型，目前只有1内容搜索
+            String funType=(String)m.get("FunType");
+            if (StringUtils.isNullOrEmptyOrSpace(funType)) {
+                funType=request.getParameter("FunType");
+            }
+            int _funType=1;
+            if (!StringUtils.isNullOrEmptyOrSpace(funType)) {
+                try {
+                    _funType=Integer.parseInt(funType);
+                } catch(Exception e) {}
+            }
+            //2-检索词数量
+            String wordSize=(String)m.get("WordSize");
+            if (StringUtils.isNullOrEmptyOrSpace(wordSize)) {
+                wordSize=request.getParameter("WordSize");
+            }
+            int _wordSize=10;
+            if (!StringUtils.isNullOrEmptyOrSpace(wordSize)) {
+                try {
+                    _wordSize=Integer.parseInt(wordSize);
+                } catch(Exception e) {}
+            }
+            //3-返回类型
+            String returnType=(String)m.get("ReturnType");
+            if (StringUtils.isNullOrEmptyOrSpace(funType)) {
+                returnType=request.getParameter("ReturnType");
+            }
+            int _returnType=1;
+            if (!StringUtils.isNullOrEmptyOrSpace(returnType)) {
+                try {
+                    _returnType=Integer.parseInt(returnType);
+                } catch(Exception e) {}
+            }
+
+            Owner o=new Owner(201, map.get("SessionId")+"");
+            List<String>[] retls=wordService.getHotWords(o, _returnType, _wordSize);
+            if (retls==null||retls.length==0) map.put("ReturnType", "1011");
+            else {
+                if (retls.length==1&&(retls[0]==null||retls[0].size()==0)) map.put("ReturnType", "1011");
+                else 
+                if (retls.length==2&&(retls[0]==null||retls[0].size()==0)&&(retls[1]==null||retls[1].size()==0)) map.put("ReturnType", "1011");
+                else 
+                if (retls.length>2)  map.put("ReturnType", "1011");
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            String tempStr="";
+            List<String> tempWords=null;
+            if (retls.length==1) {
+                tempWords=retls[0];
+                for (String word: tempWords) tempStr+=","+word;
+                map.put("KeyList", tempStr.substring(1));
+            } else if (retls.length==2) {
+                tempStr="";
+                if ((retls[0]!=null&&retls[0].size()>0)) {
+                    tempWords=retls[0];
+                    for (String word: tempWords) tempStr+=","+word;
+                    map.put("SysKeyList", tempStr.substring(1));
+                }
+                tempStr="";
+                if ((retls[1]!=null&&retls[1].size()>0)) {
+                    tempWords=retls[1];
+                    for (String word: tempWords) tempStr+=","+word;
+                    map.put("MyKeyList", tempStr.substring(1));
+                }
+            }
             map.put("ReturnType", "1001");
-            map.put("KeyList", "逻辑思维,郭德纲,芈月传奇,数学,恐怖主义,鬼吹灯,盗墓笔记,老梁说事");
+//            map.put("KeyList", "逻辑思维,郭德纲,芈月传奇,数学,恐怖主义,鬼吹灯,盗墓笔记,老梁说事");
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -248,6 +319,7 @@ public class CommonController {
 
     /**
      * 目前不处理群组查找热词
+     * 查找当前的活跃热词
      */
     @RequestMapping(value="/searchHotKeys.do")
     @ResponseBody
@@ -279,19 +351,73 @@ public class CommonController {
                 map.put("Message", "无法得到查询串");
                 return map;
             }
+            //1-获取功能类型，目前只有1内容搜索
+            String funType=(String)m.get("FunType");
+            if (StringUtils.isNullOrEmptyOrSpace(funType)) {
+                funType=request.getParameter("FunType");
+            }
+            int _funType=1;
+            if (!StringUtils.isNullOrEmptyOrSpace(funType)) {
+                try {
+                    _funType=Integer.parseInt(funType);
+                } catch(Exception e) {}
+            }
+            //2-检索词数量
+            String wordSize=(String)m.get("WordSize");
+            if (StringUtils.isNullOrEmptyOrSpace(funType)) {
+                wordSize=request.getParameter("WordSize");
+            }
+            int _wordSize=10;
+            if (!StringUtils.isNullOrEmptyOrSpace(wordSize)) {
+                try {
+                    _wordSize=Integer.parseInt(wordSize);
+                } catch(Exception e) {}
+            }
+            //3-返回类型
+            String returnType=(String)m.get("ReturnType");
+            if (StringUtils.isNullOrEmptyOrSpace(funType)) {
+                returnType=request.getParameter("ReturnType");
+            }
+            int _returnType=1;
+            if (!StringUtils.isNullOrEmptyOrSpace(returnType)) {
+                try {
+                    _returnType=Integer.parseInt(returnType);
+                } catch(Exception e) {}
+            }
 
             Owner o=new Owner(201, map.get("SessionId")+"");
-            List<String>[] retls=wordService.getHotWords(searchStr, o, 0, 10);
-            List<String> allWords=retls[0];
-            if (allWords==null||allWords.isEmpty()) {
-                map.put("ReturnType", "1011");
-                return map;
+            List<String>[] retls=wordService.searchHotWords(searchStr, o, _returnType, _wordSize);
+            if (retls==null||retls.length==0) map.put("ReturnType", "1011");
+            else {
+                if (retls.length==1&&(retls[0]==null||retls[0].size()==0)) map.put("ReturnType", "1011");
+                else 
+                if (retls.length==2&&(retls[0]==null||retls[0].size()==0)&&(retls[1]==null||retls[1].size()==0)) map.put("ReturnType", "1011");
+                else 
+                if (retls.length>2)  map.put("ReturnType", "1011");
             }
-            String ret="";
-            for (String word: allWords) ret+=","+word;
+            if (map.get("ReturnType")!=null) return map;
+
+            String tempStr="";
+            List<String> tempWords=null;
+            if (retls.length==1) {
+                tempWords=retls[0];
+                for (String word: tempWords) tempStr+=","+word;
+                map.put("KeyList", tempStr.substring(1));
+            } else if (retls.length==2) {
+                tempStr="";
+                if ((retls[0]!=null&&retls[0].size()>0)) {
+                    tempWords=retls[0];
+                    for (String word: tempWords) tempStr+=","+word;
+                    map.put("SysKeyList", tempStr.substring(1));
+                }
+                tempStr="";
+                if ((retls[1]!=null&&retls[1].size()>0)) {
+                    tempWords=retls[1];
+                    for (String word: tempWords) tempStr+=","+word;
+                    map.put("MyKeyList", tempStr.substring(1));
+                }
+            }
             map.put("ReturnType", "1001");
-            map.put("KeyList", ret.substring(1));
-//            map.put("KeyList", searchStr+",逻辑思维,郭德纲,芈月传奇,数学,恐怖主义,鬼吹灯,盗墓笔记,老梁说事");
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -423,9 +549,8 @@ public class CommonController {
             }
             //根据层级参数，对树进行截取
             int _relLevel=Integer.parseInt(relLevel);
-            if (root!=null&&_relLevel>0) {
-                root=TreeUtils.getLevelTree(root, _relLevel);
-            }
+            if (root!=null&&_relLevel>0) root=TreeUtils.cutLevelClone(root, _relLevel);
+
             if (root!=null) {
                 Map<String, Object> CatalogData=new HashMap<String, Object>();
                 //返回类型
@@ -487,7 +612,7 @@ public class CommonController {
             //敏感词处理
             Owner o=new Owner(201, map.get("SessionId")+"");
             String _s[]=searchStr.split(",");
-            for (int i=0; i<_s.length; i++) wordService.addOneWord(_s[i].trim(), o);
+            for (int i=0; i<_s.length; i++) wordService.addWord2Online(_s[i].trim(), o);
 
             //获得结果类型，0获得一个列表，1获得分类列表，这个列表根据content字段处理，这个字段目前没有用到
             int resultType=0;
@@ -556,7 +681,7 @@ public class CommonController {
             //敏感词处理
             Owner o=new Owner(201, map.get("SessionId")+"");
             String _s[]=searchStr.split(",");
-            for (int i=0; i<_s.length; i++) wordService.addOneWord(_s[i].trim(), o);
+            for (int i=0; i<_s.length; i++) wordService.addWord2Online(_s[i].trim(), o);
 
             //获得结果类型，0获得一个列表，1获得分类列表，这个列表根据content字段处理，这个字段目前没有用到
             int resultType=0;

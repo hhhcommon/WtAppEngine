@@ -3,8 +3,8 @@ package com.woting.appengine.common.web;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import org.apache.log4j.Logger;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.woting.appengine.calling.CallingConfig;
 import com.woting.appengine.calling.CallingListener;
 import com.woting.appengine.intercom.InterComConfig;
@@ -18,7 +18,7 @@ import com.woting.appengine.mobile.session.SessionListener;
 import com.woting.searchword.SearchWordListener;
 
 public class AppRunningListener implements ServletContextListener {
-    private Logger logger = Logger.getLogger(this.getClass());
+    private Logger logger=LoggerFactory.getLogger(this.getClass());
 
     @Override
     //初始化

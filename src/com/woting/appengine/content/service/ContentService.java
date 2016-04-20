@@ -24,6 +24,7 @@ import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.StringUtils;
+import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.dict.mem._CacheDictionary;
@@ -530,7 +531,7 @@ public class ContentService {
 
         if (resultType==0) { //按列表处理
             //得到所有下级结点的Id
-            List<TreeNode<? extends TreeNodeBean>> allTn=com.woting.common.TreeUtils.getDeepList(root);
+            List<TreeNode<? extends TreeNodeBean>> allTn=TreeUtils.getDeepList(root);
             //得到分类id的语句
             String orSql="";
             orSql+=" or "+idCName+"='"+root.getId()+"'";
@@ -807,7 +808,7 @@ public class ContentService {
                         String bcSqlSign1="", maSqlSign1="", smaSqlSign1="";
                         //开始循环处理
                         String tempStr=idCName+"='"+_stn.getId()+"'";
-                        List<TreeNode<? extends TreeNodeBean>> subAllTn=com.woting.common.TreeUtils.getDeepList(_stn);
+                        List<TreeNode<? extends TreeNodeBean>> subAllTn=TreeUtils.getDeepList(_stn);
                         if (subAllTn!=null&&!subAllTn.isEmpty()) {
                             for (TreeNode<? extends TreeNodeBean> tn: subAllTn) {
                                 tempStr+=" or "+idCName+"='"+tn.getId()+"'";

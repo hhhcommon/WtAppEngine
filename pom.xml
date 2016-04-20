@@ -7,14 +7,16 @@
   <!-- 配置编码格式，与eclpse的IDE环境编码格式匹配 -->
   <!-- D:\workIDE\projects\WtAppEngine || E:\work\gitworkspace || D:\WBWorkDir\WtAppEngine-->
   <properties>
-    <build.webProjectDir>D:\workIDE\projects\WtAppEngine</build.webProjectDir>
+    <projectDir>D:\workIDE\projects\WtAppEngine</projectDir>
   </properties>
+
   <parent>
     <groupId>team.gm</groupId>
     <artifactId>framework</artifactId>
     <version>0.1.0.0</version>
     <relativePath>pom.framework.xml</relativePath>
   </parent>
+
   <dependencies>
   	<dependency>
   	 <groupId>org.jsoup</groupId>
@@ -48,9 +50,9 @@
     <dependency>
       <groupId>com.spiritdata</groupId>
       <artifactId>BasicPlat</artifactId>
-      <version>0.1.0.7</version>
+      <version>0.1.0.8</version>
       <scope>system</scope>
-      <systemPath>${build.webProjectDir}/lib/BasicPlat-0.1.0.7.jar</systemPath>
+      <systemPath>${projectDir}/lib/BasicPlat-0.1.0.8.jar</systemPath>
     </dependency>
     <!-- HTML解析包 -->
     <dependency>
@@ -72,13 +74,13 @@
   </dependencies>
   <build>
     <!-- 设置源代码的根目录 -->
-    <sourceDirectory>${build.webProjectDir}\src</sourceDirectory>
+    <sourceDirectory>${projectDir}\src</sourceDirectory>
     <!-- 设置测试代码的根目录 -->
-    <testSourceDirectory>${build.webProjectDir}\test</testSourceDirectory>
+    <testSourceDirectory>${projectDir}\test</testSourceDirectory>
     <!-- 设置源代码编译后的字节代码的目录 -->
-    <outputDirectory>${build.webProjectDir}\WebContent\WEB-INF\classes</outputDirectory>
+    <outputDirectory>${projectDir}\WebContent\WEB-INF\classes</outputDirectory>
     <!-- 设置测试代码编译后的字节代码的目录 -->
-    <testOutputDirectory>${build.webProjectDir}\target\test-classes</testOutputDirectory>
+    <testOutputDirectory>${projectDir}\target\test-classes</testOutputDirectory>
     <!-- 这里定义的资源将作为资源拷贝或打包到目标中。所有的配置文件(xml,propertis)都会按目录进行打包了 -->
     <plugins>
       <plugin>

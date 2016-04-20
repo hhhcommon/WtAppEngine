@@ -23,6 +23,7 @@ import com.woting.cm.core.dict.persis.po.DictMasterPo;
 import com.woting.cm.core.dict.persis.po.DictRefResPo;
 import com.woting.exceptionC.Wtcm0301CException;
 import com.woting.exceptionC.Wtcm1000CException;
+import com.woting.searchword.model.Word;
 import com.woting.searchword.service.WordService;
 
 @Service
@@ -106,7 +107,8 @@ public class DictService {
                     dd.buildFromPo(ddp);
                     ddl.add(dd);
                     //敏感词处理，临时
-                    wordService.addOneWord(dd.getNodeName(), sysO);
+                    Word w=new Word(dd.getNodeName());
+                    wordService.addWord2LoadQueue(w, sysO);
                 }
 
                 List<DictDetail> templ=new ArrayList<DictDetail>();
