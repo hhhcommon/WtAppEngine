@@ -125,20 +125,13 @@ public class XiMaLaYaService implements Callable<Map<String, Object>> {
 					Element elf = elements.get(i);
 					String name = elf.select("a[class=soundReport_soundname]").get(0).html();
 					String id = elf.select("a[class=soundReport_soundname]").get(0).attr("href").split("/")[3];
-					String desc = elf.select("a[class=soundReport_tag]").isEmpty() ? null
-							: elf.select("a[class=soundReport_tag]").get(0).html();
-					String host = elf.select("div[class=col soundReport_author]").isEmpty() ? null
-							: elf.select("div[class=col soundReport_author]").get(0).select("a").get(0).html();
-					String playnum = elf.select("div[class=col soundReport_playCount]").get(0).select("span").get(0)
-							.html();
+					String desc = elf.select("a[class=soundReport_tag]").isEmpty() ? null : elf.select("a[class=soundReport_tag]").get(0).html();
+					String host = elf.select("div[class=col soundReport_author]").isEmpty() ? null : elf.select("div[class=col soundReport_author]").get(0).select("a").get(0).html();
+					String playnum = elf.select("div[class=col soundReport_playCount]").get(0).select("span").get(0).html();
 					festival.setAudioName(name);
 					festival.setAudioId(id);
 					festival.setAudioDes(desc);
-					festival.setHost(host == null ? null : host.split(" ")[0]); // 灰灰猪影视
-																				// <i
-																				// class=\"VIcon
-																				// \"
-																				// mustlogin=\"\">&nbsp;</i>
+					festival.setHost(host == null ? null : host.split(" ")[0]); 
 					festival.setPlaynum(playnum);
 					listfestival.add(festivalS(festival.getAudioId(), festival));
 				}
@@ -152,7 +145,6 @@ public class XiMaLaYaService implements Callable<Map<String, Object>> {
 	@Override
 	public Map<String, Object> call() throws Exception {
 		Map<String, Object> map = XiMaLaYaService(constr) == null ? null : XiMaLaYaService(constr);
-		System.out.println(map);
 		return map;
 	}
 }

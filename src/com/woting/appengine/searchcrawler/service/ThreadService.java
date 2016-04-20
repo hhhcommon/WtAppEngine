@@ -15,7 +15,6 @@ import com.woting.appengine.searchcrawler.utils.DataTransform;
 
 @Service
 public class ThreadService {
-	DataTransform dataT = new DataTransform();
 
 	/**
 	 * 使用多线程在三平台查询内容
@@ -25,16 +24,15 @@ public class ThreadService {
 	 */
 	public Map<String, Object> threadService(String constr, int resultType, int pageType) {
 		Map<String, Object> map = new HashMap<String, Object>();
-		int count = 0;
 		ExecutorService pool = Executors.newFixedThreadPool(4); // 线程池大小4
 		QingTingService qt = new QingTingService(constr); // 创建蜻蜓搜索线程
 		KaoLaService kl = new KaoLaService(constr); // 创建考拉搜索线程
 		XiMaLaYaService xm = new XiMaLaYaService(constr); // 创建喜马拉雅搜索线程
-		LocalService ls = new LocalService(constr, resultType, pageType); // 创建本地搜索线程
+		LocalSearch ls = new LocalSearch(constr, resultType, pageType);
 		Future<Map<String, Object>> kl_s = pool.submit(kl); // 开启考拉线程
 		Future<Map<String, Object>> qt_s = pool.submit(qt); // 开启蜻蜓线程
 		Future<Map<String, Object>> xm_s = pool.submit(xm); // 开启喜马拉雅线程
-		Future<Map<String, Object>> ls_s = pool.submit(ls); // 开启本地线程
+		Future<Map<String, Object>> ls_s = pool.submit(ls); // 开启本地搜索
 		try {
 			List<Festival> list_kl_festival = (List<Festival>) kl_s.get().get("KL_F"); // 取出考拉搜索的节目信息
 			List<Station> list_kl_station = (List<Station>) kl_s.get().get("KL_S"); // 取出考拉搜索的频道信息
@@ -42,6 +40,7 @@ public class ThreadService {
 			List<Station> list_qt_station = (List<Station>) qt_s.get().get("QT_S"); // 取出蜻蜓搜索的频道信息
 			List<Festival> list_xmly_festival = (List<Festival>) xm_s.get().get("XMLY_F"); // 取出喜马拉雅搜索的节目信息
 			List<Station> list_xmly_station = (List<Station>) xm_s.get().get("XMLY_S"); // 取出喜马拉雅搜索的频道信息
+			List<Map<String, Object>> list_local_festival = (List<Map<String, Object>>) ls_s.get().get("List"); // 取出本地搜索的信息
 			List<Station> liststation = new ArrayList<Station>(); // 合并搜索到的频道信息
 			List<Festival> listfestival = new ArrayList<Festival>(); // 合并搜索到的节目信息
 			if (list_kl_station != null)
@@ -56,16 +55,11 @@ public class ThreadService {
 				liststation.addAll(list_xmly_station);
 			if (list_xmly_festival != null)
 				listfestival.addAll(list_xmly_festival);
-			List<Map<String, Object>> listall = dataT.datas2Audio(listfestival, liststation, 0); // 数据信息转换
-			Map<String, Object> maplocal = ls_s.get();
-			if (maplocal != null) {
-				List<Map<String, Object>> listlocal = (List<Map<String, Object>>) maplocal.get("List");
-				for (Map<String, Object> maplocalfes : listlocal) {
-					listall.add(maplocalfes);
-				}
-				count += listall.size();
+			List<Map<String, Object>> listall = DataTransform.datas2Audio(listfestival, liststation, 0); // 数据信息转换
+			for (Map<String, Object> map2 : list_local_festival) {
+				listall.add(map2);
 			}
-			map.put("AllCount", listfestival.size() + liststation.size() + count);
+			map.put("AllCount", listall.size());
 			map.put("List", listall);
 			map.put("ResultType", resultType);
 		} catch (InterruptedException e1) {

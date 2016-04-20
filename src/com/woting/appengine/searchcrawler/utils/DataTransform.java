@@ -14,7 +14,7 @@ import com.woting.appengine.searchcrawler.model.Station;
  * @author wbq
  *
  */
-public class DataTransform {
+public abstract class DataTransform {
 
 	/**
 	 * 多festival转audio
@@ -27,7 +27,7 @@ public class DataTransform {
 	 *            如果PageType=0,把专辑的第一个节目提取出来，如果等于1，频道信息在此方法不处理
 	 * @return 返回处理好的audio信息
 	 */
-	public List<Map<String, Object>> datas2Audio(List<Festival> list_Festival, List<Station> list_Station,
+	public static List<Map<String, Object>> datas2Audio(List<Festival> list_Festival, List<Station> list_Station,
 			int PageType) {
 		if (list_Festival == null || list_Station == null) {
 			return null;
@@ -58,7 +58,7 @@ public class DataTransform {
 	 * @param list_Stations
 	 * @return
 	 */
-	public List<Map<String, Object>> datas2Sequ(List<Station>... list_Stations) {
+	public static List<Map<String, Object>> datas2Sequ(List<Station>... list_Stations) {
 		if (list_Stations == null) {
 			return null;
 		}
@@ -82,7 +82,7 @@ public class DataTransform {
 	 * @param list_stations
 	 * @return
 	 */
-	public Map<String, Object> datas2Sequ_Audio(Station station) {
+	public static Map<String, Object> datas2Sequ_Audio(Station station) {
 		if (station.getFestival() == null) {
 			return null;
 		}
@@ -98,7 +98,7 @@ public class DataTransform {
 	 * @param festival
 	 * @return
 	 */
-	public Map<String, Object> festival2Audio(Festival festival) {
+	public static Map<String, Object> festival2Audio(Festival festival) {
 		// ContentCatalogs内容分类、ContentKeyWord关键词、ContentSubjectWord主题词和PlayCount播放次数未定义参数
 		if (festival == null) {
 			return null;
@@ -130,7 +130,7 @@ public class DataTransform {
 	 * @param station
 	 * @return
 	 */
-	public Map<String, Object> station2Sequ(Station station) {
+	public static Map<String, Object> station2Sequ(Station station) {
 		// ContentCatalogs内容分类、ContentKeyWord关键词、ContentSubjectWord主题词和PlayCount播放次数
 		if (station == null) {
 			return null;
