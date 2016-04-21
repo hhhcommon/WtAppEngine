@@ -15,7 +15,6 @@ import com.woting.appengine.searchcrawler.utils.DataTransform;
 
 @Service
 public class ThreadService {
-
 	/**
 	 * 使用多线程在三平台查询内容
 	 * 

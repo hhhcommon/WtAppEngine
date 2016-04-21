@@ -2,7 +2,8 @@ package com.woting.appengine.common.cache;
 
 import javax.annotation.Resource;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.spiritdata.framework.component.UGA.cache.FrameworkUgaCLU;
 import com.spiritdata.framework.core.cache.AbstractCacheLifecycleUnit;
 import com.spiritdata.framework.core.cache.CacheEle;
@@ -15,7 +16,7 @@ import com.woting.cm.core.dict.service.DictService;
 import com.woting.exceptionC.Wtcm1000CException;
 
 public class AppEngineCLU extends AbstractCacheLifecycleUnit {
-    private Logger logger = Logger.getLogger(FrameworkUgaCLU.class);
+    private Logger logger=LoggerFactory.getLogger(FrameworkUgaCLU.class);
 
     @Resource
     private DictService dictService;

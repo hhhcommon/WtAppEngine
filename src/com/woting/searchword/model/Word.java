@@ -32,15 +32,20 @@ public class Word implements Serializable {
     public Word(String word) {
         super();
         this.word=word;
-        count=0;
+        count=1;
+    }
+    public Word(String word, int count) {
+        super();
+        this.word=word;
+        this.count=count;
     }
 
     /**
      * 把检索数加1
      * 注意：这里不考虑并发的情况
      */
-    public void incream() {
-        count++;
+    public void incream(long i) {
+        count+=i;
     }
 
     @Override
