@@ -29,16 +29,23 @@ public class XiMaLaYaService implements Callable<Map<String, Object>> {
 	}
 
 	public XiMaLaYaService() {
-		// TODO Auto-generated constructor stub
 	}
 
 	public Map<String, Object> XiMaLaYaService(String content) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		List<Station> liststations = stationService(content);
 		List<Festival> listfestivals = festivalService(content);
-		map.put("XMLY_S", liststations);
-		map.put("XMLY_F", listfestivals);
-		return map == null ? null : map;
+		if (liststations.isEmpty()) {
+			map.put("XMLY_S", null);
+		} else {
+			map.put("XMLY_S", liststations);
+		}
+		if (listfestivals.isEmpty()) {
+			map.put("XMLY_F", null);
+		} else {
+			map.put("XMLY_F", listfestivals);
+		}
+		return map;
 	}
 
 	public List<Station> stationService(String content) {
@@ -81,7 +88,7 @@ public class XiMaLaYaService implements Callable<Map<String, Object>> {
 		Festival[] festivals = new Festival[S_F_NUM];
 		Document doc = null;
 		try {
-			doc = Jsoup.connect(url).timeout(3000).get();
+			doc = Jsoup.connect(url).timeout(5000).get();
 			Elements elements = doc.select("li[sound_id]");
 			for (int i = 0; i < (elements.size() > S_F_NUM ? S_F_NUM : elements.size()); i++) {
 				Festival festival = new Festival();
@@ -103,12 +110,17 @@ public class XiMaLaYaService implements Callable<Map<String, Object>> {
 		String url = "http://www.ximalaya.com/tracks/" + contendid + ".json";
 		String jsonstr = utils.jsoupTOstr(url);
 		Map<String, Object> map = utils.jsonTOmap(jsonstr);
-		festival.setPlayUrl(map.get("play_path") + ""); // 节目音频地址
-		festival.setDuration(map.get("duration") + "000"); // 音频时长 ms
-		festival.setAudioPic(map.get("cover_url_142") + ""); // 节目图片
-		festival.setCategory(map.get("category_name") + ""); // 节目分类
-		festival.setContentPub("喜马拉雅FM");
-		return festival;
+		if (map == null) {
+			return null;
+		} else {
+			festival.setPlayUrl(map.get("play_path") + ""); // 节目音频地址
+			festival.setDuration(map.get("duration") + "000"); // 音频时长 ms
+			festival.setAudioPic(map.get("cover_url_142") + ""); // 节目图片
+			festival.setCategory(map.get("category_name") + ""); // 节目分类
+			festival.setContentPub("喜马拉雅FM");
+			return festival;
+		}
+
 	}
 
 	public List<Festival> festivalService(String content) {
@@ -125,13 +137,16 @@ public class XiMaLaYaService implements Callable<Map<String, Object>> {
 					Element elf = elements.get(i);
 					String name = elf.select("a[class=soundReport_soundname]").get(0).html();
 					String id = elf.select("a[class=soundReport_soundname]").get(0).attr("href").split("/")[3];
-					String desc = elf.select("a[class=soundReport_tag]").isEmpty() ? null : elf.select("a[class=soundReport_tag]").get(0).html();
-					String host = elf.select("div[class=col soundReport_author]").isEmpty() ? null : elf.select("div[class=col soundReport_author]").get(0).select("a").get(0).html();
-					String playnum = elf.select("div[class=col soundReport_playCount]").get(0).select("span").get(0).html();
+					String desc = elf.select("a[class=soundReport_tag]").isEmpty() ? null
+							: elf.select("a[class=soundReport_tag]").get(0).html();
+					String host = elf.select("div[class=col soundReport_author]").isEmpty() ? null
+							: elf.select("div[class=col soundReport_author]").get(0).select("a").get(0).html();
+					String playnum = elf.select("div[class=col soundReport_playCount]").get(0).select("span").get(0)
+							.html();
 					festival.setAudioName(name);
 					festival.setAudioId(id);
 					festival.setAudioDes(desc);
-					festival.setHost(host == null ? null : host.split(" ")[0]); 
+					festival.setHost(host == null ? null : host.split(" ")[0]);
 					festival.setPlaynum(playnum);
 					listfestival.add(festivalS(festival.getAudioId(), festival));
 				}

@@ -6,10 +6,11 @@ import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import com.spiritdata.framework.util.JsonUtils;
+import com.spiritdata.framework.util.StringUtils;
 
 public class SearchUtils {
 
-	private int T = 3000; // 默认超时时间为3秒
+	private int T = 5000; // 默认超时时间为3秒
 
 	public SearchUtils(int T) {
 		this.T = T;
@@ -101,6 +102,7 @@ public class SearchUtils {
 			doc = Jsoup.connect(url).ignoreContentType(true).timeout(T).get();
 			// 获取频道json数据
 			str = doc.select("body").html().toString();
+			str = str.replaceAll("\"", "'");
 			str = str.replaceAll("\n", "");
 			str = str.replaceAll("&quot;", "\"");
 			str = str.replaceAll("\r", "");
