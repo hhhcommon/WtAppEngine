@@ -104,6 +104,7 @@ public class QingTingService implements Callable<Map<String, Object>> {
 				Map<String, Object> testmap = (Map<String, Object>) JsonUtils.jsonToObj(jsonstr, Map.class);
 				festival.setAudioId(testmap.get("id").toString());
 				festival.setMediaType("AUDIO");
+				festival.setContentPub("蜻蜓FM");
 				festival.setAudioPic(testmap.get("thumb").toString());
 				festival.setDuration(testmap.get("duration") + "000");
 				List<String> list_urls = (List<String>) testmap.get("urls");
