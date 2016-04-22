@@ -4,21 +4,9 @@
   针对应用的意见
 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
-  id         varchar(32)   NOT NULL                             COMMENT '用户词Id',
-  ownerType  int unsigned  NOT NULL                             COMMENT '所有者类型',
-  ownerId    varchar(32)   NOT NULL                             COMMENT '所有者Id,可能是用户也可能是设备',
-  word       varchar(100)  NOT NULL                             COMMENT '搜索词',
-  wordLang   varchar(100)  NOT NULL                             COMMENT '搜索词语言类型，系统自动判断，可能是混合类型',
-  time1      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '本词本用户首次搜索的时间',
-  time2      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '本词本用户最后搜索的时间',
-  sumNum     int unsigned  NOT NULL                             COMMENT '搜索次数',
-  cTime      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
-
-
 <mapper namespace="DA_USERWORD">
   <!-- 对象定义:用户意见 -->
-  <resultMap id="userWordMap" type="Da_UserWord">
+  <resultMap id="userWordMap" type="DaUserWord">
     <id      column="id"         property="id"         jdbcType="VARCHAR"/>
     <result  column="ownerType"  property="ownerType"  jdbcType="INTEGER"/>
     <result  column="ownerId"    property="ownerId"    jdbcType="VARCHAR"/>
@@ -65,7 +53,7 @@
   </select>
 
   <!-- 获得一条数据 -->
-  <select id="getInfo" resultMap="opinionMap" parameterType="java.util.Map">
+  <select id="getInfo" resultMap="userWordMap" parameterType="java.util.Map">
     select <include refid="Base_Column_List"/> from da_UserSearchWord <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </select>
 
@@ -76,8 +64,8 @@
       <if test="id!=null">id,</if>
       <if test="ownerType!=null and ownerType!=0">ownerType,</if>
       <if test="ownerId!=null">ownerId,</if>
-      <if test="word!=null">wordLang,</if>
-      <if test="wordLang!=null">word,</if>
+      <if test="word!=null">word,</if>
+      <if test="wordLang!=null">wordLang,</if>
       <if test="time1!=null">time1,</if>
       <if test="time2!=null">time2,</if>
       <if test="sumNum!=null and sumNum!=0">sumNum,</if>

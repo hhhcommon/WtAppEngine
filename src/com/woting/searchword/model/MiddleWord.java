@@ -78,8 +78,9 @@ public class MiddleWord implements Serializable {
                 //排序插入
                 int insertIndex=0;
                 if (searchWordSortList!=null&&!searchWordSortList.isEmpty()) {
-                    insertIndex=WordUtils.findInsertPos(w, 0, searchWordSortList.size(), searchWordSortList);
+                    insertIndex=WordUtils.findInsertPos(word, 0, searchWordSortList.size(), searchWordSortList);
                 }
+                searchWordSortList.add(insertIndex, word);
                 for (int i=insertIndex; i<searchWordSortList.size(); i++) {
                     wordIndex.put(searchWordSortList.get(i).getWord(), i);
                 }
@@ -87,13 +88,13 @@ public class MiddleWord implements Serializable {
                 //调整排序
                 if (searchWordSortList!=null&&!searchWordSortList.isEmpty()) {
                     int wordPos=wordIndex.get(word.getWord());
-                    searchWordSortList.remove(wordIndex);
+                    searchWordSortList.remove(wordPos);
                     if (wordPos!=-1) { //查到了，排序
-                        int newPos=WordUtils.findInsertPos(w, wordPos, searchWordSortList.size(), searchWordSortList);
+                        int newPos=WordUtils.findInsertPos(w, 0, wordPos, searchWordSortList);
                         if (newPos!=-1) {
                             searchWordSortList.add(newPos, w);
                             //调整位置索引
-                            for (int i=wordPos; i<=newPos; i++) {
+                            for (int i=newPos; i<=wordPos; i++) {
                                 wordIndex.put(searchWordSortList.get(i).getWord(), i);
                             }
                         }

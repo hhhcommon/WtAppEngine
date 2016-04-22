@@ -67,11 +67,17 @@ public class WordService {
                 Owner sysO=new Owner(100, "cm");
 
                 OwnerWord ow=swm.getOwnerWord(o);
-                if (ow==null) swm.putOwnerWord(new OwnerWord(o, 5));
+                if (ow==null) {
+                    ow=new OwnerWord(o, 5);
+                    swm.putOwnerWord(ow);
+                }
                 ow.addWord(_split[2]);
                 if (!o.equals(sysO)) {
                     ow=swm.getOwnerWord(sysO);
-                    if (ow==null) swm.putOwnerWord(new OwnerWord(sysO, 5));
+                    if (ow==null) {
+                        ow=new OwnerWord(sysO, 5);
+                        swm.putOwnerWord(ow);
+                    }
                     ow.addWord(_split[2]);
                 }
                 //数据库处理
@@ -93,12 +99,18 @@ public class WordService {
 
                 //总要处理一次系统
                 OwnerWord ow=swm.getOwnerWord(sysO);
-                if (ow==null) swm.putOwnerWord(new OwnerWord(sysO, 5));
+                if (ow==null) {
+                    ow=new OwnerWord(sysO, 5);
+                    swm.putOwnerWord(ow);
+                }
                 ow.loadWord(new Word(_split[2], Integer.parseInt(_split[3])));
                 //再处理一次自己
                 if (!o.equals(sysO)) {
                     ow=swm.getOwnerWord(o);
-                    if (ow==null) swm.putOwnerWord(new OwnerWord(o, 5));
+                    if (ow==null) {
+                        ow=new OwnerWord(o, 5);
+                        swm.putOwnerWord(ow);
+                    }
                     ow.loadWord(new Word(_split[2], Integer.parseInt(_split[3])));
                 }
             }
@@ -174,7 +186,7 @@ public class WordService {
         param.put("sortByClause", "sumNum");
 
         int i=1;//页数
-        Page<UserWordPo> uwPage=userWordDao.pageQuery("count", "getList", param, i++, 10000);
+        Page<UserWordPo> uwPage=userWordDao.pageQuery("count", "DA_USERWORD.getList", param, i++, 10000);
         boolean hasDD=!uwPage.getResult().isEmpty();
         //分页处理
         while (hasDD) {
@@ -183,7 +195,7 @@ public class WordService {
             for (UserWordPo uwPo: l) {
                 swm.addWord2LoadQueue(uwPo.getOwnerId()+"::"+uwPo.getOwnerType()+"::"+uwPo.getWord()+"::"+uwPo.getSumNum());
             }
-            uwPage=userWordDao.pageQuery("count", "getList", param, i++,10000);
+            uwPage=userWordDao.pageQuery("count", "DA_USERWORD.getList", param, i++,10000);
             hasDD=!uwPage.getResult().isEmpty();
         }
         

@@ -8,7 +8,7 @@
     <typeAlias alias="WtAppOpinion"   type="com.woting.appengine.appopinion.persistence.pojo.AppOpinionPo"/>
     <typeAlias alias="WtAppReOpinion" type="com.woting.appengine.appopinion.persistence.pojo.AppReOpinionPo"/>
     <!-- 搜索词 -->
-    <typeAlias alias="Da_UserWord"   type="com.woting.searchword.persis.po.UserWordPo"/>
+    <typeAlias alias="DaUserWord"   type="com.woting.searchword.persis.po.UserWordPo"/>
   </typeAliases>
   <!-- SQL配置 -->
   <mappers>
