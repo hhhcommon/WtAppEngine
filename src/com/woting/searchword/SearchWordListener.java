@@ -6,6 +6,7 @@ import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.woting.searchword.monitor.DealLoadQueue;
 import com.woting.searchword.monitor.DealOnlineQueue;
+import com.woting.searchword.monitor.LoadWord;
 import com.woting.searchword.service.WordService;
 
 /**
@@ -40,7 +41,7 @@ public class SearchWordListener extends Thread {
                 //启动加载监控
                 (new DealLoadQueue(SearchWordListener.wordService)).start();
                 //向加载队列输入内容
-                SearchWordListener.wordService.loadUserWord();
+                (new LoadWord(SearchWordListener.wordService)).start();
             }
         } catch (InterruptedException e) {
             e.printStackTrace();

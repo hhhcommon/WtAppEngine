@@ -298,7 +298,7 @@
   </select>
   <select id="getSmSubMedias" resultType="java.util.HashMap" parameterType="java.lang.String">
     select a.* from wt_MediaAsset a, wt_SeqMA_Ref b where a.id=b.mId and b.sId=#{value,jdbcType=VARCHAR}
-    group by b.columnNum desc
+    order by b.columnNum desc
   </select>
   <select id="getCataListByTypeAndIds" resultType="java.util.HashMap" parameterType="java.util.Map">
     select * from wt_ResDict_Ref where resTableName=#{resTableName,jdbcType=INTEGER} and resId in (${ids})
