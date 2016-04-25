@@ -80,7 +80,7 @@ public class OwnerWord implements Serializable {
             w.incream(1);
             if (!searchWordSortList.isEmpty()) {
                 int wordPos=wordIndex.get(word);
-                searchWordSortList.remove(wordIndex);
+                searchWordSortList.remove(wordPos);
                 int newPos=WordUtils.findInsertPos(w, 0, wordPos, searchWordSortList);
                 if (newPos!=-1) {
                     searchWordSortList.add(newPos, w);
@@ -147,6 +147,7 @@ public class OwnerWord implements Serializable {
         if (tempMw==null) {
             //从拼音中找
             String _middleWord=ChineseCharactersUtils.getFullSpellFirstUp(middleWord);
+            _middleWord=_middleWord.toLowerCase();
             tempMw=pyMiddleWordMap.get(_middleWord);
         }
         if (tempMw==null) return null;
@@ -172,7 +173,7 @@ public class OwnerWord implements Serializable {
      * 分字处理
      * @param w
      */
-    private void splitWord(Word w) {        
+    private void splitWord(Word w) {
         int hasSplit=0;
         boolean hasChar=true;
         String notSplitWords=w.getWord();
@@ -192,6 +193,7 @@ public class OwnerWord implements Serializable {
             tempMw.insertWord(w);
             //处理拼音
             String swPy=ChineseCharactersUtils.getFullSpellFirstUp(splitWords);
+            swPy=swPy.toLowerCase();
             tempMw=pyMiddleWordMap.get(swPy);
             if (tempMw==null) {
                 tempMw=new MiddleWord(swPy);

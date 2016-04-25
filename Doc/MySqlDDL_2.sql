@@ -1,6 +1,6 @@
 ﻿/**Plug**/
 /**== 一、版本管理 */
-/**P001 版本记录[WT_VERCONFIG]*/
+/**P001 版本记录[P_VERCONFIG]*/
 DROP TABLE IF EXISTS p_VerConfig;
 CREATE TABLE p_VerConfig (
   pubStorePath       varchar(200)  NOT NULL  COMMENT '最终版本发布存储目录',
@@ -10,21 +10,21 @@ CREATE TABLE p_VerConfig (
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='P001版本配置';
 
-/**P002 版本记录[WT_VERSION]*/
+/**P002 版本记录[P_VERSION]*/
 DROP TABLE IF EXISTS p_Version;
 CREATE TABLE p_Version (
-  id       varchar(32)   NOT NULL                             COMMENT '版本ID(UUID)',
-  appName  varchar(100)  NOT NULL                             COMMENT '应用名称，这里的App不单单值手机应用',
-  verNum   varchar(100)  NOT NULL                             COMMENT '版本号，此版本号的规则由程序通过正则表达式进行处理',
-  verMemo  text                                               COMMENT '版本描述，可以是一段html',
-  bugMemo  text                                               COMMENT '版本bug修改情况描述，可以是一段html',
-  pubFlag  int unsigned  NOT NULL  DEFAULT 1                  COMMENT '发布状态：1=已发布；0=未发布；此状态用于今后扩展，目前只有1',
-  apkUrl   varchar(100)  NOT NULL                             COMMENT '版本发布物的访问Url,目前仅针对apk',
-  apkSize  int unsigned  NOT NULL  DEFAULT 0                  COMMENT '版本发布物尺寸大小，是字节数,目前仅针对apk',
-  isCur    int unsigned  NOT NULL  DEFAULT 0                  COMMENT '是否是当前版本，0不是，1是',
-  pubTime  timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '发布时间',
-  cTime    timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
-  lmTime   timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改时间',
+  id        varchar(32)   NOT NULL                             COMMENT '版本ID(UUID)',
+  appName   varchar(100)  NOT NULL                             COMMENT '应用名称，这里的App不单单值手机应用',
+  verNum    varchar(100)  NOT NULL                             COMMENT '版本号，此版本号的规则由程序通过正则表达式进行处理',
+  verMemo   text                                               COMMENT '版本描述，可以是一段html',
+  bugMemo   text                                               COMMENT '版本bug修改情况描述，可以是一段html',
+  pubFlag   int unsigned  NOT NULL  DEFAULT 1                  COMMENT '发布状态：1=已发布；0=未发布；此状态用于今后扩展，目前只有1',
+  apkUrl    varchar(100)  NOT NULL                             COMMENT '版本发布物的访问Url,目前仅针对apk',
+  apkSize   int unsigned  NOT NULL  DEFAULT 0                  COMMENT '版本发布物尺寸大小，是字节数,目前仅针对apk',
+  isCurVer  int unsigned  NOT NULL  DEFAULT 0                  COMMENT '是否是当前版本，0不是，1是',
+  pubTime   timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '发布时间',
+  cTime     timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  lmTime    timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改时间',
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='P002版本记录';
