@@ -66,10 +66,10 @@ public class GroupInterCom {
     /**
      * 设置对讲者，当且仅当，当前无对讲者时，才能设置成功
      * @param speaker 新对讲者ID
-     * @return 若设置成功，设置新的对讲者，返回<"T",null>
+     * @return 返回的是Map类型若设置成功，设置新的对讲者，返回<"T",null>
      *          若新对讲者不在用户组，不允许设置，返回<"E",null>
-     *          若原对讲者不为空，不允许设置，返回<"F",this.speaker>，原对讲者对象
-     *          若原对讲者不为空，不允许设置，返回<"O",null>，只有一个人在对讲组
+     *          若原对讲者不为空，不允许设置，返回对讲者对象
+     *          若原对讲者不为空，不允许设置，返回<"O",null>，只有<"F",this.speaker>，原一个人在对讲组
      */
     synchronized public Map<String, UserPo> setSpeaker(MobileKey speakerKey) {
         Map<String, UserPo> ret = new HashMap<String, UserPo>();

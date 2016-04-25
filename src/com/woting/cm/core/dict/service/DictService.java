@@ -98,7 +98,7 @@ public class DictService {
                     ddPage=dictDDao.pageQuery("getListByOnwerDemo", param, i++,10000);
                     hasDD=!ddPage.getResult().isEmpty();
                 }
-                if (ddpol==null||ddpol.size()==0) return null;
+                if (ddpol==null||ddpol.size()==0) return _cd;
                 List<DictDetail> ddl=new ArrayList<DictDetail>();
                 Owner sysO=new Owner(100, "cm");
                 for (DictDetailPo ddp: ddpol) {

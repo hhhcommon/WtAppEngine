@@ -21,6 +21,7 @@ CREATE TABLE p_Version (
   pubFlag  int unsigned  NOT NULL  DEFAULT 1                  COMMENT '发布状态：1=已发布；0=未发布；此状态用于今后扩展，目前只有1',
   apkUrl   varchar(100)  NOT NULL                             COMMENT '版本发布物的访问Url,目前仅针对apk',
   apkSize  int unsigned  NOT NULL  DEFAULT 0                  COMMENT '版本发布物尺寸大小，是字节数,目前仅针对apk',
+  isCur    int unsigned  NOT NULL  DEFAULT 0                  COMMENT '是否是当前版本，0不是，1是',
   pubTime  timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '发布时间',
   cTime    timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   lmTime   timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改时间',
