@@ -7,17 +7,31 @@
 
 <mapper namespace="P_VERSION">
   <!-- ===================版本配置========================= -->
-  <resultMap id="verCfgMap" type="p_VersionConfig">
+  <resultMap id="verCfgMap" type="PVerConfig">
     <id      column="pubStorePath"       property="pubStorePath"       jdbcType="VARCHAR"/>
     <result  column="pubFileName"        property="pubFileName"        jdbcType="VARCHAR"/>
     <result  column="pubUrl"             property="pubUrl"             jdbcType="VARCHAR"/>
     <result  column="verGoodsStorePath"  property="verGoodsStorePath"  jdbcType="VARCHAR"/>
   </resultMap>
 
+  <!-- 获得版本配置信息 -->
+  <select id="getCfgList" resultMap="verCfgMap">
+    select * from p_VerConfig
+  </select>
+  <!-- 修改 版本配置-->
+  <update id="update" parameterType="java.util.Map">
+    update p_VerConfig
+    <set>
+      <if test="pubStorePath!=null">pubStorePath=#{pubStorePath,jdbcType=VARCHAR}</if>
+      <if test="pubFileName!=null">pubFileName=#{pubFileName,jdbcType=VARCHAR}</if>
+      <if test="pubUrl!=null">pubUrl=#{pubUrl,jdbcType=VARCHAR}</if>
+      <if test="verGoodsStorePath!=null">verGoodsStorePath=#{verGoodsStorePath,jdbcType=VARCHAR}</if>
+    </set>
+  </update>
 
   <!-- ===================版本信息========================= -->
   <!-- 对象定义:版本信息 -->
-  <resultMap id="versionMap" type="p_Version">
+  <resultMap id="versionMap" type="PVersion">
     <id      column="id"        property="id"        jdbcType="VARCHAR"/>
     <result  column="appName"   property="appName"   jdbcType="VARCHAR"/>
     <result  column="verNum"    property="verNum"    jdbcType="VARCHAR"/>

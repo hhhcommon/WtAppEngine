@@ -9,6 +9,9 @@
     <typeAlias alias="WtAppReOpinion" type="com.woting.appengine.appopinion.persistence.pojo.AppReOpinionPo"/>
     <!-- 搜索词 -->
     <typeAlias alias="DaUserWord"   type="com.woting.searchword.persis.po.UserWordPo"/>
+    <!-- 版本管理 -->
+    <typeAlias alias="PVersion"     type="com.woting.version.core.model.Version"/>
+    <typeAlias alias="PVerConfig"   type="com.woting.version.core.model.VersionConfig"/>
   </typeAliases>
   <!-- SQL配置 -->
   <mappers>
@@ -17,5 +20,7 @@
     <mapper resource="com/woting/appengine/appopinion/persistence/sql/AppReOpinion.mapper.xml"/>
     <!-- 搜索词 -->
     <mapper resource="com/woting/searchword/persis/sql/UserWord.mapper.xml"/>
+    <!-- 版本管理 -->
+    <mapper resource="com/woting/version/persis/sql/Version.mapper.xml"/>
   </mappers>
 </configuration>
