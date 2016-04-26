@@ -18,22 +18,21 @@ import java.util.Properties;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileItemFactory;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
+//import javax.servlet.http.HttpServletRequest;
+//
+//import org.apache.commons.fileupload.FileItem;
+//import org.apache.commons.fileupload.FileItemFactory;
+//import org.apache.commons.fileupload.FileUploadException;
+//import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+//import org.apache.commons.fileupload.servlet.ServletFileUpload;
+//import com.spiritdata.framework.util.FileNameUtils;
+//import com.woting.WtAppEngineConstants;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.spiritdata.framework.FConstants;
-import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
-import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.WtAppEngineConstants;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.model.MobileParam;
 import com.woting.appengine.mobile.push.model.Message;
@@ -346,7 +345,6 @@ public abstract class MobileUtils {
         map.put("MobileSession", ms);
         return map;
     }
-//
 //    //=============图片处理
 //    /**
 //     * 按类型保存图片
@@ -440,33 +438,4 @@ public abstract class MobileUtils {
 //        }
 //        return false;
 //    }
-
-    //==============版本号
-    /**
-     * 得到最新的版本号
-     */
-    public static String getLastVersion() {
-        //应该从某一个文件中读取最新的版本号
-        return ((CacheEle<String>)SystemCache.getCache(WtAppEngineConstants.APP_VERSION)).getContent();
-    }
-    /**
-     * 从配置文件中获得版本号
-     * @return
-     */
-    public static String getVersion() {
-        String version="0.0.0.0.0000";
-        Properties prop=new Properties();
-        FileInputStream in=null;
-        try {
-            String appPfileName= ((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent()+"/WEB-INF/app.properties";
-            in=new FileInputStream(appPfileName);
-            prop.load(in);
-            version=prop.getProperty("appVersion").trim()+","+prop.getProperty("publishTime").trim()+","+prop.getProperty("patchInfo").trim();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {in.close();} catch(Exception _e){} finally{in=null;}
-        }
-        return version;
-    }
 }

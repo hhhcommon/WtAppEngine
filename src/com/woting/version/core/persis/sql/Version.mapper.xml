@@ -19,7 +19,7 @@
     select * from p_VerConfig
   </select>
   <!-- 修改 版本配置-->
-  <update id="update" parameterType="java.util.Map">
+  <update id="updateCfg" parameterType="java.util.Map">
     update p_VerConfig
     <set>
       <if test="pubStorePath!=null">pubStorePath=#{pubStorePath,jdbcType=VARCHAR}</if>

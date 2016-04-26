@@ -21,6 +21,6 @@
     <!-- 搜索词 -->
     <mapper resource="com/woting/searchword/persis/sql/UserWord.mapper.xml"/>
     <!-- 版本管理 -->
-    <mapper resource="com/woting/version/persis/sql/Version.mapper.xml"/>
+    <mapper resource="com/woting/version/core/persis/sql/Version.mapper.xml"/>
   </mappers>
 </configuration>

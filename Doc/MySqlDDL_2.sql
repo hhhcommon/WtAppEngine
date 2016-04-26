@@ -14,20 +14,23 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='P001版本配置';
 DROP TABLE IF EXISTS p_Version;
 CREATE TABLE p_Version (
   id        varchar(32)   NOT NULL                             COMMENT '版本ID(UUID)',
+  verNum    int unsigned  NOT NULL                             COMMENT '自动曾一的序号',
   appName   varchar(100)  NOT NULL                             COMMENT '应用名称，这里的App不单单值手机应用',
-  verNum    varchar(100)  NOT NULL                             COMMENT '版本号，此版本号的规则由程序通过正则表达式进行处理',
+  version   varchar(100)  NOT NULL                             COMMENT '版本号，此版本号的规则由程序通过正则表达式进行处理',
   verMemo   text                                               COMMENT '版本描述，可以是一段html',
   bugMemo   text                                               COMMENT '版本bug修改情况描述，可以是一段html',
   pubFlag   int unsigned  NOT NULL  DEFAULT 1                  COMMENT '发布状态：1=已发布；0=未发布；此状态用于今后扩展，目前只有1',
-  apkUrl    varchar(100)  NOT NULL                             COMMENT '版本发布物的访问Url,目前仅针对apk',
+  apkFile   varchar(100)  NOT NULL                             COMMENT '版本发布物的存放地址,目前仅针对apk',
   apkSize   int unsigned  NOT NULL  DEFAULT 0                  COMMENT '版本发布物尺寸大小，是字节数,目前仅针对apk',
   isCurVer  int unsigned  NOT NULL  DEFAULT 0                  COMMENT '是否是当前版本，0不是，1是',
   pubTime   timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '发布时间',
   cTime     timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   lmTime    timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  UNIQUE INDEX idx_Ver(version) USING BTREE
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='P002版本记录';
+
 
 /**DataAnalysis**/
 /**== 二、用户数据 */

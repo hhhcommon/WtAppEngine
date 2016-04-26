@@ -3,13 +3,19 @@ package com.woting.appengine.mobile.session.mem;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.ServletContext;
+
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.WtAppEngineConstants;
-import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.session.model.MobileSession;
+import com.woting.version.core.model.VersionConfig;
+import com.woting.version.core.service.VersionService;
 
 /**
  * 会话管理类，也就是会话的服务类
@@ -18,7 +24,7 @@ import com.woting.appengine.mobile.session.model.MobileSession;
 public class SessionMemoryManage {
     //java的占位单例模式===begin
     private static class InstanceHolder {
-        public static SessionMemoryManage instance = new SessionMemoryManage();
+        public static SessionMemoryManage instance=new SessionMemoryManage();
     }
     public static SessionMemoryManage getInstance() {
         return InstanceHolder.instance;
@@ -28,28 +34,39 @@ public class SessionMemoryManage {
     /**
      * 移动会话内存数据
      */
-    protected SessionMemory sm = null;
+    protected SessionMemory sm=null;
 
+    private VersionService versionService=null;
+    
     /*
      * 构造方法，设置移动会话内存数据
      */
     private SessionMemoryManage() {
-        this.sm = SessionMemory.getInstance();
+        this.sm=SessionMemory.getInstance();
     }
 
     /**
      * 清除过期的会话
      */
     public void clean() {
-        //读取版本号
-        SystemCache.setCache(
-            new CacheEle<String>(WtAppEngineConstants.APP_VERSION, "移动端版本", MobileUtils.getVersion())
-        );
+        //加载版本配置
+        if (versionService==null) {
+            //加载版本配置
+            ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
+            if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                versionService=(VersionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("versonService");
+            }
+
+        } else {
+            SystemCache.setCache(
+                new CacheEle<VersionConfig>(WtAppEngineConstants.APP_VERSIONCONFIG, "版本设置", versionService.getVerConfig())
+            );
+        }
         //清除会话
         List<MobileSession> beRemovedList= new ArrayList<MobileSession>();
         if (this.sm.mSessionMap!=null&&!this.sm.mSessionMap.isEmpty()) {
             for (String sKey: this.sm.mSessionMap.keySet()) {
-                MobileSession ms = this.sm.mSessionMap.get(sKey);
+                MobileSession ms=this.sm.mSessionMap.get(sKey);
                 if (ms.expired()) {
                     beRemovedList.add(this.sm.mSessionMap.remove(sKey));
                 }
@@ -76,7 +93,7 @@ public class SessionMemoryManage {
         if (this.sm.mSessionMap!=null&&this.sm.mSessionMap.size()>0
             &&!StringUtils.isNullOrEmptyOrSpace(imei)) {
             for (String sKey: this.sm.mSessionMap.keySet()) {
-                MobileSession ms = this.sm.mSessionMap.get(sKey);
+                MobileSession ms=this.sm.mSessionMap.get(sKey);
                 if (ms.getKey().getMobileId().equals(imei)) {
                     ms.expire();
                 }
