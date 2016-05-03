@@ -181,6 +181,8 @@ public class FriendService {
             um.remove("Email");
             um.remove("Email");
             dataMap.put("InviteUserInfo", um);
+            nMsg.setMsgContent(dataMap);
+            pmm.getSendMemory().addMsg2NotifyQueue(beInvitedUserId, nMsg);//发送通知消息
 
             m.put("ReturnType", "1001");
             m.put("InviteCount", ifPo.getInviteVector());

@@ -169,7 +169,6 @@ public class SocketHandle extends Thread {
                                     }
                                     if (canSend) {
                                         if (out==null) out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
-                                        System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+m.toJson());
                                         out.println(m.toJson());
                                         out.flush();
                                         if (m.getMsgBizType().equals("AUDIOFLOW")&&m.getCommand().equals("b1")) {//对语音广播包做特殊处理
@@ -182,6 +181,7 @@ public class SocketHandle extends Thread {
                                                 if (ts.getSendFlagMap().get(mk.toString())!=null) ts.getSendFlagMap().put(mk.toString(), 1);
                                             } catch(Exception e) {}
                                         }
+                                        System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+m.toJson());
                                     }
                                     try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
                                 }
@@ -193,9 +193,10 @@ public class SocketHandle extends Thread {
                                     nm.setToAddr(MobileUtils.getAddr(mk));
                                     synchronized(socketSendLock) {
                                         if (out==null) out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
-                                        System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送通知消息]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+nm.toJson());
                                         out.println(nm.toJson());
                                         out.flush();
+                                        System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送通知消息]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+nm.toJson());
+                                        try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
                                     }
                                 }
                             }
