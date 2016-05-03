@@ -5,7 +5,6 @@ import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
 import com.spiritdata.framework.core.model.BaseObject;
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.StringUtils;
