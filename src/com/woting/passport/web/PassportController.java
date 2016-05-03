@@ -220,6 +220,102 @@ public class PassportController {
     }
 
     /**
+     * 第三方登录注册
+     * @throws IOException
+     */
+    @RequestMapping(value="user/registerThird.do")
+    @ResponseBody
+    public Map<String,Object> registerThird(HttpServletRequest request) {
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            MobileSession ms=null;
+            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                if ((retM.get("ReturnType")+"").equals("2001")) {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取设备Id(IMEI)");
+                } else {
+                    ms=(MobileSession)retM.get("MobileSession");
+                    map.put("SessionId", ms.getKey().getSessionId());
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //1-获取业务参数
+            //1.1-获取业务参数：第三方登录的分类：=1微信；=2QQ；=3微博
+            String ln=(String)m.get("UserName");
+            String pwd=(String)m.get("Password");
+            String errMsg="";
+            if (StringUtils.isNullOrEmptyOrSpace(ln)) errMsg+=",用户名为空";
+            char[] c=ln.toCharArray();
+            if (c[0]>='0' && c[0]<='9') errMsg+=",登录名第一个字符不能是数字";
+            if (StringUtils.isNullOrEmptyOrSpace(pwd)) errMsg+=",密码为空";
+            if (!StringUtils.isNullOrEmptyOrSpace(errMsg)) {
+                errMsg=errMsg.substring(1);
+                map.put("ReturnType", "1002");
+                map.put("Message", errMsg+",无法注册");
+                return map;
+            }
+            UserPo nu=new UserPo();
+            nu.setLoginName(ln);
+            nu.setPassword(pwd);
+            //1-判断是否有重复的用户
+            UserPo oldUser=userService.getUserByLoginName(ln);
+            if (oldUser!=null) { //重复
+                map.put("ReturnType", "1003");
+                map.put("Message", "登录名重复,无法注册.");
+                return map;
+            }
+            //1.5-手机号码注册
+            String info=ms.getAttribute("phoneCheckInfo")+"";
+            if (info.startsWith("OK")) {
+                nu.setMainPhoneNum(info.substring(4));
+            }
+            //2-保存用户
+            nu.setCTime(new Timestamp(System.currentTimeMillis()));
+            nu.setUserType(1);
+            nu.setUserId(SequenceUUID.getUUIDSubSegment(4));
+            int rflag=userService.insertUser(nu);
+            if (rflag!=1) {
+                map.put("ReturnType", "1004");
+                map.put("Message", "注册失败，新增用户存储失败");
+                return map;
+            }
+            //3-注册成功后，自动登陆，及后处理
+            map.put("SessionId", nu.getUserId());
+            //3.1-处理Session
+            smm.expireAllSessionByIMEI(ms.getKey().getMobileId()); //作废所有imei对应的Session
+            MobileKey newMk=ms.getKey();
+            newMk.setUserId(nu.getUserId());
+            ms.addAttribute("user", nu);
+            ms.remove("phoneCheckInfo");//去掉之前的验证信息
+            smm.addOneSession(ms);
+            //3.2-保存使用情况
+            MobileUsedPo mu=new MobileUsedPo();
+            mu.setImei(newMk.getMobileId());
+            mu.setStatus(1);
+            mu.setUserId(nu.getUserId());
+            mu.setPCDType(newMk.getPCDType());
+            muService.saveMobileUsed(mu);
+            //4-返回成功，若没有IMEI也返回成功
+            map.put("ReturnType", "1001");
+            map.put("UserId", nu.getUserId());
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
+            return map;
+        }
+    }
+
+    /**
      * 用户注销
      * @throws IOException
      */
