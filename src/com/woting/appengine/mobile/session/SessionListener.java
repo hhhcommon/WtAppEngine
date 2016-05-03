@@ -49,9 +49,9 @@ public class SessionListener extends Thread {
             //读取版本配置，并存入内存
             ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
             if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-                VersionService versonService=(VersionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("versonService");
+                VersionService versionService=(VersionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("versionService");
                 SystemCache.setCache(
-                    new CacheEle<VersionConfig>(WtAppEngineConstants.APP_VERSIONCONFIG, "版本设置", versonService.getVerConfig())
+                    new CacheEle<VersionConfig>(WtAppEngineConstants.APP_VERSIONCONFIG, "版本设置", versionService.getVerConfig())
                 );
             }
             //初始化内存结构

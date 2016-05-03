@@ -54,7 +54,7 @@ public class SessionMemoryManage {
             //加载版本配置
             ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
             if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-                versionService=(VersionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("versonService");
+                versionService=(VersionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("versionService");
             }
 
         } else {

@@ -65,7 +65,7 @@ public class PushMemoryManage {
      */
     public Message getSendMessages(MobileKey mk) {
         //从发送队列取一条消息
-        Message m= sm.pollTypeQueue(mk);
+        Message m=sm.pollQueue(mk);
         if (m!=null) {
             if (m.isAffirm()) {
 //                try {
@@ -81,6 +81,16 @@ public class PushMemoryManage {
             }*/
         }
         return m;
+    }
+
+    /**
+     * 根据用户标识userId，获得发送消息。<br/>
+     * 若有更多需要回传的消息，需通过下次请求给出。
+     * @param userId 用户标识
+     * @return 消息体
+     */
+    public Message getNotifyMessages(String userId) {
+        return sm.pollNotifyQueue(userId);
     }
 
     private AtomicBoolean serverRuning=new AtomicBoolean(false); //推送服务是否正常运行
