@@ -254,7 +254,7 @@ public class FriendService {
                 }
                 inviteFriendDao.update(ifPo);
 
-                //发送消息
+                //发送消息——给邀请人
                 Message bMsg=new Message();
                 bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
                 bMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
@@ -269,6 +269,13 @@ public class FriendService {
                 dataMap.put("DealType", isRefuse?"2":"1");
                 if (isRefuse&&!StringUtils.isNullOrEmptyOrSpace(refuseMsg)) dataMap.put("RefuseMsg", refuseMsg);
                 dataMap.put("DealTime", System.currentTimeMillis());
+                //加入被邀请人信息
+                UserPo u=userDao.getInfoObject("getUserById", userId);
+                Map<String, Object> um=u.toHashMap4Mobile();
+                um.remove("PhoneNum");
+                um.remove("Email");
+                um.remove("Email");
+                dataMap.put("BeInvitedUserInfo", um);
                 bMsg.setMsgContent(dataMap);
                 pmm.getSendMemory().addMsg2NotifyQueue(inviteUserId, bMsg);
 
