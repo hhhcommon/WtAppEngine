@@ -670,7 +670,12 @@ public class GroupService {
             //发送给userId
             bMsg.setToAddr("("+adminId+"||wt)");
             Map<String, Object> dataMap=new HashMap<String, Object>();
-            dataMap.put("ApplyUserId", userId);
+            UserPo u=userDao.getInfoObject("getUserById", userId);
+            Map<String, Object> um=u.toHashMap4Mobile();
+            um.remove("PhoneNum");
+            um.remove("Email");
+            um.remove("Email");
+            dataMap.put("ApplyUserInfo", um);
             GroupPo gp=this.getGroupById(groupId);
             if (gp!=null) {
                 Map<String, Object> gMap=new HashMap<String, Object>();
@@ -841,7 +846,6 @@ public class GroupService {
             //发送给userId
             bMsg.setToAddr("("+userId+"||wt)");
             Map<String, Object> dataMap=new HashMap<String, Object>();
-            dataMap.put("FriendId", userId);
             if (gp!=null) {
                 Map<String, Object> gMap=new HashMap<String, Object>();
                 gMap.put("GroupId", gp.getGroupId());
@@ -854,7 +858,9 @@ public class GroupService {
             if (isRefuse&&!StringUtils.isNullOrEmptyOrSpace(refuseMsg)) dataMap.put("RefuseMsg", refuseMsg);
             dataMap.put("DealTime", System.currentTimeMillis());
             bMsg.setMsgContent(dataMap);
-            pmm.getSendMemory().addMsg2NotifyQueue(userId, bMsg);
+            if (type==1) pmm.getSendMemory().addMsg2NotifyQueue(inviteUserId, bMsg);//1邀请,给邀请人发送信息
+            else 
+            if (type==2) pmm.getSendMemory().addMsg2NotifyQueue(userId, bMsg);//2申请,给申请人发送信息
         }
         return m;
     }
@@ -927,9 +933,27 @@ public class GroupService {
                 //发送给userId
                 bMsg.setToAddr("("+inviteUserId+"||wt)");
                 Map<String, Object> dataMap=new HashMap<String, Object>();
-                dataMap.put("GroupId", groupId);
-                dataMap.put("InviteUserId", inviteUserId);
-                dataMap.put("BeInvitedUserId", beInvitedUserId);
+
+                GroupPo gp=this.getGroupById(groupId);
+                if (gp!=null) {
+                    Map<String, Object> gMap=new HashMap<String, Object>();
+                    gMap.put("GroupId", gp.getGroupId());
+                    gMap.put("GroupName", gp.getGroupName());
+                    gMap.put("GroupDesc", gp.getDescn());
+                    dataMap.put("GroupInfo", gMap);
+                }
+                UserPo u=userDao.getInfoObject("getUserById", inviteUserId);
+                Map<String, Object> um=u.toHashMap4Mobile();
+                um.remove("PhoneNum");
+                um.remove("Email");
+                um.remove("Email");
+                dataMap.put("InviteUserInfo", um);
+                u=userDao.getInfoObject("getUserById", beInvitedUserId);
+                um=u.toHashMap4Mobile();
+                um.remove("PhoneNum");
+                um.remove("Email");
+                um.remove("Email");
+                dataMap.put("BeInvitedUserInfo", um);
                 if (!StringUtils.isNullOrEmptyOrSpace(refuseMsg)) dataMap.put("RefuseMsg", refuseMsg);
                 dataMap.put("DealTime", System.currentTimeMillis());
                 bMsg.setMsgContent(dataMap);
@@ -1229,8 +1253,18 @@ public class GroupService {
                 nMsg.setCmdType("GROUP");
                 nMsg.setCommand("b6");
                 Map<String, Object> dataMap=new HashMap<String, Object>();
-                dataMap.put("GroupId", g.getGroupId());
-                dataMap.put("NewAdminId", toUserId);
+                Map<String, Object> gMap=new HashMap<String, Object>();
+                gMap.put("GroupId", gp.getGroupId());
+                gMap.put("GroupName", gp.getGroupName());
+                gMap.put("GroupDesc", gp.getDescn());
+                dataMap.put("GroupInfo", gMap);
+                UserPo u=userDao.getInfoObject("getUserById", toUserId);
+                Map<String, Object> um=u.toHashMap4Mobile();
+                um.remove("PhoneNum");
+                um.remove("Email");
+                um.remove("Email");
+                dataMap.put("NewAdminInfo", um);
+
                 nMsg.setMsgContent(dataMap);
                 for (UserPo _up: upl) {
                     nMsg.setToAddr("("+_up.getUserId()+"||wt)");

@@ -7,6 +7,8 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import org.springframework.stereotype.Service;
+
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
@@ -15,6 +17,7 @@ import com.woting.passport.useralias.mem.UserAliasMemoryManage;
 import com.woting.passport.useralias.model.UserAliasKey;
 import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
 
+@Service
 public class UserAliasService {
     private UserAliasMemoryManage uamm=UserAliasMemoryManage.getInstance();
 

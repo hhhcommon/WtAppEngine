@@ -101,7 +101,7 @@ public class FriendService {
                 m.put("ReturnType", "1005");
                 ifPo=ifl.get(0);
                 info=new HashMap<String, Object>();
-                info.put("InviteTime", DateUtils.convert2TimeChineseStr(ifPo.getInviteTime()));
+                info.put("InviteTime", ifPo.getInviteTime().getTime());
                 info.put("InviteMessage", ifPo.getInviteMessage());
                 info.put("InviteCount", ifPo.getInviteVector());
                 //获得对方信息
