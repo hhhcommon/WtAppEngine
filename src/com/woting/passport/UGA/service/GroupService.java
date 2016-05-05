@@ -983,6 +983,40 @@ public class GroupService {
         newInfo.put("groupId", g.getGroupId());
         newInfo.put("userId", userId);
         groupDao.update("updateGroupUserByUserIdGroupId", newInfo);
+        //组信息广播到组内所有成员
+        //通知消息
+        Message nMsg=new Message();
+        nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+        nMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+        nMsg.setMsgType(1);
+        nMsg.setAffirm(0);
+        nMsg.setMsgBizType("NOTIFY");
+        nMsg.setCmdType("GROUP");
+        nMsg.setCommand("b9");
+        Map<String, Object> dataMap=new HashMap<String, Object>();
+        Map<String, Object> gMap=new HashMap<String, Object>();
+        gMap.put("GroupId", g.getGroupId());
+        gMap.put("GroupNum", g.getGroupNum());
+        gMap.put("GroupType", g.getGroupType());
+        if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupSignature())) gMap.put("GroupSignature", g.getGroupSignature());
+        if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupImg())) gMap.put("GroupImg", g.getGroupImg());
+        gMap.put("GroupName", g.getGroupName());
+        if (!StringUtils.isNullOrEmptyOrSpace(g.getCreateUserId())) gMap.put("GroupCreator", g.getCreateUserId());
+        if (!StringUtils.isNullOrEmptyOrSpace((String)g.getAdminUserIds())) gMap.put("GroupManager", g.getAdminUserIds());
+        gMap.put("GroupCount", g.getGroupCount());
+        if (!StringUtils.isNullOrEmptyOrSpace((String)g.getDescn())) gMap.put("GroupOriDescn", g.getDescn());
+        dataMap.put("GroupInfo", gMap);
+        nMsg.setMsgContent(dataMap);
+
+        GroupInterCom gic = gmm.getGroupInterCom(g.getGroupId());
+        List<UserPo> upl = null;
+        if (gic!=null) upl=gic.getGroup().getUserList();
+        else upl=userDao.queryForList("getGroupMembers", g.getGroupId());
+        //群发
+        for (UserPo _up: upl) {
+            nMsg.setToAddr("("+_up.getUserId()+"||wt)");
+            pmm.getSendMemory().addMsg2NotifyQueue(_up.getUserId(), nMsg);//发送通知消息
+        }
     }
 
     /**
@@ -1116,8 +1150,8 @@ public class GroupService {
                     bMsg.setToAddr(MobileUtils.getAddr(mk));
                     pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                 }
-                nMsg.setToAddr("("+up.getUserId()+"||wt)");
-                pmm.getSendMemory().addMsg2NotifyQueue(up.getUserId(), nMsg);//发送通知消息
+                nMsg.setToAddr("("+_up.getUserId()+"||wt)");
+                pmm.getSendMemory().addMsg2NotifyQueue(_up.getUserId(), nMsg);//发送通知消息
             }
         }
         return ret;
@@ -1275,7 +1309,7 @@ public class GroupService {
         return ret;
     }
 
-    public Map<String, Object>  updateGroupUser(Map<String, String> param, String userId, GroupPo gp) {
+    public Map<String, Object> updateGroupUser(Map<String, String> param, String userId, GroupPo gp) {
         String groupId=gp.getGroupId();
         GroupInterCom gic = gmm.getGroupInterCom(groupId);
         Group g=null;
