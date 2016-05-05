@@ -196,8 +196,8 @@ public class PassportController {
             smm.expireAllSessionByIMEI(ms.getKey().getMobileId()); //作废所有imei对应的Session
             MobileKey newMk=ms.getKey();
             newMk.setUserId(nu.getUserId());
+            ms=new MobileSession(newMk);
             ms.addAttribute("user", nu);
-            ms.remove("phoneCheckInfo");//去掉之前的验证信息
             smm.addOneSession(ms);
             //3.2-保存使用情况
             MobileUsedPo mu=new MobileUsedPo();
@@ -276,13 +276,31 @@ public class PassportController {
             //1.4-获取业务参数：详细数据
             Map<String, Object> tuserData=(Map<String, Object>)m.get("ThirdUserInfo");
 
-            //第三方登录
+            //2第三方登录
             Map<String, Object> rm=userService.thirdLogin(thirdType, tuserId, tuserName, tuserImg, tuserData);
 
-            //返回
+            //3-成功后，自动登陆，及后处理
+            String _userId=((UserPo)rm.get("userInfo")).getUserId();
+            map.put("SessionId", _userId);
+            //3.1-处理Session
+            smm.expireAllSessionByIMEI(ms.getKey().getMobileId()); //作废所有imei对应的Session
+            MobileKey newMk=ms.getKey();
+            newMk.setUserId(_userId);
+            ms=new MobileSession(newMk);
+            ms.addAttribute("user", rm.get("userInfo"));
+            smm.addOneSession(ms);
+            //3.2-保存使用情况
+            MobileUsedPo mu=new MobileUsedPo();
+            mu.setImei(newMk.getMobileId());
+            mu.setStatus(1);
+            mu.setUserId(_userId);
+            mu.setPCDType(newMk.getPCDType());
+            muService.saveMobileUsed(mu);
+
+            //4设置返回值
             map.put("IsNew", "True");
             if ((Integer)rm.get("count")>1) map.put("IsNew", "False");
-            map.put("UserInfo", rm.get("userInfo"));
+            map.put("UserInfo", ((UserPo)rm.get("userInfo")).toHashMap4Mobile());
             map.put("ReturnType", "1001");
             return map;
         } catch(Exception e) {

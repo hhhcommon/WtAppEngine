@@ -140,7 +140,6 @@ public class FriendService {
                         canContinue=false;
                     } else isUpdate=true;
                 }
-                
             }
         }
         //正式保存邀请信息

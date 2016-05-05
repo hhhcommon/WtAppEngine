@@ -179,7 +179,7 @@ public class UserService implements UgaUserService {
             thirdUserDao.update(paramM);
             uPo=userDao.getInfoObject("getUserById", tuPo.getUserId());
         }
-        if (uPo!=null) r.put("userInfo", uPo.toHashMap4Mobile());
+        if (uPo!=null) r.put("userInfo", uPo);
         if (tuPo!=null) r.put("count", tuPo.getThirdLoginCount());
        
         return r;
