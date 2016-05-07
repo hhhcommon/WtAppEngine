@@ -35,17 +35,24 @@ public abstract class DataTransform {
 		List<Map<String, Object>> list_AudioData = new ArrayList<Map<String, Object>>();
 		if (list_Festival.size() > 0) {
 			for (Festival festival : list_Festival) {
-				// ContentCatalogs内容分类、ContentKeyWord关键词、ContentSubjectWord主题词和PlayCount播放次数未定义参数
-				Map<String, Object> map = new HashMap<String, Object>();
-				map = festival2Audio(festival);
-				list_AudioData.add(map);
+				if (festival != null) {
+					// ContentCatalogs内容分类、ContentKeyWord关键词、ContentSubjectWord主题词播放次数未定义参数
+					Map<String, Object> map = new HashMap<String, Object>();
+					map = festival2Audio(festival);
+					list_AudioData.add(map);
+				}
 			}
 		}
 		if (PageType == 0) {
 			if (list_Station.size() > 0) {
 				for (int i = 0; i < list_Station.size(); i++) {
-					Map<String, Object> map = datas2Sequ_Audio(list_Station.get(i));
-					list_AudioData.add(map);
+					if (list_Station.get(i).getFestival() != null) {
+						if (list_Station.get(i).getFestival().length > 0) {
+							Map<String, Object> map = datas2Sequ_Audio(list_Station.get(i));
+							if (map != null)
+								list_AudioData.add(map);
+						}
+					}
 				}
 			}
 		}
@@ -86,10 +93,16 @@ public abstract class DataTransform {
 		if (station.getFestival() == null) {
 			return null;
 		}
-		Festival festival = station.getFestival()[0];
-		Map<String, Object> map = festival2Audio(festival);
-		map.put("SeqInfo", station2Sequ(station));
-		return map;
+		Map<String, Object> map = new HashMap<String, Object>();
+		if (station.getFestival()[0] != null) {
+			Festival festival = station.getFestival()[0];
+			map = festival2Audio(festival);
+			map.put("SeqInfo", station2Sequ(station));
+			return map;
+		} else {
+			return null;
+		}
+
 	}
 
 	/**

@@ -11,32 +11,33 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.stereotype.Service;
 
 import com.spiritdata.framework.util.JsonUtils;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
+@Service
 public class QingTingService implements Callable<Map<String, Object>> {
 
-	private int S_S_NUM = 2; // 搜索频道的数目
-	private int S_F_NUM = 2; // 搜索频道内节目的数目
-	private int F_NUM = 2; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
-	private int T = 3000;
-	SearchUtils utils = new SearchUtils();
+	private final int S_S_NUM = 2; // 搜索频道的数目
+	private final int F_NUM = 2; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
+	private final int T = 5000;
 	private String constr = "";
+	Map<String, Object> map = new HashMap<String,Object>();
 
-	public QingTingService(String constr) {
+	public QingTingService(String constr,Map<String, Object> map) {
 		this.constr = constr;
+		this.map = map;
 	}
 
 	public QingTingService() {
-		// TODO Auto-generated constructor stub
 	}
 
 	// 电台搜索链接请求
-	public Map<String, Object> QingTingService(String url) {
-		url = utils.utf8TOurl(url);
+	public Map<String, Object> qingtingService(String url) {
+		url = SearchUtils.utf8TOurl(url);
 		Map<String, Object> map = new HashMap<String, Object>();
 		String station_url = "http://www.qingting.fm/s/search/" + url;
 		List<Festival> list_festival = new ArrayList<Festival>();
@@ -52,17 +53,15 @@ public class QingTingService implements Callable<Map<String, Object>> {
 			String festival_num = elements_festivals.select("a[href]").html();
 			String station_num = elements_stations.select("a[href]").html();
 			String radio_num = elements_radios.select("a[href]").html();
-			int r_num = utils.findint(radio_num); // 电台数量
-			int s_num = utils.findint(station_num); // 频道数量
-			int f_num = utils.findint(festival_num);// 节目数量
+			int r_num = SearchUtils.findint(radio_num); // 电台数量
+			int s_num = SearchUtils.findint(station_num); // 频道数量
+			int f_num = SearchUtils.findint(festival_num);// 节目数量
 			elements = doc.select("li[class=playable clearfix]");
 			for (int i = r_num; i < r_num + s_num + F_NUM; i++) {
 				String title = elements.get(i).select("a[href]").get(0).select("span").get(0).html();
-				String href = "http://www.qingting.fm"
-						+ elements.get(i).select("a[href]").get(0).attr("data-switch-url");
+				String href = "http://www.qingting.fm" + elements.get(i).select("a[href]").get(0).attr("data-switch-url");
 				if (i >= r_num + s_num) {
 					Festival festival = new Festival();
-					festival.setContentPub("蜻蜓FM");
 					festival = festivalS(href);
 					festival.setAudioName(title);
 					list_festival.add(festival);
@@ -102,6 +101,7 @@ public class QingTingService implements Callable<Map<String, Object>> {
 				Element element = doc.select("li[class=playable auto-play clearfix]").get(0);
 				String jsonstr = element.attr("data-play-info").replaceAll("&quot;", "\"");
 				Map<String, Object> testmap = (Map<String, Object>) JsonUtils.jsonToObj(jsonstr, Map.class);
+				festival.setAudioName(testmap.get("name").toString());
 				festival.setAudioId(testmap.get("id").toString());
 				festival.setMediaType("AUDIO");
 				festival.setContentPub("蜻蜓FM");
@@ -136,6 +136,7 @@ public class QingTingService implements Callable<Map<String, Object>> {
 			station.setDesc(descstr);
 			String jsonstr = element.attr("data-play-info").replaceAll("&quot;", "\"");
 			Map<String, Object> testmap = (Map<String, Object>) JsonUtils.jsonToObj(jsonstr, Map.class);
+			festival.setAudioName(testmap.get("name").toString());
 			festival.setAudioId(testmap.get("id").toString());
 			festival.setMediaType("AUDIO");
 			festival.setContentPub("蜻蜓FM");
@@ -154,6 +155,7 @@ public class QingTingService implements Callable<Map<String, Object>> {
 
 	@Override
 	public Map<String, Object> call() throws Exception {
-		return QingTingService(constr);
+		map = qingtingService(constr) == null ? null : qingtingService(constr);
+		return map;
 	}
 }

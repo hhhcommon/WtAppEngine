@@ -6,15 +6,10 @@ import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import com.spiritdata.framework.util.JsonUtils;
-import com.spiritdata.framework.util.StringUtils;
 
-public class SearchUtils {
+public abstract class SearchUtils {
 
-	private int T = 5000; // 默认超时时间为3秒
-
-	public SearchUtils(int T) {
-		this.T = T;
-	}
+	private static int T = 1000; // 默认超时时间
 
 	public SearchUtils() {
 	}
@@ -26,7 +21,7 @@ public class SearchUtils {
 	 *            搜索的中文内容
 	 * @return 返回转成的url编码
 	 */
-	public String utf8TOurl(String s) {
+	public static String utf8TOurl(String s) {
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < s.length(); i++) {
 			char c = s.charAt(i);
@@ -37,7 +32,6 @@ public class SearchUtils {
 				try {
 					b = String.valueOf(c).getBytes("utf-8");
 				} catch (Exception ex) {
-					System.out.println(ex);
 					b = new byte[0];
 				}
 				for (int j = 0; j < b.length; j++) {
@@ -61,7 +55,7 @@ public class SearchUtils {
 	 *            解析json数据各层的属性名，可多个，也可为空
 	 * @return 返回已解析好的json数据
 	 */
-	public List<Map<String, Object>> jsonTOlist(String jsonstr, String... strings) {
+	public static List<Map<String, Object>> jsonTOlist(String jsonstr, String... strings) {
 		if (strings.length == 0 || jsonstr.isEmpty() || jsonstr.equals("")) {
 			return null;
 		} else {
@@ -75,7 +69,7 @@ public class SearchUtils {
 	}
 
 	@SuppressWarnings("unchecked")
-	public Map<String, Object> jsonTOmap(String jsonstr, String... strings) {
+	public static Map<String, Object> jsonTOmap(String jsonstr, String... strings) {
 		if (jsonstr.isEmpty() || jsonstr.equals("")) {
 			return null;
 		} else {
@@ -83,7 +77,6 @@ public class SearchUtils {
 			for (int i = 0; i < strings.length; i++) {
 				testmap = (Map<String, Object>) testmap.get(strings[i]);
 			}
-
 			return testmap;
 		}
 	}
@@ -95,7 +88,7 @@ public class SearchUtils {
 	 *            链接地址
 	 * @return 得到的json格式数据或者html格式文本
 	 */
-	public String jsoupTOstr(String url) {
+	public static String jsoupTOstr(String url) {
 		Document doc = null;
 		String str = null;
 		try {
@@ -112,7 +105,7 @@ public class SearchUtils {
 		return str;
 	}
 
-	public int findint(String str) {
+	public static int findint(String str) {
 		char[] s = str.toCharArray();
 		String d = "";
 		for (int i = 0; i < s.length; i++) {

@@ -19,10 +19,9 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 public class KaoLaService implements Callable<Map<String, Object>> {
 
-	private int S_S_NUM = 2; // 搜索频道的数目
-	private int S_F_NUM = 2; // 搜索频道内节目的数目
-	private int F_NUM = 2; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
-	SearchUtils utils = new SearchUtils(5000); // 搜索工具
+	private final int S_S_NUM = 2; // 搜索频道的数目
+	private final int S_F_NUM = 2; // 搜索频道内节目的数目
+	private final int F_NUM = 2; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
 	/**
 	 * Map<String, Object> "KL_Fl":list_festival "KL_Sl":list_station
 	 * 
@@ -34,11 +33,10 @@ public class KaoLaService implements Callable<Map<String, Object>> {
 	}
 
 	public KaoLaService() {
-		// TODO Auto-generated constructor stub
 	}
 
 	public Map<String, Object> kaolaService(String content) {
-		String str = utils.utf8TOurl(content);
+		String str = SearchUtils.utf8TOurl(content);
 		List<Station> list_station = StationS(str);
 		List<Festival> list_festival = FestivalsS(str);
 		Map<String, Object> map = new HashMap<>();
@@ -59,8 +57,8 @@ public class KaoLaService implements Callable<Map<String, Object>> {
 				+ "&rtype=20000&pagesize=20&pagenum=1";
 		List<Station> list_station = new ArrayList<Station>();
 		String station_id = new String();
-		String jsonstr = utils.jsoupTOstr(station_url);
-		List<Map<String, Object>> list_href = utils.jsonTOlist(jsonstr, "result", "dataList");
+		String jsonstr = SearchUtils.jsoupTOstr(station_url);
+		List<Map<String, Object>> list_href = SearchUtils.jsonTOlist(jsonstr, "result", "dataList");
 		if (!list_href.isEmpty()) {
 			for (int i = 0; i < (list_href.size() > S_S_NUM ? S_S_NUM : list_href.size()); i++) {
 				// 频道信息采集
@@ -83,8 +81,8 @@ public class KaoLaService implements Callable<Map<String, Object>> {
 				station.setHost(S_host_name);
 				String festival_url = "http://www.kaolafm.com/webapi/audios/list?id=" + station_id
 						+ "&pagesize=20&pagenum=1&sorttype=1";
-				jsonstr = utils.jsoupTOstr(festival_url);
-				List<Map<String, Object>> list_href2 = utils.jsonTOlist(jsonstr, "result", "dataList");
+				jsonstr = SearchUtils.jsoupTOstr(festival_url);
+				List<Map<String, Object>> list_href2 = SearchUtils.jsonTOlist(jsonstr, "result", "dataList");
 				if (list_href2.size() > 0) {
 					for (int j = 0; j < (list_href2.size() > S_F_NUM ? S_F_NUM : list_href2.size()); j++) {
 						// 频道里节目信息采集
@@ -93,21 +91,20 @@ public class KaoLaService implements Callable<Map<String, Object>> {
 						festival.setContentPub("考拉FM");
 						festival.setAudioId(list_href2.get(j).get("audioId").toString());
 						festival.setAudioName(list_href2.get(j).get("audioName").toString());
-						festival.setAudioPic(list_href2.get(j).get("audioPic") == null ? ""
+						festival.setAudioPic(list_href2.get(j).get("audioPic") == null ? null
 								: list_href2.get(j).get("audioPic").toString()); // 频道里节目信息没有图片链接
 						festival.setAudioDes(list_href2.get(j).get("audioDes").toString());
-						festival.setAlbumName(list_href2.get(j).get("albumName") == null ? ""
+						festival.setAlbumName(list_href2.get(j).get("albumName") == null ? null
 								: list_href2.get(j).get("albumName").toString());
-						festival.setAlbumPic(list_href2.get(j).get("albumPic") == null ? ""
+						festival.setAlbumPic(list_href2.get(j).get("albumPic") == null ? null
 								: list_href2.get(j).get("albumPic").toString());
 						festival.setPlayUrl((list_href2.get(j).get("mp3PlayUrl").toString()));
 						festival.setFileSize((list_href2.get(j).get("fileSize").toString()));
 						festival.setDuration(((list_href2.get(j).get("duration").toString())));
 						festival.setUpdateTime(((list_href2.get(j).get("updateTime").toString())));
 						festival.setListenNum(((list_href2.get(j).get("listenNum").toString())));
-						List<Map<String, Object>> F_list_host = (List<Map<String, Object>>) list_href2.get(j)
-								.get("host");
-						for (Map<String, Object> map : list_host) {
+						List<Map<String, Object>> F_list_host = (List<Map<String, Object>>) list_href2.get(j).get("host");
+						for (Map<String, Object> map : F_list_host) {
 							F_host_name += "," + map.get("name").toString();
 						}
 						if (F_host_name.length() > 0) {
@@ -137,15 +134,15 @@ public class KaoLaService implements Callable<Map<String, Object>> {
 		String url = "http://www.kaolafm.com/webapi/resource/search?words=" + content
 				+ "&rtype=30000&pagesize=20&pagenum=1";
 		List<Festival> list_festival = new ArrayList<Festival>();
-		String jsonstr = utils.jsoupTOstr(url); // 获取网页链接的返回结果
-		List<Map<String, Object>> list = utils.jsonTOlist(jsonstr, "result", "dataList"); // 获取json数据解析后的map对象
+		String jsonstr = SearchUtils.jsoupTOstr(url); // 获取网页链接的返回结果
+		List<Map<String, Object>> list = SearchUtils.jsonTOlist(jsonstr, "result", "dataList"); // 获取json数据解析后的map对象
 		if (!list.isEmpty()) {
 			for (int i = 0; i < (list.size() > F_NUM ? F_NUM : list.size()); i++) {
 				String festival_id = list.get(i).get("id").toString();
 				// 节目音频查询
 				url = "http://www.kaolafm.com/webapi/audiodetail/get?id=" + festival_id;
-				jsonstr = utils.jsoupTOstr(url); // 获取网页链接的返回json结果
-				Map<String, Object> map = utils.jsonTOmap(jsonstr, "result");
+				jsonstr = SearchUtils.jsoupTOstr(url); // 获取网页链接的返回json结果
+				Map<String, Object> map = SearchUtils.jsonTOmap(jsonstr, "result");
 				List<Map<String, Object>> list_host = (List<Map<String, Object>>) map.get("host");
 				String host_name = "";
 				Festival festival = new Festival();
@@ -178,7 +175,7 @@ public class KaoLaService implements Callable<Map<String, Object>> {
 
 	@Override
 	public Map<String, Object> call() throws Exception {
-		return kaolaService(constr);
+		return kaolaService(constr) == null ? null : kaolaService(constr);
 	}
 
 }

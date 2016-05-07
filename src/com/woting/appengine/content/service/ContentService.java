@@ -85,7 +85,9 @@ public class ContentService {
             conn=dataSource.getConnection();
             ps=conn.prepareStatement(sql+" limit 0, 10");
             rs=ps.executeQuery();
-            
+            rs.last();
+            System.out.println(rs.getRow());
+            rs.first();
             cataList=new ArrayList<Map<String, Object>>();
             while (rs!=null&&rs.next()) {
                 Map<String, Object> oneData=new HashMap<String, Object>();

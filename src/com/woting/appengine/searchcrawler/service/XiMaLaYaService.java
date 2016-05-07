@@ -6,54 +6,51 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import com.spiritdata.framework.util.JsonUtils;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
+
 public class XiMaLaYaService implements Callable<Map<String, Object>> {
 
-	private int S_S_NUM = 2; // 搜索频道的数目
-	private int S_F_NUM = 2; // 搜索频道内节目的数目
-	private int F_NUM = 2; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
-	SearchUtils utils = new SearchUtils();
-	private String constr;
+	private final int S_S_NUM = 2; // 搜索频道的数目
+	private final int S_F_NUM = 2; // 搜索频道内节目的数目
+	private final int F_NUM = 2; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
+	private final int T =5000;
+	private String content;
+	Map<String, Object> map = new HashMap<String,Object>();
 
-	public XiMaLaYaService(String constr) {
-		this.constr = constr;
+	public XiMaLaYaService(String content,Map<String, Object> map) {
+		this.content = content;
+		this.map = map;
 	}
 
 	public XiMaLaYaService() {
 	}
 
-	public Map<String, Object> XiMaLaYaService(String content) {
+	public Map<String, Object> ximalayaService(String content) {
 		Map<String, Object> map = new HashMap<String, Object>();
-		List<Station> liststations = stationService(content);
-		List<Festival> listfestivals = festivalService(content);
-		if (liststations.isEmpty()) {
-			map.put("XMLY_S", null);
-		} else {
-			map.put("XMLY_S", liststations);
-		}
-		if (listfestivals.isEmpty()) {
-			map.put("XMLY_F", null);
-		} else {
-			map.put("XMLY_F", listfestivals);
-		}
+		map.put("XMLY_S", null);
+		map.put("XMLY_F", null);
+		List<Station> liststations = stationS(content);
+		List<Festival> listfestivals = festivalsS(content);
+		if (liststations != null) map.put("XMLY_S", liststations);
+		if (listfestivals != null) map.put("XMLY_F", listfestivals);
 		return map;
 	}
 
-	public List<Station> stationService(String content) {
-		String url = "http://www.ximalaya.com/search/" + utils.utf8TOurl(content) + "/t3";
+	public List<Station> stationS(String content) {
+		String url = "http://www.ximalaya.com/search/" + SearchUtils.utf8TOurl(content) + "/t3";
 		Document doc = null;
 		List<Station> liststation = new ArrayList<Station>();
 		try {
-			doc = Jsoup.connect(url).timeout(3000).get();
+			doc = Jsoup.connect(url).timeout(T).get();
 			Elements elements = doc.select("div[class=content_wrap2]");
 			for (int i = 0; i < (elements.size() > S_S_NUM ? S_S_NUM : elements.size()); i++) {
 				Station station = new Station();
@@ -88,16 +85,16 @@ public class XiMaLaYaService implements Callable<Map<String, Object>> {
 		Festival[] festivals = new Festival[S_F_NUM];
 		Document doc = null;
 		try {
-			doc = Jsoup.connect(url).timeout(5000).get();
+			doc = Jsoup.connect(url).timeout(T).get();
 			Elements elements = doc.select("li[sound_id]");
 			for (int i = 0; i < (elements.size() > S_F_NUM ? S_F_NUM : elements.size()); i++) {
 				Festival festival = new Festival();
 				Element element = elements.get(i).select("a[class=forwardBtn]").get(0);
 				festival.setAudioId(element.attr("track_id")); // 节目id
-				festival.setAudioName(element.attr("track_title")); // 节目名称
+	//			festival.setAudioName(element.attr("track_title")); // 节目名称
 				Elements elementsspan = elements.select("span");
 				festival.setUpdateTime(elementsspan.get(0).html()); // 节目创建时间
-				festival.setPlaynum(elementsspan.get(1).html()); // 节目播放次数
+	//			festival.setPlaynum(elementsspan.get(1).html()); // 节目播放次数
 				festivals[i] = festivalS(festival.getAudioId(), festival);
 			}
 		} catch (IOException e) {
@@ -108,27 +105,30 @@ public class XiMaLaYaService implements Callable<Map<String, Object>> {
 
 	public Festival festivalS(String contendid, Festival festival) {
 		String url = "http://www.ximalaya.com/tracks/" + contendid + ".json";
-		String jsonstr = utils.jsoupTOstr(url);
-		Map<String, Object> map = utils.jsonTOmap(jsonstr);
+		String jsonstr = SearchUtils.jsoupTOstr(url);
+		Map<String, Object> map = SearchUtils.jsonTOmap(jsonstr);
 		if (map == null) {
 			return null;
 		} else {
+			festival.setAudioId(contendid);	//	节目id
+			festival.setAudioName(map.get("title")+"");
 			festival.setPlayUrl(map.get("play_path") + ""); // 节目音频地址
 			festival.setDuration(map.get("duration") + "000"); // 音频时长 ms
 			festival.setAudioPic(map.get("cover_url_142") + ""); // 节目图片
 			festival.setCategory(map.get("category_name") + ""); // 节目分类
+			festival.setPlaynum(map.get("play_count")+""); // 节目播放次数
 			festival.setContentPub("喜马拉雅FM");
 			return festival;
 		}
 
 	}
 
-	public List<Festival> festivalService(String content) {
-		String url = "http://www.ximalaya.com/search/" + utils.utf8TOurl(content) + "/t2";
+	public List<Festival> festivalsS(String content) {
+		String url = "http://www.ximalaya.com/search/" + SearchUtils.utf8TOurl(content) + "/t2";
 		Document doc = null;
 		List<Festival> listfestival = new ArrayList<Festival>();
 		try {
-			doc = Jsoup.connect(url).timeout(3000).get();
+			doc = Jsoup.connect(url).timeout(T).get();
 			Elements elements = doc.select("div[class=row soundReport]");
 			if (elements.size() > 0) {
 				elements.remove(0);
@@ -143,7 +143,7 @@ public class XiMaLaYaService implements Callable<Map<String, Object>> {
 							: elf.select("div[class=col soundReport_author]").get(0).select("a").get(0).html();
 					String playnum = elf.select("div[class=col soundReport_playCount]").get(0).select("span").get(0)
 							.html();
-					festival.setAudioName(name);
+		//			festival.setAudioName(name);
 					festival.setAudioId(id);
 					festival.setAudioDes(desc);
 					festival.setHost(host == null ? null : host.split(" ")[0]);
@@ -159,7 +159,14 @@ public class XiMaLaYaService implements Callable<Map<String, Object>> {
 
 	@Override
 	public Map<String, Object> call() throws Exception {
-		Map<String, Object> map = XiMaLaYaService(constr) == null ? null : XiMaLaYaService(constr);
-		return map;
+		
+		System.out.println("###########"+JsonUtils.objToJson(map));
+		try {
+			map = ximalayaService(content) == null ? null : ximalayaService(content);
+		} catch (Exception e) {
+			System.out.println("喜马拉雅搜索timeout！");
+		}finally {
+			return map;
+		}
 	}
 }
