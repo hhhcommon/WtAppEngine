@@ -11,37 +11,38 @@ import com.woting.appengine.mobile.model.MobileKey;
  * @author wh
  */
 public class MobileSession implements Serializable {
-    private static final long serialVersionUID = 7375288306760265060L;
+    private static final long serialVersionUID=7375288306760265060L;
 
     private MobileKey key; //会话的键值
-    private Map<String, Object> body=new ConcurrentHashMap<String, Object>(); //会话数据体，会话的上下文数据
+    private Map<String, Object> body; //会话数据体，会话的上下文数据
 
     public MobileKey getKey() {
         return key;
     }
     public void setKey(MobileKey key) {
-        this.key = key;
+        this.key=key;
     }
     public Map<String, Object> getBody() {
         return body;
     }
     public void setBody(Map<String, Object> body) {
-        this.body = body;
+        this.body=body;
     }
 
-    protected long creationTime = System.currentTimeMillis();;//创建时间
-    protected volatile long lastAccessedTime = this.creationTime; //最后访问时间
-    protected volatile transient boolean expiring = false; //是否过期
+    protected long creationTime=System.currentTimeMillis();;//创建时间
+    protected volatile long lastAccessedTime=this.creationTime; //最后访问时间
+    protected volatile transient boolean expiring=false; //是否过期
 
     public MobileSession(MobileKey key) {
-        this.key = key;
+        this.key=key;
+        body=new ConcurrentHashMap<String, Object>();
     }
 
     /**
      * 设置过期
      */
     public void expire() {
-        this.expiring = true;
+        this.expiring=true;
     }
 
     /**

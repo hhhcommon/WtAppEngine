@@ -11,6 +11,7 @@ import javax.annotation.Resource;
 
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.SequenceUUID;
+import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.intercom.model.GroupInterCom;
@@ -116,6 +117,18 @@ public class GroupService {
                     bMsg.setMsgContent(dataMap);
                     MobileSession ms=null;
                     MobileKey mk=null;
+
+                    //通知消息
+                    Message nMsg=new Message();
+                    nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                    nMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+                    nMsg.setMsgType(1);
+                    nMsg.setAffirm(0);
+                    nMsg.setMsgBizType("NOTIFY");
+                    nMsg.setCmdType("GROUP");
+                    nMsg.setCommand("b4");
+                    nMsg.setMsgContent(dataMap);
+
                     for (UserPo up: upl) {
                         ms=smm.getActivedUserSessionByUserId(up.getUserId());
                         if (ms!=null) {
@@ -123,6 +136,8 @@ public class GroupService {
                             bMsg.setToAddr(MobileUtils.getAddr(mk));
                             pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                         }
+                        nMsg.setToAddr("("+up.getUserId()+"||wt)");
+                        pmm.getSendMemory().addMsg2NotifyQueue(up.getUserId(), nMsg);//发送通知消息
                     }
                 }
                 gic.getGroup().addOneUser(u);
@@ -442,6 +457,18 @@ public class GroupService {
                 bMsg.setMsgContent(dataMap);
                 MobileSession ms=null;
                 MobileKey mk=null;
+
+                //通知消息
+                Message nMsg=new Message();
+                nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                nMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+                nMsg.setMsgType(1);
+                nMsg.setAffirm(0);
+                nMsg.setMsgBizType("NOTIFY");
+                nMsg.setCmdType("GROUP");
+                nMsg.setCommand("b5");
+                nMsg.setMsgContent(dataMap);
+
                 for (UserPo up: oldUpl) {
                     ms=smm.getActivedUserSessionByUserId(up.getUserId());
                     if (ms!=null) {
@@ -449,6 +476,8 @@ public class GroupService {
                         bMsg.setToAddr(MobileUtils.getAddr(mk));
                         pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                     }
+                    nMsg.setToAddr("("+up.getUserId()+"||wt)");
+                    pmm.getSendMemory().addMsg2NotifyQueue(up.getUserId(), nMsg);//发送通知消息
                 }
             }
             return 1;
@@ -497,6 +526,7 @@ public class GroupService {
 
             InviteGroupPo igp=null;
             String[] ua=beInvitedUserIds.split(",");
+            long inviteTime=System.currentTimeMillis();
             for (String beInvitedUserId: ua) {
                 Map<String, String> oneResult=new HashMap<String, String>();
                 oneResult.put("UserId", beInvitedUserId);
@@ -537,6 +567,30 @@ public class GroupService {
                         if (isManaager==1) igp.setManagerFlag(1);
                         inviteGroupDao.insert(igp);
                         oneResult.put("InviteCount", "1");
+                        //发送消息
+                        Message bMsg=new Message();
+                        bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                        bMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+                        bMsg.setMsgType(1);
+                        bMsg.setAffirm(0);
+                        bMsg.setMsgBizType("NOTIFY");
+                        bMsg.setCmdType("GROUP");
+                        bMsg.setCommand("b1");//邀请入组通知
+                        //发送给beInvitedUserId
+                        bMsg.setToAddr("("+beInvitedUserId+"||wt)");
+                        Map<String, Object> dataMap=new HashMap<String, Object>();
+                        dataMap.put("FriendId", userId);
+                        GroupPo gp=this.getGroupById(groupId);
+                        if (gp!=null) {
+                            Map<String, Object> gMap=new HashMap<String, Object>();
+                            gMap.put("GroupId", gp.getGroupId());
+                            gMap.put("GroupName", gp.getGroupName());
+                            gMap.put("GroupDesc", gp.getDescn());
+                            dataMap.put("GroupInfo", gMap);
+                        }
+                        dataMap.put("InviteTime", inviteTime);
+                        bMsg.setMsgContent(dataMap);
+                        pmm.getSendMemory().addMsg2NotifyQueue(beInvitedUserId, bMsg);
                     }
                 }
                 resultList.add(oneResult);
@@ -604,6 +658,35 @@ public class GroupService {
             igp.setInviteVector(-1);
             inviteGroupDao.insert(igp);
             m.put("ReturnType", "1001");
+            //发送通知类消息
+            Message bMsg=new Message();
+            bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+            bMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+            bMsg.setMsgType(1);
+            bMsg.setAffirm(0);
+            bMsg.setMsgBizType("NOTIFY");
+            bMsg.setCmdType("GROUP");
+            bMsg.setCommand("b2");//处理组邀请信息
+            //发送给userId
+            bMsg.setToAddr("("+adminId+"||wt)");
+            Map<String, Object> dataMap=new HashMap<String, Object>();
+            UserPo u=userDao.getInfoObject("getUserById", userId);
+            Map<String, Object> um=u.toHashMap4Mobile();
+            um.remove("PhoneNum");
+            um.remove("Email");
+            um.remove("Email");
+            dataMap.put("ApplyUserInfo", um);
+            GroupPo gp=this.getGroupById(groupId);
+            if (gp!=null) {
+                Map<String, Object> gMap=new HashMap<String, Object>();
+                gMap.put("GroupId", gp.getGroupId());
+                gMap.put("GroupName", gp.getGroupName());
+                gMap.put("GroupDesc", gp.getDescn());
+                dataMap.put("GroupInfo", gMap);
+            }
+            dataMap.put("ApplyTime", System.currentTimeMillis());
+            bMsg.setMsgContent(dataMap);
+            pmm.getSendMemory().addMsg2NotifyQueue(adminId, bMsg);
         }
         return m;
     }
@@ -730,10 +813,10 @@ public class GroupService {
         } else {
             InviteGroupPo igPo=igl.get(0);
             igPo.setAcceptTime(new Timestamp(System.currentTimeMillis()));
+            GroupPo gp=this.getGroupById(groupId);
             if (!isRefuse) { //是接受
                 igPo.setAcceptFlag(1);
                 m.put("DealType", "1");
-                GroupPo gp=this.getGroupById(groupId);
                 //判断是否已是用户，若已是，则不必插入了
                 if (this.existUserInGroup(groupId, userId)==0) {
                     //插入用户组表
@@ -751,6 +834,33 @@ public class GroupService {
             //把在同一组邀请同一个人的消息一起都处理掉
             inviteGroupDao.update("sameUserInviteDeal", igPo);
             inviteGroupDao.update(igPo);//更新组邀请信息
+            //发送消息
+            Message bMsg=new Message();
+            bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+            bMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+            bMsg.setMsgType(1);
+            bMsg.setAffirm(0);
+            bMsg.setMsgBizType("NOTIFY");
+            bMsg.setCmdType("GROUP");
+            bMsg.setCommand("b3");//处理组邀请信息
+            //发送给userId
+            bMsg.setToAddr("("+userId+"||wt)");
+            Map<String, Object> dataMap=new HashMap<String, Object>();
+            if (gp!=null) {
+                Map<String, Object> gMap=new HashMap<String, Object>();
+                gMap.put("GroupId", gp.getGroupId());
+                gMap.put("GroupName", gp.getGroupName());
+                gMap.put("GroupDesc", gp.getDescn());
+                dataMap.put("GroupInfo", gMap);
+            }
+            dataMap.put("DealType", isRefuse?"2":"1");
+            dataMap.put("InType", type+"");
+            if (isRefuse&&!StringUtils.isNullOrEmptyOrSpace(refuseMsg)) dataMap.put("RefuseMsg", refuseMsg);
+            dataMap.put("DealTime", System.currentTimeMillis());
+            bMsg.setMsgContent(dataMap);
+            if (type==1) pmm.getSendMemory().addMsg2NotifyQueue(inviteUserId, bMsg);//1邀请,给邀请人发送信息
+            else 
+            if (type==2) pmm.getSendMemory().addMsg2NotifyQueue(userId, bMsg);//2申请,给申请人发送信息
         }
         return m;
     }
@@ -809,6 +919,46 @@ public class GroupService {
                 }
                 m.put("ReturnType", "1001");
             }
+            //发送通知消息
+            if (isRefuse) {
+                //发送消息
+                Message bMsg=new Message();
+                bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                bMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+                bMsg.setMsgType(1);
+                bMsg.setAffirm(0);
+                bMsg.setMsgBizType("NOTIFY");
+                bMsg.setCmdType("GROUP");
+                bMsg.setCommand("b8");//处理组邀请信息
+                //发送给userId
+                bMsg.setToAddr("("+inviteUserId+"||wt)");
+                Map<String, Object> dataMap=new HashMap<String, Object>();
+
+                GroupPo gp=this.getGroupById(groupId);
+                if (gp!=null) {
+                    Map<String, Object> gMap=new HashMap<String, Object>();
+                    gMap.put("GroupId", gp.getGroupId());
+                    gMap.put("GroupName", gp.getGroupName());
+                    gMap.put("GroupDesc", gp.getDescn());
+                    dataMap.put("GroupInfo", gMap);
+                }
+                UserPo u=userDao.getInfoObject("getUserById", inviteUserId);
+                Map<String, Object> um=u.toHashMap4Mobile();
+                um.remove("PhoneNum");
+                um.remove("Email");
+                um.remove("Email");
+                dataMap.put("InviteUserInfo", um);
+                u=userDao.getInfoObject("getUserById", beInvitedUserId);
+                um=u.toHashMap4Mobile();
+                um.remove("PhoneNum");
+                um.remove("Email");
+                um.remove("Email");
+                dataMap.put("BeInvitedUserInfo", um);
+                if (!StringUtils.isNullOrEmptyOrSpace(refuseMsg)) dataMap.put("RefuseMsg", refuseMsg);
+                dataMap.put("DealTime", System.currentTimeMillis());
+                bMsg.setMsgContent(dataMap);
+                pmm.getSendMemory().addMsg2NotifyQueue(inviteUserId, bMsg);
+            }
         }
         return m;
     }
@@ -833,6 +983,40 @@ public class GroupService {
         newInfo.put("groupId", g.getGroupId());
         newInfo.put("userId", userId);
         groupDao.update("updateGroupUserByUserIdGroupId", newInfo);
+        //组信息广播到组内所有成员
+        //通知消息
+        Message nMsg=new Message();
+        nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+        nMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+        nMsg.setMsgType(1);
+        nMsg.setAffirm(0);
+        nMsg.setMsgBizType("NOTIFY");
+        nMsg.setCmdType("GROUP");
+        nMsg.setCommand("b9");
+        Map<String, Object> dataMap=new HashMap<String, Object>();
+        Map<String, Object> gMap=new HashMap<String, Object>();
+        gMap.put("GroupId", g.getGroupId());
+        gMap.put("GroupNum", g.getGroupNum());
+        gMap.put("GroupType", g.getGroupType());
+        if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupSignature())) gMap.put("GroupSignature", g.getGroupSignature());
+        if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupImg())) gMap.put("GroupImg", g.getGroupImg());
+        gMap.put("GroupName", g.getGroupName());
+        if (!StringUtils.isNullOrEmptyOrSpace(g.getCreateUserId())) gMap.put("GroupCreator", g.getCreateUserId());
+        if (!StringUtils.isNullOrEmptyOrSpace((String)g.getAdminUserIds())) gMap.put("GroupManager", g.getAdminUserIds());
+        gMap.put("GroupCount", g.getGroupCount());
+        if (!StringUtils.isNullOrEmptyOrSpace((String)g.getDescn())) gMap.put("GroupOriDescn", g.getDescn());
+        dataMap.put("GroupInfo", gMap);
+        nMsg.setMsgContent(dataMap);
+
+        GroupInterCom gic = gmm.getGroupInterCom(g.getGroupId());
+        List<UserPo> upl = null;
+        if (gic!=null) upl=gic.getGroup().getUserList();
+        else upl=userDao.queryForList("getGroupMembers", g.getGroupId());
+        //群发
+        for (UserPo _up: upl) {
+            nMsg.setToAddr("("+_up.getUserId()+"||wt)");
+            pmm.getSendMemory().addMsg2NotifyQueue(_up.getUserId(), nMsg);//发送通知消息
+        }
     }
 
     /**
@@ -946,6 +1130,17 @@ public class GroupService {
             dataMap.put("UserList", userMapList);
             bMsg.setMsgContent(dataMap);
 
+            //通知消息
+            Message nMsg=new Message();
+            nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+            nMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+            nMsg.setMsgType(1);
+            nMsg.setAffirm(0);
+            nMsg.setMsgBizType("NOTIFY");
+            nMsg.setCmdType("GROUP");
+            nMsg.setCommand("b5");
+            nMsg.setMsgContent(dataMap);
+
             MobileSession ms=null;
             MobileKey mk=null;
             for (UserPo _up: upl) {
@@ -955,6 +1150,8 @@ public class GroupService {
                     bMsg.setToAddr(MobileUtils.getAddr(mk));
                     pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                 }
+                nMsg.setToAddr("("+_up.getUserId()+"||wt)");
+                pmm.getSendMemory().addMsg2NotifyQueue(_up.getUserId(), nMsg);//发送通知消息
             }
         }
         return ret;
@@ -1008,9 +1205,20 @@ public class GroupService {
                 dataMap.put("GroupId", g.getGroupId());
                 dataMap.put("Del", "1");
                 bMsg.setMsgContent(dataMap);
-
                 MobileSession ms=null;
                 MobileKey mk=null;
+
+                //通知消息
+                Message nMsg=new Message();
+                nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                nMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+                nMsg.setMsgType(1);
+                nMsg.setAffirm(0);
+                nMsg.setMsgBizType("NOTIFY");
+                nMsg.setCmdType("GROUP");
+                nMsg.setCommand("b6");
+                nMsg.setMsgContent(dataMap);
+
                 for (UserPo _up: upl) {
                     ms=smm.getActivedUserSessionByUserId(_up.getUserId());
                     if (ms!=null) {
@@ -1018,6 +1226,8 @@ public class GroupService {
                         bMsg.setToAddr(MobileUtils.getAddr(mk));
                         pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                     }
+                    nMsg.setToAddr("("+_up.getUserId()+"||wt)");
+                    pmm.getSendMemory().addMsg2NotifyQueue(_up.getUserId(), nMsg);//发送通知消息
                 }
             }
             ret.put("ReturnType", "1001");
@@ -1065,11 +1275,41 @@ public class GroupService {
             groupDao.update(param);
             g.setAdminUserIds(toUserId);
             ret.put("ReturnType", "1001");
+            //发送权限转移消息
+            if (upl!=null&&!upl.isEmpty()) {
+                //通知消息
+                Message nMsg=new Message();
+                nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                nMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+                nMsg.setMsgType(1);
+                nMsg.setAffirm(0);
+                nMsg.setMsgBizType("NOTIFY");
+                nMsg.setCmdType("GROUP");
+                nMsg.setCommand("b6");
+                Map<String, Object> dataMap=new HashMap<String, Object>();
+                Map<String, Object> gMap=new HashMap<String, Object>();
+                gMap.put("GroupId", gp.getGroupId());
+                gMap.put("GroupName", gp.getGroupName());
+                gMap.put("GroupDesc", gp.getDescn());
+                dataMap.put("GroupInfo", gMap);
+                UserPo u=userDao.getInfoObject("getUserById", toUserId);
+                Map<String, Object> um=u.toHashMap4Mobile();
+                um.remove("PhoneNum");
+                um.remove("Email");
+                um.remove("Email");
+                dataMap.put("NewAdminInfo", um);
+
+                nMsg.setMsgContent(dataMap);
+                for (UserPo _up: upl) {
+                    nMsg.setToAddr("("+_up.getUserId()+"||wt)");
+                    pmm.getSendMemory().addMsg2NotifyQueue(_up.getUserId(), nMsg);//发送通知消息
+                }
+            }
         }
         return ret;
     }
 
-    public Map<String, Object>  updateGroupUser(Map<String, String> param, String userId, GroupPo gp) {
+    public Map<String, Object> updateGroupUser(Map<String, String> param, String userId, GroupPo gp) {
         String groupId=gp.getGroupId();
         GroupInterCom gic = gmm.getGroupInterCom(groupId);
         Group g=null;

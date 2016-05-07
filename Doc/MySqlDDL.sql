@@ -64,6 +64,20 @@ CREATE TABLE plat_User (
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='003用户表';
 
+/**0031 PLAT_THIRDUSER(第三方用户)*/
+DROP TABLE IF EXISTS plat_ThirdUser;
+CREATE TABLE plat_ThirdUser (
+  id               varchar(32)   NOT NULL                             COMMENT 'uuid(第三方用户对照表id)',
+  userId           varchar(32)   NOT NULL                             COMMENT '用户Id',
+  thirdUserId      varchar(100)  NOT NULL                             COMMENT '第三方中的用户唯一标识',
+  thirdLoginType   varchar(32)   NOT NULL                             COMMENT '第三方用户登录的类型',
+  thirdUserInfo    text          NOT NULL                             COMMENT '第三方用户数据，以Json格式存储',
+  thirdLoginCount  int unsigned  NOT NULL  DEFAULT 1                  COMMENT '第三方用户登录的次数',
+  cTime            timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
+  PRIMARY KEY(id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='0031第三方用户的扩展信息';
+
 /**004 手机用户使用[WT_MOBILEUSED]*/
 /**
  * 记录手机最近一次用某账号登录的情况。
@@ -79,7 +93,6 @@ CREATE TABLE wt_MobileUsed (
   lmTime   timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改：每次更新的时间',
   PRIMARY KEY(id),
   UNIQUE KEY imei(imei) USING BTREE
-
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='004手机用户使用';
 

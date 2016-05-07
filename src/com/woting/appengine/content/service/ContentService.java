@@ -397,7 +397,7 @@ public class ContentService {
      * @return
      */
     public Map<String, Object> getMainPage(String userId, int pageType, int pageSize, int page) {
-        return getContents("-1", null, 0, null, 3, pageSize, page, null, pageType);
+        return getContents("-1", null, 3, null, 3, pageSize, page, null, pageType);
     }
 
     /**
@@ -466,7 +466,7 @@ public class ContentService {
         //获得相应的结点，通过查找
         if (root!=null&&catalogId!=null) root=root.findNode(catalogId);
         if (root==null) return null;
-        if (root.isLeaf()) resultType=0;
+        if (root.isLeaf()) resultType=3;
 
         //得到分类id的语句
         String idCName="dictDid", typeCName="resTableName", resIdCName="resId";
@@ -491,7 +491,7 @@ public class ContentService {
             else mediaFilterSql=mediaFilterSql.substring(3);
         }
 
-        if (resultType==0) { //按列表处理
+        if (resultType==3) { //按列表处理
             //得到所有下级结点的Id
             List<TreeNode<? extends TreeNodeBean>> allTn=TreeUtils.getDeepList(root);
             //得到分类id的语句
@@ -505,13 +505,13 @@ public class ContentService {
             orSql=orSql.substring(4);
 
             //得到获得内容Id的Sql
-            String sql="select * from wt_ChannelAsset where isValidate=1 and flowFlag=2 and ("+orSql+")";//栏目
-            if (!catalogType.equals("-1")) {//分类
-                sql="select * from wt_ResDict_Ref where dictMid="+catalogType;
-                sql+=" and ("+orSql+")";
-            }
+            String sql="select distinct assetType,assetId from wt_ChannelAsset where isValidate=1 and flowFlag=2 and ("+orSql+")";//栏目
+            if (!catalogType.equals("-1")) sql="select distinct resTableName,resId from wt_ResDict_Ref where dictMid="+catalogType;//分类
+            sql+=" and ("+orSql+")";
+
             if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
-            String sqlCount="select count(*)"+sql.substring(8);
+            String sqlCount="select count("+sql.substring(7);
+            sqlCount=sqlCount.replace("Id from", "Id) from");
             if (catalogType.equals("-1")) sql+=" order by sort desc, pubTime desc";//栏目
             else sql+=" order by cTime desc";//分类
             sql+=" limit "+(((page<=0?1:page)-1)*pageSize)+","+pageSize; //分页

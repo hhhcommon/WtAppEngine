@@ -151,6 +151,7 @@ public class SocketHandle extends Thread {
                 while (pmm.isServerRuning()&&SocketHandle.this.running&&!isInterrupted) {
                     try {
                         try { sleep(10); } catch (InterruptedException e) {};
+                        long t=System.currentTimeMillis();
                         //发消息
                         if (SocketHandle.this.mk!=null) {
                             //获得消息
@@ -160,7 +161,6 @@ public class SocketHandle extends Thread {
                                 synchronized(socketSendLock) {
                                     boolean canSend=true;
                                     //判断是否过期的语音包，这个比较特殊
-                                    long t=System.currentTimeMillis();
                                     if (m.getMsgBizType().equals("AUDIOFLOW")) {
                                         if (t-m.getSendTime()>60*1000) {
                                             canSend=false;
@@ -169,7 +169,6 @@ public class SocketHandle extends Thread {
                                     }
                                     if (canSend) {
                                         if (out==null) out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
-                                        System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+m.toJson());
                                         out.println(m.toJson());
                                         out.flush();
                                         if (m.getMsgBizType().equals("AUDIOFLOW")&&m.getCommand().equals("b1")) {//对语音广播包做特殊处理
@@ -182,8 +181,23 @@ public class SocketHandle extends Thread {
                                                 if (ts.getSendFlagMap().get(mk.toString())!=null) ts.getSendFlagMap().put(mk.toString(), 1);
                                             } catch(Exception e) {}
                                         }
+                                        System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+m.toJson());
                                     }
                                     try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
+                                }
+                            }
+                            //发送通知类消息
+                            if (mk.isUser()) {
+                                Message nm=pmm.getNotifyMessages(mk.getUserId());
+                                if (nm!=null) {
+                                    nm.setToAddr(MobileUtils.getAddr(mk));
+                                    synchronized(socketSendLock) {
+                                        if (out==null) out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
+                                        out.println(nm.toJson());
+                                        out.flush();
+                                        System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送通知消息]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+nm.toJson());
+                                        try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
+                                    }
                                 }
                             }
                         }

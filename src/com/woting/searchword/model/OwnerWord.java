@@ -173,7 +173,7 @@ public class OwnerWord implements Serializable {
      * 分字处理
      * @param w
      */
-    private void splitWord(Word w) {        
+    private void splitWord(Word w) {
         int hasSplit=0;
         boolean hasChar=true;
         String notSplitWords=w.getWord();

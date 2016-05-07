@@ -1,30 +1,44 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!--
   App版本管理
 -->
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
 <mapper namespace="P_VERSION">
   <!-- ===================版本配置========================= -->
-  <resultMap id="verCfgMap" type="p_VersionConfig">
+  <resultMap id="verCfgMap" type="PVerConfig">
     <id      column="pubStorePath"       property="pubStorePath"       jdbcType="VARCHAR"/>
     <result  column="pubFileName"        property="pubFileName"        jdbcType="VARCHAR"/>
     <result  column="pubUrl"             property="pubUrl"             jdbcType="VARCHAR"/>
     <result  column="verGoodsStorePath"  property="verGoodsStorePath"  jdbcType="VARCHAR"/>
   </resultMap>
 
+  <!-- 获得版本配置信息 -->
+  <select id="getCfgList" resultMap="verCfgMap">
+    select * from p_VerConfig
+  </select>
+  <!-- 修改 版本配置-->
+  <update id="updateCfg" parameterType="java.util.Map">
+    update p_VerConfig
+    <set>
+      <if test="pubStorePath!=null">pubStorePath=#{pubStorePath,jdbcType=VARCHAR}</if>
+      <if test="pubFileName!=null">pubFileName=#{pubFileName,jdbcType=VARCHAR}</if>
+      <if test="pubUrl!=null">pubUrl=#{pubUrl,jdbcType=VARCHAR}</if>
+      <if test="verGoodsStorePath!=null">verGoodsStorePath=#{verGoodsStorePath,jdbcType=VARCHAR}</if>
+    </set>
+  </update>
 
   <!-- ===================版本信息========================= -->
   <!-- 对象定义:版本信息 -->
-  <resultMap id="versionMap" type="p_Version">
+  <resultMap id="versionMap" type="PVersion">
     <id      column="id"        property="id"        jdbcType="VARCHAR"/>
+    <result  column="verNum"    property="verNum"    jdbcType="INTEGER"/>
     <result  column="appName"   property="appName"   jdbcType="VARCHAR"/>
-    <result  column="verNum"    property="verNum"    jdbcType="VARCHAR"/>
+    <result  column="version"   property="version"   jdbcType="VARCHAR"/>
     <result  column="verMemo"   property="verMemo"   jdbcType="VARCHAR"/>
     <result  column="bugMemo"   property="bugMemo"   jdbcType="VARCHAR"/>
     <result  column="pubFlag"   property="pubFlag"   jdbcType="INTEGER"/>
-    <result  column="apkUrl"    property="apkUrl"    jdbcType="VARCHAR"/>
+    <result  column="apkFile"   property="apkFile"   jdbcType="VARCHAR"/>
     <result  column="apkSize"   property="apkSize"   jdbcType="INTEGER"/>
     <result  column="isCurVer"  property="isCurVer"  jdbcType="INTEGER"/>
     <result  column="pubTime"   property="pubTime"   jdbcType="TIMESTAMP"/>
@@ -34,7 +48,7 @@
 
   <!-- 所有列 -->
   <sql id="Base_Column_List">
-    id, appName, verNum, verMemo, bugMemo, pubFlag, apkUrl, apkSize, isCurVer, pubTime, cTime, lmTime
+    id, verNum, appName, version, verMemo, bugMemo, pubFlag, apkFile, apkSize, isCurVer, pubTime, cTime, lmTime
   </sql>
 
   <!-- 条件子句 -->
@@ -42,17 +56,18 @@
     <where>
       <trim prefix="(" suffix=")" prefixOverrides="and">
         <if test="id!=null"> and id=#{id,jdbcType=VARCHAR}</if>
+        <if test="verNum!=null and verNum!=0"> and verNum=#{verNum,jdbcType=INTEGER}</if>
         <if test="appName!=null"> and appName=#{appName,jdbcType=VARCHAR}</if>
-        <if test="verNum!=null"> and verNum=#{verNum,jdbcType=VARCHAR}</if>
+        <if test="version!=null"> and version=#{version,jdbcType=VARCHAR}</if>
         <if test="verMemo!=null"> and verMemo=#{verMemo,jdbcType=VARCHAR}</if>
         <if test="bugMemo!=null"> and bugMemo=#{bugMemo,jdbcType=VARCHAR}</if>
-        <if test="pubFlag!=null and pubFlag!=0"> and pubFlag=#{pubFlag,jdbcType=INTEGER}</if>
-        <if test="apkUrl!=null"> and apkUrl=#{apkUrl,jdbcType=VARCHAR}</if>
+        <if test="pubFlag!=null"> and pubFlag=#{pubFlag,jdbcType=INTEGER}</if>
+        <if test="apkFile!=null">  and apkFile=#{apkFile,jdbcType=VARCHAR}</if>
         <if test="apkSize!=null"> and apkSize=#{apkSize,jdbcType=INTEGER}</if>
-        <if test="isCurVer!=null"> and isCurVer=#{isCurVer,jdbcType=INTEGER}</if>
+        <if test="isCurVer!=null">and isCurVer=#{isCurVer,jdbcType=INTEGER}</if>
         <if test="pubTime!=null"> and pubTime=#{pubTime,jdbcType=TIMESTAMP}</if>
-        <if test="CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
-        <if test="lmTime!=null"> and lmTime=#{lmTime,jdbcType=TIMESTAMP}</if>
+        <if test="CTime!=null">   and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
+        <if test="lmTime!=null">  and lmTime=#{lmTime,jdbcType=TIMESTAMP}</if>
       </trim>
     </where>
   </sql>
@@ -68,10 +83,18 @@
     <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
     <if test="sortByClause!=null">order by ${sortByClause}</if>
   </select>
+  <select id="getNoVersionList" resultMap="versionMap">
+    select <include refid="Base_Column_List"/> from p_Version
+    <![CDATA[ where verNum>#{appVerNum,jdbcType=TIMESTAMP} and verNum<=#{curVerNum,jdbcType=TIMESTAMP} ]]>
+    order by verNum
+  </select>
 
   <!-- 获得一条数据 -->
   <select id="getInfo" parameterType="java.util.Map" resultMap="versionMap">
     select <include refid="Base_Column_List"/> from p_Version <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </select>
+  <select id="getCurrentVersion" resultMap="versionMap">
+    select <include refid="Base_Column_List"/> from p_Version where isCurVer=1
   </select>
 
   <!-- 新增数据 -->
@@ -79,12 +102,13 @@
     insert into p_Version
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id!=null">id,</if>
+      <if test="verNum!=null and verNum!=0">verNum,</if>
       <if test="appName!=null">appName,</if>
-      <if test="verNum!=null">verNum,</if>
+      <if test="version!=null">version,</if>
       <if test="verMemo!=null">verMemo,</if>
       <if test="bugMemo!=null">bugMemo,</if>
       <if test="pubFlag!=null and pubFlag!=0">pubFlag,</if>
-      <if test="apkUrl!=null">apkUrl,</if>
+      <if test="apkFile!=null">apkFile,</if>
       <if test="apkSize!=null">apkSize,</if>
       <if test="isCurVer!=null">isCurVer,</if>
       <if test="pubTime!=null">pubTime,</if>
@@ -93,12 +117,13 @@
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
-      <if test="appName!=null">#{appName,jdbcType=VARCHAR,}</if>
-      <if test="verNum!=null">#{verNum,jdbcType=VARCHAR},</if>
+      <if test="verNum!=null and verNum!=0">#{verNum,jdbcType=INTEGER},</if>
+      <if test="appName!=null">#{appName,jdbcType=VARCHAR},</if>
+      <if test="version!=null">#{version,jdbcType=VARCHAR},</if>
       <if test="verMemo!=null">#{verMemo,jdbcType=VARCHAR},</if>
       <if test="bugMemo!=null">#{bugMemo,jdbcType=VARCHAR},</if>
-      <if test="pubFlag!=null and pubFlag!=0">#{pubFlag,jdbcType=INTEGER},</if>
-      <if test="apkUrl!=null">#{apkUrl,jdbcType=VARCHAR},</if>
+      <if test="pubFlag!=null">#{pubFlag,jdbcType=INTEGER},</if>
+      <if test="apkFile!=null">#{apkFile,jdbcType=VARCHAR},</if>
       <if test="apkSize!=null">#{apkSize,jdbcType=INTEGER},</if>
       <if test="isCurVer!=null">#{isCurVer,jdbcType=INTEGER},</if>
       <if test="pubTime!=null">#{pubTime,jdbcType=TIMESTAMP},</if>
@@ -111,17 +136,18 @@
   <update id="update" parameterType="java.util.Map">
     update p_Version
     <set>
-      <if test="appName!=null">appName=#{appName,jdbcType=VARCHAR}</if>
-      <if test="verNum!=null">verNum=#{verNum,jdbcType=VARCHAR}</if>
-      <if test="verMemo!=null">verMemo=#{verMemo,jdbcType=VARCHAR}</if>
-      <if test="bugMemo!=null">bugMemo=#{bugMemo,jdbcType=VARCHAR}</if>
-      <if test="pubFlag!=null and pubFlag!=0">pubFlag=#{pubFlag,jdbcType=INTEGER}</if>
-      <if test="apkUrl!=null">apkUrl=#{apkUrl,jdbcType=VARCHAR}</if>
-      <if test="apkSize!=null">apkSize=#{apkSize,jdbcType=INTEGER}</if>
-      <if test="isCurVer!=null">isCurVer=#{isCurVer,jdbcType=INTEGER}</if>
-      <if test="pubTime!=null">pubTime=#{pubTime,jdbcType=TIMESTAMP}</if>
-      <if test="CTime!=null">cTime=#{CTime,jdbcType=TIMESTAMP}</if>
-      <if test="lmTime!=null">lmTime=#{lmTime,jdbcType=TIMESTAMP}</if>
+      <if test="verNum!=null and verNum!=0">verNum=#{verNum,jdbcType=INTEGER},</if>
+      <if test="appName!=null">appName=#{appName,jdbcType=VARCHAR},</if>
+      <if test="version!=null">version=#{version,jdbcType=VARCHAR},</if>
+      <if test="verMemo!=null">verMemo=#{verMemo,jdbcType=VARCHAR},</if>
+      <if test="bugMemo!=null">bugMemo=#{bugMemo,jdbcType=VARCHAR},</if>
+      <if test="pubFlag!=null and pubFlag!=0">pubFlag=#{pubFlag,jdbcType=INTEGER},</if>
+      <if test="apkFile!=null">apkFile=#{apkFile,jdbcType=VARCHAR},</if>
+      <if test="apkSize!=null">apkSize=#{apkSize,jdbcType=INTEGER},</if>
+      <if test="isCurVer!=null">isCurVer=#{isCurVer,jdbcType=INTEGER},</if>
+      <if test="pubTime!=null">pubTime=#{pubTime,jdbcType=TIMESTAMP},</if>
+      <if test="CTime!=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
+      <if test="lmTime!=null">lmTime=#{lmTime,jdbcType=TIMESTAMP},</if>
     </set>
     where id=#{id,jdbcType=VARCHAR}
   </update>

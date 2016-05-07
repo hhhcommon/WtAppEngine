@@ -136,8 +136,7 @@ public class FriendController {
                 }
             }
             if (map.get("ReturnType")!=null) return map;
-
-            //2-获取被邀请人Id
+            //1-获取被邀请人Id
             String beInvitedUserId=(String)m.get("BeInvitedUserId");
             if (StringUtils.isNullOrEmptyOrSpace(beInvitedUserId)) {
                 map.put("ReturnType", "1003");
@@ -151,7 +150,15 @@ public class FriendController {
                     return map;
                 }
             }
+            //2-邀请信息
             String inviteMsg=(String)m.get("InviteMsg");
+
+            //自己邀请I级的判断
+            if (userId.equals(beInvitedUserId)) {
+                map.put("ReturnType", "1008");
+                map.put("Message", "自己无法邀请自己");
+                return map;
+            }
             map.putAll(friendService.inviteFriend(userId, beInvitedUserId, inviteMsg));
             return map;
         } catch(Exception e) {

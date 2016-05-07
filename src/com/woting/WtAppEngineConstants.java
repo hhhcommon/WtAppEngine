@@ -7,6 +7,6 @@ public abstract class WtAppEngineConstants {
     public final static String CACHE_DICT="CacheDict";
     //栏目结构
     public final static String CACHE_CHANNEL="CacheChannel";
-    //应用版本
-    public static final String APP_VERSION = "AppVersion";
+    //版本配置信息
+    public static final String APP_VERSIONCONFIG = "AppVersionConfig";
 }

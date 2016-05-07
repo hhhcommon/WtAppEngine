@@ -173,7 +173,7 @@ public class Message implements Serializable, Comparable<Message> {
         ret+=",\"BizType\":\""+this.msgBizType+"\"";
         ret+=",\"CmdType\":\""+this.cmdType+"\"";
         ret+=",\"Command\":\""+this.command+"\"";
-        ret+=",\"SendTime\":\""+this.sendTime+"\"";
+        ret+=",\"SendTime\":"+this.sendTime;
         ret+=",\"Data\":"+JsonUtils.objToJson(this.msgContent);
         ret="{"+ret.substring(1)+"}";
         return ret;

@@ -147,7 +147,7 @@ public class WholeTalk {
             }
             if (_sendAll) {
                 sendAllTime=System.currentTimeMillis();
-                System.out.println("发送所有的包共用时=====================：["+(sendAllTime-beginTime)+"]毫秒");
+                //System.out.println("发送所有的包共用时=====================：["+(sendAllTime-beginTime)+"]毫秒");
             }
         }
 

@@ -23,23 +23,39 @@ public class SendMemory {
 
     protected ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> msgMap;//将要发送的消息列表，String是用户的Key信息
     protected ConcurrentHashMap<String, SendMessageList> msgSendedMap;//已发送的信息情况
+    protected ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> notifyMsgMap;//通知类消息Map，String是用户的Id信息
 
     /*
      * 初始化发送消息结构
      */
     private SendMemory() {
         msgMap=new ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>>();
+        notifyMsgMap=new ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>>();
         msgSendedMap=new ConcurrentHashMap<String, SendMessageList>();
     }
 
-    protected Map<String, ConcurrentLinkedQueue<Message>> getMsgMap() {
-        return this.msgMap;
-    }
     protected Map<String, SendMessageList> getMsgSendedMap() {
         return this.msgSendedMap;
     }
 
     //发送消息处理
+    /**
+     * 向某一用户的通知类消息队列放入一条消息
+     * @param userId 用户标识
+     * @param msg 消息数据
+     */
+    public void addMsg2NotifyQueue(String userId, Message msg) {
+        ConcurrentLinkedQueue<Message> notifyQueue=notifyMsgMap.get(userId);
+        if (notifyQueue==null) {
+            notifyQueue=new ConcurrentLinkedQueue<Message>();
+            notifyMsgMap.put(userId, notifyQueue);
+        }
+        synchronized(notifyQueue) {
+            if (msg.getSendTime()==0) msg.setSendTime(System.currentTimeMillis());
+            notifyQueue.add(msg);
+        }
+    }
+
     /**
      * 向某一设移动设备的输出队列中插入
      * @param mk 移动设备标识
@@ -56,6 +72,7 @@ public class SendMemory {
             mobileQueue.add(msg);
         }
     }
+
     /**
      * 向某一设移动设备的输出队列中插入唯一消息，唯一消息是指，同一时间某类消息对一个设备只能有一个消息内容。
      * @param mk 移动设备标识
@@ -68,7 +85,7 @@ public class SendMemory {
         if (sendedMl!=null&&sendedMl.size()>0) {
             for (int i=sendedMl.size()-1; i>=0; i--) {
                 Message m=sendedMl.get(i);
-                if (compMsg.compare(m, msg)) sendedMl.remove(i);
+                if (compMsg!=null&&compMsg.compare(m, msg)) sendedMl.remove(i);
             }
         }
         //2-加入现有的队列
@@ -80,7 +97,7 @@ public class SendMemory {
         synchronized(mobileQueue) {
             List<Message> removeMsg = new ArrayList<Message>();
             for (Message m: mobileQueue) {
-                if (compMsg.compare(m, msg)) removeMsg.add(m);
+                if (compMsg!=null&&compMsg.compare(m, msg)) removeMsg.add(m);
             }
             for (Message m: removeMsg) {
                 mobileQueue.remove(m);
@@ -95,7 +112,7 @@ public class SendMemory {
      * @param mk 设备标识
      * @return 消息
      */
-    public Message pollTypeQueue(MobileKey mk) {
+    public Message pollQueue(MobileKey mk) {
         if (this.msgMap==null) return null;
         if (this.msgMap.get(mk.toString())==null) return null;
         return this.msgMap.get(mk.toString()).poll();
@@ -110,6 +127,17 @@ public class SendMemory {
         if (this.msgMap==null) return null;
         if (this.msgMap.get(mk.toString())==null) return null;
         return this.msgMap.get(mk.toString()).peek();
+    }
+
+    /**
+     * 从通知消息发送队列中取出要发送的消息，并从该队列中将这条消息移除
+     * @param userId 用户标识
+     * @return 消息
+     */
+    public Message pollNotifyQueue(String userId) {
+        if (this.notifyMsgMap==null) return null;
+        if (this.notifyMsgMap.get(userId)==null) return null;
+        return this.notifyMsgMap.get(userId).poll();
     }
 
     //已发送消息处理

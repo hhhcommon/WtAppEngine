@@ -12,6 +12,7 @@
     <typeAlias alias="InviteGroup" type="com.woting.passport.groupinvite.persistence.pojo.InviteGroupPo"/>
     <typeAlias alias="FriendRel" type="com.woting.passport.friend.persistence.pojo.FriendRelPo"/>
     <typeAlias alias="UserAlias" type="com.woting.passport.useralias.persistence.pojo.UserAliasPo"/>
+    <typeAlias alias="ThirdUser" type="com.woting.passport.thirdlogin.persis.po.ThirdUserPo"/>
   </typeAliases>
   <!-- SQL配置 -->
   <mappers>
@@ -22,5 +23,6 @@
     <mapper resource="com/woting/passport/groupinvite/persistence/sql/GroupInvite.mapper.xml"/>
     <mapper resource="com/woting/passport/friend/persistence/sql/Friend.mapper.xml"/>
     <mapper resource="com/woting/passport/useralias/persistence/sql/UserAlias.mapper.xml"/>
+    <mapper resource="com/woting/passport/thirdlogin/persis/sql/ThirdUser.mapper.xml"/>
   </mappers>
 </configuration>

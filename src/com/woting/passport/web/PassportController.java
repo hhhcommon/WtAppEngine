@@ -196,8 +196,8 @@ public class PassportController {
             smm.expireAllSessionByIMEI(ms.getKey().getMobileId()); //作废所有imei对应的Session
             MobileKey newMk=ms.getKey();
             newMk.setUserId(nu.getUserId());
+            ms=new MobileSession(newMk);
             ms.addAttribute("user", nu);
-            ms.remove("phoneCheckInfo");//去掉之前的验证信息
             smm.addOneSession(ms);
             //3.2-保存使用情况
             MobileUsedPo mu=new MobileUsedPo();
@@ -209,6 +209,99 @@ public class PassportController {
             //4-返回成功，若没有IMEI也返回成功
             map.put("ReturnType", "1001");
             map.put("UserId", nu.getUserId());
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", e.getMessage());
+            return map;
+        }
+    }
+
+    /**
+     * 第三方登录注册
+     * @throws IOException
+     */
+    @RequestMapping(value="user/afterThirdAuth.do")
+    @ResponseBody
+    public Map<String,Object> afterThirdAuth(HttpServletRequest request) {
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            MobileSession ms=null;
+            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                if ((retM.get("ReturnType")+"").equals("2001")) {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取设备Id(IMEI)");
+                } else {
+                    ms=(MobileSession)retM.get("MobileSession");
+                    map.put("SessionId", ms.getKey().getSessionId());
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //1-获取业务参数
+            //1.1-获取业务参数：第三方登录的分类：=1微信；=2QQ；=3微博
+            String thirdType=(String)m.get("ThirdType");
+            if (StringUtils.isNullOrEmptyOrSpace(thirdType)) thirdType=request.getParameter("ThirdType");
+            if (StringUtils.isNullOrEmptyOrSpace(thirdType)) {
+                map.put("ReturnType", "1002");
+                map.put("Message", "无法获得第三方登录类型");
+                return map;
+            }
+            //1.2-获取业务参数：用户的名称和Id
+            String tuserId=(String)m.get("ThirdUserId");
+            if (StringUtils.isNullOrEmptyOrSpace(tuserId)) tuserId=request.getParameter("ThirdUserId");
+            if (StringUtils.isNullOrEmptyOrSpace(tuserId)) {
+                map.put("ReturnType", "1000");
+                map.put("Message", "无法获取第三方用户Id");
+                return map;
+            }
+            String tuserName=(String)m.get("ThirdUserName");
+            if (StringUtils.isNullOrEmptyOrSpace(tuserName)) tuserName=request.getParameter("ThirdUserName");
+            if (StringUtils.isNullOrEmptyOrSpace(tuserName)) {
+                map.put("ReturnType", "1000");
+                map.put("Message", "无法获取第三方用户名称");
+                return map;
+            }
+            //1.3-获取业务参数：头像Url
+            String tuserImg=(String)m.get("ThirdUserImg");
+            if (StringUtils.isNullOrEmptyOrSpace(tuserImg)) tuserImg=request.getParameter("ThirdUserImg");
+            //1.4-获取业务参数：详细数据
+            Map<String, Object> tuserData=(Map<String, Object>)m.get("ThirdUserInfo");
+
+            //2第三方登录
+            Map<String, Object> rm=userService.thirdLogin(thirdType, tuserId, tuserName, tuserImg, tuserData);
+
+            //3-成功后，自动登陆，及后处理
+            String _userId=((UserPo)rm.get("userInfo")).getUserId();
+            map.put("SessionId", _userId);
+            //3.1-处理Session
+            smm.expireAllSessionByIMEI(ms.getKey().getMobileId()); //作废所有imei对应的Session
+            MobileKey newMk=ms.getKey();
+            newMk.setUserId(_userId);
+            ms=new MobileSession(newMk);
+            ms.addAttribute("user", rm.get("userInfo"));
+            smm.addOneSession(ms);
+            //3.2-保存使用情况
+            MobileUsedPo mu=new MobileUsedPo();
+            mu.setImei(newMk.getMobileId());
+            mu.setStatus(1);
+            mu.setUserId(_userId);
+            mu.setPCDType(newMk.getPCDType());
+            muService.saveMobileUsed(mu);
+
+            //4设置返回值
+            map.put("IsNew", "True");
+            if ((Integer)rm.get("count")>1) map.put("IsNew", "False");
+            map.put("UserInfo", ((UserPo)rm.get("userInfo")).toHashMap4Mobile());
+            map.put("ReturnType", "1001");
             return map;
         } catch(Exception e) {
             e.printStackTrace();

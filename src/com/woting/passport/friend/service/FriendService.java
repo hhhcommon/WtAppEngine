@@ -12,6 +12,8 @@ import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
+import com.woting.appengine.mobile.push.mem.PushMemoryManage;
+import com.woting.appengine.mobile.push.model.Message;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.friend.persistence.pojo.FriendRelPo;
 import com.woting.passport.friend.persistence.pojo.InviteFriendPo;
@@ -22,6 +24,8 @@ import com.woting.passport.useralias.service.UserAliasService;
 public class FriendService {
     static private int INVITE_INTERVAL_TIME=5*60*1000;//毫秒数：5分钟
     static private int INVITE_REFUSE_TIME=5*60*1000;//7*24*60*60*1000;//毫秒数：一周
+    private PushMemoryManage pmm=PushMemoryManage.getInstance();
+
     @Resource(name="defaultDAO")
     private MybatisDAO<UserPo> userDao;
     @Resource(name="defaultDAO")
@@ -97,7 +101,7 @@ public class FriendService {
                 m.put("ReturnType", "1005");
                 ifPo=ifl.get(0);
                 info=new HashMap<String, Object>();
-                info.put("InviteTime", DateUtils.convert2TimeChineseStr(ifPo.getInviteTime()));
+                info.put("InviteTime", ifPo.getInviteTime().getTime());
                 info.put("InviteMessage", ifPo.getInviteMessage());
                 info.put("InviteCount", ifPo.getInviteVector());
                 //获得对方信息
@@ -136,7 +140,6 @@ public class FriendService {
                         canContinue=false;
                     } else isUpdate=true;
                 }
-                
             }
         }
         //正式保存邀请信息
@@ -157,6 +160,28 @@ public class FriendService {
             ifPo.setAcceptFlag(0);
             if (!isUpdate) inviteFriendDao.insert(ifPo);
             else inviteFriendDao.update(ifPo);
+
+            //通知消息
+            Message nMsg=new Message();
+            nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+            nMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+            nMsg.setMsgType(1);
+            nMsg.setAffirm(0);
+            nMsg.setMsgBizType("NOTIFY");
+            nMsg.setCmdType("USER");
+            nMsg.setCommand("b1");
+            nMsg.setToAddr("("+beInvitedUserId+"||wt)");
+            Map<String, Object> dataMap=new HashMap<String, Object>();
+            dataMap.put("InviteMsg", inviteMsg);
+            dataMap.put("InviteTime", System.currentTimeMillis());
+            UserPo u=userDao.getInfoObject("getUserById", userId);
+            Map<String, Object> um=u.toHashMap4Mobile();
+            um.remove("PhoneNum");
+            um.remove("Email");
+            um.remove("Email");
+            dataMap.put("InviteUserInfo", um);
+            nMsg.setMsgContent(dataMap);
+            pmm.getSendMemory().addMsg2NotifyQueue(beInvitedUserId, nMsg);//发送通知消息
 
             m.put("ReturnType", "1001");
             m.put("InviteCount", ifPo.getInviteVector());
@@ -227,6 +252,32 @@ public class FriendService {
                     m.put("DealType", "2");
                 }
                 inviteFriendDao.update(ifPo);
+
+                //发送消息——给邀请人
+                Message bMsg=new Message();
+                bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                bMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+                bMsg.setMsgType(1);
+                bMsg.setAffirm(0);
+                bMsg.setMsgBizType("NOTIFY");
+                bMsg.setCmdType("USER");
+                bMsg.setCommand("b3");//处理组邀请信息
+                //发送给inviteUserId
+                bMsg.setToAddr("("+inviteUserId+"||wt)");
+                Map<String, Object> dataMap=new HashMap<String, Object>();
+                dataMap.put("DealType", isRefuse?"2":"1");
+                if (isRefuse&&!StringUtils.isNullOrEmptyOrSpace(refuseMsg)) dataMap.put("RefuseMsg", refuseMsg);
+                dataMap.put("DealTime", System.currentTimeMillis());
+                //加入被邀请人信息
+                UserPo u=userDao.getInfoObject("getUserById", userId);
+                Map<String, Object> um=u.toHashMap4Mobile();
+                um.remove("PhoneNum");
+                um.remove("Email");
+                um.remove("Email");
+                dataMap.put("BeInvitedUserInfo", um);
+                bMsg.setMsgContent(dataMap);
+                pmm.getSendMemory().addMsg2NotifyQueue(inviteUserId, bMsg);
+
                 m.put("ReturnType", "1001");
             }
         }
@@ -261,6 +312,22 @@ public class FriendService {
             UserAliasKey uak=new UserAliasKey("FRIEND", userId, friendUserId);
             userAliasService.del(uak);
             ret.put("ReturnType", "1001");
+            //发送消息
+            Message bMsg=new Message();
+            bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+            bMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+            bMsg.setMsgType(1);
+            bMsg.setAffirm(0);
+            bMsg.setMsgBizType("NOTIFY");
+            bMsg.setCmdType("USER");
+            bMsg.setCommand("b5");//处理组邀请信息
+            //发送给inviteUserId
+            bMsg.setToAddr("("+friendUserId+"||wt)");
+            Map<String, Object> dataMap=new HashMap<String, Object>();
+            dataMap.put("UserId", userId);
+            dataMap.put("DealTime", System.currentTimeMillis());
+            bMsg.setMsgContent(dataMap);
+            pmm.getSendMemory().addMsg2NotifyQueue(friendUserId, bMsg);
         }
         return ret;
     }

@@ -1,7 +1,6 @@
 package com.woting.appengine.common.web;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
@@ -100,51 +98,6 @@ public class CommonController {
                 }
                 map.put("ServerStatus", "1"); //服务器状态
             }
-            return map;
-        } catch(Exception e) {
-            e.printStackTrace();
-            map.put("ReturnType", "T");
-            map.put("TClass", e.getClass().getName());
-            map.put("Message", e.getMessage());
-            return map;
-        }
-    }
-
-    @RequestMapping(value="/common/getVersion.do")
-    @ResponseBody
-    public Map<String,Object> getVersion(HttpServletRequest request) {//不需要登录
-        Map<String,Object> map=new HashMap<String, Object>();
-        try {
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
-            if (m!=null&&m.size()>0) {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                MobileSession ms=(MobileSession)retM.get("MobileSession");
-                try {
-                    map.put("SessionId", ms.getKey().getSessionId());
-                } catch(Exception e) {}
-                //1-获取版本
-                String _temp=MobileUtils.getLastVersion();
-                if (_temp==null) {
-                    map.put("Version", "0.0.0.0.0");
-                    map.put("PublishDate", "2015-09-18");
-                } else {
-                    String[] vs=_temp.split(",");
-                    map.put("Version", vs[0]);
-                    if (vs.length>1) {
-                        map.put("PublishDate", vs[1]);
-                    } else {
-                        map.put("PublishDate", DateUtils.convert2LocalStr("yyyy-MM-dd", new Date()));
-                    }
-                    if (vs.length>2) {
-                        String patchInfo="";
-                        for (int i=2; i<vs.length; i++) {
-                            patchInfo+=vs[i];
-                        }
-                        map.put("PatchInfo", patchInfo);
-                    }
-                }
-            }
-            map.put("ServerStatus", "1");
             return map;
         } catch(Exception e) {
             e.printStackTrace();
