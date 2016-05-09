@@ -159,6 +159,7 @@ public class OpinionController {
             selfOpinion=new HashMap<String, Object>();
             selfOpinion.put("OpinionId", ap.getId());
             selfOpinion.put("Opinion", ap.getOpinion());
+            selfOpinion.put("OpinionTime", ap.getCTime().getTime());
             reApl=ap.getReList();
             if (reApl!=null&&reApl.size()>0) {
                 rel = new ArrayList<Map<String, Object>>();
@@ -166,6 +167,7 @@ public class OpinionController {
                     reOpinion=new HashMap<String, Object>();
                     reOpinion.put("OpinionReId", aro.getId());
                     reOpinion.put("ReOpinion", aro.getReOpinion());
+                    reOpinion.put("ReOpinionTime", aro.getCTime().getTime());
                     rel.add(reOpinion);
                 }
                 selfOpinion.put("ReList", rel);
