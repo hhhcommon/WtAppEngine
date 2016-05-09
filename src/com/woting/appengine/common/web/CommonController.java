@@ -581,11 +581,9 @@ public class CommonController {
 
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
-            if(resultType==0 && pageType==0){
-            	 cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
-            }else{
-            	 cl=contentService.searchAll(searchStr, resultType, pageType);
-            }
+            if(resultType==0 && pageType==0) cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
+            else cl=contentService.searchAll(searchStr, resultType, pageType);
+
             a=System.currentTimeMillis()-a;
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultType", cl.get("ResultType"));
