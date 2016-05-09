@@ -479,11 +479,11 @@ public class ContentService {
         if (!StringUtils.isNullOrEmptyOrSpace(mediaType)) {
             String[] _mt=mediaType.split(",");
             for (int i=0; i<_mt.length; i++) {
-                if (_mt[i].equals("RADIO")&&(mediaFilterSql.indexOf("wt_Broadcast")==-1)) {
+                if (_mt[i].trim().equals("RADIO")&&(mediaFilterSql.indexOf("wt_Broadcast")==-1)) {
                     mediaFilterSql+="or "+typeCName+"='wt_Broadcast'";
-                } else if (_mt[i].equals("AUDIO")&&(mediaFilterSql.indexOf("wt_MediaAsset")==-1)) {
+                } else if (_mt[i].trim().equals("AUDIO")&&(mediaFilterSql.indexOf("wt_MediaAsset")==-1)) {
                     mediaFilterSql+="or "+typeCName+"='wt_MediaAsset'";
-                } else if (_mt[i].equals("SEQU")&&(mediaFilterSql.indexOf("wt_SeqMediaAsset")==-1)) {
+                } else if (_mt[i].trim().equals("SEQU")&&(mediaFilterSql.indexOf("wt_SeqMediaAsset")==-1)) {
                     mediaFilterSql+="or "+typeCName+"='wt_SeqMediaAsset'";
                 }
             }
