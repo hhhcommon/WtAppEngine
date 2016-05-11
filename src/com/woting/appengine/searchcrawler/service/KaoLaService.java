@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
@@ -17,7 +15,7 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
  *
  */
 
-public class KaoLaService implements Callable<Map<String, Object>> {
+public class KaoLaService extends Thread {
 
 	private final int S_S_NUM = 2; // 搜索频道的数目
 	private final int S_F_NUM = 2; // 搜索频道内节目的数目
@@ -26,13 +24,12 @@ public class KaoLaService implements Callable<Map<String, Object>> {
 	 * Map<String, Object> "KL_Fl":list_festival "KL_Sl":list_station
 	 * 
 	 */
-	private String constr;
+	private static String constr;
 
-	public KaoLaService(String constr) {
-		this.constr = constr;
-	}
-
-	public KaoLaService() {
+	public static void begin(String constr){
+		KaoLaService.constr = constr;
+		KaoLaService kl = new KaoLaService();
+		kl.start();
 	}
 
 	public Map<String, Object> kaolaService(String content) {
@@ -115,6 +112,7 @@ public class KaoLaService implements Callable<Map<String, Object>> {
 					}
 					station.setFestival(festivals);
 				}
+				if (station!=null) SearchUtils.updateListInfo(constr, station); // 保存到在redis里key为constr的list里
 				list_station.add(station);
 			}
 		} else {
@@ -165,6 +163,7 @@ public class KaoLaService implements Callable<Map<String, Object>> {
 					host_name = host_name.substring(1);
 				}
 				festival.setHost(host_name);
+				if (festival!=null) SearchUtils.updateListInfo(constr, festival); // 保存到在redis里key为constr的list里
 				list_festival.add(festival);
 			}
 		} else {
@@ -174,8 +173,12 @@ public class KaoLaService implements Callable<Map<String, Object>> {
 	}
 
 	@Override
-	public Map<String, Object> call() throws Exception {
-		return kaolaService(constr) == null ? null : kaolaService(constr);
+	public void run() {
+		System.out.println("考拉开始搜索");
+		String str = SearchUtils.utf8TOurl(constr);
+		List<Station> list_station = StationS(str);
+		List<Festival> list_festival = FestivalsS(str);
+		System.out.println("考拉搜索结束");
 	}
 
 }

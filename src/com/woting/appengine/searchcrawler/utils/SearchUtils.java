@@ -6,13 +6,15 @@ import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import com.spiritdata.framework.util.JsonUtils;
+import com.woting.appengine.searchcrawler.model.Festival;
+import com.woting.appengine.searchcrawler.model.Station;
+
+import redis.clients.jedis.Jedis;
 
 public abstract class SearchUtils {
 
 	private static int T = 1000; // 默认超时时间
-
-	public SearchUtils() {
-	}
+	private static String ippath = "127.0.0.1";
 
 	/**
 	 * 搜索内容中文转url编码
@@ -114,5 +116,45 @@ public abstract class SearchUtils {
 			}
 		}
 		return Integer.valueOf(d);
+	}
+
+	public static List<String> getListInfo(String key) {
+		Jedis jedis = new Jedis(ippath);
+		if (jedis.exists(key) && jedis.llen(key)>0){
+			List<String> list = jedis.lrange(key, 0, jedis.llen(key)-1);
+			jedis.close();
+			return list;
+		}else return null;
+	}
+
+	// 待删
+	public static boolean updateRedisInfo(String key, List<Map<String, Object>> list) {
+		Jedis jedis = new Jedis(ippath);
+		String value = JsonUtils.objToJson(list);
+		System.out.println("检查数据##"+jedis.set(key, value));
+		jedis.close();
+		return true;
+	}
+
+	//添加list里节目数据
+	public static <T> boolean updateListInfo(String key, T T) {
+		Jedis jedis = new Jedis(ippath);
+		String value = "";
+		String classname = T.getClass().getSimpleName();
+		if(classname.equals("Festival"))
+			value = JsonUtils.objToJson(DataTransform.festival2Audio((Festival) T));
+		else {
+			if (classname.equals("Station"))
+				value = JsonUtils.objToJson(DataTransform.datas2Sequ_Audio((Station) T));
+		}
+		System.out.println(value);
+		jedis.lpush(key, value);
+		jedis.close();
+		return false;
+	}
+
+	
+	public static boolean createRedisInfo(String key) {
+		return false;
 	}
 }

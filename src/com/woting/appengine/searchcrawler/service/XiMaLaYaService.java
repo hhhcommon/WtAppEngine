@@ -17,21 +17,19 @@ import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 
-public class XiMaLaYaService implements Callable<Map<String, Object>> {
+public class XiMaLaYaService extends Thread {
 
 	private final int S_S_NUM = 2; // 搜索频道的数目
 	private final int S_F_NUM = 2; // 搜索频道内节目的数目
 	private final int F_NUM = 2; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
 	private final int T =5000;
-	private String content;
+	private static String content;
 	Map<String, Object> map = new HashMap<String,Object>();
 
-	public XiMaLaYaService(String content,Map<String, Object> map) {
-		this.content = content;
-		this.map = map;
-	}
-
-	public XiMaLaYaService() {
+	public static void begin(String constr){
+		XiMaLaYaService.content = constr;
+		XiMaLaYaService xiMaLaYaService = new XiMaLaYaService();
+		xiMaLaYaService.start();
 	}
 
 	public Map<String, Object> ximalayaService(String content) {
@@ -66,6 +64,7 @@ public class XiMaLaYaService implements Callable<Map<String, Object>> {
 				station.setName(stationname); // 专辑名称
 				station.setContentPub("喜马拉雅FM");
 				station.setFestival(stationfestiavlS(hrefstation));
+				if(station!=null) SearchUtils.updateListInfo(content, station); // 保存到在redis里key为constr的list里
 				liststation.add(station);
 			}
 		} catch (IOException e) {
@@ -148,7 +147,9 @@ public class XiMaLaYaService implements Callable<Map<String, Object>> {
 					festival.setAudioDes(desc);
 					festival.setHost(host == null ? null : host.split(" ")[0]);
 					festival.setPlaynum(playnum);
-					listfestival.add(festivalS(festival.getAudioId(), festival));
+					festival = festivalS(festival.getAudioId(), festival);
+					if(festival!=null) SearchUtils.updateListInfo(content, festival); // 保存到在redis里key为constr的list里
+					listfestival.add(festival);
 				}
 			}
 		} catch (IOException e) {
@@ -156,17 +157,18 @@ public class XiMaLaYaService implements Callable<Map<String, Object>> {
 		}
 		return listfestival;
 	}
-
+	
 	@Override
-	public Map<String, Object> call() throws Exception {
-		
-		System.out.println("###########"+JsonUtils.objToJson(map));
+	public void run() {
+		System.out.println("喜马拉雅搜索开始");
 		try {
-			map = ximalayaService(content) == null ? null : ximalayaService(content);
+			List<Station> liststations = stationS(content);
+		    List<Festival> listfestivals = festivalsS(content);
 		} catch (Exception e) {
-			System.out.println("喜马拉雅搜索timeout！");
-		}finally {
-			return map;
+			System.out.println("喜马拉雅搜索异常");
 		}
+		
+		System.err.println("喜马拉雅搜索结束");
 	}
+
 }

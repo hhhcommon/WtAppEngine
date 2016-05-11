@@ -1,5 +1,6 @@
 package com.woting.appengine.searchcrawler.model;
 
+import com.spiritdata.framework.util.StringUtils;
 
 /**
  * 考拉FM搜索节目信息
@@ -56,11 +57,11 @@ public class Festival {
 		return host;
 	}
 	public void setHost(String host) {
+		if(!StringUtils.isNullOrEmptyOrSpace(host))
 		this.host = host.replaceAll("<em>|</em>", "");
 	}
 	
 	public String getAudioDes() {
-		
 		return audioDes==null?null:audioDes.replaceAll("\n", "").replaceAll("\r", "");
 	}
 	public void setAudioDes(String audioDes) {
@@ -100,7 +101,9 @@ public class Festival {
 		return audioName;
 	}
 	public void setAudioName(String audioName) {
-		this.audioName = audioName.replaceAll("<em>|</em>", "");
+		if (!StringUtils.isNullOrEmptyOrSpace(audioName)) {
+			this.audioName = audioName.replaceAll("<em>|</em>", "");
+		}
 	}
 	public String getAudioPic() {
 		return audioPic;
@@ -112,7 +115,9 @@ public class Festival {
 		return albumName;
 	}
 	public void setAlbumName(String albumName) {
-		this.albumName = albumName.replaceAll("<em>|</em>", "");
+		if (!StringUtils.isNullOrEmptyOrSpace(albumName)) {
+			this.albumName = albumName.replaceAll("<em>|</em>", "");
+		}
 	}
 
 	public String getPlayUrl() {
