@@ -1,10 +1,12 @@
 package com.woting.appengine.searchcrawler.utils;
 
+import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.spiritdata.framework.util.JsonUtils;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 
@@ -57,6 +59,21 @@ public abstract class DataTransform {
 			}
 		}
 		return list_AudioData;
+	}
+	
+	public static List<Map<String, Object>> data2Audio(List<String> list){
+		List<Map<String, Object>> listdata = new ArrayList<Map<String,Object>>();
+		Map<String, Object> map = new HashMap<String,Object>();
+		for (String string : list) {
+			if(string.contains("AUDIO")) 
+				map = festival2Audio((Festival)JsonUtils.jsonToObj(string, Festival.class));
+			else {
+				if(string.contains("SEQU"))
+					map = station2Sequ((Station)JsonUtils.jsonToObj(string, Station.class));
+			}
+			if(!map.isEmpty()) listdata.add(map);
+		}
+		return listdata;
 	}
 
 	/**

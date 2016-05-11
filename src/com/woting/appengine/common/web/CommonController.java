@@ -20,6 +20,7 @@ import com.woting.WtAppEngineConstants;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.session.model.MobileSession;
+import com.woting.appengine.searchcrawler.service.SearchCrawlerService;
 import com.woting.appengine.searchcrawler.service.ThreadService;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;
@@ -47,6 +48,8 @@ public class CommonController {
     private WordService wordService;
     @Resource
     private ThreadService threadService;
+    @Resource
+    private SearchCrawlerService scs;
     
 
     private _CacheDictionary _cd=null;
@@ -581,10 +584,11 @@ public class CommonController {
 
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
-            if(resultType==0 && pageType==0) cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
+            if(resultType==0 && pageType==0) //cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
+            cl = scs.searchCrawler(searchStr, resultType, pageType);
             else cl=contentService.searchAll(searchStr, resultType, pageType);
-
             a=System.currentTimeMillis()-a;
+            
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultType", cl.get("ResultType"));
                 cl.remove("ResultType");
@@ -653,9 +657,10 @@ public class CommonController {
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
             if(resultType==0 && pageType==0){
-            	 cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
+            	cl = scs.searchCrawler(searchStr, resultType, pageType);
+            //	 cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
             }else{
-            	 cl=contentService.searchAll(searchStr, resultType, pageType);
+            	cl=contentService.searchAll(searchStr, resultType, pageType);
             }
             a=System.currentTimeMillis()-a;
             

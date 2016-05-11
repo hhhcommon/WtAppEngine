@@ -54,6 +54,10 @@
   <listener>
     <listener-class>com.woting.appengine.common.web.AppRunningListener</listener-class>
   </listener>
+  <!-- 搜索抓取服务 -->
+  <listener>
+    <listener-class>com.woting.appengine.searchcrawler.SearchCrawlerListener</listener-class>
+  </listener>
   <!-- end监听设置 -->
 
   <!-- begin过滤器 -->

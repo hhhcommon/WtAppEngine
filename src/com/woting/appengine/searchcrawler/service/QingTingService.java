@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -19,27 +17,25 @@ import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 @Service
-public class QingTingService implements Callable<Map<String, Object>> {
+public class QingTingService extends Thread {
 
 	private final int S_S_NUM = 2; // 搜索频道的数目
 	private final int F_NUM = 2; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
 	private final int T = 5000;
-	private String constr = "";
+	private static String constr = "";
 	Map<String, Object> map = new HashMap<String,Object>();
 
-	public QingTingService(String constr,Map<String, Object> map) {
-		this.constr = constr;
-		this.map = map;
-	}
-
-	public QingTingService() {
+	public static void begin(String constr){
+		QingTingService.constr = constr;
+		QingTingService qts= new QingTingService();
+		qts.start();
 	}
 
 	// 电台搜索链接请求
-	public Map<String, Object> qingtingService(String url) {
-		url = SearchUtils.utf8TOurl(url);
+	public Map<String, Object> qingtingService(String content) {
+		content = SearchUtils.utf8TOurl(content);
 		Map<String, Object> map = new HashMap<String, Object>();
-		String station_url = "http://www.qingting.fm/s/search/" + url;
+		String station_url = "http://www.qingting.fm/s/search/" + content;
 		List<Festival> list_festival = new ArrayList<Festival>();
 		List<Station> list_station = new ArrayList<Station>();
 		Document doc = null;
@@ -72,6 +68,7 @@ public class QingTingService implements Callable<Map<String, Object>> {
 					station.setId(href.replaceAll("http://www.qingting.fm/s/vchannels/", ""));
 					station.setName(title);
 					station.setContentPub("蜻蜓FM");
+					if(station!=null)SearchUtils.updateListInfo(constr, station); // 保存到在redis里key为constr的list里
 					list_station.add(station);
 					if (i == r_num + (s_num > (S_S_NUM - 1) ? (S_S_NUM - 1) : s_num) && (r_num + s_num) > 0) {
 						i = r_num + s_num - 1;
@@ -114,6 +111,7 @@ public class QingTingService implements Callable<Map<String, Object>> {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		if(festival!=null)SearchUtils.updateListInfo(constr, festival); // 保存到在redis里key为constr的list里
 		return festival;
 	}
 
@@ -152,10 +150,11 @@ public class QingTingService implements Callable<Map<String, Object>> {
 		}
 		return station;
 	}
-
+	
 	@Override
-	public Map<String, Object> call() throws Exception {
-		map = qingtingService(constr) == null ? null : qingtingService(constr);
-		return map;
+	public void run() {
+		System.out.println("蜻蜓开始搜索");
+		qingtingService(constr);
+		System.out.println("蜻蜓结束搜索");
 	}
 }

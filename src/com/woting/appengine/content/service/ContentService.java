@@ -1080,7 +1080,7 @@ public class ContentService {
     }
 
     /** 计算分享地址的功能 */
-    private static final String preAddr="http://182.92.175.134:908/CM/mweb";//分享地址前缀
+    private static final String preAddr="http://www.wotingfm.com:908/CM/mweb";//分享地址前缀
     public static final String getShareUrl_JM(String preUrl, String contentId) {//的到节目的分享地址
         return preUrl+"/jm/"+contentId+"/content.html";
     }
