@@ -48,7 +48,6 @@ public class CommonController {
     @Resource
     private SearchCrawlerService scs;
     
-
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
 
@@ -579,10 +578,12 @@ public class CommonController {
             int pageType=1;
             if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
 
+            int page = Integer.valueOf((String) m.get("Page")) ;
+            int pageSize = Integer.valueOf((String) m.get("PageSize")) ;
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
             if(resultType==0 && pageType==0) //cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
-            cl = scs.searchCrawler(searchStr, resultType, pageType);
+            cl = scs.searchCrawler(searchStr, resultType, pageType, page, pageSize);
             else cl=contentService.searchAll(searchStr, resultType, pageType);
             a=System.currentTimeMillis()-a;
             
@@ -651,10 +652,12 @@ public class CommonController {
             int pageType=1;
             if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
             
+            int page = (int) m.get("Page");
+            int pageSize = (int) m.get("PageSize");
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
             if(resultType==0 && pageType==0){
-            	cl = scs.searchCrawler(searchStr, resultType, pageType);
+            	cl = scs.searchCrawler(searchStr, resultType, pageType, page, pageSize);
             //	 cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
             }else{
             	cl=contentService.searchAll(searchStr, resultType, pageType);

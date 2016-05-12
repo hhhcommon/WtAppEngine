@@ -1,17 +1,13 @@
 package com.woting.appengine.searchcrawler.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import com.spiritdata.framework.util.JsonUtils;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
@@ -19,9 +15,9 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 public class XiMaLaYaService extends Thread {
 
-	private final int S_S_NUM = 2; // 搜索频道的数目
+	private final int S_S_NUM = 4; // 搜索频道的数目
 	private final int S_F_NUM = 2; // 搜索频道内节目的数目
-	private final int F_NUM = 2; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
+	private final int F_NUM = 4; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
 	private final int T =5000;
 	private static String content;
 	Map<String, Object> map = new HashMap<String,Object>();
@@ -32,21 +28,9 @@ public class XiMaLaYaService extends Thread {
 		xiMaLaYaService.start();
 	}
 
-	public Map<String, Object> ximalayaService(String content) {
-		Map<String, Object> map = new HashMap<String, Object>();
-		map.put("XMLY_S", null);
-		map.put("XMLY_F", null);
-		List<Station> liststations = stationS(content);
-		List<Festival> listfestivals = festivalsS(content);
-		if (liststations != null) map.put("XMLY_S", liststations);
-		if (listfestivals != null) map.put("XMLY_F", listfestivals);
-		return map;
-	}
-
-	public List<Station> stationS(String content) {
+	public boolean stationS(String content) {
 		String url = "http://www.ximalaya.com/search/" + SearchUtils.utf8TOurl(content) + "/t3";
 		Document doc = null;
-		List<Station> liststation = new ArrayList<Station>();
 		try {
 			doc = Jsoup.connect(url).timeout(T).get();
 			Elements elements = doc.select("div[class=content_wrap2]");
@@ -64,13 +48,12 @@ public class XiMaLaYaService extends Thread {
 				station.setName(stationname); // 专辑名称
 				station.setContentPub("喜马拉雅FM");
 				station.setFestival(stationfestiavlS(hrefstation));
-				if(station!=null) SearchUtils.updateListInfo(content, station); // 保存到在redis里key为constr的list里
-				liststation.add(station);
+				if(station!=null) SearchUtils.addListInfo(content, station); // 保存到在redis里key为constr的list里
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return liststation;
+		return true;
 	}
 
 	/**
@@ -119,13 +102,11 @@ public class XiMaLaYaService extends Thread {
 			festival.setContentPub("喜马拉雅FM");
 			return festival;
 		}
-
 	}
 
-	public List<Festival> festivalsS(String content) {
+	public boolean festivalsS(String content) {
 		String url = "http://www.ximalaya.com/search/" + SearchUtils.utf8TOurl(content) + "/t2";
 		Document doc = null;
-		List<Festival> listfestival = new ArrayList<Festival>();
 		try {
 			doc = Jsoup.connect(url).timeout(T).get();
 			Elements elements = doc.select("div[class=row soundReport]");
@@ -134,7 +115,7 @@ public class XiMaLaYaService extends Thread {
 				for (int i = 0; i < (elements.size() > F_NUM ? F_NUM : elements.size()); i++) {
 					Festival festival = new Festival();
 					Element elf = elements.get(i);
-					String name = elf.select("a[class=soundReport_soundname]").get(0).html();
+//					String name = elf.select("a[class=soundReport_soundname]").get(0).html();
 					String id = elf.select("a[class=soundReport_soundname]").get(0).attr("href").split("/")[3];
 					String desc = elf.select("a[class=soundReport_tag]").isEmpty() ? null
 							: elf.select("a[class=soundReport_tag]").get(0).html();
@@ -148,22 +129,21 @@ public class XiMaLaYaService extends Thread {
 					festival.setHost(host == null ? null : host.split(" ")[0]);
 					festival.setPlaynum(playnum);
 					festival = festivalS(festival.getAudioId(), festival);
-					if(festival!=null) SearchUtils.updateListInfo(content, festival); // 保存到在redis里key为constr的list里
-					listfestival.add(festival);
+					if(festival!=null) SearchUtils.addListInfo(content, festival); // 保存到在redis里key为constr的list里
 				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return listfestival;
+		return true;
 	}
 	
 	@Override
 	public void run() {
 		System.out.println("喜马拉雅搜索开始");
 		try {
-			List<Station> liststations = stationS(content);
-		    List<Festival> listfestivals = festivalsS(content);
+			stationS(content);
+		    festivalsS(content);
 		} catch (Exception e) {
 			System.out.println("喜马拉雅搜索异常");
 		}
