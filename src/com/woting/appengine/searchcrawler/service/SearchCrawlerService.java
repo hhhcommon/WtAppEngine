@@ -26,6 +26,7 @@ public class SearchCrawlerService {
 			long a = System.currentTimeMillis(), b, num;
 			SearchUtils.searchContent(searchStr);
 			while (true) {
+			    
 				if ((num = SearchUtils.getListNum(searchStr)) > 0) {
 					if (num >= 10) {
 						SearchUtils.unlockRedisKey(searchStr);
