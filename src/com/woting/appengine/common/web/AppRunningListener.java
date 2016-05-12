@@ -15,8 +15,6 @@ import com.woting.appengine.mobile.push.PushConfig;
 import com.woting.appengine.mobile.push.PushListener;
 import com.woting.appengine.mobile.session.MobileSessionConfig;
 import com.woting.appengine.mobile.session.SessionListener;
-import com.woting.appengine.searchcrawler.SearchCrawlerConfig;
-import com.woting.appengine.searchcrawler.SearchCrawlerListener;
 import com.woting.searchword.SearchWordListener;
 
 public class AppRunningListener implements ServletContextListener {
@@ -38,8 +36,6 @@ public class AppRunningListener implements ServletContextListener {
             MfListener.begin(new MfConfig());
             //启动推送服务
             PushListener.begin(new PushConfig());
-            //启动搜索抓去服务
-            SearchCrawlerListener.begin(new SearchCrawlerConfig());
         } catch(Exception e) {
             logger.error("Web运行时监听启动异常：",e);
         }

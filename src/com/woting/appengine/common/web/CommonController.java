@@ -21,7 +21,6 @@ import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.appengine.searchcrawler.service.SearchCrawlerService;
-import com.woting.appengine.searchcrawler.service.ThreadService;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
@@ -46,8 +45,6 @@ public class CommonController {
     private ContentService contentService;
     @Resource
     private WordService wordService;
-    @Resource
-    private ThreadService threadService;
     @Resource
     private SearchCrawlerService scs;
     
