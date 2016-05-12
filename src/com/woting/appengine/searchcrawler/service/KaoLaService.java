@@ -1,7 +1,5 @@
 package com.woting.appengine.searchcrawler.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.woting.appengine.searchcrawler.model.Festival;
@@ -17,9 +15,9 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 public class KaoLaService extends Thread {
 
-	private final int S_S_NUM = 2; // 搜索频道的数目
+	private final int S_S_NUM = 4; // 搜索频道的数目
 	private final int S_F_NUM = 2; // 搜索频道内节目的数目
-	private final int F_NUM = 2; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
+	private final int F_NUM = 4; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
 	/**
 	 * Map<String, Object> "KL_Fl":list_festival "KL_Sl":list_station
 	 * 
@@ -32,16 +30,6 @@ public class KaoLaService extends Thread {
 		kl.start();
 	}
 
-	public Map<String, Object> kaolaService(String content) {
-		String str = SearchUtils.utf8TOurl(content);
-		List<Station> list_station = StationS(str);
-		List<Festival> list_festival = FestivalsS(str);
-		Map<String, Object> map = new HashMap<>();
-		map.put("KL_S", list_station);
-		map.put("KL_F", list_festival);
-		return map;
-	}
-
 	/**
 	 * 频道信息及级下节目的搜索
 	 * 
@@ -49,10 +37,9 @@ public class KaoLaService extends Thread {
 	 *            搜索内容的url编码
 	 * @return 返回搜索到的频道及级下节目
 	 */
-	public List<Station> StationS(String content) {
+	public boolean StationS(String content) {
 		String station_url = "http://www.kaolafm.com/webapi/resource/search?words=" + content
 				+ "&rtype=20000&pagesize=20&pagenum=1";
-		List<Station> list_station = new ArrayList<Station>();
 		String station_id = new String();
 		String jsonstr = SearchUtils.jsoupTOstr(station_url);
 		List<Map<String, Object>> list_href = SearchUtils.jsonTOlist(jsonstr, "result", "dataList");
@@ -112,13 +99,10 @@ public class KaoLaService extends Thread {
 					}
 					station.setFestival(festivals);
 				}
-				if (station!=null) SearchUtils.updateListInfo(constr, station); // 保存到在redis里key为constr的list里
-				list_station.add(station);
+				if (station!=null) SearchUtils.addListInfo(constr, station); // 保存到在redis里key为constr的list里
 			}
-		} else {
-			list_station.clear();
-		}
-		return list_station;
+		} 
+		return true;
 	}
 
 	/**
@@ -128,10 +112,9 @@ public class KaoLaService extends Thread {
 	 *            搜索内容的url编码
 	 * @return 返回搜索到的节目信息
 	 */
-	public List<Festival> FestivalsS(String content) {
+	public boolean FestivalsS(String content) {
 		String url = "http://www.kaolafm.com/webapi/resource/search?words=" + content
 				+ "&rtype=30000&pagesize=20&pagenum=1";
-		List<Festival> list_festival = new ArrayList<Festival>();
 		String jsonstr = SearchUtils.jsoupTOstr(url); // 获取网页链接的返回结果
 		List<Map<String, Object>> list = SearchUtils.jsonTOlist(jsonstr, "result", "dataList"); // 获取json数据解析后的map对象
 		if (!list.isEmpty()) {
@@ -163,21 +146,18 @@ public class KaoLaService extends Thread {
 					host_name = host_name.substring(1);
 				}
 				festival.setHost(host_name);
-				if (festival!=null) SearchUtils.updateListInfo(constr, festival); // 保存到在redis里key为constr的list里
-				list_festival.add(festival);
+				if (festival!=null) SearchUtils.addListInfo(constr, festival); // 保存到在redis里key为constr的list里
 			}
-		} else {
-			list_festival.clear();
 		}
-		return list_festival;
+		return true;
 	}
 
 	@Override
 	public void run() {
 		System.out.println("考拉开始搜索");
 		String str = SearchUtils.utf8TOurl(constr);
-		List<Station> list_station = StationS(str);
-		List<Festival> list_festival = FestivalsS(str);
+		StationS(str);
+		FestivalsS(str);
 		System.out.println("考拉搜索结束");
 	}
 

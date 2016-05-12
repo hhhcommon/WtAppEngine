@@ -6,15 +6,20 @@ import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import com.spiritdata.framework.util.JsonUtils;
+import com.spiritdata.framework.util.StringUtils;
+import com.woting.WtAppEngineConstants;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
+import com.woting.appengine.searchcrawler.service.KaoLaService;
+import com.woting.appengine.searchcrawler.service.QingTingService;
+import com.woting.appengine.searchcrawler.service.XiMaLaYaService;
 
 import redis.clients.jedis.Jedis;
 
 public abstract class SearchUtils {
 
 	private static int T = 1000; // 默认超时时间
-	private static String ippath = "127.0.0.1";
+	private static Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
 
 	/**
 	 * 搜索内容中文转url编码
@@ -58,7 +63,7 @@ public abstract class SearchUtils {
 	 * @return 返回已解析好的json数据
 	 */
 	public static List<Map<String, Object>> jsonTOlist(String jsonstr, String... strings) {
-		if (strings.length == 0 || jsonstr.isEmpty() || jsonstr.equals("")) {
+		if (strings.length == 0 || StringUtils.isNullOrEmptyOrSpace(jsonstr)) {
 			return null;
 		} else {
 			Map<String, Object> testmap = (Map<String, Object>) JsonUtils.jsonToObj(jsonstr, Map.class);
@@ -72,7 +77,7 @@ public abstract class SearchUtils {
 
 	@SuppressWarnings("unchecked")
 	public static Map<String, Object> jsonTOmap(String jsonstr, String... strings) {
-		if (jsonstr.isEmpty() || jsonstr.equals("")) {
+		if (StringUtils.isNullOrEmptyOrSpace(jsonstr)) {
 			return null;
 		} else {
 			Map<String, Object> testmap = (Map<String, Object>) JsonUtils.jsonToObj(jsonstr, Map.class);
@@ -118,43 +123,130 @@ public abstract class SearchUtils {
 		return Integer.valueOf(d);
 	}
 
-	public static List<String> getListInfo(String key) {
-		Jedis jedis = new Jedis(ippath);
-		if (jedis.exists(key) && jedis.llen(key)>0){
-			List<String> list = jedis.lrange(key, 0, jedis.llen(key)-1);
-			jedis.close();
-			return list;
-		}else return null;
+	/**
+	 * 得到list里节目数
+	 * @param key
+	 * @return
+	 */
+	public static long getListNum(String key) {
+		if (jedis.exists(key)) {
+			return jedis.llen(key);
+		} else
+			return 0;
 	}
 
-	// 待删
-	public static boolean updateRedisInfo(String key, List<Map<String, Object>> list) {
-		Jedis jedis = new Jedis(ippath);
-		String value = JsonUtils.objToJson(list);
-		System.out.println("检查数据##"+jedis.set(key, value));
-		jedis.close();
-		return true;
+	/**
+	 * 得到list分页
+	 * @param key
+	 * @param page
+	 * @param pageSize
+	 * @return
+	 */
+	public static List<String> getListPage(String key, int page, int pageSize) {
+		if (jedis.exists(key)) {
+			long num = jedis.llen(key);
+			num = num - (page - 1) * pageSize;
+			if (num > 0) {
+				if (num >= pageSize)
+					return jedis.lrange(key, (page - 1) * pageSize, page * pageSize - 1);
+				else if (0 < num && num < pageSize)
+					return jedis.lrange(key, (page - 1) * pageSize, num - 1);
+				else if (num < 0)
+					return null;
+			} else {
+				return null;
+			}
+		}
+		return null;
 	}
 
-	//添加list里节目数据
-	public static <T> boolean updateListInfo(String key, T T) {
-		Jedis jedis = new Jedis(ippath);
+	/**
+	 * 添加list里节目数据
+	 * @param key
+	 * @param T
+	 * @return
+	 */
+	public static <T> boolean addListInfo(String key, T T) {
 		String value = "";
 		String classname = T.getClass().getSimpleName();
-		if(classname.equals("Festival"))
+		if (classname.equals("Festival"))
 			value = JsonUtils.objToJson(DataTransform.festival2Audio((Festival) T));
 		else {
 			if (classname.equals("Station"))
 				value = JsonUtils.objToJson(DataTransform.datas2Sequ_Audio((Station) T));
 		}
-		System.out.println(value);
-		jedis.lpush(key, value);
-		jedis.close();
+		value = value.replace("\"", "'");
+		if(!existSame(key, value))jedis.rpush(key, value);
+		return true;
+	}
+
+	/**
+	 * 在三平台搜索
+	 * @param searchStr
+	 * @return
+	 */
+	public static boolean searchContent(String searchStr) {
+		lockRedisKey(searchStr);
+		KaoLaService.begin(searchStr);
+		XiMaLaYaService.begin(searchStr);
+		QingTingService.begin(searchStr);
+		return true;
+	}
+
+	/**
+	 * 判断锁是否存在和等待解锁
+	 * @param key
+	 * @return
+	 */
+	public static boolean judgeLock(String key) {
+		if (jedis.exists("LOCK:" + key)) {
+			long a = System.currentTimeMillis(), b;
+			while (jedis.exists("LOCK:" + key))
+				if ((b = System.currentTimeMillis() - a) > 1500) { // 需加超时判断1.5s
+					unlockRedisKey(key);
+					return true;
+				}
+		}
+		return true;
+	}
+
+	/**
+	 * 查找list里是否存在相似
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public static boolean existSame(String key, String value) {
+		List<String> list = jedis.lrange(key, 0, jedis.llen(key) - 1);
+		if (list != null) {
+			for (int i=0;i<list.size()-1;i++) {
+				if(value.equals(list.get(i)))
+					return true;
+			}
+			return false;
+		}
 		return false;
 	}
 
-	
-	public static boolean createRedisInfo(String key) {
+	/**
+	 * 解锁
+	 * @param key
+	 * @return
+	 */
+	public static boolean unlockRedisKey(String key) {
+		if (jedis.exists(key))
+			jedis.del(key);
 		return false;
 	}
+
+	/**
+	 * 给正在查询的内容加锁
+	 * @param key
+	 * @return
+	 */
+	private static boolean lockRedisKey(String key) {
+		jedis.set("LOCK:" + key, "1");
+		return false;
+	}
+
 }

@@ -21,7 +21,6 @@ import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.appengine.searchcrawler.service.SearchCrawlerService;
-import com.woting.appengine.searchcrawler.service.ThreadService;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
@@ -47,11 +46,8 @@ public class CommonController {
     @Resource
     private WordService wordService;
     @Resource
-    private ThreadService threadService;
-    @Resource
     private SearchCrawlerService scs;
     
-
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
 
@@ -582,10 +578,12 @@ public class CommonController {
             int pageType=1;
             if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
 
+            int page = Integer.valueOf((String) m.get("Page")) ;
+            int pageSize = Integer.valueOf((String) m.get("PageSize")) ;
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
             if(resultType==0 && pageType==0) //cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
-            cl = scs.searchCrawler(searchStr, resultType, pageType);
+            cl = scs.searchCrawler(searchStr, resultType, pageType, page, pageSize);
             else cl=contentService.searchAll(searchStr, resultType, pageType);
             a=System.currentTimeMillis()-a;
             
@@ -654,10 +652,12 @@ public class CommonController {
             int pageType=1;
             if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
             
+            int page = (int) m.get("Page");
+            int pageSize = (int) m.get("PageSize");
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
             if(resultType==0 && pageType==0){
-            	cl = scs.searchCrawler(searchStr, resultType, pageType);
+            	cl = scs.searchCrawler(searchStr, resultType, pageType, page, pageSize);
             //	 cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
             }else{
             	cl=contentService.searchAll(searchStr, resultType, pageType);
