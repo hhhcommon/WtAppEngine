@@ -94,7 +94,6 @@ public class ThreadService {
 					listall.add(map2);
 				}
 			}
-			System.out.println(list_local_festival.size());
 			pool.shutdown(); // 线程关闭
 
 			// 去掉重复的节目
