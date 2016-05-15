@@ -18,6 +18,7 @@ import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.appengine.common.util.MobileUtils;
+import com.woting.appengine.common.util.RequestUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.appengine.searchcrawler.service.SearchCrawlerService;
@@ -72,7 +73,7 @@ public class CommonController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -114,7 +115,7 @@ public class CommonController {
         try {
             //0-获取参数
             MobileSession ms=null;
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -131,22 +132,16 @@ public class CommonController {
             if (map.get("ReturnType")!=null) return map;
 
             //获得页面类型
-            String _pageType=(String)m.get("PageType");
-            if (StringUtils.isNullOrEmptyOrSpace(_pageType)) _pageType=request.getParameter("PageType");
             int pageType=1;
-            if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
+            try {pageType=Integer.parseInt(m.get("PageType")+"");} catch(Exception e) {};
             //得到每页条数
-            String pageSize=(String)m.get("PageSize");
-            if (StringUtils.isNullOrEmptyOrSpace(pageSize)) pageSize=request.getParameter("PageSize");
-            if (StringUtils.isNullOrEmptyOrSpace(pageSize)) pageSize="10";
-            int _pageSize=Integer.parseInt(pageSize);
+            int pageSize=10;
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
             //得到页数
-            String page=(String)m.get("Page");
-            if (StringUtils.isNullOrEmptyOrSpace(page)) page=request.getParameter("Page");
-            if (StringUtils.isNullOrEmptyOrSpace(page)) page="1";
-            int _page=Integer.parseInt(page);
+            int page=1;
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
 
-            Map<String, Object> cl=contentService.getMainPage(ms.getKey().getUserId(), pageType, _pageSize, _page);
+            Map<String, Object> cl=contentService.getMainPage(ms.getKey().getUserId(), pageType, pageSize, page);
 
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultList", cl);
@@ -176,7 +171,7 @@ public class CommonController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -193,41 +188,17 @@ public class CommonController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-获取功能类型，目前只有1内容搜索
-            String funType=(String)m.get("FunType");
-            if (StringUtils.isNullOrEmptyOrSpace(funType)) {
-                funType=request.getParameter("FunType");
-            }
-            int _funType=1;
-            if (!StringUtils.isNullOrEmptyOrSpace(funType)) {
-                try {
-                    _funType=Integer.parseInt(funType);
-                } catch(Exception e) {}
-            }
+            int funType=1;
+            try {funType=Integer.parseInt(m.get("FunType")+"");} catch(Exception e) {}
             //2-检索词数量
-            String wordSize=(String)m.get("WordSize");
-            if (StringUtils.isNullOrEmptyOrSpace(wordSize)) {
-                wordSize=request.getParameter("WordSize");
-            }
-            int _wordSize=10;
-            if (!StringUtils.isNullOrEmptyOrSpace(wordSize)) {
-                try {
-                    _wordSize=Integer.parseInt(wordSize);
-                } catch(Exception e) {}
-            }
+            int wordSize=10;
+            try {wordSize=Integer.parseInt(m.get("WordSize")+"");} catch(Exception e) {}
             //3-返回类型
-            String returnType=(String)m.get("ReturnType");
-            if (StringUtils.isNullOrEmptyOrSpace(funType)) {
-                returnType=request.getParameter("ReturnType");
-            }
-            int _returnType=1;
-            if (!StringUtils.isNullOrEmptyOrSpace(returnType)) {
-                try {
-                    _returnType=Integer.parseInt(returnType);
-                } catch(Exception e) {}
-            }
+            int returnType=1;
+            try {returnType=Integer.parseInt(m.get("ReturnType")+"");} catch(Exception e) {}
 
             Owner o=new Owner(201, map.get("SessionId")+"");
-            List<String>[] retls=wordService.getHotWords(o, _returnType, _wordSize);
+            List<String>[] retls=wordService.getHotWords(o, returnType, wordSize);
             if (retls==null||retls.length==0) map.put("ReturnType", "1011");
             else {
                 if (retls.length==1&&(retls[0]==null||retls[0].size()==0)) map.put("ReturnType", "1011");
@@ -280,7 +251,7 @@ public class CommonController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -297,49 +268,24 @@ public class CommonController {
             if (map.get("ReturnType")!=null) return map;
 
             //获得查找词
-            String searchStr=(String)m.get("KeyWord");
-            if (StringUtils.isNullOrEmptyOrSpace(searchStr)) searchStr=request.getParameter("KeyWord");
+            String searchStr=m.get("KeyWord")+"";
             if (StringUtils.isNullOrEmptyOrSpace(searchStr)) {
                 map.put("ReturnType", "1002");
                 map.put("Message", "无法得到查询串");
                 return map;
             }
             //1-获取功能类型，目前只有1内容搜索
-            String funType=(String)m.get("FunType");
-            if (StringUtils.isNullOrEmptyOrSpace(funType)) {
-                funType=request.getParameter("FunType");
-            }
-            int _funType=1;
-            if (!StringUtils.isNullOrEmptyOrSpace(funType)) {
-                try {
-                    _funType=Integer.parseInt(funType);
-                } catch(Exception e) {}
-            }
+            int funType=1;
+            try {funType=Integer.parseInt(m.get("FunType")+"");} catch(Exception e) {}
             //2-检索词数量
-            String wordSize=(String)m.get("WordSize");
-            if (StringUtils.isNullOrEmptyOrSpace(funType)) {
-                wordSize=request.getParameter("WordSize");
-            }
-            int _wordSize=10;
-            if (!StringUtils.isNullOrEmptyOrSpace(wordSize)) {
-                try {
-                    _wordSize=Integer.parseInt(wordSize);
-                } catch(Exception e) {}
-            }
+            int wordSize=10;
+            try {wordSize=Integer.parseInt(m.get("WordSize")+"");} catch(Exception e) {}
             //3-返回类型
-            String returnType=(String)m.get("ReturnType");
-            if (StringUtils.isNullOrEmptyOrSpace(funType)) {
-                returnType=request.getParameter("ReturnType");
-            }
-            int _returnType=1;
-            if (!StringUtils.isNullOrEmptyOrSpace(returnType)) {
-                try {
-                    _returnType=Integer.parseInt(returnType);
-                } catch(Exception e) {}
-            }
+            int returnType=1;
+            try {returnType=Integer.parseInt(m.get("ReturnType")+"");} catch(Exception e) {}
 
             Owner o=new Owner(201, map.get("SessionId")+"");
-            List<String>[] retls=wordService.searchHotWords(searchStr, o, _returnType, _wordSize);
+            List<String>[] retls=wordService.searchHotWords(searchStr, o, returnType, wordSize);
             if (retls==null||retls.length==0) map.put("ReturnType", "1011");
             else {
                 if (retls.length==1&&(retls[0]==null||retls[0].size()==0)) map.put("ReturnType", "1011");
@@ -439,7 +385,7 @@ public class CommonController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -456,37 +402,17 @@ public class CommonController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-得到模式Id
-            String catalogType=(String)m.get("CatalogType");
-            if (StringUtils.isNullOrEmptyOrSpace(catalogType)) {
-                catalogType=request.getParameter("CatalogType");
-            }
-            if (StringUtils.isNullOrEmptyOrSpace(catalogType)) {
-                catalogType="-1";
-            }
+            String catalogType=m.get("CatalogType")+"";
+            if (StringUtils.isNullOrEmptyOrSpace(catalogType)) catalogType="-1";
             //2-得到字典项Id或父栏目Id
-            String catalogId=(String)m.get("CatalogId");
-            if (StringUtils.isNullOrEmptyOrSpace(catalogId)) {
-                catalogId=request.getParameter("CatalogId");
-            }
-            if (StringUtils.isNullOrEmptyOrSpace(catalogId)) {
-                catalogId=null;
-            }
+            String catalogId=m.get("CatalogId")+"";
+            if (StringUtils.isNullOrEmptyOrSpace(catalogId)) catalogId=null;
             //3-得到返回类型
-            String resultType=(String)m.get("ResultType");
-            if (StringUtils.isNullOrEmptyOrSpace(resultType)) {
-                resultType=request.getParameter("ResultType");
-            }
-            if (StringUtils.isNullOrEmptyOrSpace(resultType)) {
-                resultType="2";
-            }
+            int resultType=2;
+            try {resultType=Integer.parseInt(m.get("ResultType")+"");} catch(Exception e) {}
             //4-得到相对层次
-            String relLevel=(String)m.get("RelLevel");
-            if (StringUtils.isNullOrEmptyOrSpace(relLevel)) {
-                relLevel=request.getParameter("RelLevel");
-            }
-            if (StringUtils.isNullOrEmptyOrSpace(relLevel)) {
-                relLevel="1";
-            }
+            int relLevel=1;
+            try {relLevel=Integer.parseInt(m.get("RelLevel")+"");} catch(Exception e) {}
 
             //根据分类获得根
             TreeNode<? extends TreeNodeBean> root=null;
@@ -501,21 +427,19 @@ public class CommonController {
                 if (catalogId!=null) root=root.findNode(catalogId);
             }
             //根据层级参数，对树进行截取
-            int _relLevel=Integer.parseInt(relLevel);
-            if (root!=null&&_relLevel>0) root=TreeUtils.cutLevelClone(root, _relLevel);
+            if (root!=null&&relLevel>0) root=TreeUtils.cutLevelClone(root, relLevel);
 
             if (root!=null) {
                 Map<String, Object> CatalogData=new HashMap<String, Object>();
                 //返回类型
-                int _resultType=Integer.parseInt(resultType);
-                if (_resultType==1) {//树结构
+                if (resultType==1) {//树结构
                     convert2Data(root, CatalogData, catalogType);
                     map.put("CatalogData", CatalogData);
                 } else {//列表结构
-                    if (_relLevel<=0) {//所有结点列表
+                    if (relLevel<=0) {//所有结点列表
                         map.put("CatalogData", getDeepList(root, catalogType));
                     } else { //某层级节点
-                        map.put("CatalogData", getLevelNodeList(root, _relLevel, catalogType));
+                        map.put("CatalogData", getLevelNodeList(root, relLevel, catalogType));
                     }
                 }
                 map.put("ReturnType", "1001");
@@ -539,7 +463,7 @@ public class CommonController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -556,7 +480,7 @@ public class CommonController {
             if (map.get("ReturnType")!=null) return map;
 
             //获得查询串
-            String searchStr=(String)m.get("SearchStr");
+            String searchStr=m.get("SearchStr")+"";
             if (StringUtils.isNullOrEmptyOrSpace(searchStr)) {
                 map.put("ReturnType", "1002");
                 map.put("Message", "无法得到查询串");
@@ -569,24 +493,24 @@ public class CommonController {
 
             //获得结果类型，0获得一个列表，1获得分类列表，这个列表根据content字段处理，这个字段目前没有用到
             int resultType=0;
-            try {
-                resultType=Integer.parseInt(m.get("ResultType")+"");
-            } catch(Exception e) {}
+            try {resultType=Integer.parseInt(m.get("ResultType")+"");} catch(Exception e) {}
             //获得页面类型
-            String _pageType=(String)m.get("PageType");
-            if (StringUtils.isNullOrEmptyOrSpace(_pageType)) _pageType=request.getParameter("PageType");
             int pageType=1;
-            if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
+            try {pageType=Integer.parseInt(m.get("PageType")+"");} catch(Exception e) {};
+            //得到每页条数
+            int pageSize=10;
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+            //得到页数
+            int page=1;
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
 
-            int page = Integer.valueOf((String) m.get("Page")) ;
-            int pageSize = Integer.valueOf((String) m.get("PageSize")) ;
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
             if(resultType==0 && pageType==0) //cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
             cl = scs.searchCrawler(searchStr, resultType, pageType, page, pageSize);
             else cl=contentService.searchAll(searchStr, resultType, pageType);
             a=System.currentTimeMillis()-a;
-            
+
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultType", cl.get("ResultType"));
                 cl.remove("ResultType");
@@ -613,7 +537,7 @@ public class CommonController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -630,7 +554,7 @@ public class CommonController {
             if (map.get("ReturnType")!=null) return map;
 
             //获得查询串
-            String searchStr=(String)m.get("SearchStr");
+            String searchStr=m.get("SearchStr")+"";
             if (StringUtils.isNullOrEmptyOrSpace(searchStr)) {
                 map.put("ReturnType", "1002");
                 map.put("Message", "无法得到查询串");
@@ -643,17 +567,17 @@ public class CommonController {
 
             //获得结果类型，0获得一个列表，1获得分类列表，这个列表根据content字段处理，这个字段目前没有用到
             int resultType=0;
-            try {
-                resultType=Integer.parseInt(m.get("ResultType")+"");
-            } catch(Exception e) {}
+            try {resultType=Integer.parseInt(m.get("ResultType")+"");} catch(Exception e) {}
             //获得页面类型
-            String _pageType=(String)m.get("PageType");
-            if (StringUtils.isNullOrEmptyOrSpace(_pageType)) _pageType=request.getParameter("PageType");
             int pageType=1;
-            if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
-            
-            int page = (int) m.get("Page");
-            int pageSize = (int) m.get("PageSize");
+            try {pageType=Integer.parseInt(m.get("PageType")+"");} catch(Exception e) {};
+            //得到每页条数
+            int pageSize=10;
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+            //得到页数
+            int page=1;
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
             if(resultType==0 && pageType==0){
@@ -663,7 +587,7 @@ public class CommonController {
             	cl=contentService.searchAll(searchStr, resultType, pageType);
             }
             a=System.currentTimeMillis()-a;
-            
+
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultType", cl.get("ResultType"));
                 cl.remove("ResultType");

@@ -18,6 +18,7 @@ import com.woting.appengine.appopinion.persistence.pojo.AppOpinionPo;
 import com.woting.appengine.appopinion.persistence.pojo.AppReOpinionPo;
 import com.woting.appengine.appopinion.service.AppOpinionService;
 import com.woting.appengine.common.util.MobileUtils;
+import com.woting.appengine.common.util.RequestUtils;
 import com.woting.appengine.mobile.session.model.MobileSession;
 
 @Controller
@@ -39,7 +40,7 @@ public class OpinionController {
             //0-获取参数
             String userId="";
             MobileSession ms=null;
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -64,7 +65,7 @@ public class OpinionController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-获取意见
-            String opinion=(String)m.get("Opinion");
+            String opinion=m.get("Opinion")+"";
             if (StringUtils.isNullOrEmptyOrSpace(opinion)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取意见");
@@ -108,7 +109,7 @@ public class OpinionController {
             //0-获取参数
             String userId="";
             MobileSession ms=null;
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");

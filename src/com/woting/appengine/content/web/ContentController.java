@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
+import com.woting.appengine.common.util.RequestUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.session.model.MobileSession;
 
@@ -34,7 +35,7 @@ public class ContentController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -103,7 +104,7 @@ public class ContentController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -115,48 +116,34 @@ public class ContentController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-得到模式Id
-            String catalogType=(String)m.get("CatalogType");
-            if (StringUtils.isNullOrEmptyOrSpace(catalogType)) catalogType=request.getParameter("CatalogType");
+            String catalogType=m.get("CatalogType")+"";
             if (StringUtils.isNullOrEmptyOrSpace(catalogType)) catalogType="-1";
             //2-得到字典项Id或父栏目Id
-            String catalogId=(String)m.get("CatalogId");
-            if (StringUtils.isNullOrEmptyOrSpace(catalogId)) catalogId=request.getParameter("CatalogId");
+            String catalogId=m.get("CatalogId")+"";
             if (StringUtils.isNullOrEmptyOrSpace(catalogId)) catalogId=null;
             //3-得到返回类型
-            String resultType=(String)m.get("ResultType");
-            if (StringUtils.isNullOrEmptyOrSpace(resultType)) resultType=request.getParameter("ResultType");
-            if (StringUtils.isNullOrEmptyOrSpace(resultType)) resultType="3";
-            int _resultType=Integer.parseInt(resultType);
+            int resultType=3;
+            try {resultType=Integer.parseInt(m.get("ResultType")+"");} catch(Exception e) {}
             //4-得到类型
-            String mediaType=(String)m.get("MediaType");
-            if (StringUtils.isNullOrEmptyOrSpace(mediaType)) mediaType=request.getParameter("MediaType");
+            String mediaType=m.get("MediaType")+"";
             if (StringUtils.isNullOrEmptyOrSpace(mediaType)) mediaType=null;
             //5-得到每分类条目数
-            String perSize=(String)m.get("PerSize");
-            if (StringUtils.isNullOrEmptyOrSpace(perSize)) perSize=request.getParameter("PerSize");
-            if (StringUtils.isNullOrEmptyOrSpace(perSize)) perSize="3";
-            int _perSize=Integer.parseInt(perSize);
+            int perSize=3;
+            try {perSize=Integer.parseInt(m.get("PerSize")+"");} catch(Exception e) {}
             //6-得到每页条数
-            String pageSize=(String)m.get("PageSize");
-            if (StringUtils.isNullOrEmptyOrSpace(pageSize)) pageSize=request.getParameter("PageSize");
-            if (StringUtils.isNullOrEmptyOrSpace(pageSize)) pageSize="10";
-            int _pageSize=Integer.parseInt(pageSize);
+            int pageSize=10;
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
             //7-得到页数
-            String page=(String)m.get("Page");
-            if (StringUtils.isNullOrEmptyOrSpace(page)) page=request.getParameter("Page");
-            if (StringUtils.isNullOrEmptyOrSpace(page)) page="1";
-            int _page=Integer.parseInt(page);
+            int page=1;
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
             //8-得到开始分类Id
-            String beginCatalogId=(String)m.get("BeginCatalogId");
-            if (StringUtils.isNullOrEmptyOrSpace(beginCatalogId)) beginCatalogId=request.getParameter("BeginCatalogId");
+            String beginCatalogId=m.get("BeginCatalogId")+"";
             if (StringUtils.isNullOrEmptyOrSpace(beginCatalogId)) beginCatalogId=null;
             //9-获得页面类型
-            String _pageType=(String)m.get("PageType");
-            if (StringUtils.isNullOrEmptyOrSpace(_pageType)) _pageType=request.getParameter("PageType");
             int pageType=1;
-            if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
+            try {pageType=Integer.parseInt(m.get("PageType")+"");} catch(Exception e) {};
 
-            Map<String, Object> contents=contentService.getContents(catalogType, catalogId, _resultType, mediaType, _perSize, _pageSize, _page, beginCatalogId, pageType);
+            Map<String, Object> contents=contentService.getContents(catalogType, catalogId, resultType, mediaType, perSize, pageSize, page, beginCatalogId, pageType);
             if (contents!=null&&contents.size()>0) {
                 map.put("ResultList", contents);
                 map.put("ReturnType", "1001");
@@ -180,7 +167,7 @@ public class ContentController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -192,43 +179,25 @@ public class ContentController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-得到内容类别
-            String mediaType=(String)m.get("MediaType");
-            if (StringUtils.isNullOrEmptyOrSpace(mediaType)) {
-                mediaType=request.getParameter("MediaType");
-            }
+            String mediaType=m.get("MediaType")+"";
             if (StringUtils.isNullOrEmptyOrSpace(mediaType)) {
                 map.put("ReturnType", "1002");
                 map.put("Message", "无法获得内容类别");
                 return map;
             }
             //2-得到系列内容的Id
-            String contentId=(String)m.get("ContentId");
-            if (StringUtils.isNullOrEmptyOrSpace(contentId)) {
-                contentId=request.getParameter("ContentId");
-            }
+            String contentId=m.get("ContentId")+"";
             if (StringUtils.isNullOrEmptyOrSpace(contentId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获得内容呢Id");
                 return map;
             }
             //3-得到每页记录数
-            String _pageSize=(String)m.get("PageSize");
-            if (StringUtils.isNullOrEmptyOrSpace(_pageSize)) {
-                _pageSize=request.getParameter("PageSize");
-            }
             int pageSize=-1;
-            if (!StringUtils.isNullOrEmptyOrSpace(_pageSize)) {
-                try {pageSize=Integer.parseInt(_pageSize);} catch(Exception e) {}
-            }
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
             //4-得到当前页数
-            String _pageNum=(String)m.get("Page");
-            if (StringUtils.isNullOrEmptyOrSpace(_pageNum)) {
-                _pageNum=request.getParameter("Page");
-            }
-            int page=-1;
-            if (!StringUtils.isNullOrEmptyOrSpace(_pageNum)) {
-                try {page=Integer.parseInt(_pageNum);} catch(Exception e) {}
-            }
+            int page=1;
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
 
             if (mediaType.equals("SEQU")) {
                 Map<String, Object> smInfo=contentService.getSeqMaInfo(contentId, pageSize, page);

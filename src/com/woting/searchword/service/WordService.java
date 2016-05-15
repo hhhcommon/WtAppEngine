@@ -131,7 +131,7 @@ public class WordService {
      *          (List<String>)[1]是私有搜索词列表，(List<String>)[0].size()<={参数size}
      * </pre>
      */
-    public List<String>[] getHotWords( Owner o, int rType, int topSize) {
+    public List<String>[] getHotWords(Owner o, int rType, int topSize) {
         List<Word> sysWords=null;//系统热词
         List<Word> ownerWords=null;//用户热词
         List<Word> allWords=null;//所有热词，只有当rType==0时才有用
@@ -268,11 +268,10 @@ public class WordService {
         for (int i=0; i<ownerWordList.size(); i++) {
             if (ownerWordList.get(i).getWord().equals(word.getWord())) return;
         }
-        int insertIndex=-1, flag=0;
+        int insertIndex=-1;
         if (ownerWordList.size()==0) insertIndex=0;
         else {
             for (int i=ownerWordList.size()-1; i>=0; i--) {
-                if (flag>1) break;
                 Word _w=ownerWordList.get(i);
                 if (_w.getCount()*100<word.getCount()) {
                     insertIndex=i;

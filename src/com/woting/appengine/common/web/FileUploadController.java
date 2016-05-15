@@ -34,7 +34,7 @@ public class FileUploadController extends AbstractFileUploadController {
 
     @Override
     public Map<String, Object> afterUploadOneFileOnSuccess(Map<String, Object> m, Map<String, Object> a, Map<String, Object> p) {
-        String tempFileName=(String)m.get("storeFilename");
+        String tempFileName=m.get("storeFilename")+"";
         Map<String,Object> retmap=new HashMap<String, Object>();
         Map<String,Object> datamap=new HashMap<String, Object>();
         //0-获取参数
@@ -63,8 +63,8 @@ public class FileUploadController extends AbstractFileUploadController {
             datamap.put("SessionId", ms.getKey().getSessionId());
         }
         if (datamap.get("ReturnType")==null){
-            String fType = (String)p.get("FType");
-            String extName = (String)p.get("ExtName");
+            String fType=p.get("FType")+"";
+            String extName=p.get("ExtName")+"";
             if (fType.equals("UserP")) {//========================================处理用户头像
                 try {
                     String bigImgFileName=((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent();
@@ -85,7 +85,7 @@ public class FileUploadController extends AbstractFileUploadController {
                     e.printStackTrace();
                 }
             } else if (fType.equals("GroupP")) {
-                String groupId=(String)p.get("GroupId");
+                String groupId=p.get("GroupId")+"";
                 GroupPo g=groupService.getGroupById(groupId);
                 if (g==null) {
                     datamap.put("ReturnType", "1002");

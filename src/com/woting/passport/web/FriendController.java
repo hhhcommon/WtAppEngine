@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
+import com.woting.appengine.common.util.RequestUtils;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
@@ -43,7 +44,7 @@ public class FriendController {
             //0-获取参数
             String userId="";
             MobileSession ms=null;
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -69,7 +70,7 @@ public class FriendController {
 
 
             //2-获取搜索条件
-            String searchStr=(String)m.get("SearchStr");
+            String searchStr=m.get("SearchStr")+"";
             if (StringUtils.isNullOrEmptyOrSpace(searchStr)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "搜索条件不能为空");
@@ -113,7 +114,7 @@ public class FriendController {
             //0-获取参数
             String userId="";
             MobileSession ms=null;
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -137,7 +138,7 @@ public class FriendController {
             }
             if (map.get("ReturnType")!=null) return map;
             //1-获取被邀请人Id
-            String beInvitedUserId=(String)m.get("BeInvitedUserId");
+            String beInvitedUserId=m.get("BeInvitedUserId")+"";
             if (StringUtils.isNullOrEmptyOrSpace(beInvitedUserId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "被邀请人Id为空");
@@ -151,7 +152,8 @@ public class FriendController {
                 }
             }
             //2-邀请信息
-            String inviteMsg=(String)m.get("InviteMsg");
+            String inviteMsg=m.get("InviteMsg")+"";
+            if (StringUtils.isNullOrEmptyOrSpace(inviteMsg)) inviteMsg=null;
 
             //自己邀请I级的判断
             if (userId.equals(beInvitedUserId)) {
@@ -181,7 +183,7 @@ public class FriendController {
             //0-获取参数
             String userId="";
             MobileSession ms=null;
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -244,7 +246,7 @@ public class FriendController {
             //0-获取参数
             String userId="";
             MobileSession ms=null;
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -269,7 +271,7 @@ public class FriendController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-邀请人id
-            String inviteUserId=(String)m.get("InviteUserId");
+            String inviteUserId=m.get("InviteUserId")+"";
             if (StringUtils.isNullOrEmptyOrSpace(inviteUserId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "邀请人Id为空");
@@ -290,7 +292,7 @@ public class FriendController {
                 return map;
             }
             //4-获得拒绝理由
-            String refuseMsg=(String)m.get("RefuseMsg");
+            String refuseMsg=m.get("RefuseMsg")+"";
             //4-邀请处理
             map.putAll(friendService.deal(userId, inviteUserId, dealType.equals("2"), refuseMsg));
             return map;
@@ -314,7 +316,7 @@ public class FriendController {
             //0-获取参数
             String userId="";
             MobileSession ms=null;
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -339,7 +341,7 @@ public class FriendController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-好友Id
-            String friendUserId=(String)m.get("FriendUserId");
+            String friendUserId=m.get("FriendUserId")+"";
             if (StringUtils.isNullOrEmptyOrSpace(friendUserId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "好友Id为空");
@@ -376,7 +378,7 @@ public class FriendController {
             //0-获取参数
             String userId="";
             MobileSession ms=null;
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -441,7 +443,7 @@ public class FriendController {
             //0-获取参数
             String userId="";
             MobileSession ms=null;
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -467,7 +469,7 @@ public class FriendController {
 
 
             //2-好友Id
-            String friendUserId=(String)m.get("FriendUserId");
+            String friendUserId=m.get("FriendUserId")+"";
             if (StringUtils.isNullOrEmptyOrSpace(friendUserId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "好友Id为空");
@@ -481,8 +483,8 @@ public class FriendController {
             if (map.get("ReturnType")!=null) return map;
 
             //获得别名和描述
-            String alias=(String)m.get("FriendAliasName");
-            String aliasDescn=(String)m.get("FriendAliasDescn");
+            String alias=m.get("FriendAliasName")+"";
+            String aliasDescn=m.get("FriendAliasDescn")+"";
             if (StringUtils.isNullOrEmptyOrSpace(alias)&&StringUtils.isNullOrEmptyOrSpace(aliasDescn)) {
                 map.put("ReturnType", "1005");
                 map.put("Message", "没有可修改信息");
