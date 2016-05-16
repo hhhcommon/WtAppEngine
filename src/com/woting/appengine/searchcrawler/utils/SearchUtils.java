@@ -136,9 +136,14 @@ public abstract class SearchUtils {
 	public static long getListNum(String key) {
 		Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
 		if (jedis.exists("Search_"+key+"_Data")) {
-			return jedis.llen("Search_"+key+"_Data");
-		} else
+			long num = jedis.llen("Search_"+key+"_Data");
+			jedis.close();
+			return num;
+		} else{
+			jedis.close();
 			return 0;
+		}
+			
 	}
 
 	/**
@@ -185,7 +190,6 @@ public abstract class SearchUtils {
 			else if (0<num&&num<pageSize) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);jedis.close();return list;}
 		}
 		jedis.close();
-		jedis.quit();
 		return null;
 	}
 
@@ -197,8 +201,8 @@ public abstract class SearchUtils {
 	 * @return
 	 */
 	public static <T> boolean addListInfo(String key, T T) {
-//		Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
-		Jedis jedis=new Jedis("127.0.0.33", 6379);
+		Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
+//		Jedis jedis=new Jedis("127.0.0.33", 6379);
 		String value = "";
 		String classname = T.getClass().getSimpleName();
 		if (classname.equals("Festival"))

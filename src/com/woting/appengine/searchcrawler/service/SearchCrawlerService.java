@@ -27,14 +27,15 @@ public class SearchCrawlerService {
 				SearchUtils.searchContent(searchStr);
 				System.out.println("开启搜索");
 				while (true) {
-					if ((num = SearchUtils.getListNum(searchStr)) > 0) {
-						if (num >= pageSize) {
-							break;
-						}
-					}
-					b = System.currentTimeMillis() - a;
-					if (b > 3 * 1000) {
-						break;
+					try {
+						Thread.sleep(50);
+						if ((num = SearchUtils.getListNum(searchStr)) > 0) {
+						if (num >= pageSize) break;
+					    }
+					    b = System.currentTimeMillis() - a;
+					    if (b > 3 * 1000) break;
+					} catch (InterruptedException e) {
+						e.printStackTrace();
 					}
 				}
 			}
