@@ -36,7 +36,7 @@
   <!-- begin监听设置，顺序不能改变 -->
   <!-- 刷新JDK的JavaBeans的Introspector缓存，防止内存泄漏 -->
   <listener>
-    <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
+    <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class> 
   </listener>
   <!-- logback -->
   <listener>
@@ -53,11 +53,7 @@
   <!-- App引擎运行时监听 -->
   <listener>
     <listener-class>com.woting.appengine.common.web.AppRunningListener</listener-class>
-  </listener>
-  <!-- 搜索抓取服务 -->
-  <listener>
-    <listener-class>com.woting.appengine.searchcrawler.SearchCrawlerListener</listener-class>
-  </listener>
+  </listener> 
   <!-- end监听设置 -->
 
   <!-- begin过滤器 -->

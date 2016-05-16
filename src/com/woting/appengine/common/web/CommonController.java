@@ -20,6 +20,7 @@ import com.woting.WtAppEngineConstants;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.session.model.MobileSession;
+import com.woting.appengine.searchcrawler.service.BaiDuNewsService;
 import com.woting.appengine.searchcrawler.service.SearchCrawlerService;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;
@@ -47,6 +48,8 @@ public class CommonController {
     private WordService wordService;
     @Resource
     private SearchCrawlerService scs;
+    @Resource
+    private BaiDuNewsService baiduNewsService;
     
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
@@ -562,6 +565,7 @@ public class CommonController {
                 map.put("Message", "无法得到查询串");
                 return map;
             }
+       
             //敏感词处理
             Owner o=new Owner(201, map.get("SessionId")+"");
             String _s[]=searchStr.split(",");
@@ -578,14 +582,15 @@ public class CommonController {
             int pageType=1;
             if (!StringUtils.isNullOrEmptyOrSpace(_pageType)) try {pageType=Integer.parseInt(_pageType);} catch(Exception e) {};
 
-            int page = Integer.valueOf((String) m.get("Page")) ;
-            int pageSize = Integer.valueOf((String) m.get("PageSize")) ;
+            String page = (String) m.get("Page");
+            String pagesize = (String) m.get("PageSize");
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
-            if(resultType==0 && pageType==0) //cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
-            cl = scs.searchCrawler(searchStr, resultType, pageType, page, pageSize);
-            else cl=contentService.searchAll(searchStr, resultType, pageType);
-            a=System.currentTimeMillis()-a;
+            if(!StringUtils.isNullOrEmptyOrSpace(page) && !StringUtils.isNullOrEmptyOrSpace(pagesize)){
+                if(resultType==0 && pageType==0) cl=scs.searchCrawler(searchStr, resultType, pageType, Integer.valueOf(page), Integer.valueOf(pagesize));
+                else cl=contentService.searchAll(searchStr, resultType, pageType);
+                a=System.currentTimeMillis()-a;
+            }
             
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultType", cl.get("ResultType"));

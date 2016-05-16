@@ -16,12 +16,15 @@ import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.session.model.MobileSession;
+import com.woting.appengine.searchcrawler.service.BaiDuNewsService;
 
 @Controller
 @RequestMapping(value="/content/")
 public class ContentController {
     @Resource
     private ContentService contentService;
+    @Resource
+    private BaiDuNewsService baiduNewsService;
 
     /**
      * 获得标题图
@@ -239,7 +242,6 @@ public class ContentController {
                     map.put("ReturnType", "1011");
                     map.put("Message", "没有查到任何内容");
                 }
-                
             }
             return map;
         } catch(Exception e) {

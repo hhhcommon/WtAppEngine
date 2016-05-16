@@ -18,10 +18,7 @@ public class KaoLaService extends Thread {
 	private final int S_S_NUM = 4; // 搜索频道的数目
 	private final int S_F_NUM = 2; // 搜索频道内节目的数目
 	private final int F_NUM = 4; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
-	/**
-	 * Map<String, Object> "KL_Fl":list_festival "KL_Sl":list_station
-	 * 
-	 */
+	private int num = 0;
 	private static String constr;
 
 	public static void begin(String constr){
@@ -99,7 +96,10 @@ public class KaoLaService extends Thread {
 					}
 					station.setFestival(festivals);
 				}
-				if (station!=null) SearchUtils.addListInfo(constr, station); // 保存到在redis里key为constr的list里
+				if (station!=null) {
+					SearchUtils.addListInfo(constr, station); // 保存到在redis里key为constr的list里
+					num++;
+				} 
 			}
 		} 
 		return true;
@@ -146,7 +146,10 @@ public class KaoLaService extends Thread {
 					host_name = host_name.substring(1);
 				}
 				festival.setHost(host_name);
-				if (festival!=null) SearchUtils.addListInfo(constr, festival); // 保存到在redis里key为constr的list里
+				if (festival!=null) {
+					SearchUtils.addListInfo(constr, festival); // 保存到在redis里key为constr的list里
+					num++;
+				}
 			}
 		}
 		return true;
@@ -158,6 +161,7 @@ public class KaoLaService extends Thread {
 		String str = SearchUtils.utf8TOurl(constr);
 		StationS(str);
 		FestivalsS(str);
+		SearchUtils.updateSearchFinish(constr);
 		System.out.println("考拉搜索结束");
 	}
 

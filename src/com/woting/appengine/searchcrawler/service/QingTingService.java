@@ -22,6 +22,7 @@ public class QingTingService extends Thread {
 	private final int F_NUM = 4; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
 	private final int T = 5000;
 	private static String constr = "";
+	private int num = 0;
 	Map<String, Object> map = new HashMap<String,Object>();
 
 	public static void begin(String constr){
@@ -147,6 +148,7 @@ public class QingTingService extends Thread {
 	public void run() {
 		System.out.println("蜻蜓开始搜索");
 		qingtingService(constr);
+		SearchUtils.updateSearchFinish(constr);
 		System.out.println("蜻蜓结束搜索");
 	}
 }
