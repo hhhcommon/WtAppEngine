@@ -528,13 +528,14 @@ public class GroupService {
             String[] ua=beInvitedUserIds.split(",");
             long inviteTime=System.currentTimeMillis();
             for (String beInvitedUserId: ua) {
+                String _beInvitedUserId=beInvitedUserId.trim();
                 Map<String, String> oneResult=new HashMap<String, String>();
-                oneResult.put("UserId", beInvitedUserId);
+                oneResult.put("UserId", _beInvitedUserId);
                 find=false;
                 //是否已在用户组
                 if (gul!=null&&!gul.isEmpty()) {
                     for (UserPo up: gul) {
-                        if (up.getUserId().equals(beInvitedUserId)) {
+                        if (up.getUserId().equals(_beInvitedUserId)) {
                             find=true;
                             break;
                         }
@@ -545,7 +546,7 @@ public class GroupService {
                     igp=null;
                     if (igl!=null&&!igl.isEmpty()) {
                         for (InviteGroupPo _igp: igl) {
-                            if (_igp.getbUserId().equals(beInvitedUserId)) {
+                            if (_igp.getbUserId().equals(_beInvitedUserId)) {
                                 igp=_igp;
                                 break;
                             }
@@ -558,7 +559,7 @@ public class GroupService {
                         igp= new InviteGroupPo();
                         igp.setId(SequenceUUID.getUUIDSubSegment(4));
                         igp.setaUserId(userId);
-                        igp.setbUserId(beInvitedUserId);
+                        igp.setbUserId(_beInvitedUserId);
                         igp.setGroupId(groupId);
                         igp.setInviteMessage(inviteMsg);
                         igp.setInviteVector(1);
@@ -577,7 +578,7 @@ public class GroupService {
                         bMsg.setCmdType("GROUP");
                         bMsg.setCommand("b1");//邀请入组通知
                         //发送给beInvitedUserId
-                        bMsg.setToAddr("("+beInvitedUserId+"||wt)");
+                        bMsg.setToAddr("("+_beInvitedUserId+"||wt)");
                         Map<String, Object> dataMap=new HashMap<String, Object>();
                         dataMap.put("FriendId", userId);
                         GroupPo gp=this.getGroupById(groupId);
@@ -590,7 +591,7 @@ public class GroupService {
                         }
                         dataMap.put("InviteTime", inviteTime);
                         bMsg.setMsgContent(dataMap);
-                        pmm.getSendMemory().addMsg2NotifyQueue(beInvitedUserId, bMsg);
+                        pmm.getSendMemory().addMsg2NotifyQueue(_beInvitedUserId, bMsg);
                     }
                 }
                 resultList.add(oneResult);
@@ -1054,20 +1055,21 @@ public class GroupService {
         UserPo up=null;
         for (String userId: ua) {
             Map<String, String> oneResult=new HashMap<String, String>();
-            oneResult.put("UserId", userId);
+            String _userId=userId.trim();
+            oneResult.put("UserId", _userId);
             resultList.add(oneResult);
-            if (g.getAdminUserIds().equals(userId)) {
+            if (g.getAdminUserIds().equals(_userId)) {
                 oneResult.put("DealType", "2");
                 continue;
             }
-            if (gic!=null&&gic.getSpeaker()!=null&&gic.getSpeaker().getUserId().equals(userId)) {
+            if (gic!=null&&gic.getSpeaker()!=null&&gic.getSpeaker().getUserId().equals(_userId)) {
                 oneResult.put("DealType", "4");
                 continue;
             }
             up=null;
             if (upl!=null&&!upl.isEmpty()) {
                 for (UserPo _up: upl) {
-                    if (_up.getUserId().equals(userId)) {
+                    if (_up.getUserId().equals(_userId)) {
                         up=_up;
                         break;
                     }

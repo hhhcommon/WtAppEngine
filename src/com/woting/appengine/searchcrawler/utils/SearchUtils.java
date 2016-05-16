@@ -151,6 +151,7 @@ public abstract class SearchUtils {
 	 */
 	public static List<String> getListPage(String key, int page, int pageSize) {
 		Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
+		List<String> list = null;
 		if (jedis.exists("Search_"+key+"_Data")) {
 			long num = jedis.llen("Search_"+key+"_Data");
 			num = num-(page-1)*pageSize;
@@ -162,15 +163,15 @@ public abstract class SearchUtils {
 						while((endtime=System.currentTimeMillis()-time)<5000){
 							num = jedis.llen("Search_"+key+"_Data")-(page-1)*pageSize;
 							if(isOrNoSearchFinish(key)){
-								if (num>0) return jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);
+								if (num>0) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);jedis.close();return list;}
 								else return null;
 							}else{
-								if(num>pageSize) return jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);
+								if(num>pageSize) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);jedis.close();return list;}
 							    else if(num<=0) Thread.sleep(100);
 						        else if(num>0 && num<pageSize){
-						        	if((num%pageSize)>pageSize/2) return jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);
+						        	if((num%pageSize)>pageSize/2) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);jedis.close();return list;}
 						        	if((num%pageSize)<pageSize/2) {
-						        		if (isOrNoSearchFinish(key)) return jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);
+						        		if (isOrNoSearchFinish(key)) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);jedis.close();return list;}
 						        	}
 						        }
 							}
@@ -180,10 +181,11 @@ public abstract class SearchUtils {
 					}
 				}
 			} 
-			else if (num>=pageSize) return jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);
-			else if (0<num&&num<pageSize) return jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);
+			else if (num>=pageSize) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);jedis.close();return list;}
+			else if (0<num&&num<pageSize) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);jedis.close();return list;}
 		}
 		jedis.close();
+		jedis.quit();
 		return null;
 	}
 
@@ -195,7 +197,8 @@ public abstract class SearchUtils {
 	 * @return
 	 */
 	public static <T> boolean addListInfo(String key, T T) {
-		Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
+//		Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
+		Jedis jedis=new Jedis("127.0.0.33", 6379);
 		String value = "";
 		String classname = T.getClass().getSimpleName();
 		if (classname.equals("Festival"))
@@ -220,9 +223,9 @@ public abstract class SearchUtils {
 	public static boolean searchContent(String searchStr) {
 		createSearchTime(searchStr);
 		createBeginSearch(searchStr);
-		KaoLaService.begin(searchStr);
-		XiMaLaYaService.begin(searchStr);
-		QingTingService.begin(searchStr);
+//		KaoLaService.begin(searchStr);
+//		XiMaLaYaService.begin(searchStr);
+//		QingTingService.begin(searchStr);
 		BaiDuNewsService.begin(searchStr);
 		return true;
 	}
@@ -246,11 +249,13 @@ public abstract class SearchUtils {
 	public static boolean isOrNoSearchFinish(String key){
 		Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
 		if(jedis.exists("Search_"+key+"_Finish")){
-			if(jedis.get("Search_"+key+"_Finish").equals("4")){
+			if(jedis.get("Search_"+key+"_Finish").equals("1")){
 				System.out.println("key:已搜索完成 ");
+				jedis.close();
 				return true;
 			}
 		}
+		jedis.close();
 		return false;
 	}
 

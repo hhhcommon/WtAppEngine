@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
+import com.woting.appengine.common.util.RequestUtils;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.version.core.model.Version;
 import com.woting.version.core.service.VersionService;
@@ -28,7 +29,7 @@ public class VersionController {
     public Map<String,Object> getVersion(HttpServletRequest request) {//不需要登录
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m!=null&&m.size()>0) {
                 Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 MobileSession ms=(MobileSession)retM.get("MobileSession");
@@ -37,8 +38,7 @@ public class VersionController {
                 } catch(Exception e) {}
 
                 //1-获取版本号
-                String version=(String)m.get("Version");
-                if (StringUtils.isNullOrEmptyOrSpace(version)) version=request.getParameter("Version");
+                String version=m.get("Version")+"";
                 if (StringUtils.isNullOrEmptyOrSpace(version)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法获得版本号信息");
@@ -71,7 +71,7 @@ public class VersionController {
     public Map<String,Object> judgeVersion(HttpServletRequest request) {//不需要登录
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            Map<String, Object> m=MobileUtils.getDataFromRequest(request);
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m!=null&&m.size()>0) {
                 Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 MobileSession ms=(MobileSession)retM.get("MobileSession");
@@ -80,8 +80,7 @@ public class VersionController {
                 } catch(Exception e) {}
 
                 //1-获取App版本号
-                String version=(String)m.get("AppVersion");
-                if (StringUtils.isNullOrEmptyOrSpace(version)) version=request.getParameter("AppVersion");
+                String version=m.get("AppVersion")+"";
                 if (StringUtils.isNullOrEmptyOrSpace(version)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法获得版本号信息");

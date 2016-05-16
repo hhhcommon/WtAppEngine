@@ -10,5 +10,5 @@ public abstract class WtAppEngineConstants {
     //版本配置信息
     public static final String APP_VERSIONCONFIG = "AppVersionConfig";
     //Redis绑定主机IP
-    public static final String IPPATH = "127.0.0.1";
+    public static final String IPPATH = "33.33.33.33";
 }

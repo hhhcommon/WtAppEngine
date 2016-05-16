@@ -14,7 +14,7 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 public class BaiDuNewsService extends Thread {
 
-	private static int searchnum = 10;
+	private static int searchnum = 20;
 	private static String constr;
 	
 	public static void begin(String constr){

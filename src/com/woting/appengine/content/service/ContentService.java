@@ -401,7 +401,7 @@ public class ContentService {
     }
 
     /**
-     * 获得主页信息
+     * 获得专辑信息
      * @param userId
      * @return
      */
@@ -479,11 +479,11 @@ public class ContentService {
         if (!StringUtils.isNullOrEmptyOrSpace(mediaType)) {
             String[] _mt=mediaType.split(",");
             for (int i=0; i<_mt.length; i++) {
-                if (_mt[i].equals("RADIO")&&(mediaFilterSql.indexOf("wt_Broadcast")==-1)) {
+                if (_mt[i].trim().equals("RADIO")&&(mediaFilterSql.indexOf("wt_Broadcast")==-1)) {
                     mediaFilterSql+="or "+typeCName+"='wt_Broadcast'";
-                } else if (_mt[i].equals("AUDIO")&&(mediaFilterSql.indexOf("wt_MediaAsset")==-1)) {
+                } else if (_mt[i].trim().equals("AUDIO")&&(mediaFilterSql.indexOf("wt_MediaAsset")==-1)) {
                     mediaFilterSql+="or "+typeCName+"='wt_MediaAsset'";
-                } else if (_mt[i].equals("SEQU")&&(mediaFilterSql.indexOf("wt_SeqMediaAsset")==-1)) {
+                } else if (_mt[i].trim().equals("SEQU")&&(mediaFilterSql.indexOf("wt_SeqMediaAsset")==-1)) {
                     mediaFilterSql+="or "+typeCName+"='wt_SeqMediaAsset'";
                 }
             }
@@ -978,6 +978,7 @@ public class ContentService {
         retM.put("ContentPub", one.get("bcPublisher"));//P03-公共：发布者，集团名称
         retM.put("ContentImg", one.get("bcImg"));//P07-公共：相关图片
         retM.put("ContentPlay", one.get("flowURI"));//P08-公共：主播放Url
+        retM.put("ContentShareURL", ContentService.getShareUrl_DT(ContentService.preAddr, one.get("id")+""));//分享地址
         retM.put("ContentSource", one.get("bcSource"));//P09-公共：来源名称
         retM.put("ContentURIS", null);//P10-公共：其他播放地址列表，目前为空
         retM.put("ContentDesc", one.get("descn"));//P11-公共：说明
@@ -1008,6 +1009,7 @@ public class ContentService {
         retM.put("ContentImg", one.get("maImg"));//P07-公共：相关图片
         retM.put("ContentPlay", one.get("maURL"));//P08-公共：主播放Url，这个应该从其他地方来，现在先这样//TODO
         retM.put("ContentURI", "content/getContentInfo.do?MediaType=AUDIO&ContentId="+retM.get("ContentId"));//P08-公共：主播放Url，这个应该从其他地方来，现在先这样//TODO
+        retM.put("ContentShareURL", ContentService.getShareUrl_JM(ContentService.preAddr, one.get("id")+""));//分享地址
 //        retM.put("ContentSource", one.get("maSource"));//P09-公共：来源名称
 //        retM.put("ContentURIS", null);//P10-公共：其他播放地址列表，目前为空
         retM.put("ContentDesc", one.get("descn"));//P11-公共：说明
@@ -1035,6 +1037,7 @@ public class ContentService {
         retM.put("ContentPubTime", one.get("smaPublishTime"));//P06-公共：发布时间
         retM.put("ContentImg", one.get("smaImg"));//P07-公共：相关图片
         retM.put("ContentURI", "content/getContentInfo.do?MediaType=SEQU&ContentId="+retM.get("ContentId"));//P08-公共：在此是获得系列节目列表的Url
+        retM.put("ContentShareURL", ContentService.getShareUrl_ZJ(ContentService.preAddr, one.get("id")+""));//分享地址
         retM.put("ContentDesc", one.get("descn"));//P11-公共：说明
         retM.put("ContentPersons", fetchPersons(personList, 3, retM.get("ContentId")+""));//P12-公共：相关人员列表
         retM.put("ContentCatalogs", fetchCatas(cataList, 3, retM.get("ContentId")+""));//P13-公共：所有分类列表
@@ -1046,6 +1049,7 @@ public class ContentService {
 
         return retM;
     }
+
     private List<Map<String, Object>> fetchPersons(List<Map<String, Object>> personList, int resType, String resId) {
         if (personList==null||personList.size()==0) return null;
         Map<String, Object> onePerson=null;
@@ -1075,6 +1079,17 @@ public class ContentService {
         return ret.size()>0?ret:null;
     }
 
+    /** 计算分享地址的功能 */
+    private static final String preAddr="http://www.wotingfm.com:908/CM/mweb";//分享地址前缀
+    public static final String getShareUrl_JM(String preUrl, String contentId) {//的到节目的分享地址
+        return preUrl+"/jm/"+contentId+"/content.html";
+    }
+    public static final String getShareUrl_ZJ(String preUrl, String contentId) {//的到专辑的分享地址
+        return preUrl+"/zj/"+contentId+"/content.html";
+    }
+    public static final String getShareUrl_DT(String preUrl, String contentId) {//的到电台的分享地址
+        return preUrl+"/dt/"+contentId+"/content.html";
+    }
 }
 //测试的消息{"IMEI":"12356","UserId":"107fc906ae0f","ResultType":"0","SearchStr":"罗,电影,安徽"}=
 //http://localhost:808/wt/searchByVoice.do
