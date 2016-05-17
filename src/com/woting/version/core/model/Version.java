@@ -12,8 +12,7 @@ import com.spiritdata.framework.util.StringUtils;
 public class Version extends BaseObject {
     private static final long serialVersionUID=-1670331511245273735L;
 
-    private String id; //版本ID(UUID)
-    private int verNum; //自动增加的顺序号
+    private int id; //版本ID(UUID)自动增加的顺序号
     private String appName; //应用名称，这里的App不单单值手机应用
     private String version; //版本号，此版本号的规则由程序通过正则表达式进行处理
     private String verMemo; //版本描述，可以是一段html
@@ -25,18 +24,13 @@ public class Version extends BaseObject {
     private Timestamp pubTime; //发布时间
     private Timestamp CTime; //创建时间
     private Timestamp lmTime; //最后修改时间
+    private String extHisPatchInfo; //历史版本的修改信息,删除版本时，用此保存被删除版本的说明
 
-    public String getId() {
+    public int getId() {
         return id;
     }
-    public void setId(String id) {
+    public void setId(int id) {
         this.id=id;
-    }
-    public int getVerNum() {
-        return verNum;
-    }
-    public void setVerNum(int verNum) {
-        this.verNum=verNum;
     }
     public String getAppName() {
         return appName;
@@ -104,6 +98,12 @@ public class Version extends BaseObject {
     public void setLmTime(Timestamp lmTime) {
         this.lmTime=lmTime;
     }
+    public String getExtHisPatchInfo() {
+        return extHisPatchInfo;
+    }
+    public void setExtHisPatchInfo(String extHisPatchInfo) {
+        this.extHisPatchInfo=extHisPatchInfo;
+    }
 
     /**
      * 转换为为App所用的显示Map
@@ -126,6 +126,43 @@ public class Version extends BaseObject {
             _s=DateUtils.convert2LocalStr("yyyy年MM月dd日 HH时mm分", new Date(this.getPubTime().getTime()));
             retM.put("PubTime", _s);
         }
+        return retM;
+    }
+
+    /**
+     * 转换为为显示所用的Map
+     * @return
+     */
+    public Map<String, Object> toViewMap4View() {
+        Map<String, Object> retM=new HashMap<String, Object>();
+        if (StringUtils.isNullOrEmptyOrSpace(this.getAppName())) return null;
+        if (StringUtils.isNullOrEmptyOrSpace(this.getVersion())) return null;
+
+        retM.put("VerId", this.getId());
+        retM.put("AppName", this.getAppName());
+        retM.put("Version", this.getVersion());
+        if (!StringUtils.isNullOrEmptyOrSpace(this.getVerMemo())) retM.put("Descn", this.getVerMemo());
+        if (!StringUtils.isNullOrEmptyOrSpace(this.getBugMemo())) retM.put("BugPatch", this.getBugMemo());
+        retM.put("PubFlag", this.getPubFlag());
+        retM.put("StoreFile", this.getApkFile());
+        retM.put("IsCur", ""+(this.getIsCurVer()==1));//是否是当前版本
+        String _s=(new DecimalFormat("0.00")).format(((float)this.apkSize)/(2<<19));
+        if (_s.endsWith(".00")) _s=_s.substring(0, _s.length()-3);
+        if (_s.endsWith("0")&&_s.indexOf(".")!=-1) _s=_s.substring(0, _s.length()-1);
+        retM.put("ApkSize", _s+" m");
+        if (this.getPubTime()!=null) {
+            _s=DateUtils.convert2LocalStr("yyyy年MM月dd日 HH时mm分", new Date(this.getPubTime().getTime()));
+            retM.put("PubTime", _s);
+        }
+        if (this.getCTime()!=null) {
+            _s=DateUtils.convert2LocalStr("yyyy年MM月dd日 HH时mm分", new Date(this.getCTime().getTime()));
+            retM.put("CreateTime", _s);
+        }
+        if (this.getLmTime()!=null) {
+            _s=DateUtils.convert2LocalStr("yyyy年MM月dd日 HH时mm分", new Date(this.getLmTime().getTime()));
+            retM.put("LastModifyTime", _s);
+        }
+        if (!StringUtils.isNullOrEmptyOrSpace(this.getExtHisPatchInfo())) retM.put("HisPathInfo", this.getExtHisPatchInfo());
         return retM;
     }
 }
