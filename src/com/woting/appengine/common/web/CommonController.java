@@ -21,6 +21,7 @@ import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.common.util.RequestUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.session.model.MobileSession;
+import com.woting.appengine.searchcrawler.service.BaiDuNewsService;
 import com.woting.appengine.searchcrawler.service.SearchCrawlerService;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;
@@ -48,6 +49,8 @@ public class CommonController {
     private WordService wordService;
     @Resource
     private SearchCrawlerService scs;
+    @Resource
+    private BaiDuNewsService baiduNewsService;
     
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
@@ -486,6 +489,7 @@ public class CommonController {
                 map.put("Message", "无法得到查询串");
                 return map;
             }
+       
             //敏感词处理
             Owner o=new Owner(201, map.get("SessionId")+"");
             String _s[]=searchStr.split(",");
@@ -506,8 +510,7 @@ public class CommonController {
 
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
-            if(resultType==0 && pageType==0) //cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
-            cl = scs.searchCrawler(searchStr, resultType, pageType, page, pageSize);
+            if(page>0 && pageSize>0 && resultType==0 && pageType==0)cl=scs.searchCrawler(searchStr, resultType, pageType, page, pageSize);
             else cl=contentService.searchAll(searchStr, resultType, pageType);
             a=System.currentTimeMillis()-a;
 

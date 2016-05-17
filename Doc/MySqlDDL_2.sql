@@ -3,10 +3,10 @@
 /**P001 版本记录[P_VERCONFIG]*/
 DROP TABLE IF EXISTS p_VerConfig;
 CREATE TABLE p_VerConfig (
-  pubFileName        varchar(200)  NOT NULL  COMMENT '最终发布版本Apk名称',
-  pubUrl             varchar(200)  NOT NULL  COMMENT '最终发布版本的Url',
-  pubStorePath       varchar(200)  NOT NULL  COMMENT '最终发布版本存储目录',
-  verGoodsStorePath  varchar(200)  NOT NULL  COMMENT '历史版本物存储目录'
+  pubStorePath       varchar(200)  NOT NULL  COMMENT '最终版本发布存储目录',
+  pubFileName        varchar(200)  NOT NULL  COMMENT '最终版本发布Apk名称',
+  pubUrl             varchar(200)  NOT NULL  COMMENT '最终版本发布的Url',
+  verGoodsStorePath  varchar(200)  NOT NULL  COMMENT '历史版本发布物存储目录'
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='P001版本配置';
 

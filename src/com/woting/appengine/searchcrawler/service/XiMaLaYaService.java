@@ -19,11 +19,11 @@ public class XiMaLaYaService extends Thread {
 	private final int S_F_NUM = 2; // 搜索频道内节目的数目
 	private final int F_NUM = 4; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
 	private final int T =5000;
-	private static String content;
+	private static String constr;
 	Map<String, Object> map = new HashMap<String,Object>();
 
 	public static void begin(String constr){
-		XiMaLaYaService.content = constr;
+		XiMaLaYaService.constr = constr;
 		XiMaLaYaService xiMaLaYaService = new XiMaLaYaService();
 		xiMaLaYaService.start();
 	}
@@ -142,12 +142,12 @@ public class XiMaLaYaService extends Thread {
 	public void run() {
 		System.out.println("喜马拉雅搜索开始");
 		try {
-			stationS(content);
-		    festivalsS(content);
+			stationS(constr);
+		    festivalsS(constr);
 		} catch (Exception e) {
 			System.out.println("喜马拉雅搜索异常");
 		}
-		
+		SearchUtils.updateSearchFinish(constr);
 		System.err.println("喜马拉雅搜索结束");
 	}
 
