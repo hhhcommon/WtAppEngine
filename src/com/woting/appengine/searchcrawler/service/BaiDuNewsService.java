@@ -87,7 +87,6 @@ public class BaiDuNewsService extends Thread {
 	public void run() {
 		List<Map<String, Object>> listnews =  baiduNewsService(constr);
 		for (Map<String, Object> newmap : listnews) {
-			System.out.println("##"+newmap);
 			new SearchNews(constr, newmap).start();
 		}
 		SearchUtils.updateSearchFinish(constr); // 暂定开启新闻搜索所有线程后，新闻搜索完成

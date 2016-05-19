@@ -9,7 +9,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.WtAppEngineConstants;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.service.BaiDuNewsService;
@@ -18,6 +17,8 @@ import com.woting.appengine.searchcrawler.service.QingTingService;
 import com.woting.appengine.searchcrawler.service.XiMaLaYaService;
 
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 public abstract class SearchUtils {
 
@@ -25,7 +26,34 @@ public abstract class SearchUtils {
 	private static String[] specialfield = { "扫一扫", "新闻", "关注", "微信", "好友", "分享", "朋友圈", "iphone", "客户端", "[详情]",
 			"京ICP证", "京网文", "|", "┊", "｜", "上一篇：", "我的收藏", "首页", "不良信息举报：", "经营许可证编号:", "2016.", "：", "订阅", "保留所有权利",
 			"@", "联系我们", "反垃圾邮件策略" };
-
+	private static JedisPool jedisPool = getPool();
+	
+	public static JedisPool getPool() {
+		JedisPool pool = null;
+		if (pool == null) {
+			JedisPoolConfig config = new JedisPoolConfig();
+			// 控制一个pool可分配多少个jedis实例，通过pool.getResource()来获取；
+			// 如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted(耗尽)。
+			config.setMaxTotal(500);
+			// 控制一个pool最多有多少个状态为idle(空闲的)的jedis实例。
+			config.setMaxIdle(5);
+			// 表示当borrow(引入)一个jedis实例时，最大的等待时间，如果超过等待时间，则直接抛出JedisConnectionException；
+			config.setMaxWaitMillis(1000 * 100);
+			// 在borrow一个jedis实例时，是否提前进行validate操作；如果为true，则得到的jedis实例均是可用的；
+			config.setTestOnBorrow(true);
+			pool = new JedisPool(config, "127.0.0.1", 6379);
+		}
+		return pool;
+	}
+	
+	private static void release(Jedis jedis) {
+		System.out.println(jedis);
+        if (jedis != null) {
+			jedisPool.returnResource(jedis);
+        }
+        System.out.println(jedis);
+    }
+	
 	/**
 	 * 搜索内容中文转url编码
 	 * 
@@ -134,16 +162,16 @@ public abstract class SearchUtils {
 	 * @return
 	 */
 	public static long getListNum(String key) {
-		Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
+	//	jedis = new Jedis(WtAppEngineConstants.IPPATH);
+		Jedis jedis = jedisPool.getResource();
 		if (jedis.exists("Search_"+key+"_Data")) {
 			long num = jedis.llen("Search_"+key+"_Data");
-			jedis.close();
+			release(jedis);
 			return num;
 		} else{
-			jedis.close();
+			release(jedis);
 			return 0;
 		}
-			
 	}
 
 	/**
@@ -155,28 +183,35 @@ public abstract class SearchUtils {
 	 * @return
 	 */
 	public static List<String> getListPage(String key, int page, int pageSize) {
-		Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
+//		jedis = new Jedis(WtAppEngineConstants.IPPATH);
+		Jedis jedis = jedisPool.getResource();
 		List<String> list = null;
 		if (jedis.exists("Search_"+key+"_Data")) {
 			long num = jedis.llen("Search_"+key+"_Data");
 			num = num-(page-1)*pageSize;
 			if(num<=0){
-				if(isOrNoSearchFinish(key)) return null;
+				if(isOrNoSearchFinish(key)){
+					release(jedis);
+					return null;
+				} 
 				else {
 					try {
 						long time = System.currentTimeMillis(),endtime;
 						while((endtime=System.currentTimeMillis()-time)<5000){
 							num = jedis.llen("Search_"+key+"_Data")-(page-1)*pageSize;
 							if(isOrNoSearchFinish(key)){
-								if (num>0) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);jedis.close();return list;}
-								else return null;
+								if (num>0) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);release(jedis);return list;}
+								else {
+									release(jedis);
+									return null;
+								}
 							}else{
-								if(num>pageSize) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);jedis.close();return list;}
+								if(num>pageSize) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);release(jedis);return list;}
 							    else if(num<=0) Thread.sleep(100);
 						        else if(num>0 && num<pageSize){
-						        	if((num%pageSize)>pageSize/2) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);jedis.close();return list;}
+						        	if((num%pageSize)>pageSize/2) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);release(jedis);return list;}
 						        	if((num%pageSize)<pageSize/2) {
-						        		if (isOrNoSearchFinish(key)) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);jedis.close();return list;}
+						        		if (isOrNoSearchFinish(key)) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);release(jedis);return list;}
 						        	}
 						        }
 							}
@@ -186,10 +221,10 @@ public abstract class SearchUtils {
 					}
 				}
 			} 
-			else if (num>=pageSize) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);jedis.close();return list;}
-			else if (0<num&&num<pageSize) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);jedis.close();return list;}
+			else if (num>=pageSize) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);release(jedis);return list;}
+			else if (0<num&&num<pageSize) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);release(jedis);return list;}
 		}
-		jedis.close();
+		release(jedis);
 		return null;
 	}
 
@@ -201,8 +236,9 @@ public abstract class SearchUtils {
 	 * @return
 	 */
 	public static <T> boolean addListInfo(String key, T T) {
-		Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
+//		jedis = new Jedis(WtAppEngineConstants.IPPATH);
 //		Jedis jedis=new Jedis("127.0.0.33", 6379);
+		Jedis jedis = jedisPool.getResource();
 		String value = "";
 		String classname = T.getClass().getSimpleName();
 		if (classname.equals("Festival"))
@@ -214,7 +250,7 @@ public abstract class SearchUtils {
 		value = value.replace("\"", "'");
 		if (!StringUtils.isNullOrEmptyOrSpace(value))
 			jedis.rpush("Search_" + key + "_Data", value);
-		jedis.close();
+		release(jedis);
 		return true;
 	}
 
@@ -227,9 +263,9 @@ public abstract class SearchUtils {
 	public static boolean searchContent(String searchStr) {
 		createSearchTime(searchStr);
 		createBeginSearch(searchStr);
-//		KaoLaService.begin(searchStr);
-//		XiMaLaYaService.begin(searchStr);
-//		QingTingService.begin(searchStr);
+		KaoLaService.begin(searchStr);
+		XiMaLaYaService.begin(searchStr);
+		QingTingService.begin(searchStr);
 		BaiDuNewsService.begin(searchStr);
 		return true;
 	}
@@ -239,10 +275,11 @@ public abstract class SearchUtils {
 	 * @param key
 	 */
 	private static void createSearchTime(String key) {
-		Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
+//		jedis = new Jedis(WtAppEngineConstants.IPPATH);
+		Jedis jedis = jedisPool.getResource();
 		long time = System.currentTimeMillis();
 		jedis.set("Search_"+key+"_Date", Long.toString(time));
-		jedis.close();
+		release(jedis);
 	}
 	
 	/**
@@ -251,15 +288,16 @@ public abstract class SearchUtils {
 	 * @return
 	 */
 	public static boolean isOrNoSearchFinish(String key){
-		Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
+//		jedis = new Jedis(WtAppEngineConstants.IPPATH);
+		Jedis jedis = jedisPool.getResource();
 		if(jedis.exists("Search_"+key+"_Finish")){
-			if(jedis.get("Search_"+key+"_Finish").equals("1")){
+			if(jedis.get("Search_"+key+"_Finish").equals("4")){
 				System.out.println("key:已搜索完成 ");
-				jedis.close();
+				release(jedis);
 				return true;
 			}
 		}
-		jedis.close();
+		release(jedis);
 		return false;
 	}
 
@@ -268,9 +306,10 @@ public abstract class SearchUtils {
 	 * @param key
 	 */
 	public static void createBeginSearch(String key) {
-		Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
+//		jedis = new Jedis(WtAppEngineConstants.IPPATH);
+		Jedis jedis = jedisPool.getResource();
 		jedis.set("Search_"+key+"_Finish", "0");
-		jedis.close();
+		release(jedis);
 	}
 	
 	/**
@@ -278,13 +317,14 @@ public abstract class SearchUtils {
 	 * @param key
 	 */
 	public static void updateSearchFinish(String key){
-		Jedis jedis = new Jedis(WtAppEngineConstants.IPPATH);
+//		jedis = new Jedis(WtAppEngineConstants.IPPATH);
+		Jedis jedis = jedisPool.getResource();
 		if(jedis.exists("Search_"+key+"_Finish")){
 			String finishnum = jedis.get("Search_"+key+"_Finish");
 			finishnum = String.valueOf(Integer.valueOf(finishnum)+1);
 			jedis.set("Search_"+key+"_Finish", finishnum);
 		}
-		jedis.close();
+		release(jedis);
 	}
 
 	/**

@@ -8,6 +8,7 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 public class SearchCrawlerService {
 
+	
 	/**
 	 * 
 	 * @param searchStr
