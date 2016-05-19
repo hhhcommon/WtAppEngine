@@ -478,6 +478,7 @@ CREATE TABLE wt_ChannelAsset (
   checkRuleIds  varchar(100)                          COMMENT '审核规则，0为手工/人工创建，其他为系统规则id',
   cTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   pubTime       timestamp                             COMMENT '发布时间，发布时的时间，若多次发布，则是最新的发布时间',
+  ？？？lmTime        timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改时间，任何字段进行了修改都要改这个字段',
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='027栏目内容发布';

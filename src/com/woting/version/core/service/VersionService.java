@@ -32,7 +32,7 @@ public class VersionService {
         verCfgDao.setNamespace("P_VERSION");
     }
 
-    //版本配置======================================================================================================
+    //版本配置Begin======================================================================================================
     /**
      * 得到版本配置信息
      * @return
@@ -40,7 +40,9 @@ public class VersionService {
     public VersionConfig getVerConfig() {
         return verCfgDao.getInfoObject("getCfgList", null);
     }
+    //版本配置End======================================================================================================
 
+    //版本Begin======================================================================================================
     /**
      * 根据所给版本号version，获得该版本号详细信息
      * @param version 所给版本号
@@ -69,17 +71,17 @@ public class VersionService {
             Map<String, Object> param=new HashMap<String, Object>();
             param.put("version", version);
             Version appVer=verDao.getInfoObject(param);
-            Version curVer=verDao.getInfoObject("getCurrentVersion", null); //获取当前版本
+            Version curVer=verDao.getInfoObject("getCurrentPubVersion", null); //获取当前版本
             if (curVer==null) return null;
 
             boolean mastUpdate=false;
             List<String> noVersionList=new ArrayList<String>();
 
-            int beginVerNum=(appVer==null?1:appVer.getVerNum());
-            int endVerNum=curVer.getVerNum();
+            int beginVerNum=(appVer==null?1:appVer.getId());
+            int endVerNum=curVer.getId();
             param.clear();
-            param.put("appVerNum", beginVerNum);
-            param.put("curVerNum", endVerNum);
+            param.put("appVerId", beginVerNum);
+            param.put("curVerId", endVerNum);
             List<Version> l=verDao.queryForList("getNoVersionList", param);
             if (l!=null&&!l.isEmpty()) {
                 for (Version _v: l) {
@@ -98,4 +100,5 @@ public class VersionService {
         }
         return retm;
     }
+    //版本End======================================================================================================
 }

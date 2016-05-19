@@ -1,6 +1,10 @@
 package com.woting.version.core.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.spiritdata.framework.core.model.BaseObject;
+import com.spiritdata.framework.util.StringUtils;
 
 /**
  * 版本基础配置信息，这个对象就是持久化对象的结构
@@ -37,5 +41,18 @@ public class VersionConfig extends BaseObject {
     }
     public void setVerGoodsStorePath(String verGoodsStorePath) {
         this.verGoodsStorePath = verGoodsStorePath;
+    }
+
+    /**
+     * 转换为为显示使用的数据类型
+     * @return 显示层所用的数据类型，为Map
+     */
+    public Map<String, Object> toHashMap4View() {
+        Map<String, Object> ret=new HashMap<String, Object>();
+        if (StringUtils.isNullOrEmptyOrSpace(pubStorePath)) ret.put("PubStorPath", pubStorePath);
+        if (StringUtils.isNullOrEmptyOrSpace(pubFileName)) ret.put("PubFileName", pubFileName);
+        if (StringUtils.isNullOrEmptyOrSpace(pubUrl)) ret.put("PubUrl", pubUrl);
+        if (StringUtils.isNullOrEmptyOrSpace(verGoodsStorePath)) ret.put("VerGoodsStorePath", verGoodsStorePath);
+        return ret;
     }
 }
