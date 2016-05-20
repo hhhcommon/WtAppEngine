@@ -146,9 +146,11 @@ public class XiMaLaYaService extends Thread {
 		    festivalsS(constr);
 		} catch (Exception e) {
 			System.out.println("喜马拉雅搜索异常");
+		}finally {
+			SearchUtils.updateSearchFinish(constr);
+	     	System.err.println("喜马拉雅搜索结束");
 		}
-		SearchUtils.updateSearchFinish(constr);
-		System.err.println("喜马拉雅搜索结束");
+		
 	}
 
 }

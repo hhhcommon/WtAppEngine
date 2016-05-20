@@ -8,7 +8,6 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 public class SearchCrawlerService {
 
-	
 	/**
 	 * 
 	 * @param searchStr
@@ -21,8 +20,8 @@ public class SearchCrawlerService {
 	 */
 	public Map<String, Object> searchCrawler(String searchStr, int resultType, int pageType, int page, int pageSize) {
 		Map<String, Object> map = new HashMap<String, Object>();
-		List<String> liststr = SearchUtils.getListPage(searchStr, page, pageSize);
-		if (liststr == null) {
+		List<Map<String, Object>> list = SearchUtils.getListPage(searchStr, page, pageSize);
+		if (list==null) {
 			long a = System.currentTimeMillis(), b, num;
 			if (SearchUtils.getListNum(searchStr) == 0) {
 				SearchUtils.searchContent(searchStr);
@@ -41,10 +40,10 @@ public class SearchCrawlerService {
 				}
 			}
 		}
-		liststr = SearchUtils.getListPage(searchStr, page, pageSize);
-		if(liststr!=null){
-			map.put("AllCount", liststr.size());
-		    map.put("List", liststr);
+		list = SearchUtils.getListPage(searchStr, page, pageSize);
+		if(list!=null&&list.size()>0){
+			map.put("AllCount", list.size());
+		    map.put("List", list);
 	        map.put("ResultType", resultType);
 		}
 		return map;

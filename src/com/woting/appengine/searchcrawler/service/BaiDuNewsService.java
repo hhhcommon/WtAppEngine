@@ -90,5 +90,6 @@ public class BaiDuNewsService extends Thread {
 			new SearchNews(constr, newmap).start();
 		}
 		SearchUtils.updateSearchFinish(constr); // 暂定开启新闻搜索所有线程后，新闻搜索完成
+		System.out.println("百度搜索完成");
 	}
 }

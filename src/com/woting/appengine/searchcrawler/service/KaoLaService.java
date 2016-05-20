@@ -159,10 +159,16 @@ public class KaoLaService extends Thread {
 	public void run() {
 		System.out.println("考拉开始搜索");
 		String str = SearchUtils.utf8TOurl(constr);
-		StationS(str);
-		FestivalsS(str);
-		SearchUtils.updateSearchFinish(constr);
-		System.out.println("考拉搜索结束");
+		try {
+			StationS(str);
+		    FestivalsS(str);
+		} catch (Exception e) {
+			System.out.println("考拉搜索异常");
+		}
+		finally {
+			SearchUtils.updateSearchFinish(constr);
+			System.out.println("考拉搜索结束");
+		}
 	}
 
 }

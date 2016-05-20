@@ -147,8 +147,14 @@ public class QingTingService extends Thread {
 	@Override
 	public void run() {
 		System.out.println("蜻蜓开始搜索");
-		qingtingService(constr);
-		SearchUtils.updateSearchFinish(constr);
-		System.out.println("蜻蜓结束搜索");
+		try {
+			qingtingService(constr);
+		} catch (Exception e) {
+			System.out.println("蜻蜓搜索异常");
+		}
+		finally {
+			SearchUtils.updateSearchFinish(constr);
+		    System.out.println("蜻蜓结束搜索");
+		}
 	}
 }

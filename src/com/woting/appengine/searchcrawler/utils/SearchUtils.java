@@ -2,17 +2,20 @@ package com.woting.appengine.searchcrawler.utils;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.service.BaiDuNewsService;
 import com.woting.appengine.searchcrawler.service.KaoLaService;
+import com.woting.appengine.searchcrawler.service.LocalSearch;
 import com.woting.appengine.searchcrawler.service.QingTingService;
 import com.woting.appengine.searchcrawler.service.XiMaLaYaService;
 
@@ -25,7 +28,7 @@ public abstract class SearchUtils {
 	private static int T = 5000; // 默认超时时间
 	private static String[] specialfield = { "扫一扫", "新闻", "关注", "微信", "好友", "分享", "朋友圈", "iphone", "客户端", "[详情]",
 			"京ICP证", "京网文", "|", "┊", "｜", "上一篇：", "我的收藏", "首页", "不良信息举报：", "经营许可证编号:", "2016.", "：", "订阅", "保留所有权利",
-			"@", "联系我们", "反垃圾邮件策略" };
+			"@", "联系我们", "反垃圾邮件策略", "书面授权", "正北方网"};
 	private static JedisPool jedisPool = getPool();
 	
 	public static JedisPool getPool() {
@@ -47,11 +50,15 @@ public abstract class SearchUtils {
 	}
 	
 	private static void release(Jedis jedis) {
-		System.out.println(jedis);
-        if (jedis != null) {
-			jedisPool.returnResource(jedis);
-        }
-        System.out.println(jedis);
+//		try {
+//			if (jedis != null) jedisPool.returnResource(jedis);
+//		} catch (Exception e) {}finally {jedis.close();}
+		try{
+	        jedis.close();
+	        if(jedis.isConnected())
+	            jedis.disconnect();
+	    }catch(Exception e){
+	    }
     }
 	
 	/**
@@ -85,7 +92,6 @@ public abstract class SearchUtils {
 		return sb.toString();
 	}
 
-	@SuppressWarnings("unchecked")
 	/**
 	 * json解析工具
 	 * 
@@ -162,7 +168,6 @@ public abstract class SearchUtils {
 	 * @return
 	 */
 	public static long getListNum(String key) {
-	//	jedis = new Jedis(WtAppEngineConstants.IPPATH);
 		Jedis jedis = jedisPool.getResource();
 		if (jedis.exists("Search_"+key+"_Data")) {
 			long num = jedis.llen("Search_"+key+"_Data");
@@ -182,12 +187,11 @@ public abstract class SearchUtils {
 	 * @param pageSize
 	 * @return
 	 */
-	public static List<String> getListPage(String key, int page, int pageSize) {
-//		jedis = new Jedis(WtAppEngineConstants.IPPATH);
+	public static List<Map<String, Object>> getListPage(String key, int page, int pageSize) {
 		Jedis jedis = jedisPool.getResource();
-		List<String> list = null;
-		if (jedis.exists("Search_"+key+"_Data")) {
-			long num = jedis.llen("Search_"+key+"_Data");
+		List<Map<String, Object>> list = null;
+		if (jedis.exists("Search_"+key+"_Data")) { //判断是否redis里有存储的数据
+			long num = jedis.llen("Search_"+key+"_Data"); // 得到已存储数据的个数
 			num = num-(page-1)*pageSize;
 			if(num<=0){
 				if(isOrNoSearchFinish(key)){
@@ -200,34 +204,66 @@ public abstract class SearchUtils {
 						while((endtime=System.currentTimeMillis()-time)<5000){
 							num = jedis.llen("Search_"+key+"_Data")-(page-1)*pageSize;
 							if(isOrNoSearchFinish(key)){
-								if (num>0) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);release(jedis);return list;}
-								else {
+								if (num>0) {
+									list=convertJsonList(jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1));
+									release(jedis);
+									return list;
+								} else {
 									release(jedis);
 									return null;
 								}
 							}else{
-								if(num>pageSize) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);release(jedis);return list;}
+								if(num>pageSize) {
+									list=convertJsonList(jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1));
+									release(jedis);
+									return list;
+								}
 							    else if(num<=0) Thread.sleep(100);
 						        else if(num>0 && num<pageSize){
-						        	if((num%pageSize)>pageSize/2) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);release(jedis);return list;}
-						        	if((num%pageSize)<pageSize/2) {
-						        		if (isOrNoSearchFinish(key)) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);release(jedis);return list;}
+						        	if((num%pageSize)>pageSize/2) {
+						        		list=convertJsonList(jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1));
+						        		release(jedis);
+						        		return list;
 						        	}
+						        	if((num%pageSize)<pageSize/2) 
+						        		if (isOrNoSearchFinish(key)) {
+						        			list=convertJsonList(jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1));
+						        			release(jedis);
+						        			return list;
+						        		}
 						        }
 							}
 						}
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+					} catch (InterruptedException e) {e.printStackTrace();}finally {release(jedis);}
 				}
 			} 
-			else if (num>=pageSize) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1);release(jedis);return list;}
-			else if (0<num&&num<pageSize) {list=jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1);release(jedis);return list;}
+			else if (num>=pageSize) {
+				list=convertJsonList(jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1));
+				release(jedis);
+				return list;
+			}
+			else if (0<num&&num<pageSize) {
+				list=convertJsonList(jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1));
+				release(jedis);
+				return list;
+			}
 		}
 		release(jedis);
 		return null;
 	}
 
+	private static List<Map<String, Object>> convertJsonList(List<String> l) {
+		List<Map<String, Object>> retM=new ArrayList<Map<String, Object>>();
+		if (l!=null&&l.size()>0) {
+			for (String josnS: l) {
+				Map<String, Object> m=(Map<String, Object>)JsonUtils.jsonToObj(josnS, Map.class);
+				retM.add(m);
+			}
+			return retM;
+		}
+		return null;
+	}
+	
 	/**
 	 * 添加list里节目数据
 	 * 
@@ -236,8 +272,6 @@ public abstract class SearchUtils {
 	 * @return
 	 */
 	public static <T> boolean addListInfo(String key, T T) {
-//		jedis = new Jedis(WtAppEngineConstants.IPPATH);
-//		Jedis jedis=new Jedis("127.0.0.33", 6379);
 		Jedis jedis = jedisPool.getResource();
 		String value = "";
 		String classname = T.getClass().getSimpleName();
@@ -247,7 +281,6 @@ public abstract class SearchUtils {
 			value = JsonUtils.objToJson(DataTransform.datas2Sequ_Audio((Station) T));
 		else if (classname.equals("HashMap"))
 			value = JsonUtils.objToJson(T);
-		value = value.replace("\"", "'");
 		if (!StringUtils.isNullOrEmptyOrSpace(value))
 			jedis.rpush("Search_" + key + "_Data", value);
 		release(jedis);
@@ -267,6 +300,7 @@ public abstract class SearchUtils {
 		XiMaLaYaService.begin(searchStr);
 		QingTingService.begin(searchStr);
 		BaiDuNewsService.begin(searchStr);
+		LocalSearch.begin(searchStr, 0, 0);
 		return true;
 	}
 
@@ -275,7 +309,6 @@ public abstract class SearchUtils {
 	 * @param key
 	 */
 	private static void createSearchTime(String key) {
-//		jedis = new Jedis(WtAppEngineConstants.IPPATH);
 		Jedis jedis = jedisPool.getResource();
 		long time = System.currentTimeMillis();
 		jedis.set("Search_"+key+"_Date", Long.toString(time));
@@ -288,10 +321,9 @@ public abstract class SearchUtils {
 	 * @return
 	 */
 	public static boolean isOrNoSearchFinish(String key){
-//		jedis = new Jedis(WtAppEngineConstants.IPPATH);
 		Jedis jedis = jedisPool.getResource();
 		if(jedis.exists("Search_"+key+"_Finish")){
-			if(jedis.get("Search_"+key+"_Finish").equals("4")){
+			if(jedis.get("Search_"+key+"_Finish").equals("5")){ //喜马拉雅，考拉，蜻蜓，百度新闻，服务器数据库
 				System.out.println("key:已搜索完成 ");
 				release(jedis);
 				return true;
@@ -306,23 +338,40 @@ public abstract class SearchUtils {
 	 * @param key
 	 */
 	public static void createBeginSearch(String key) {
-//		jedis = new Jedis(WtAppEngineConstants.IPPATH);
 		Jedis jedis = jedisPool.getResource();
 		jedis.set("Search_"+key+"_Finish", "0");
 		release(jedis);
 	}
 	
 	/**
-	 * 更新缓存里
+	 * 更新缓存里搜索完成进度
 	 * @param key
 	 */
 	public static void updateSearchFinish(String key){
-//		jedis = new Jedis(WtAppEngineConstants.IPPATH);
 		Jedis jedis = jedisPool.getResource();
 		if(jedis.exists("Search_"+key+"_Finish")){
 			String finishnum = jedis.get("Search_"+key+"_Finish");
 			finishnum = String.valueOf(Integer.valueOf(finishnum)+1);
 			jedis.set("Search_"+key+"_Finish", finishnum);
+		}
+		release(jedis);
+		removeListInfoSame(key);
+	}
+	
+	/**
+	 * 去除list里相同的节目
+	 * @param key
+	 */
+	private static void removeListInfoSame(String key){
+		Jedis jedis = jedisPool.getResource();
+		if(jedis.exists("Search_"+key+"_Finish")){
+			List<String> list = jedis.lrange("Search_"+key+"_Data", 0, jedis.llen("Search_"+key+"_Data"));
+			for (int i=1;i<list.size();i++) {
+				for (int j = 0; j < i; j++) {
+					if(list.get(i).equals(list.get(j)))
+						jedis.lrem("Search_"+key+"_Data", 1, list.get(i));		
+				}
+			}
 		}
 		release(jedis);
 	}
@@ -373,21 +422,19 @@ public abstract class SearchUtils {
 		if (count == 0) {
 			return true;
 		} else {
-			if (num/count>=3 || (num<40&&num/count>=1))
-				return true;
+			if (num/count>=3 || (num<40&&num/count>=2)) return true;
 		}
 		if (num < 100) {
 			count = 0;
 			for (String specialstr : specialfield) {
-				if (constr.contains(specialstr)) {
-					count++;
-				}
-				if (count == 2)
-					return true;
+				if (constr.contains(specialstr)) count++;
+				if (count == 2) return true;
 			}
 		}
 		return false;
 	}
+	
+	
 
 	/**
 	 * 得到发布信息
@@ -402,18 +449,14 @@ public abstract class SearchUtils {
 		if (pubs.length == 2) {
 			char[] ctimes = pubs[1].toCharArray();
 			for (char c : ctimes) {
-				if (Character.isDigit(c)) {
-					time += String.valueOf(c);
-				}
+				if (Character.isDigit(c)) time += String.valueOf(c);
 			}
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm");
 			long ltime = Long.valueOf(time)*3600*1000;
 			ltime = System.currentTimeMillis()-ltime;
 			pubinfo[1] = sdf.format(new Date(ltime));
 		} else {
-			if (pubs.length == 3) {
-				pubinfo[1] = pubs[1]+pubs[2];
-			}
+			if (pubs.length == 3) pubinfo[1] = pubs[1]+pubs[2];
 		}
 		return pubinfo;
 	}

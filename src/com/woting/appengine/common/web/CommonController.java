@@ -585,7 +585,6 @@ public class CommonController {
             long a=System.currentTimeMillis();
             if(resultType==0 && pageType==0){
             	cl = scs.searchCrawler(searchStr, resultType, pageType, page, pageSize);
-            //	 cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
             }else{
             	cl=contentService.searchAll(searchStr, resultType, pageType);
             }

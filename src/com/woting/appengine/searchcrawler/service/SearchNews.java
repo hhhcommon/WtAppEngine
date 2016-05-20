@@ -23,7 +23,9 @@ public class SearchNews extends Thread {
 		Document doc = null;
 		String contentinfo = "";
 		try {
-			doc = Jsoup.connect(url).ignoreContentType(true).timeout(5000).get();
+			doc = Jsoup.connect(url).ignoreContentType(true)
+					.header("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2")
+					.timeout(5000).get();
 			Elements elements = doc.getElementsByTag("p");
 			if(elements!=null){
 				for (Element element : elements) {
