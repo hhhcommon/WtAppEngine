@@ -75,7 +75,7 @@ public class BaiDuNewsService extends Thread {
 				newmap.put("ContentPub", contentpub);
 				newmap.put("ContentPubTime", contentpubtime);
 				newmap.put("MediaType", "TTS");
-				newlist.add(newmap);
+				if(!contentpub.equals("7k7k小游戏")) newlist.add(newmap); //待优化
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

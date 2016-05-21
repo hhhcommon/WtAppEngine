@@ -28,9 +28,9 @@ public abstract class SearchUtils {
 	private static int T = 5000; // 默认超时时间
 	private static String[] specialfield = { "扫一扫", "新闻", "关注", "微信", "好友", "分享", "朋友圈", "iphone", "客户端", "[详情]",
 			"京ICP证", "京网文", "|", "┊", "｜", "上一篇：", "我的收藏", "首页", "不良信息举报：", "经营许可证编号:", "2016.", "：", "订阅", "保留所有权利",
-			"@", "联系我们", "反垃圾邮件策略", "书面授权", "正北方网"};
+			"@", "联系我们", "反垃圾邮件策略", "书面授权", "正北方网", "浏览本网主页", "显示屏的分辨率", "免责声明", "稿件侵权行为", "版权", "转载", "18183", "和讯网" };
 	private static JedisPool jedisPool = getPool();
-	
+
 	public static JedisPool getPool() {
 		JedisPool pool = null;
 		if (pool == null) {
@@ -48,19 +48,17 @@ public abstract class SearchUtils {
 		}
 		return pool;
 	}
-	
+
+	/**
+	 * 释放jedis客户端
+	 * 
+	 * @param jedis
+	 */
 	private static void release(Jedis jedis) {
-//		try {
-//			if (jedis != null) jedisPool.returnResource(jedis);
-//		} catch (Exception e) {}finally {jedis.close();}
-		try{
-	        jedis.close();
-	        if(jedis.isConnected())
-	            jedis.disconnect();
-	    }catch(Exception e){
-	    }
-    }
-	
+		if (jedis.isConnected())
+			jedis.disconnect();
+	}
+
 	/**
 	 * 搜索内容中文转url编码
 	 * 
@@ -169,11 +167,11 @@ public abstract class SearchUtils {
 	 */
 	public static long getListNum(String key) {
 		Jedis jedis = jedisPool.getResource();
-		if (jedis.exists("Search_"+key+"_Data")) {
-			long num = jedis.llen("Search_"+key+"_Data");
+		if (jedis.exists("Search_" + key + "_Data")) {
+			long num = jedis.llen("Search_" + key + "_Data");
 			release(jedis);
 			return num;
-		} else{
+		} else {
 			release(jedis);
 			return 0;
 		}
@@ -190,80 +188,108 @@ public abstract class SearchUtils {
 	public static List<Map<String, Object>> getListPage(String key, int page, int pageSize) {
 		Jedis jedis = jedisPool.getResource();
 		List<Map<String, Object>> list = null;
-		if (jedis.exists("Search_"+key+"_Data")) { //判断是否redis里有存储的数据
-			long num = jedis.llen("Search_"+key+"_Data"); // 得到已存储数据的个数
-			num = num-(page-1)*pageSize;
-			if(num<=0){
-				if(isOrNoSearchFinish(key)){
-					release(jedis);
-					return null;
-				} 
-				else {
-					try {
-						long time = System.currentTimeMillis(),endtime;
-						while((endtime=System.currentTimeMillis()-time)<5000){
-							num = jedis.llen("Search_"+key+"_Data")-(page-1)*pageSize;
-							if(isOrNoSearchFinish(key)){
-								if (num>0) {
-									list=convertJsonList(jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1));
+		try {
+			if (jedis.exists("Search_" + key + "_Data")) { // 判断是否redis里有存储的数据
+				long num = jedis.llen("Search_" + key + "_Data"); // 得到已存储数据的个数
+				num = num - (page - 1) * pageSize;
+				if (num <= 0) {
+					if (isOrNoSearchFinish(key)) {
+						release(jedis);
+						return null;
+					} else {
+						long time = System.currentTimeMillis(), endtime;
+						while ((endtime = System.currentTimeMillis() - time) < 5000) {
+							num = jedis.llen("Search_" + key + "_Data") - (page - 1) * pageSize;
+							if (num>=pageSize) {
+								list = convertJsonList(jedis.lrange("Search_" + key + "_Data",(page - 1) * pageSize, page * pageSize - 1));
+								release(jedis);
+								return list;
+							} else {
+								if(isOrNoSearchFinish(key)) {
+									list = convertJsonList(jedis.lrange("Search_" + key + "_Data",(page - 1) * pageSize, (page - 1) * pageSize + num - 1));
 									release(jedis);
 									return list;
-								} else {
-									release(jedis);
-									return null;
-								}
-							}else{
-								if(num>pageSize) {
-									list=convertJsonList(jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1));
-									release(jedis);
-									return list;
-								}
-							    else if(num<=0) Thread.sleep(100);
-						        else if(num>0 && num<pageSize){
-						        	if((num%pageSize)>pageSize/2) {
-						        		list=convertJsonList(jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1));
-						        		release(jedis);
-						        		return list;
-						        	}
-						        	if((num%pageSize)<pageSize/2) 
-						        		if (isOrNoSearchFinish(key)) {
-						        			list=convertJsonList(jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1));
-						        			release(jedis);
-						        			return list;
-						        		}
-						        }
+								} else Thread.sleep(50);
 							}
 						}
-					} catch (InterruptedException e) {e.printStackTrace();}finally {release(jedis);}
+						//num<=0时未完成等待5s超时处理
+						if (num >= pageSize) {
+							list = convertJsonList(jedis.lrange("Search_" + key + "_Data",(page - 1) * pageSize, page * pageSize - 1));
+							release(jedis);
+							return list;
+						} else {
+							if (num > 0 && num < pageSize) {
+								list = convertJsonList(jedis.lrange("Search_" + key + "_Data",(page - 1) * pageSize, (page - 1) * pageSize + num - 1));
+								release(jedis);
+								return list;
+							} else {
+								release(jedis);
+								return null;
+							}
+						}
+					}
+				} else if (num >= pageSize) {
+					list = convertJsonList(jedis.lrange("Search_" + key + "_Data", (page - 1) * pageSize, page * pageSize - 1));
+					release(jedis);
+					return list;
+				} else if (num < pageSize) {
+					if (isOrNoSearchFinish(key)) {
+						list = convertJsonList(jedis.lrange("Search_" + key + "_Data", (page - 1) * pageSize, (page - 1) * pageSize + num - 1));
+						release(jedis);
+						return list;
+					} else {
+						long time = System.currentTimeMillis(), endtime;
+						while ((endtime = System.currentTimeMillis() - time) < 5000) {
+							num = jedis.llen("Search_" + key + "_Data") - (page - 1) * pageSize;
+							if (num >= pageSize) {
+								list = convertJsonList(jedis.lrange(key, (page - 1) * pageSize, page * pageSize - 1));
+								release(jedis);
+								return list;
+							} else {
+								if(isOrNoSearchFinish(key))
+								{
+									list = convertJsonList(jedis.lrange(key, (page - 1) * pageSize, (page - 1) * pageSize + num - 1));
+									release(jedis);
+									return list;
+								} else Thread.sleep(50);
+							}
+						}
+						// 0<num<pagesize时未完成等待5s超时处理
+						if(num>=pageSize){
+							list = convertJsonList(jedis.lrange(key, (page - 1) * pageSize, (page - 1) * pageSize - 1));
+						    release(jedis);
+						    return list;
+						} else {
+							list = convertJsonList(jedis.lrange(key, (page - 1) * pageSize, (page - 1) * pageSize + num - 1));
+							release(jedis);
+							return list;
+						}
+					}
 				}
-			} 
-			else if (num>=pageSize) {
-				list=convertJsonList(jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, page*pageSize-1));
-				release(jedis);
-				return list;
 			}
-			else if (0<num&&num<pageSize) {
-				list=convertJsonList(jedis.lrange("Search_"+key+"_Data", (page-1)*pageSize, (page-1)*pageSize+num-1));
-				release(jedis);
-				return list;
-			}
-		}
-		release(jedis);
+		    release(jedis);
+		} catch (InterruptedException e) {} finally {release(jedis);}
 		return null;
 	}
 
+	/**
+	 * 把List里的字符串转化为Map对象
+	 * 
+	 * @param l
+	 * @return
+	 */
 	private static List<Map<String, Object>> convertJsonList(List<String> l) {
-		List<Map<String, Object>> retM=new ArrayList<Map<String, Object>>();
-		if (l!=null&&l.size()>0) {
-			for (String josnS: l) {
-				Map<String, Object> m=(Map<String, Object>)JsonUtils.jsonToObj(josnS, Map.class);
+		List<Map<String, Object>> retM = new ArrayList<Map<String, Object>>();
+		if (l != null && l.size() > 0) {
+			for (String josnS : l) {
+				Map<String, Object> m = (Map<String, Object>) JsonUtils.jsonToObj(josnS, Map.class);
 				retM.add(m);
 			}
 			return retM;
 		}
 		return null;
 	}
-	
+
 	/**
 	 * 添加list里节目数据
 	 * 
@@ -306,24 +332,26 @@ public abstract class SearchUtils {
 
 	/**
 	 * 放入缓存搜索时间
+	 * 
 	 * @param key
 	 */
 	private static void createSearchTime(String key) {
 		Jedis jedis = jedisPool.getResource();
 		long time = System.currentTimeMillis();
-		jedis.set("Search_"+key+"_Date", Long.toString(time));
+		jedis.set("Search_" + key + "_Date", Long.toString(time));
 		release(jedis);
 	}
-	
+
 	/**
 	 * 是否搜索完成
+	 * 
 	 * @param key
 	 * @return
 	 */
-	public static boolean isOrNoSearchFinish(String key){
+	public static boolean isOrNoSearchFinish(String key) {
 		Jedis jedis = jedisPool.getResource();
-		if(jedis.exists("Search_"+key+"_Finish")){
-			if(jedis.get("Search_"+key+"_Finish").equals("5")){ //喜马拉雅，考拉，蜻蜓，百度新闻，服务器数据库
+		if (jedis.exists("Search_" + key + "_Finish")) {
+			if (jedis.get("Search_" + key + "_Finish").equals("5")) { // 喜马拉雅，考拉，蜻蜓，百度新闻，服务器数据库
 				System.out.println("key:已搜索完成 ");
 				release(jedis);
 				return true;
@@ -335,41 +363,44 @@ public abstract class SearchUtils {
 
 	/**
 	 * 放入缓存开始搜索标志
+	 * 
 	 * @param key
 	 */
 	public static void createBeginSearch(String key) {
 		Jedis jedis = jedisPool.getResource();
-		jedis.set("Search_"+key+"_Finish", "0");
+		jedis.set("Search_" + key + "_Finish", "0");
 		release(jedis);
 	}
-	
+
 	/**
 	 * 更新缓存里搜索完成进度
+	 * 
 	 * @param key
 	 */
-	public static void updateSearchFinish(String key){
+	public static void updateSearchFinish(String key) {
 		Jedis jedis = jedisPool.getResource();
-		if(jedis.exists("Search_"+key+"_Finish")){
-			String finishnum = jedis.get("Search_"+key+"_Finish");
-			finishnum = String.valueOf(Integer.valueOf(finishnum)+1);
-			jedis.set("Search_"+key+"_Finish", finishnum);
+		if (jedis.exists("Search_" + key + "_Finish")) {
+			String finishnum = jedis.get("Search_" + key + "_Finish");
+			finishnum = String.valueOf(Integer.valueOf(finishnum) + 1);
+			jedis.set("Search_" + key + "_Finish", finishnum);
 		}
 		release(jedis);
 		removeListInfoSame(key);
 	}
-	
+
 	/**
 	 * 去除list里相同的节目
+	 * 
 	 * @param key
 	 */
-	private static void removeListInfoSame(String key){
+	private static void removeListInfoSame(String key) {
 		Jedis jedis = jedisPool.getResource();
-		if(jedis.exists("Search_"+key+"_Finish")){
-			List<String> list = jedis.lrange("Search_"+key+"_Data", 0, jedis.llen("Search_"+key+"_Data"));
-			for (int i=1;i<list.size();i++) {
+		if (jedis.exists("Search_" + key + "_Finish")) {
+			List<String> list = jedis.lrange("Search_" + key + "_Data", 0, jedis.llen("Search_" + key + "_Data"));
+			for (int i = 1; i < list.size(); i++) {
 				for (int j = 0; j < i; j++) {
-					if(list.get(i).equals(list.get(j)))
-						jedis.lrem("Search_"+key+"_Data", 1, list.get(i));		
+					if (list.get(i).equals(list.get(j)))
+						jedis.lrem("Search_" + key + "_Data", 1, list.get(i));
 				}
 			}
 		}
@@ -378,6 +409,7 @@ public abstract class SearchUtils {
 
 	/**
 	 * 清除搜索到页面文本里标签
+	 * 
 	 * @param str
 	 * @return
 	 */
@@ -385,8 +417,8 @@ public abstract class SearchUtils {
 		while (true) {
 			int tagbegin = str.indexOf("<");
 			int tagend = str.indexOf(">", tagbegin);
-			if (tagbegin!=-1 && tagend!=-1) {
-				String constr = str.substring(tagbegin, tagend+1);
+			if (tagbegin != -1 && tagend != -1) {
+				String constr = str.substring(tagbegin, tagend + 1);
 				str = str.replace(constr, "");
 			} else {
 				if (str.indexOf("条相同新闻") != -1)
@@ -398,11 +430,13 @@ public abstract class SearchUtils {
 
 	/**
 	 * 是否清除需要加载的一句文本
+	 * 
 	 * @param constr
 	 * @return
 	 */
 	public static boolean isOrNORemove(String constr) {
-		if (constr.contains("...") || constr.contains("&gt;&gt;"))
+		if (constr.contains("...") || constr.contains("&gt;&gt;") || (constr.length() < 15 && constr.contains("写真"))
+				|| constr.contains("[详细]"))
 			return true;
 		char[] cs = constr.toCharArray();
 		int num = cs.length;
@@ -422,22 +456,24 @@ public abstract class SearchUtils {
 		if (count == 0) {
 			return true;
 		} else {
-			if (num/count>=3 || (num<40&&num/count>=2)) return true;
+			if (num / count >= 3 || (num < 40 && num / count >= 2))
+				return true;
 		}
 		if (num < 100) {
 			count = 0;
 			for (String specialstr : specialfield) {
-				if (constr.contains(specialstr)) count++;
-				if (count == 2) return true;
+				if (constr.contains(specialstr))
+					count++;
+				if (count == 2)
+					return true;
 			}
 		}
 		return false;
 	}
-	
-	
 
 	/**
 	 * 得到发布信息
+	 * 
 	 * @param contentpubstr
 	 * @return 发布组织和发布时间
 	 */
@@ -449,14 +485,16 @@ public abstract class SearchUtils {
 		if (pubs.length == 2) {
 			char[] ctimes = pubs[1].toCharArray();
 			for (char c : ctimes) {
-				if (Character.isDigit(c)) time += String.valueOf(c);
+				if (Character.isDigit(c))
+					time += String.valueOf(c);
 			}
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm");
-			long ltime = Long.valueOf(time)*3600*1000;
-			ltime = System.currentTimeMillis()-ltime;
+			long ltime = Long.valueOf(time) * 3600 * 1000;
+			ltime = System.currentTimeMillis() - ltime;
 			pubinfo[1] = sdf.format(new Date(ltime));
 		} else {
-			if (pubs.length == 3) pubinfo[1] = pubs[1]+pubs[2];
+			if (pubs.length == 3)
+				pubinfo[1] = pubs[1] + pubs[2];
 		}
 		return pubinfo;
 	}

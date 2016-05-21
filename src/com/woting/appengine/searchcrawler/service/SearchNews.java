@@ -29,11 +29,11 @@ public class SearchNews extends Thread {
 			Elements elements = doc.getElementsByTag("p");
 			if(elements!=null){
 				for (Element element : elements) {
-					if (!element.hasAttr("class")) {
+					if (element.attr("class").equals("p15") || !element.hasAttr("class")) { // p15  工业和信息化部
 						String constr = SearchUtils.cleanTag(element.toString());
 						if (!SearchUtils.isOrNORemove(constr)) {
 							if (!constr.equals("") && constr.length() > 9) {
-								contentinfo += constr + "\n";
+								contentinfo += constr ;// + "\n";
 							}
 						}
 					}
@@ -50,7 +50,7 @@ public class SearchNews extends Thread {
 		String url = (String) map.get("ContentURL");
 		if (!StringUtils.isNullOrEmptyOrSpace(url)) {
 			String contenturi = getContentInfo(url);
-			if(!StringUtils.isNullOrEmptyOrSpace(contenturi)){
+			if(!StringUtils.isNullOrEmptyOrSpace(contenturi) && contenturi.length()>30){ // contenturi为抓取到的新闻内容
 				map.put("ContentURI", contenturi);
 				map.remove("ContentURL");
 				SearchUtils.addListInfo(constr, map);
