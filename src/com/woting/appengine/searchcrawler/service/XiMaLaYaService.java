@@ -27,8 +27,13 @@ public class XiMaLaYaService extends Thread {
 		XiMaLaYaService xiMaLaYaService = new XiMaLaYaService();
 		xiMaLaYaService.start();
 	}
+	
+	private void ximalayaService(String content){
+		stationS(content);
+	    festivalsS(content);
+	}
 
-	public boolean stationS(String content) {
+	private void stationS(String content) {
 		String url = "http://www.ximalaya.com/search/" + SearchUtils.utf8TOurl(content) + "/t3";
 		Document doc = null;
 		try {
@@ -53,7 +58,6 @@ public class XiMaLaYaService extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return true;
 	}
 
 	/**
@@ -62,7 +66,7 @@ public class XiMaLaYaService extends Thread {
 	 * @param contentid
 	 * @return
 	 */
-	public Festival[] stationfestiavlS(String contentid) {
+	private Festival[] stationfestiavlS(String contentid) {
 		String url = "http://www.ximalaya.com" + contentid;
 		Festival[] festivals = new Festival[S_F_NUM];
 		Document doc = null;
@@ -85,7 +89,7 @@ public class XiMaLaYaService extends Thread {
 		return festivals;
 	}
 
-	public Festival festivalS(String contendid, Festival festival) {
+	private Festival festivalS(String contendid, Festival festival) {
 		String url = "http://www.ximalaya.com/tracks/" + contendid + ".json";
 		String jsonstr = SearchUtils.jsoupTOstr(url);
 		Map<String, Object> map = SearchUtils.jsonTOmap(jsonstr);
@@ -104,7 +108,7 @@ public class XiMaLaYaService extends Thread {
 		}
 	}
 
-	public boolean festivalsS(String content) {
+	private void festivalsS(String content) {
 		String url = "http://www.ximalaya.com/search/" + SearchUtils.utf8TOurl(content) + "/t2";
 		Document doc = null;
 		try {
@@ -135,15 +139,13 @@ public class XiMaLaYaService extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return true;
 	}
 	
 	@Override
 	public void run() {
 		System.out.println("喜马拉雅搜索开始");
 		try {
-			stationS(constr);
-		    festivalsS(constr);
+			ximalayaService(constr);
 		} catch (Exception e) {
 			System.out.println("喜马拉雅搜索异常");
 		}finally {

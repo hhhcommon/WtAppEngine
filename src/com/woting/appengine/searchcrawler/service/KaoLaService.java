@@ -26,6 +26,12 @@ public class KaoLaService extends Thread {
 		KaoLaService kl = new KaoLaService();
 		kl.start();
 	}
+	
+	private void kaolaService(String content){
+		String str = SearchUtils.utf8TOurl(constr);
+		StationS(str);
+	    FestivalsS(str);
+	}
 
 	/**
 	 * 频道信息及级下节目的搜索
@@ -34,7 +40,7 @@ public class KaoLaService extends Thread {
 	 *            搜索内容的url编码
 	 * @return 返回搜索到的频道及级下节目
 	 */
-	public boolean StationS(String content) {
+	private void StationS(String content) {
 		String station_url = "http://www.kaolafm.com/webapi/resource/search?words=" + content
 				+ "&rtype=20000&pagesize=20&pagenum=1";
 		String station_id = new String();
@@ -102,17 +108,15 @@ public class KaoLaService extends Thread {
 				} 
 			}
 		} 
-		return true;
 	}
 
 	/**
 	 * 节目信息的搜索
 	 * 
-	 * @param content
-	 *            搜索内容的url编码
+	 * @param content 搜索内容的url编码
 	 * @return 返回搜索到的节目信息
 	 */
-	public boolean FestivalsS(String content) {
+	private void FestivalsS(String content) {
 		String url = "http://www.kaolafm.com/webapi/resource/search?words=" + content
 				+ "&rtype=30000&pagesize=20&pagenum=1";
 		String jsonstr = SearchUtils.jsoupTOstr(url); // 获取网页链接的返回结果
@@ -152,16 +156,13 @@ public class KaoLaService extends Thread {
 				}
 			}
 		}
-		return true;
 	}
 
 	@Override
 	public void run() {
 		System.out.println("考拉开始搜索");
-		String str = SearchUtils.utf8TOurl(constr);
 		try {
-			StationS(str);
-		    FestivalsS(str);
+			kaolaService(constr);
 		} catch (Exception e) {
 			System.out.println("考拉搜索异常");
 		}

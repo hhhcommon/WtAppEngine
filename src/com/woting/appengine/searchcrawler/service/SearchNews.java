@@ -29,7 +29,7 @@ public class SearchNews extends Thread {
 			Elements elements = doc.getElementsByTag("p");
 			if(elements!=null){
 				for (Element element : elements) {
-					if (element.attr("class").equals("p15") || !element.hasAttr("class")) { // p15  工业和信息化部
+					if (!element.hasAttr("class")){//element.attr("class").equals("p15") || !element.hasAttr("class")) { // p15  工业和信息化部
 						String constr = SearchUtils.cleanTag(element.toString());
 						if (!SearchUtils.isOrNORemove(constr)) {
 							if (!constr.equals("") && constr.length() > 9) {

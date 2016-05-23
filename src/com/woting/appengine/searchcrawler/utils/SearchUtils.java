@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.searchcrawler.model.Festival;
@@ -62,8 +61,7 @@ public abstract class SearchUtils {
 	/**
 	 * 搜索内容中文转url编码
 	 * 
-	 * @param s
-	 *            搜索的中文内容
+	 * @param s 搜索的中文内容
 	 * @return 返回转成的url编码
 	 */
 	public static String utf8TOurl(String s) {
@@ -93,10 +91,8 @@ public abstract class SearchUtils {
 	/**
 	 * json解析工具
 	 * 
-	 * @param jsonstr
-	 *            字符串形式的json数据
-	 * @param strings
-	 *            解析json数据各层的属性名，可多个，也可为空
+	 * @param jsonstr 字符串形式的json数据
+	 * @param strings 解析json数据各层的属性名，可多个，也可为空
 	 * @return 返回已解析好的json数据
 	 */
 	public static List<Map<String, Object>> jsonTOlist(String jsonstr, String... strings) {
@@ -189,7 +185,7 @@ public abstract class SearchUtils {
 		Jedis jedis = jedisPool.getResource();
 		List<Map<String, Object>> list = null;
 		try {
-			if (jedis.exists("Search_" + key + "_Data")) { // 判断是否redis里有存储的数据
+			if (jedis.exists("Search_" + key + "_Finish")) { // 判断是否redis里有存储的数据
 				long num = jedis.llen("Search_" + key + "_Data"); // 得到已存储数据的个数
 				num = num - (page - 1) * pageSize;
 				if (num <= 0) {
@@ -242,32 +238,34 @@ public abstract class SearchUtils {
 						while ((endtime = System.currentTimeMillis() - time) < 5000) {
 							num = jedis.llen("Search_" + key + "_Data") - (page - 1) * pageSize;
 							if (num >= pageSize) {
-								list = convertJsonList(jedis.lrange(key, (page - 1) * pageSize, page * pageSize - 1));
+								list = convertJsonList(jedis.lrange("Search_" + key + "_Data", (page - 1) * pageSize, page * pageSize - 1));
 								release(jedis);
 								return list;
 							} else {
 								if(isOrNoSearchFinish(key))
 								{
-									list = convertJsonList(jedis.lrange(key, (page - 1) * pageSize, (page - 1) * pageSize + num - 1));
+									list = convertJsonList(jedis.lrange("Search_" + key + "_Data", (page - 1) * pageSize, (page - 1) * pageSize + num - 1));
 									release(jedis);
 									return list;
 								} else Thread.sleep(50);
 							}
 						}
 						// 0<num<pagesize时未完成等待5s超时处理
+						num = jedis.llen("Search_" + key + "_Data") - (page - 1) * pageSize;
 						if(num>=pageSize){
-							list = convertJsonList(jedis.lrange(key, (page - 1) * pageSize, (page - 1) * pageSize - 1));
+							list = convertJsonList(jedis.lrange("Search_" + key + "_Data", (page - 1) * pageSize, page  * pageSize - 1));
 						    release(jedis);
 						    return list;
 						} else {
-							list = convertJsonList(jedis.lrange(key, (page - 1) * pageSize, (page - 1) * pageSize + num - 1));
+							list = convertJsonList(jedis.lrange("Search_" + key + "_Data", (page - 1) * pageSize, (page - 1) * pageSize + num - 1));
 							release(jedis);
 							return list;
 						}
 					}
 				}
 			}
-		    release(jedis);
+//		    release(jedis);
+			
 		} catch (InterruptedException e) {} finally {release(jedis);}
 		return null;
 	}
@@ -283,7 +281,7 @@ public abstract class SearchUtils {
 		if (l != null && l.size() > 0) {
 			for (String josnS : l) {
 				Map<String, Object> m = (Map<String, Object>) JsonUtils.jsonToObj(josnS, Map.class);
-				retM.add(m);
+				if (m!=null) retM.add(m);
 			}
 			return retM;
 		}
@@ -385,27 +383,26 @@ public abstract class SearchUtils {
 			jedis.set("Search_" + key + "_Finish", finishnum);
 		}
 		release(jedis);
-		removeListInfoSame(key);
 	}
 
-	/**
-	 * 去除list里相同的节目
-	 * 
-	 * @param key
-	 */
-	private static void removeListInfoSame(String key) {
-		Jedis jedis = jedisPool.getResource();
-		if (jedis.exists("Search_" + key + "_Finish")) {
-			List<String> list = jedis.lrange("Search_" + key + "_Data", 0, jedis.llen("Search_" + key + "_Data"));
-			for (int i = 1; i < list.size(); i++) {
-				for (int j = 0; j < i; j++) {
-					if (list.get(i).equals(list.get(j)))
-						jedis.lrem("Search_" + key + "_Data", 1, list.get(i));
-				}
-			}
-		}
-		release(jedis);
-	}
+//	/**
+//	 * 去除list里相同的节目
+//	 * 
+//	 * @param key
+//	 */
+//	private static void removeListInfoSame(String key) {
+//		Jedis jedis = jedisPool.getResource();
+//		if (jedis.exists("Search_" + key + "_Finish")) {
+//			List<String> list = jedis.lrange("Search_" + key + "_Data", 0, jedis.llen("Search_" + key + "_Data"));
+//			for (int i = 1; i < list.size(); i++) {
+//				for (int j = 0; j < i; j++) {
+//					if (list.get(i).equals(list.get(j)))
+//						jedis.lrem("Search_" + key + "_Data", 1, list.get(i));
+//				}
+//			}
+//		}
+//		release(jedis);
+//	}
 
 	/**
 	 * 清除搜索到页面文本里标签
@@ -414,6 +411,7 @@ public abstract class SearchUtils {
 	 * @return
 	 */
 	public static String cleanTag(String str) {
+		if (StringUtils.isNullOrEmptyOrSpace(str)) return "";
 		while (true) {
 			int tagbegin = str.indexOf("<");
 			int tagend = str.indexOf(">", tagbegin);
@@ -435,9 +433,13 @@ public abstract class SearchUtils {
 	 * @return
 	 */
 	public static boolean isOrNORemove(String constr) {
-		if (constr.contains("...") || constr.contains("&gt;&gt;") || (constr.length() < 15 && constr.contains("写真"))
-				|| constr.contains("[详细]"))
+		if (StringUtils.isNullOrEmptyOrSpace(constr)) return true;
+		if (constr.contains("...") || constr.contains("&gt;&gt;") || constr.contains("[详细]"))
 			return true;
+		if(constr.length()<30){
+			if (!constr.contains("，") && !constr.contains("。") && !constr.contains(",") && !constr.contains("、")) 
+				return true;
+		}
 		char[] cs = constr.toCharArray();
 		int num = cs.length;
 		int count = 0;

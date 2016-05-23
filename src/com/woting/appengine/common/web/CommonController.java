@@ -489,7 +489,7 @@ public class CommonController {
                 map.put("Message", "无法得到查询串");
                 return map;
             }
-       
+
             //敏感词处理
             Owner o=new Owner(201, map.get("SessionId")+"");
             String _s[]=searchStr.split(",");

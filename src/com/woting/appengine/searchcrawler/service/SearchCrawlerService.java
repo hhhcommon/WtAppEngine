@@ -14,8 +14,7 @@ public class SearchCrawlerService {
 	 * @param resultType
 	 * @param pageType
 	 * @param page
-	 * @param pageSize
-	 *            默认为10
+	 * @param pageSize 默认为10
 	 * @return
 	 */
 	public Map<String, Object> searchCrawler(String searchStr, int resultType, int pageType, int page, int pageSize) {
