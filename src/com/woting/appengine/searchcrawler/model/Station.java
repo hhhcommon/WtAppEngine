@@ -1,5 +1,6 @@
 package com.woting.appengine.searchcrawler.model;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -9,7 +10,7 @@ import java.util.Arrays;
  * @author wbq
  *
  */
-public class Station {
+public class Station implements Serializable {
 
 	private String MediaType = "SEQU";// 类型
 	private String contentPub; // 发布者

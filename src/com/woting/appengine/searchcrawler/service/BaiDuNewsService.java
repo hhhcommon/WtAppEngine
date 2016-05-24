@@ -75,7 +75,7 @@ public class BaiDuNewsService extends Thread {
 				newmap.put("ContentPub", contentpub);
 				newmap.put("ContentPubTime", contentpubtime);
 				newmap.put("MediaType", "TTS");
-				newlist.add(newmap);
+				newlist.add(newmap); 
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -87,9 +87,9 @@ public class BaiDuNewsService extends Thread {
 	public void run() {
 		List<Map<String, Object>> listnews =  baiduNewsService(constr);
 		for (Map<String, Object> newmap : listnews) {
-			System.out.println("##"+newmap);
 			new SearchNews(constr, newmap).start();
 		}
 		SearchUtils.updateSearchFinish(constr); // 暂定开启新闻搜索所有线程后，新闻搜索完成
+		System.out.println("百度搜索完成");
 	}
 }

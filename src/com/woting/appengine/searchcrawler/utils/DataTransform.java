@@ -1,6 +1,5 @@
 package com.woting.appengine.searchcrawler.utils;
 
-import java.nio.channels.ScatteringByteChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

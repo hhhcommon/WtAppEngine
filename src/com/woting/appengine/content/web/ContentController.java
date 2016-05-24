@@ -18,6 +18,7 @@ import com.woting.appengine.common.util.RequestUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.appengine.searchcrawler.service.BaiDuNewsService;
+import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 @Controller
 @RequestMapping(value="/content/")
@@ -211,7 +212,17 @@ public class ContentController {
                     map.put("ReturnType", "1011");
                     map.put("Message", "没有查到任何内容");
                 }
-            }
+           }
+           if(mediaType.equals("TTS")) {
+        	   Map<String, Object> newsInfo = SearchUtils.getNewsInfo(contentId);
+        	   if(newsInfo!=null&&newsInfo.size()>0) {
+        		   map.put("ResultList", newsInfo);
+                   map.put("ReturnType", "1001");
+        	   } else {
+        		   map.put("ReturnType", "1011");
+                   map.put("Message", "没有查到任何内容");
+        	   }
+           }
             return map;
         } catch(Exception e) {
             e.printStackTrace();

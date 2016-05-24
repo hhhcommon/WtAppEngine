@@ -14,14 +14,13 @@ public class SearchCrawlerService {
 	 * @param resultType
 	 * @param pageType
 	 * @param page
-	 * @param pageSize
-	 *            默认为10
+	 * @param pageSize 默认为10
 	 * @return
 	 */
 	public Map<String, Object> searchCrawler(String searchStr, int resultType, int pageType, int page, int pageSize) {
 		Map<String, Object> map = new HashMap<String, Object>();
-		List<String> liststr = SearchUtils.getListPage(searchStr, page, pageSize);
-		if (liststr == null) {
+		List<Map<String, Object>> list = SearchUtils.getListPage(searchStr, page, pageSize);
+		if (list==null) {
 			long a = System.currentTimeMillis(), b, num;
 			if (SearchUtils.getListNum(searchStr) == 0) {
 				SearchUtils.searchContent(searchStr);
@@ -40,10 +39,21 @@ public class SearchCrawlerService {
 				}
 			}
 		}
-		liststr = SearchUtils.getListPage(searchStr, page, pageSize);
-		if(liststr!=null){
-			map.put("AllCount", liststr.size());
-		    map.put("List", liststr);
+		list = SearchUtils.getListPage(searchStr, page, pageSize);
+		if(page==1) {
+			for (Map<String, Object> m : list) {
+				if(m.get("MediaType").equals("TTS")) {
+					Map<String, Object> m2 = SearchUtils.getNewsInfo(m.get("ContentId")+"");
+					if(m2!=null&&m2.size()>0) {
+						m.put("ContentURI", m2.get("ContentURI"));
+						break;
+					}   
+				}
+			}
+		}
+		if(list!=null&&list.size()>0){
+			map.put("AllCount", list.size());
+		    map.put("List", list);
 	        map.put("ResultType", resultType);
 		}
 		return map;

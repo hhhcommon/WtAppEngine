@@ -32,7 +32,7 @@ public class QingTingService extends Thread {
 	}
 
 	// 电台搜索链接请求
-	public boolean qingtingService(String content) {
+	private void qingtingService(String content) {
 		content = SearchUtils.utf8TOurl(content);
 		String station_url = "http://www.qingting.fm/s/search/" + content;
 		Document doc = null;
@@ -74,7 +74,6 @@ public class QingTingService extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return true;
 	}
 
 	/**
@@ -83,7 +82,7 @@ public class QingTingService extends Thread {
 	 * @param url
 	 * @return
 	 */
-	public Festival festivalS(String url) {
+	private Festival festivalS(String url) {
 		Document doc = null;
 		Festival festival = new Festival();
 		try {
@@ -114,7 +113,7 @@ public class QingTingService extends Thread {
 	 * @param url
 	 * @return
 	 */
-	public Station stationS(String url) {
+	private Station stationS(String url) {
 		Document doc = null;
 		Station station = new Station();
 		Festival[] festivals = new Festival[1];
@@ -147,8 +146,14 @@ public class QingTingService extends Thread {
 	@Override
 	public void run() {
 		System.out.println("蜻蜓开始搜索");
-		qingtingService(constr);
-		SearchUtils.updateSearchFinish(constr);
-		System.out.println("蜻蜓结束搜索");
+		try {
+			qingtingService(constr);
+		} catch (Exception e) {
+			System.out.println("蜻蜓搜索异常");
+		}
+		finally {
+			SearchUtils.updateSearchFinish(constr);
+		    System.out.println("蜻蜓结束搜索");
+		}
 	}
 }

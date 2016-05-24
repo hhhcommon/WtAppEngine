@@ -489,7 +489,7 @@ public class CommonController {
                 map.put("Message", "无法得到查询串");
                 return map;
             }
-       
+
             //敏感词处理
             Owner o=new Owner(201, map.get("SessionId")+"");
             String _s[]=searchStr.split(",");
@@ -585,7 +585,6 @@ public class CommonController {
             long a=System.currentTimeMillis();
             if(resultType==0 && pageType==0){
             	cl = scs.searchCrawler(searchStr, resultType, pageType, page, pageSize);
-            //	 cl=threadService.searchWebAndLocal(searchStr, resultType, pageType);
             }else{
             	cl=contentService.searchAll(searchStr, resultType, pageType);
             }

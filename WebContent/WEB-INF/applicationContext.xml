@@ -1,96 +1,102 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:context="http://www.springframework.org/schema/context"
-  xsi:schemaLocation="http://www.springframework.org/schema/beans
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
     http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
     http://www.springframework.org/schema/context
     http://www.springframework.org/schema/context/spring-context-3.0.xsd">
-  <!--读取数据库配置信息 -->
-  <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-    <property name="locations">
-      <list merge="default">
-        <value>/WEB-INF/database.properties</value>
-      </list>
-    </property>
-  </bean>
+	<!--读取数据库配置信息 -->
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list merge="default">
+				<value>/WEB-INF/database.properties</value>
+			</list>
+		</property>
+	</bean>
 
-  <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close" lazy-init="false">
-    <property name="driverClassName" value="${jdbc.mysql.driverClassName}"/>
-    <property name="url" value="${jdbc.mysql.url}"/>
-    <property name="username" value="${jdbc.mysql.username}"/>
-    <property name="password" value="${jdbc.mysql.password}"/>
-    <property name="initialSize" value="30"/>
-    <property name="maxActive" value="50"/>
-    <property name="maxWait" value="60000"/>
-    <property name="poolPreparedStatements" value="true"/>
-    <property name="maxOpenPreparedStatements" value="30"/>
-    <property name="testOnBorrow"><value>false</value></property>
-    <property name="validationQuery"><value>select 1 from dual</value></property>
-  </bean>
-  <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
-    <property name="dataSource" ref="dataSource"/>
-  </bean>
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close" lazy-init="false">
+		<property name="driverClassName" value="${jdbc.mysql.driverClassName}" />
+		<property name="url" value="${jdbc.mysql.url}" />
+		<property name="username" value="${jdbc.mysql.username}" />
+		<property name="password" value="${jdbc.mysql.password}" />
+		<property name="initialSize" value="30" />
+		<property name="maxActive" value="50" />
+		<property name="maxWait" value="60000" />
+		<property name="poolPreparedStatements" value="true" />
+		<property name="maxOpenPreparedStatements" value="30" />
+		<property name="testOnBorrow">
+			<value>false</value>
+		</property>
+		<property name="validationQuery">
+			<value>select 1 from dual</value>
+		</property>
+	</bean>
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
 
-  <bean id="sqlSessionFactory" class="com.spiritdata.framework.ext.spring.mybatis.MySqlSessionFactoryBean">
-    <property name="configLocations">
-      <list merge="default">
-        <value>classpath*:mybatisConfig/frameworkMybatis.xml</value>
-        <value>classpath*:mybatisConfig/*.mappers.cfg.xml</value>
-      </list>
-    </property>
-    <!--备选方案
-    <property name="mapperLocations">
-      <list merge="default">
-        <value>classpath*:my\*\sql\*_mapper.xml</value>
-      </list>
-    </property> -->
-    <property name="databaseType" value="MySql"/>
-    <property name="dataSource" ref="dataSource"/>
-    <property name="transactionFactory">
-      <bean class="org.apache.ibatis.transaction.managed.ManagedTransactionFactory" />
-    </property>
-  </bean>
+	<bean id="sqlSessionFactory"
+		class="com.spiritdata.framework.ext.spring.mybatis.MySqlSessionFactoryBean">
+		<property name="configLocations">
+			<list merge="default">
+				<value>classpath*:mybatisConfig/frameworkMybatis.xml</value>
+				<value>classpath*:mybatisConfig/*.mappers.cfg.xml</value>
+			</list>
+		</property>
+		<!--备选方案 <property name="mapperLocations"> <list merge="default"> <value>classpath*:my\*\sql\*_mapper.xml</value> 
+			</list> </property> -->
+		<property name="databaseType" value="MySql" />
+		<property name="dataSource" ref="dataSource" />
+		<property name="transactionFactory">
+			<bean
+				class="org.apache.ibatis.transaction.managed.ManagedTransactionFactory" />
+		</property>
+	</bean>
 
-  <bean id="defaultDAO" class="com.spiritdata.framework.core.dao.mybatis.MybatisDAO"  scope="prototype" init-method="initialize">
-    <property name="sqlSessionFactory" ref="sqlSessionFactory"/>
-  </bean>
+	<bean id="defaultDAO" class="com.spiritdata.framework.core.dao.mybatis.MybatisDAO"
+		scope="prototype" init-method="initialize">
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
 
-  <!-- 平台缓存池-->
-  <bean id="cachePool" class=" com.spiritdata.framework.core.cache.CachePool">
-    <property name="caches">
-      <map>
-        <entry key="1" value-ref="cacheAppEngineCLU"/>
-      </map>
-    </property>
-  </bean>
-  <!-- 以下为web环境Session加载的定义 -->
-  <!-- session加载器外壳 -->
-  <bean id="sessionLoaderShell" class="com.spiritdata.framework.core.web.SessionLoaderShell">
-    <property name="sessionLoaderList">
-      <list>
-      </list>
-    </property>
-  </bean>
+	<!-- 平台缓存池 -->
+	<bean id="cachePool" class=" com.spiritdata.framework.core.cache.CachePool">
+		<property name="caches">
+			<map>
+				<entry key="1" value-ref="cacheAppEngineCLU" />
+			</map>
+		</property>
+	</bean>
+	<!-- 以下为web环境Session加载的定义 -->
+	<!-- session加载器外壳 -->
+	<bean id="sessionLoaderShell" class="com.spiritdata.framework.core.web.SessionLoaderShell">
+		<property name="sessionLoaderList">
+			<list>
+			</list>
+		</property>
+	</bean>
 
-  <!-- 处理文件上传 MVC部分 -->
-  <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver" >
-    <property name="defaultEncoding" value="utf-8"/> <!-- 默认编码 (ISO-8859-1) -->
-    <property name="maxInMemorySize" value="10240"/> <!-- 最大内存大小 (10240)-->
-    <property name="maxUploadSize" value="52428800"/> <!-- 5000kb最大文件大小，这个属性的限制不针对单个文件，而是所有文件的容量之和，-1为无限止(-1) -->
-    <property name="uploadTempDir" value="/tempUpload/"/> <!-- 此路径为临时路径上传后的目录名 (WebUtils#TEMP_DIR_CONTEXT_ATTRIBUTE) -->
-    <property name="resolveLazily" value="true"/> <!--resolveLazily属性启用是为了推迟文件解析，以便在UploadAction 中捕获文件大小异常-->
-  </bean>
+	<!-- 处理文件上传 MVC部分 -->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding" value="utf-8" /> <!-- 默认编码 (ISO-8859-1) -->
+		<property name="maxInMemorySize" value="10240" /> <!-- 最大内存大小 (10240) -->
+		<property name="maxUploadSize" value="52428800" /> <!-- 5000kb最大文件大小，这个属性的限制不针对单个文件，而是所有文件的容量之和，-1为无限止(-1) -->
+		<property name="uploadTempDir" value="/tempUpload/" /> <!-- 此路径为临时路径上传后的目录名 (WebUtils#TEMP_DIR_CONTEXT_ATTRIBUTE) -->
+		<property name="resolveLazily" value="true" /> <!--resolveLazily属性启用是为了推迟文件解析，以便在UploadAction 中捕获文件大小异常 -->
+	</bean>
 
-  <!-- 以下为UGA框架(用户/用户组/权限框架)所需配置 -->
-  <!--gisUga用户服务：平台 -->
-  <bean id="ugaUserService"       class="com.woting.passport.UGA.service.UserService"/>
-  <!--Uga用户模块服务：平台 -->
-  <bean id="ugaAuthorityService"  class="com.woting.passport.UGA.service.AuthorityService"/>
+	<!-- 以下为UGA框架(用户/用户组/权限框架)所需配置 -->
+	<!--gisUga用户服务：平台 -->
+	<bean id="ugaUserService" class="com.woting.passport.UGA.service.UserService" />
+	<!--Uga用户模块服务：平台 -->
+	<bean id="ugaAuthorityService" class="com.woting.passport.UGA.service.AuthorityService" />
 
-  <!-- 以下为缓存设置 -->
-  <!--Uga缓存：平台 -->
-  <bean id="cacheAppEngineCLU" class="com.woting.appengine.common.cache.AppEngineCLU"/>
+	<!-- 以下为缓存设置 -->
+	<!--Uga缓存：平台 -->
+	<bean id="cacheAppEngineCLU" class="com.woting.appengine.common.cache.AppEngineCLU" />
 
-  <context:annotation-config/>
+	<context:annotation-config />
 </beans>

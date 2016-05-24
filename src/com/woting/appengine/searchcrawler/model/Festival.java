@@ -1,5 +1,7 @@
 package com.woting.appengine.searchcrawler.model;
 
+import java.io.Serializable;
+
 import com.spiritdata.framework.util.StringUtils;
 
 /**
@@ -7,7 +9,7 @@ import com.spiritdata.framework.util.StringUtils;
  * @author wbq
  *
  */
-public class Festival {
+public class Festival implements Serializable {
 
 	private String mediaType = "AUDIO";	//类型
 	private String contentPub;	//发布者
