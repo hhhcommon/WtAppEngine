@@ -271,7 +271,7 @@ public class CommonController {
             if (map.get("ReturnType")!=null) return map;
 
             //获得查找词
-            String searchStr=m.get("KeyWord")+"";
+            String searchStr=(m.get("KeyWord")==null?null:m.get("KeyWord")+"");
             if (StringUtils.isNullOrEmptyOrSpace(searchStr)) {
                 map.put("ReturnType", "1002");
                 map.put("Message", "无法得到查询串");
@@ -405,10 +405,10 @@ public class CommonController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-得到模式Id
-            String catalogType=m.get("CatalogType")+"";
+            String catalogType=(m.get("CatalogType")==null?null:m.get("CatalogType")+"");
             if (StringUtils.isNullOrEmptyOrSpace(catalogType)) catalogType="-1";
             //2-得到字典项Id或父栏目Id
-            String catalogId=m.get("CatalogId")+"";
+            String catalogId=(m.get("CatalogId")==null?null:m.get("CatalogId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(catalogId)) catalogId=null;
             //3-得到返回类型
             int resultType=2;
@@ -483,7 +483,7 @@ public class CommonController {
             if (map.get("ReturnType")!=null) return map;
 
             //获得查询串
-            String searchStr=m.get("SearchStr")+"";
+            String searchStr=(m.get("SearchStr")==null?null:m.get("SearchStr")+"");
             if (StringUtils.isNullOrEmptyOrSpace(searchStr)) {
                 map.put("ReturnType", "1002");
                 map.put("Message", "无法得到查询串");
@@ -557,7 +557,7 @@ public class CommonController {
             if (map.get("ReturnType")!=null) return map;
 
             //获得查询串
-            String searchStr=m.get("SearchStr")+"";
+            String searchStr=(m.get("SearchStr")==null?null:m.get("SearchStr")+"");
             if (StringUtils.isNullOrEmptyOrSpace(searchStr)) {
                 map.put("ReturnType", "1002");
                 map.put("Message", "无法得到查询串");

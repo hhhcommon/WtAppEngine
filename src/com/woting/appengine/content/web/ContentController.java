@@ -119,16 +119,16 @@ public class ContentController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-得到模式Id
-            String catalogType=m.get("CatalogType")+"";
+            String catalogType=(m.get("CatalogType")==null?null:m.get("CatalogType")+"");
             if (StringUtils.isNullOrEmptyOrSpace(catalogType)) catalogType="-1";
             //2-得到字典项Id或父栏目Id
-            String catalogId=m.get("CatalogId")+"";
+            String catalogId=(m.get("CatalogId")==null?null:m.get("CatalogId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(catalogId)) catalogId=null;
             //3-得到返回类型
             int resultType=3;
             try {resultType=Integer.parseInt(m.get("ResultType")+"");} catch(Exception e) {}
             //4-得到类型
-            String mediaType=m.get("MediaType")+"";
+            String mediaType=(m.get("MediaType")==null?null:m.get("MediaType")+"");
             if (StringUtils.isNullOrEmptyOrSpace(mediaType)) mediaType=null;
             //5-得到每分类条目数
             int perSize=3;
@@ -140,7 +140,7 @@ public class ContentController {
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
             //8-得到开始分类Id
-            String beginCatalogId=m.get("BeginCatalogId")+"";
+            String beginCatalogId=(m.get("BeginCatalogId")==null?null:m.get("BeginCatalogId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(beginCatalogId)) beginCatalogId=null;
             //9-获得页面类型
             int pageType=1;
@@ -182,14 +182,14 @@ public class ContentController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-得到内容类别
-            String mediaType=m.get("MediaType")+"";
+            String mediaType=(m.get("MediaType")==null?null:m.get("MediaType")+"");
             if (StringUtils.isNullOrEmptyOrSpace(mediaType)) {
                 map.put("ReturnType", "1002");
                 map.put("Message", "无法获得内容类别");
                 return map;
             }
             //2-得到系列内容的Id
-            String contentId=m.get("ContentId")+"";
+            String contentId=(m.get("ContentId")==null?null:m.get("ContentId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(contentId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获得内容呢Id");

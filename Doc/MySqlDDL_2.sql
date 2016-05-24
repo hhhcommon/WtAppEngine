@@ -3,10 +3,10 @@
 /**P001 版本记录[P_VERCONFIG]*/
 DROP TABLE IF EXISTS p_VerConfig;
 CREATE TABLE p_VerConfig (
-  pubStorePath       varchar(200)  NOT NULL  COMMENT '最终版本发布存储目录',
-  pubFileName        varchar(200)  NOT NULL  COMMENT '最终版本发布Apk名称',
-  pubUrl             varchar(200)  NOT NULL  COMMENT '最终版本发布的Url',
-  verGoodsStorePath  varchar(200)  NOT NULL  COMMENT '历史版本发布物存储目录'
+  pubFileName        varchar(200)  NOT NULL  COMMENT '最终发布版本Apk名称',
+  pubUrl             varchar(200)  NOT NULL  COMMENT '最终发布版本的Url',
+  pubStorePath       varchar(200)  NOT NULL  COMMENT '最终发布版本存储目录',
+  verGoodsStorePath  varchar(200)  NOT NULL  COMMENT '历史版本物存储目录'
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='P001版本配置';
 
@@ -18,7 +18,7 @@ CREATE TABLE p_Version (
   version           varchar(100)  NOT NULL                             COMMENT '版本号，此版本号的规则由程序通过正则表达式进行处理',
   verMemo           text                                               COMMENT '版本描述，可以是一段html',
   bugMemo           text                                               COMMENT '版本bug修改情况描述，可以是一段html',
-  pubFlag           int           NOT NULL  DEFAULT 1                  COMMENT '发布状态：1=已发布；0=未发布；>0是未发布，但这里指已发布后又变为未发布状态。大于0为发布，并且表示发布次数。此状态用于今后扩展，目前只有1',
+  pubFlag           int           NOT NULL  DEFAULT 1                  COMMENT '发布状态：0未处理，1已发布，2已撤销，3已作废，-3已作废',
   apkFile           varchar(100)  NOT NULL                             COMMENT '版本发布物的存放地址,目前仅针对apk',
   apkSize           int unsigned  NOT NULL  DEFAULT 0                  COMMENT '版本发布物尺寸大小，是字节数,目前仅针对apk',
   isCurVer          int unsigned  NOT NULL  DEFAULT 0                  COMMENT '是否是当前版本，0不是，1是',

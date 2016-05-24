@@ -70,8 +70,8 @@ public class PassportController {
             MobileKey sk=(mp==null?null:mp.getMobileKey());
             if (sk!=null) map.put("SessionId", sk.getSessionId());
 
-            String ln=m.get("UserName")+"";
-            String pwd=m.get("Password")+"";
+            String ln=(m.get("UserName")==null?null:m.get("UserName")+"");
+            String pwd=(m.get("Password")==null?null:m.get("Password")+"");
             String errMsg="";
             if (StringUtils.isNullOrEmptyOrSpace(ln)) errMsg+=",用户名为空";
             if (StringUtils.isNullOrEmptyOrSpace(pwd)) errMsg+=",密码为空";
@@ -142,7 +142,7 @@ public class PassportController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -153,8 +153,8 @@ public class PassportController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            String ln=m.get("UserName")+"";
-            String pwd=m.get("Password")+"";
+            String ln=(m.get("UserName")==null?null:m.get("UserName")+"");
+            String pwd=(m.get("Password")==null?null:m.get("Password")+"");
             String errMsg="";
             if (StringUtils.isNullOrEmptyOrSpace(ln)) errMsg+=",用户名为空";
             char[] c=ln.toCharArray();
@@ -236,7 +236,7 @@ public class PassportController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -249,27 +249,27 @@ public class PassportController {
 
             //1-获取业务参数
             //1.1-获取业务参数：第三方登录的分类：=1微信；=2QQ；=3微博
-            String thirdType=m.get("ThirdType")+"";
+            String thirdType=(m.get("ThirdType")==null?null:m.get("ThirdType")+"");
             if (StringUtils.isNullOrEmptyOrSpace(thirdType)) {
                 map.put("ReturnType", "1002");
                 map.put("Message", "无法获得第三方登录类型");
                 return map;
             }
             //1.2-获取业务参数：用户的名称和Id
-            String tuserId=m.get("ThirdUserId")+"";
+            String tuserId=(m.get("ThirdUserId")==null?null:m.get("ThirdUserId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(tuserId)) {
                 map.put("ReturnType", "1000");
                 map.put("Message", "无法获取第三方用户Id");
                 return map;
             }
-            String tuserName=m.get("ThirdUserName")+"";
+            String tuserName=(m.get("ThirdUserName")==null?null:m.get("ThirdUserName")+"");
             if (StringUtils.isNullOrEmptyOrSpace(tuserName)) {
                 map.put("ReturnType", "1000");
                 map.put("Message", "无法获取第三方用户名称");
                 return map;
             }
             //1.3-获取业务参数：头像Url
-            String tuserImg=m.get("ThirdUserImg")+"";
+            String tuserImg=(m.get("ThirdUserImg")==null?null:m.get("ThirdUserImg")+"");
             //1.4-获取业务参数：详细数据
             Map<String, Object> tuserData=(Map<String, Object>)m.get("ThirdUserInfo");
 
@@ -326,7 +326,7 @@ public class PassportController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -382,7 +382,7 @@ public class PassportController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -402,8 +402,8 @@ public class PassportController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-获取其他参数
-            String oldPwd=m.get("OldPassword")+"";
-            String newPwd=m.get("NewPassword")+"";
+            String oldPwd=(m.get("OldPassword")==null?null:m.get("OldPassword")+"");
+            String newPwd=(m.get("NewPassword")==null?null:m.get("NewPassword")+"");
             String errMsg="";
             if (StringUtils.isNullOrEmptyOrSpace(oldPwd)) errMsg+=",旧密码为空";
             if (StringUtils.isNullOrEmptyOrSpace(newPwd)) errMsg+=",新密码为空";
@@ -456,7 +456,7 @@ public class PassportController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 ms=(MobileSession)retM.get("MobileSession");
                 map.put("SessionId", ms.getKey().getSessionId());
             }
@@ -467,7 +467,7 @@ public class PassportController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-获取其他参数
-            String newPwd=(String)m.get("NewPassword");
+            String newPwd=(m.get("NewPassword")==null?null:m.get("NewPassword")+"");
             String errMsg="";
             if (StringUtils.isNullOrEmptyOrSpace(newPwd)) errMsg+=",新密码为空";
             if (!StringUtils.isNullOrEmptyOrSpace(errMsg)) {
@@ -476,7 +476,7 @@ public class PassportController {
                 map.put("Message", errMsg+",无法修改密码");
                 return map;
             }
-            UserPo up=userService.getUserById(m.get("RetrieveUserId")+"");
+            UserPo up=userService.getUserById(m.get("RetrieveUserId")==null?null:(m.get("RetrieveUserId")+""));
             String info=ms.getAttribute("phoneCheckInfo")+"";
             if (info.startsWith("OK")) {
                 up.setPassword(newPwd);
@@ -520,7 +520,7 @@ public class PassportController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -539,9 +539,9 @@ public class PassportController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            String phoneNum=m.get("PhoneNum")+"";
-            String mail=m.get("MailAddr")+"";
-            String userNum=m.get("UserNum")+"";
+            String phoneNum=(m.get("PhoneNum")==null?null:m.get("PhoneNum")+"");
+            String mail=(m.get("MailAddr")==null?null:m.get("MailAddr")+"");
+            String userNum=(m.get("UserNum")==null?null:m.get("MailAddr")+"");
             if (StringUtils.isNullOrEmptyOrSpace(phoneNum)&&StringUtils.isNullOrEmptyOrSpace(mail)&&StringUtils.isNullOrEmptyOrSpace(userNum)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "邮箱、手机号码或用户号不能同时为空");
@@ -586,7 +586,7 @@ public class PassportController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -636,7 +636,7 @@ public class PassportController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 ms=(MobileSession)retM.get("MobileSession");
                 map.put("SessionId", ms.getKey().getSessionId());
             }
@@ -647,7 +647,7 @@ public class PassportController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-获取电话号码
-            String phoneNum=m.get("PhoneNum")+"";
+            String phoneNum=(m.get("PhoneNum")==null?null:m.get("PhoneNum")+"");
             if (StringUtils.isNullOrEmptyOrSpace(phoneNum)) {
                 map.put("ReturnType", "1000");
                 map.put("Message", "无法获取手机号");
@@ -692,7 +692,7 @@ public class PassportController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 ms=(MobileSession)retM.get("MobileSession");
                 map.put("SessionId", ms.getKey().getSessionId());
             }
@@ -703,7 +703,7 @@ public class PassportController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-获取电话号码
-            String phoneNum=m.get("PhoneNum")+"";
+            String phoneNum=(m.get("PhoneNum")==null?null:m.get("PhoneNum")+"");
             if (StringUtils.isNullOrEmptyOrSpace(phoneNum)) {
                 map.put("ReturnType", "1000");
                 map.put("Message", "无法获取手机号");
@@ -748,7 +748,7 @@ public class PassportController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 ms=(MobileSession)retM.get("MobileSession");
                 map.put("SessionId", ms.getKey().getSessionId());
             }
@@ -759,7 +759,7 @@ public class PassportController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-获取电话号码
-            String phoneNum=m.get("PhoneNum")+"";
+            String phoneNum=(m.get("PhoneNum")==null?null:m.get("PhoneNum")+"");
             if (StringUtils.isNullOrEmptyOrSpace(phoneNum)) {
                 map.put("ReturnType", "1000");
                 map.put("Message", "无法获取手机号");
@@ -825,7 +825,7 @@ public class PassportController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 ms=(MobileSession)retM.get("MobileSession");
                 map.put("SessionId", ms.getKey().getSessionId());
             }
@@ -836,14 +836,14 @@ public class PassportController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-获取电话号码
-            String phoneNum=m.get("PhoneNum")+"";
+            String phoneNum=(m.get("PhoneNum")==null?null:m.get("PhoneNum")+"");
             if (StringUtils.isNullOrEmptyOrSpace(phoneNum)) {
                 map.put("ReturnType", "1000");
                 map.put("Message", "无法获取手机号");
             }
             if (map.get("ReturnType")!=null) return map;
             //2-获取验证码
-            String checkNum=m.get("CheckCode")+"";
+            String checkNum=(m.get("CheckCode")==null?null:m.get("CheckCode")+"");
             if (StringUtils.isNullOrEmptyOrSpace(checkNum)) {
                 map.put("ReturnType", "1000");
                 map.put("Message", "无法获取手机验证码");
@@ -851,7 +851,7 @@ public class PassportController {
             if (map.get("ReturnType")!=null) return map;
             //3-获取是否需要得到用户id，只有在找回密码时才有用
             boolean needUserId=false;
-            try {needUserId=Boolean.parseBoolean(m.get("NeedUserId")+"");} catch(Exception e) {}
+            try {needUserId=Boolean.parseBoolean((m.get("NeedUserId")==null?"false":m.get("NeedUserId")+""));} catch(Exception e) {}
 
             //验证验证码
             String info=ms.getAttribute("phoneCheckInfo")+"";
@@ -935,7 +935,7 @@ public class PassportController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");

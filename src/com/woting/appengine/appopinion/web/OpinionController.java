@@ -65,7 +65,7 @@ public class OpinionController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-获取意见
-            String opinion=m.get("Opinion")+"";
+            String opinion=(m.get("Opinion")==null?null:m.get("Opinion")+"");
             if (StringUtils.isNullOrEmptyOrSpace(opinion)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取意见");
