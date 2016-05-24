@@ -40,6 +40,17 @@ public class SearchCrawlerService {
 			}
 		}
 		list = SearchUtils.getListPage(searchStr, page, pageSize);
+		if(page==1) {
+			for (Map<String, Object> m : list) {
+				if(m.get("MediaType").equals("TTS")) {
+					Map<String, Object> m2 = SearchUtils.getNewsInfo(m.get("ContentId")+"");
+					if(m2!=null&&m2.size()>0) {
+						m.put("ContentURI", m2.get("ContentURI"));
+						break;
+					}   
+				}
+			}
+		}
 		if(list!=null&&list.size()>0){
 			map.put("AllCount", list.size());
 		    map.put("List", list);

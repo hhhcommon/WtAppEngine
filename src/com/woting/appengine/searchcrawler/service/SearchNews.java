@@ -51,9 +51,10 @@ public class SearchNews extends Thread {
 		if (!StringUtils.isNullOrEmptyOrSpace(url)) {
 			String contenturi = getContentInfo(url);
 			if(!StringUtils.isNullOrEmptyOrSpace(contenturi) && contenturi.length()>30){ // contenturi为抓取到的新闻内容
-				map.put("ContentURI", contenturi);
+			//	map.put("ContentURI", contenturi);
 				map.remove("ContentURL");
 				SearchUtils.addListInfo(constr, map);
+				SearchUtils.createNewsInfo(map.get("ContentId")+"", contenturi);
 			}
 		}
 	}

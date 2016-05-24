@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.springframework.util.SerializationUtils;
+
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.searchcrawler.model.Festival;
@@ -163,8 +166,8 @@ public abstract class SearchUtils {
 	 */
 	public static long getListNum(String key) {
 		Jedis jedis = jedisPool.getResource();
-		if (jedis.exists("Search_" + key + "_Data")) {
-			long num = jedis.llen("Search_" + key + "_Data");
+		if (jedis.exists(("Search_" + key + "_Data").getBytes())) {
+			long num = jedis.llen(("Search_" + key + "_Data").getBytes());
 			release(jedis);
 			return num;
 		} else {
@@ -184,9 +187,11 @@ public abstract class SearchUtils {
 	public static List<Map<String, Object>> getListPage(String key, int page, int pageSize) {
 		Jedis jedis = jedisPool.getResource();
 		List<Map<String, Object>> list = null;
+		String finishstr = "Search_" + key + "_Finish";
+		String datastr = "Search_" + key + "_Data";
 		try {
-			if (jedis.exists("Search_" + key + "_Finish")) { // 判断是否redis里有存储的数据
-				long num = jedis.llen("Search_" + key + "_Data"); // 得到已存储数据的个数
+			if (jedis.exists(finishstr)) { // 判断是否redis里有存储的数据
+				long num = jedis.llen(datastr); // 得到已存储数据的个数
 				num = num - (page - 1) * pageSize;
 				if (num <= 0) {
 					if (isOrNoSearchFinish(key)) {
@@ -195,14 +200,14 @@ public abstract class SearchUtils {
 					} else {
 						long time = System.currentTimeMillis(), endtime;
 						while ((endtime = System.currentTimeMillis() - time) < 5000) {
-							num = jedis.llen("Search_" + key + "_Data") - (page - 1) * pageSize;
+							num = jedis.llen(datastr) - (page - 1) * pageSize;
 							if (num>=pageSize) {
-								list = convertJsonList(jedis.lrange("Search_" + key + "_Data",(page - 1) * pageSize, page * pageSize - 1));
+								list = convertJsonList(jedis.lrange(datastr,(page - 1) * pageSize, page * pageSize - 1));
 								release(jedis);
 								return list;
 							} else {
 								if(isOrNoSearchFinish(key)) {
-									list = convertJsonList(jedis.lrange("Search_" + key + "_Data",(page - 1) * pageSize, (page - 1) * pageSize + num - 1));
+									list = convertJsonList(jedis.lrange(datastr,(page - 1) * pageSize, (page - 1) * pageSize + num - 1));
 									release(jedis);
 									return list;
 								} else Thread.sleep(50);
@@ -210,12 +215,12 @@ public abstract class SearchUtils {
 						}
 						//num<=0时未完成等待5s超时处理
 						if (num >= pageSize) {
-							list = convertJsonList(jedis.lrange("Search_" + key + "_Data",(page - 1) * pageSize, page * pageSize - 1));
+							list = convertJsonList(jedis.lrange(datastr,(page - 1) * pageSize, page * pageSize - 1));
 							release(jedis);
 							return list;
 						} else {
 							if (num > 0 && num < pageSize) {
-								list = convertJsonList(jedis.lrange("Search_" + key + "_Data",(page - 1) * pageSize, (page - 1) * pageSize + num - 1));
+								list = convertJsonList(jedis.lrange(datastr,(page - 1) * pageSize, (page - 1) * pageSize + num - 1));
 								release(jedis);
 								return list;
 							} else {
@@ -225,48 +230,78 @@ public abstract class SearchUtils {
 						}
 					}
 				} else if (num >= pageSize) {
-					list = convertJsonList(jedis.lrange("Search_" + key + "_Data", (page - 1) * pageSize, page * pageSize - 1));
+					list = convertJsonList(jedis.lrange(datastr, (page - 1) * pageSize, page * pageSize - 1));
 					release(jedis);
 					return list;
 				} else if (num < pageSize) {
 					if (isOrNoSearchFinish(key)) {
-						list = convertJsonList(jedis.lrange("Search_" + key + "_Data", (page - 1) * pageSize, (page - 1) * pageSize + num - 1));
+						list = convertJsonList(jedis.lrange(datastr, (page - 1) * pageSize, (page - 1) * pageSize + num - 1));
 						release(jedis);
 						return list;
 					} else {
 						long time = System.currentTimeMillis(), endtime;
 						while ((endtime = System.currentTimeMillis() - time) < 5000) {
-							num = jedis.llen("Search_" + key + "_Data") - (page - 1) * pageSize;
+							num = jedis.llen(datastr) - (page - 1) * pageSize;
 							if (num >= pageSize) {
-								list = convertJsonList(jedis.lrange("Search_" + key + "_Data", (page - 1) * pageSize, page * pageSize - 1));
+								list = convertJsonList(jedis.lrange(datastr, (page - 1) * pageSize, page * pageSize - 1));
 								release(jedis);
 								return list;
 							} else {
 								if(isOrNoSearchFinish(key))
 								{
-									list = convertJsonList(jedis.lrange("Search_" + key + "_Data", (page - 1) * pageSize, (page - 1) * pageSize + num - 1));
+									list = convertJsonList(jedis.lrange(datastr, (page - 1) * pageSize, (page - 1) * pageSize + num - 1));
 									release(jedis);
 									return list;
 								} else Thread.sleep(50);
 							}
 						}
 						// 0<num<pagesize时未完成等待5s超时处理
-						num = jedis.llen("Search_" + key + "_Data") - (page - 1) * pageSize;
+						num = jedis.llen(datastr) - (page - 1) * pageSize;
 						if(num>=pageSize){
-							list = convertJsonList(jedis.lrange("Search_" + key + "_Data", (page - 1) * pageSize, page  * pageSize - 1));
+							list = convertJsonList(jedis.lrange(datastr, (page - 1) * pageSize, page  * pageSize - 1));
 						    release(jedis);
 						    return list;
 						} else {
-							list = convertJsonList(jedis.lrange("Search_" + key + "_Data", (page - 1) * pageSize, (page - 1) * pageSize + num - 1));
+							list = convertJsonList(jedis.lrange(datastr, (page - 1) * pageSize, (page - 1) * pageSize + num - 1));
 							release(jedis);
 							return list;
 						}
 					}
 				}
-			}
-//		    release(jedis);
-			
+			}		
 		} catch (InterruptedException e) {} finally {release(jedis);}
+		return null;
+	}
+	
+	public static void createNewsInfo(String contentid, String contenturi){
+		Jedis jedis = jedisPool.getResource();
+		try {
+			jedis.set("Search_"+contentid+"_NewsInfo", contenturi);
+		} catch (Exception e) {
+		} finally {
+			release(jedis);
+		}
+	}
+	
+	/**
+	 * 得到新闻内容
+	 * @param contentid
+	 * @return
+	 */
+	public static Map<String, Object> getNewsInfo(String contentid){
+		Jedis jedis = jedisPool.getResource();
+		Map<String, Object> map = new HashMap<String,Object>();
+		try {
+			if (jedis.exists("Search_"+contentid+"_NewsInfo")) {
+				if(jedis.get("Search_"+contentid+"_NewsInfo")!=null) {
+					map.put("ContentURI", jedis.get("Search_"+contentid+"_NewsInfo"));
+					map.put("ContentId", contentid);
+					return map;
+				}
+			}
+		} catch (Exception e) {}finally {
+			release(jedis);
+		}
 		return null;
 	}
 
@@ -277,11 +312,14 @@ public abstract class SearchUtils {
 	 * @return
 	 */
 	private static List<Map<String, Object>> convertJsonList(List<String> l) {
-		List<Map<String, Object>> retM = new ArrayList<Map<String, Object>>();
+		List<Map<String, Object>> retM = new ArrayList<Map<String,Object>>();
+		System.out.println(l);
+		System.out.println("##"+l.size());
 		if (l != null && l.size() > 0) {
 			for (String josnS : l) {
 				Map<String, Object> m = (Map<String, Object>) JsonUtils.jsonToObj(josnS, Map.class);
 				if (m!=null) retM.add(m);
+				System.out.println(m);
 			}
 			return retM;
 		}
@@ -298,6 +336,7 @@ public abstract class SearchUtils {
 	public static <T> boolean addListInfo(String key, T T) {
 		Jedis jedis = jedisPool.getResource();
 		String value = "";
+		Map<String, Object> map = new HashMap<String,Object>();
 		String classname = T.getClass().getSimpleName();
 		if (classname.equals("Festival"))
 			value = JsonUtils.objToJson(DataTransform.festival2Audio((Festival) T));
