@@ -1,29 +1,13 @@
 package com.woting.appengine.common.util;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletRequest;
-//import javax.servlet.http.HttpServletRequest;
-//
-//import org.apache.commons.fileupload.FileItem;
-//import org.apache.commons.fileupload.FileItemFactory;
-//import org.apache.commons.fileupload.FileUploadException;
-//import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-//import org.apache.commons.fileupload.servlet.ServletFileUpload;
-//import com.spiritdata.framework.util.FileNameUtils;
-//import com.woting.WtAppEngineConstants;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.SystemCache;
-import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.model.MobileParam;

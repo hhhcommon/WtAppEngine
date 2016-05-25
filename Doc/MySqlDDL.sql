@@ -47,8 +47,8 @@ CREATE TABLE plat_User (
   id             varchar(32)      NOT NULL                COMMENT 'uuid(用户id)',
   userName       varchar(100)               DEFAULT NULL  COMMENT '用户名称——实名',
   userNum        varchar(32)                              COMMENT '用户号，用于公开的号码，唯一',
-  loginName      varchar(15)      NOT NULL                COMMENT '登录账号',
-  password       varchar(30)                DEFAULT NULL  COMMENT '密码',
+  loginName      varchar(100)     NOT NULL                COMMENT '登录账号',
+  password       varchar(100)               DEFAULT NULL  COMMENT '密码',
   mailAddress    varchar(100)               DEFAULT NULL  COMMENT '邮箱(非空为一索引)',
   mainPhoneNum   varchar(100)               DEFAULT NULL  COMMENT '用户主手机号码',
   userType       int(1) unsigned  NOT NULL                COMMENT '用户分类：1自然人用户，2机构用户',
@@ -479,6 +479,7 @@ CREATE TABLE wt_ChannelAsset (
   cTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   pubTime       timestamp                             COMMENT '发布时间，发布时的时间，若多次发布，则是最新的发布时间',
   ？？？lmTime        timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改时间，任何字段进行了修改都要改这个字段',
+  INDEX pubAsset (assetType, assetId, flowFlag) USING HASH,
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='027栏目内容发布';

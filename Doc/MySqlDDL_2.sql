@@ -33,7 +33,7 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='P002版本记录';
 
 
 /**DataAnalysis**/
-/**== 二、用户数据 */
+/**== 二、用户行为数据 */
 /**DA001 用户搜索词统计[DA_USERSEARCHWORD]*/
 DROP TABLE IF EXISTS da_UserSearchWord;
 CREATE TABLE da_UserSearchWord (
@@ -54,16 +54,16 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='DA001用户搜索词统计';
 /**DA002 用户内容喜欢记录表[DA_USERFAVORITE]*/
 DROP TABLE IF EXISTS da_UserFavorite;
 CREATE TABLE da_UserFavorite (
-  id         varchar(32)   NOT NULL                             COMMENT '用户词Id',
-  ownerType  int unsigned  NOT NULL                             COMMENT '所有者类型',
-  ownerId    varchar(32)   NOT NULL                             COMMENT '所有者Id,可能是用户也可能是设备',
-  word       varchar(100)  NOT NULL                             COMMENT '搜索词',
-  wordLang   varchar(100)  NOT NULL                             COMMENT '搜索词语言类型，系统自动判断，可能是混合类型',
-  time1      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '本词本用户首次搜索的时间',
-  time2      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '本词本用户最后搜索的时间',
-  sumNum     int unsigned  NOT NULL                             COMMENT '搜索次数',
-  cTime      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
-  INDEX bizIdx (ownerType, ownerId, word) USING HASH,
+  id          varchar(32)   NOT NULL                                                         COMMENT '用户喜欢Id',
+  ownerType   int unsigned  NOT NULL                                                         COMMENT '所有者类型',
+  ownerId     varchar(32)   NOT NULL                                                         COMMENT '所有者Id',
+  assetType   varchar(200)  NOT NULL                                                         COMMENT '内容类型：1电台；2单体媒体资源；3专辑资源；4文本',
+  assetId     varchar(32)   NOT NULL                                                         COMMENT '内容Id',
+  cTime       timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP                              COMMENT '创建时间',
+  INDEX bizIdx (ownerType, ownerId, assetType, assetId) USING HASH,
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='DA002用户内容喜欢记录表';
+/**
+ * 说明：目前OwnerType只有100，没有其他值
+ */

@@ -968,7 +968,7 @@ public class ContentService {
         ret.add(insertIndex, oneM);
     }
     //转换电台
-    private Map<String, Object> convert2MediaMap_1(Map<String, Object> one, List<Map<String, Object>> cataList, List<Map<String, Object>> personList) {
+    public static Map<String, Object> convert2MediaMap_1(Map<String, Object> one, List<Map<String, Object>> cataList, List<Map<String, Object>> personList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
         retM.put("MediaType", "RADIO");
@@ -995,7 +995,7 @@ public class ContentService {
         return retM;
     }
     //转换单媒体
-    private Map<String, Object> convert2MediaMap_2(Map<String, Object> one, List<Map<String, Object>> cataList, List<Map<String, Object>> personList) {
+    public static Map<String, Object> convert2MediaMap_2(Map<String, Object> one, List<Map<String, Object>> cataList, List<Map<String, Object>> personList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
         retM.put("MediaType", "AUDIO");
@@ -1024,7 +1024,7 @@ public class ContentService {
         return retM;
     }
     //转换系列媒体
-    private Map<String, Object> convert2MediaMap_3(Map<String, Object> one, List<Map<String, Object>> cataList, List<Map<String, Object>> personList) {
+    public static Map<String, Object> convert2MediaMap_3(Map<String, Object> one, List<Map<String, Object>> cataList, List<Map<String, Object>> personList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
         retM.put("MediaType", "SEQU");
@@ -1050,7 +1050,7 @@ public class ContentService {
         return retM;
     }
 
-    private List<Map<String, Object>> fetchPersons(List<Map<String, Object>> personList, int resType, String resId) {
+    public static List<Map<String, Object>> fetchPersons(List<Map<String, Object>> personList, int resType, String resId) {
         if (personList==null||personList.size()==0) return null;
         Map<String, Object> onePerson=null;
         List<Map<String, Object>> ret=new ArrayList<Map<String, Object>>();
@@ -1064,7 +1064,7 @@ public class ContentService {
         }
         return ret.size()>0?ret:null;
     }
-    private List<Map<String, Object>> fetchCatas(List<Map<String, Object>> cataList, int resType, String resId) {
+    public static List<Map<String, Object>> fetchCatas(List<Map<String, Object>> cataList, int resType, String resId) {
         if (cataList==null||cataList.size()==0) return null;
         Map<String, Object> oneCata=new HashMap<String, Object>();
         List<Map<String, Object>> ret=new ArrayList<Map<String, Object>>();
@@ -1080,7 +1080,7 @@ public class ContentService {
     }
 
     /** 计算分享地址的功能 */
-    private static final String preAddr="http://www.wotingfm.com:908/CM/mweb";//分享地址前缀
+    public static final String preAddr="http://www.wotingfm.com:908/CM/mweb";//分享地址前缀
     public static final String getShareUrl_JM(String preUrl, String contentId) {//的到节目的分享地址
         return preUrl+"/jm/"+contentId+"/content.html";
     }

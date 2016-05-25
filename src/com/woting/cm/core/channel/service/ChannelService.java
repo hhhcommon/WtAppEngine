@@ -93,4 +93,36 @@ public class ChannelService {
     public void publish(ChannelAsset ca) {
         channelAssetDao.insert(ca.convert2Po());
     }
+
+    /**
+     * 判断一个内容资源是否已经发布了
+     * @param assetType 资源类型
+     * @param assetId 资源Id
+     * @return true已经发布了，false未发布
+     */
+    public boolean isPub(String assetType, String assetId) {
+        Map<String, Object> param=new HashMap<String, Object>();
+        param.put("assetType", assetType);
+        param.put("assetId", assetId);
+        param.put("flowFlag", "2");
+        return (channelDao.getCount(param)>0);
+    }
+
+    /**
+     * 判断一个列表中的内容是否被发布了
+     * @param assetList 被判断的资源列表，列表中是Map，Map中包括两个字段 assetType,assetId
+     * @return 该资源是否发布了，返回值包括三个字段assetType,assetId,isPub，其中isPub=1是已发布，否则是未发布
+     */
+    public List<Map<String, Object>> isPubList(List<Map<String, Object>> assetList) {
+        if (assetList==null||assetList.isEmpty()) return null;
+        //拼Sql
+        String sql="";
+        for (Map<String, Object> asset: assetList) {
+            sql+="or (assetType='"+asset.get("assetType")+"' and assetId='"+asset.get("assetId")+"')";
+        }
+        sql=sql.substring(3);
+        Map<String, Object> param=new HashMap<String, Object>();
+        param.put("whereSql", sql);
+        return channelDao.queryForListAutoTranform("isPubAssets", param);
+    }
 }
