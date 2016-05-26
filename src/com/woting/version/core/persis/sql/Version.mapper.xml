@@ -86,7 +86,7 @@
   <select id="getNoVersionList" resultMap="versionMap">
     select <include refid="Base_Column_List"/> from p_Version
     <![CDATA[ where id>#{appVerId,jdbcType=INTEGER} and id<=#{curVerId,jdbcType=INTEGER} and ABS(pubFlag)>0]]>
-    order by verNum
+    order by id
   </select>
 
   <!-- 获得一条数据 -->

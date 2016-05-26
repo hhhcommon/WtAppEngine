@@ -3,10 +3,10 @@
 /**P001 版本记录[P_VERCONFIG]*/
 DROP TABLE IF EXISTS p_VerConfig;
 CREATE TABLE p_VerConfig (
-  pubStorePath       varchar(200)  NOT NULL  COMMENT '最终版本发布存储目录',
-  pubFileName        varchar(200)  NOT NULL  COMMENT '最终版本发布Apk名称',
-  pubUrl             varchar(200)  NOT NULL  COMMENT '最终版本发布的Url',
-  verGoodsStorePath  varchar(200)  NOT NULL  COMMENT '历史版本发布物存储目录'
+  pubFileName        varchar(200)  NOT NULL  COMMENT '最终发布版本Apk名称',
+  pubUrl             varchar(200)  NOT NULL  COMMENT '最终发布版本的Url',
+  pubStorePath       varchar(200)  NOT NULL  COMMENT '最终发布版本存储目录',
+  verGoodsStorePath  varchar(200)  NOT NULL  COMMENT '历史版本物存储目录'
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='P001版本配置';
 
@@ -18,7 +18,7 @@ CREATE TABLE p_Version (
   version           varchar(100)  NOT NULL                             COMMENT '版本号，此版本号的规则由程序通过正则表达式进行处理',
   verMemo           text                                               COMMENT '版本描述，可以是一段html',
   bugMemo           text                                               COMMENT '版本bug修改情况描述，可以是一段html',
-  pubFlag           int           NOT NULL  DEFAULT 1                  COMMENT '发布状态：1=已发布；0=未发布；>0是未发布，但这里指已发布后又变为未发布状态。大于0为发布，并且表示发布次数。此状态用于今后扩展，目前只有1',
+  pubFlag           int           NOT NULL  DEFAULT 1                  COMMENT '发布状态：0未处理，1已发布，2已撤销，3已作废，-3已作废',
   apkFile           varchar(100)  NOT NULL                             COMMENT '版本发布物的存放地址,目前仅针对apk',
   apkSize           int unsigned  NOT NULL  DEFAULT 0                  COMMENT '版本发布物尺寸大小，是字节数,目前仅针对apk',
   isCurVer          int unsigned  NOT NULL  DEFAULT 0                  COMMENT '是否是当前版本，0不是，1是',
@@ -33,7 +33,7 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='P002版本记录';
 
 
 /**DataAnalysis**/
-/**== 二、用户数据 */
+/**== 二、用户行为数据 */
 /**DA001 用户搜索词统计[DA_USERSEARCHWORD]*/
 DROP TABLE IF EXISTS da_UserSearchWord;
 CREATE TABLE da_UserSearchWord (
@@ -54,16 +54,16 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='DA001用户搜索词统计';
 /**DA002 用户内容喜欢记录表[DA_USERFAVORITE]*/
 DROP TABLE IF EXISTS da_UserFavorite;
 CREATE TABLE da_UserFavorite (
-  id         varchar(32)   NOT NULL                             COMMENT '用户词Id',
-  ownerType  int unsigned  NOT NULL                             COMMENT '所有者类型',
-  ownerId    varchar(32)   NOT NULL                             COMMENT '所有者Id,可能是用户也可能是设备',
-  word       varchar(100)  NOT NULL                             COMMENT '搜索词',
-  wordLang   varchar(100)  NOT NULL                             COMMENT '搜索词语言类型，系统自动判断，可能是混合类型',
-  time1      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '本词本用户首次搜索的时间',
-  time2      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '本词本用户最后搜索的时间',
-  sumNum     int unsigned  NOT NULL                             COMMENT '搜索次数',
-  cTime      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
-  INDEX bizIdx (ownerType, ownerId, word) USING HASH,
+  id          varchar(32)   NOT NULL                                                         COMMENT '用户喜欢Id',
+  ownerType   int unsigned  NOT NULL                                                         COMMENT '所有者类型',
+  ownerId     varchar(32)   NOT NULL                                                         COMMENT '所有者Id',
+  assetType   varchar(200)  NOT NULL                                                         COMMENT '内容类型：1电台；2单体媒体资源；3专辑资源；4文本',
+  assetId     varchar(32)   NOT NULL                                                         COMMENT '内容Id',
+  cTime       timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP                              COMMENT '创建时间',
+  INDEX bizIdx (ownerType, ownerId, assetType, assetId) USING HASH,
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='DA002用户内容喜欢记录表';
+/**
+ * 说明：目前OwnerType只有100，没有其他值
+ */

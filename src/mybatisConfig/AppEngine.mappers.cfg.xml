@@ -12,6 +12,8 @@
     <!-- 版本管理 -->
     <typeAlias alias="PVersion"     type="com.woting.version.core.model.Version"/>
     <typeAlias alias="PVerConfig"   type="com.woting.version.core.model.VersionConfig"/>
+    <!-- 用户喜欢 -->
+    <typeAlias alias="DaUserFavorite"   type="com.woting.favorite.persis.po.UserFavoritePo"/>
   </typeAliases>
   <!-- SQL配置 -->
   <mappers>
@@ -22,5 +24,7 @@
     <mapper resource="com/woting/searchword/persis/sql/UserWord.mapper.xml"/>
     <!-- 版本管理 -->
     <mapper resource="com/woting/version/core/persis/sql/Version.mapper.xml"/>
+    <!-- 用户喜欢 -->
+    <mapper resource="com/woting/favorite/persis/sql/UserFavorite.mapper.xml"/>
   </mappers>
 </configuration>

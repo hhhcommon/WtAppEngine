@@ -70,7 +70,7 @@ public class FriendController {
 
 
             //2-获取搜索条件
-            String searchStr=m.get("SearchStr")+"";
+            String searchStr=(m.get("SearchStr")==null?null:m.get("SearchStr")+"");
             if (StringUtils.isNullOrEmptyOrSpace(searchStr)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "搜索条件不能为空");
@@ -138,7 +138,7 @@ public class FriendController {
             }
             if (map.get("ReturnType")!=null) return map;
             //1-获取被邀请人Id
-            String beInvitedUserId=m.get("BeInvitedUserId")+"";
+            String beInvitedUserId=(m.get("BeInvitedUserId")==null?null:m.get("BeInvitedUserId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(beInvitedUserId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "被邀请人Id为空");
@@ -152,7 +152,7 @@ public class FriendController {
                 }
             }
             //2-邀请信息
-            String inviteMsg=m.get("InviteMsg")+"";
+            String inviteMsg=(m.get("InviteMsg")==null?null:m.get("InviteMsg")+"");
             if (StringUtils.isNullOrEmptyOrSpace(inviteMsg)) inviteMsg=null;
 
             //自己邀请I级的判断
@@ -271,7 +271,7 @@ public class FriendController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-邀请人id
-            String inviteUserId=m.get("InviteUserId")+"";
+            String inviteUserId=(m.get("InviteUserId")==null?null:m.get("InviteUserId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(inviteUserId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "邀请人Id为空");
@@ -285,7 +285,7 @@ public class FriendController {
                 }
             }
             //3-获得处理类型
-            String dealType=""+m.get("DealType");
+            String dealType=(m.get("DealType")==null?null:m.get("DealType")+"");
             if (StringUtils.isNullOrEmptyOrSpace(dealType)) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "没有处理类型dealType，无法处理");
@@ -341,7 +341,7 @@ public class FriendController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-好友Id
-            String friendUserId=m.get("FriendUserId")+"";
+            String friendUserId=(m.get("FriendUserId")==null?null:m.get("FriendUserId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(friendUserId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "好友Id为空");
@@ -469,7 +469,7 @@ public class FriendController {
 
 
             //2-好友Id
-            String friendUserId=m.get("FriendUserId")+"";
+            String friendUserId=(m.get("FriendUserId")==null?null:m.get("FriendUserId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(friendUserId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "好友Id为空");
@@ -483,7 +483,7 @@ public class FriendController {
             if (map.get("ReturnType")!=null) return map;
 
             //获得别名和描述
-            String alias=m.get("FriendAliasName")+"";
+            String alias=(m.get("FriendAliasName")==null?null:m.get("FriendAliasName")+"");
             String aliasDescn=m.get("FriendAliasDescn")+"";
             if (StringUtils.isNullOrEmptyOrSpace(alias)&&StringUtils.isNullOrEmptyOrSpace(aliasDescn)) {
                 map.put("ReturnType", "1005");

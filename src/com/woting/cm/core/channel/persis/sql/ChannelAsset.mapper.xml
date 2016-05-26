@@ -94,6 +94,11 @@
     select <include refid="Base_Column_List"/>from wt_ChannelAsset where id=#{id,jdbcType=VARCHAR}
   </select>
 
+  <!-- 是否内容列表已发布 -->
+  <select id="isPubAssets" resultType="java.util.HashMap" parameterType="java.util.Map">
+     <if test="_parameter!=null">select * from wt_ChannelAsset where (${whereSql}) and flowFlag=2</if>
+  </select>
+
   <!-- 新增数据 -->
   <insert id="insert" parameterType="java.util.Map">
     insert into wt_ChannelAsset

@@ -82,7 +82,7 @@ public class GroupController {
                 return map;
             }
             //若是密码群，得到密码
-            String groupPwd=m.get("GroupPwd")+"";
+            String groupPwd=(m.get("GroupPwd")==null?null:m.get("GroupPwd")+"");
             if (groupType==2) {
                 if (StringUtils.isNullOrEmptyOrSpace(groupPwd)) {
                     map.put("ReturnType", "1004");
@@ -91,11 +91,11 @@ public class GroupController {
                 }
             }
             //是否需要用户组成员
-            boolean needMember=(m.get("NeedMember")+"").equals("1");
+            boolean needMember=(m.get("NeedMember")==null?false:(m.get("NeedMember")+"").equals("1"));
             String memNames="";
             List<UserPo> ml=null;
             if (needMember) {
-                String members=m.get("Members")+"";
+                String members=(m.get("Members")==null?null:m.get("Members")+"");
                 if (StringUtils.isNullOrEmptyOrSpace(members)) {
                     map.put("ReturnType", "1005");
                     map.put("Message", "无法得到组员信息");
@@ -154,9 +154,9 @@ public class GroupController {
                 if (groupType==2) groupName="新建密码群"+(needMember?memNames:newGroupNum);
             }
             //获得组描述
-            String groupDescn=m.get("GroupDescn")+"";
+            String groupDescn=(m.get("GroupDescn")==null?null:m.get("GroupDescn")+"");
             //获得组描述
-            String groupSignature=m.get("GroupSignature")+"";
+            String groupSignature=(m.get("GroupSignature")==null?null:m.get("GroupSignature")+"");
 
             //创建组
             if (ml==null) {
@@ -382,7 +382,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-得到用户组Id
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
@@ -453,7 +453,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             int isManager=0;//是否是管理员，=0不是
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
@@ -467,7 +467,7 @@ public class GroupController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            String beInvitedUserIds=m.get("BeInvitedUserIds")+"";
+            String beInvitedUserIds=(m.get("BeInvitedUserIds")==null?null:m.get("BeInvitedUserIds")+"");
             if (StringUtils.isNullOrEmptyOrSpace(beInvitedUserIds)) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "被邀请人Id为空");
@@ -479,7 +479,7 @@ public class GroupController {
                 return map;
             }
 
-            String inviteMsg=m.get("InviteMsg")+"";
+            String inviteMsg=(m.get("InviteMsg")==null?null:m.get("InviteMsg")+"");
             map.putAll(groupService.inviteGroup(userId, beInvitedUserIds, groupId, inviteMsg, isManager));
             return map;
         } catch(Exception e) {
@@ -604,7 +604,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-处理用户组Id
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
@@ -618,7 +618,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-邀请人id
-            String inviteUserId=m.get("InviteUserId")+"";
+            String inviteUserId=(m.get("InviteUserId")==null?null:m.get("InviteUserId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(inviteUserId)) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "邀请人Id为空");
@@ -626,7 +626,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //3-获得处理类型
-            String dealType=m.get("DealType")+"";
+            String dealType=(m.get("DealType")==null?null:m.get("DealType")+"");
             if (StringUtils.isNullOrEmptyOrSpace(dealType)) {
                 map.put("ReturnType", "1005");
                 map.put("Message", "没有处理类型dealType，无法处理");
@@ -634,7 +634,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //4-获得拒绝理由
-            String refuseMsg=m.get("RefuseMsg")+"";
+            String refuseMsg=(m.get("RefuseMsg")==null?null:m.get("RefuseMsg")+"");
             //4-邀请处理
             map.putAll(groupService.dealInvite(userId, inviteUserId, groupId, dealType.equals("2"), refuseMsg, 1));
             return map;
@@ -682,7 +682,7 @@ public class GroupController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             String adminId=null;
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
@@ -707,7 +707,7 @@ public class GroupController {
                 return map;
             }
 
-            String inviteMsg=m.get("ApplyMsg")+"";
+            String inviteMsg=(m.get("ApplyMsg")==null?null:m.get("ApplyMsg")+"");
             map.putAll(groupService.applyGroup(userId, groupId, adminId, inviteMsg));
             return map;
         } catch(Exception e) {
@@ -755,7 +755,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-处理用户组Id
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
@@ -921,7 +921,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-处理用户组Id
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
@@ -947,7 +947,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-申请人id
-            String applyUserId=m.get("ApplyUserId")+"";
+            String applyUserId=(m.get("ApplyUserId")==null?null:m.get("ApplyUserId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(applyUserId)) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "申请人Id为空");
@@ -955,7 +955,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //3-获得处理类型
-            String dealType=m.get("DealType")+"";
+            String dealType=(m.get("DealType")==null?null:m.get("DealType")+"");
             if (StringUtils.isNullOrEmptyOrSpace(dealType)) {
                 map.put("ReturnType", "1005");
                 map.put("Message", "没有处理类型dealType，无法处理");
@@ -963,7 +963,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //4-获得拒绝理由
-            String refuseMsg=m.get("RefuseMsg")+"";
+            String refuseMsg=(m.get("RefuseMsg")==null?null:m.get("RefuseMsg")+"");
             //4-邀请处理
             map.putAll(groupService.dealInvite(applyUserId, userId, groupId, dealType.equals("2"), refuseMsg, 2));
             return map;
@@ -1012,7 +1012,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-判断用户组进入是否符合业务逻辑
-            String groupNum=m.get("GroupNum")+"";
+            String groupNum=(m.get("GroupNum")==null?null:m.get("GroupNum")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupNum)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取用户组号码");
@@ -1030,7 +1030,7 @@ public class GroupController {
                     map.put("Message", "加入的组需要验证，不能直接加入");
                 }
                 if (gp.getGroupType()==2) {
-                    String groupPwd=m.get("GroupPwd")+"";
+                    String groupPwd=(m.get("GroupPwd")==null?null:m.get("GroupPwd")+"");
                     if (StringUtils.isNullOrEmptyOrSpace(groupPwd)) {
                         map.put("ReturnType", "1006");
                         map.put("Message", "加入密码组需要提供组密码");
@@ -1126,7 +1126,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-判断用户组进入是否符合业务逻辑
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取用户组号码");
@@ -1197,7 +1197,7 @@ public class GroupController {
 
             //1-处理用户组Id
             GroupPo gp=null;
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
@@ -1219,7 +1219,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-处理用户组Id
-            String userIds=m.get("UserIds")+"";
+            String userIds=(m.get("UserIds")==null?null:m.get("UserIds")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "无法获取被踢出用户Id");
@@ -1276,7 +1276,7 @@ public class GroupController {
 
             //1-处理用户组Id
             GroupPo gp=null;
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
@@ -1346,7 +1346,7 @@ public class GroupController {
 
             //1-处理用户组Id
             GroupPo gp=null;
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
@@ -1368,7 +1368,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-被移交用户Id
-            String toUserId=m.get("ToUserId")+"";
+            String toUserId=(m.get("ToUserId")==null?null:m.get("ToUserId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(toUserId)) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "无法获取被移交用户Id");
@@ -1423,7 +1423,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //获得查询串
-            String searchStr=m.get("SearchStr")+"";
+            String searchStr=(m.get("SearchStr")==null?null:m.get("SearchStr")+"");
             if (StringUtils.isNullOrEmptyOrSpace(searchStr)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法得到查询串");
@@ -1510,7 +1510,7 @@ public class GroupController {
             //获得用户组
             int isManager=0;//不是管理员
             GroupPo gp=null;
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法得到用户组Id");
@@ -1525,9 +1525,9 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //获得用户更新内容
-            String groupName=m.get("GroupName")+"";
-            String groupDescn=m.get("Descn")+"";
-            String groupSignature=m.get("GroupSignature")+"";
+            String groupName=(m.get("GroupName")==null?null:m.get("GroupName")+"");
+            String groupDescn=(m.get("Descn")==null?null:m.get("Descn")+"");
+            String groupSignature=(m.get("GroupSignature")==null?null:m.get("GroupSignature")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupName)&&StringUtils.isNullOrEmptyOrSpace(groupDescn)&&StringUtils.isNullOrEmptyOrSpace(groupSignature)) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "无法获得修改所需的新信息");
@@ -1587,7 +1587,7 @@ public class GroupController {
 
             //获得用户组
             GroupPo gp=null;
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法得到用户组Id");
@@ -1613,8 +1613,8 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-获取其他参数
-            String oldPwd=m.get("OldPassword")+"";
-            String newPwd=m.get("NewPassword")+"";
+            String oldPwd=(m.get("OldPassword")==null?null:m.get("OldPassword")+"");
+            String newPwd=(m.get("NewPassword")==null?null:m.get("NewPassword")+"");
             String errMsg="";
             if (StringUtils.isNullOrEmptyOrSpace(oldPwd)) errMsg+=",旧密码为空";
             if (StringUtils.isNullOrEmptyOrSpace(newPwd)) errMsg+=",新密码为空";
@@ -1681,7 +1681,7 @@ public class GroupController {
 
             //1-处理用户组Id
             GroupPo gp=null;
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
@@ -1778,7 +1778,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-处理用户组Id
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
@@ -1804,7 +1804,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-邀请人
-            String inviteUserId=m.get("InviteUserId")+"";
+            String inviteUserId=(m.get("InviteUserId")==null?null:m.get("InviteUserId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(inviteUserId)) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "邀请人Id无法获得");
@@ -1812,7 +1812,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //3-被邀请人
-            String beInvitedUserId=m.get("BeInvitedUserId")+"";
+            String beInvitedUserId=(m.get("BeInvitedUserId")==null?null:m.get("BeInvitedUserId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(beInvitedUserId)) {
                 map.put("ReturnType", "1005");
                 map.put("Message", "被邀请人Id无法获得");
@@ -1820,7 +1820,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //4-获得处理类型
-            String dealType=m.get("DealType")+"";
+            String dealType=(m.get("DealType")==null?null:m.get("DealType")+"");
             if (StringUtils.isNullOrEmptyOrSpace(dealType)) {
                 map.put("ReturnType", "1006");
                 map.put("Message", "没有处理类型dealType，无法处理");
@@ -1828,7 +1828,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //5-获得拒绝理由
-            String refuseMsg=m.get("RefuseMsg")+"";
+            String refuseMsg=(m.get("RefuseMsg")==null?null:m.get("RefuseMsg")+"");
 
             //6-处理
             map.putAll(groupService.dealCheck(inviteUserId, beInvitedUserId, groupId, dealType.equals("2"), refuseMsg));
@@ -1879,7 +1879,7 @@ public class GroupController {
 
             //获得用户组
             GroupPo gp=null;
-            String groupId=m.get("GroupId")+"";
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法得到用户组Id");
@@ -1893,14 +1893,14 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //获得所修改的用户Id
-            String updateUserId=m.get("UpdateUserId")+"";
+            String updateUserId=(m.get("UpdateUserId")==null?null:m.get("UpdateUserId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(updateUserId)) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "无法获得被修改用户Id");
                 return map;
             }
-            String userAliasName=m.get("UserAliasName")+"";
-            String userAliasDescn=m.get("UserAliasDescn")+"";
+            String userAliasName=(m.get("UserAliasName")==null?null:m.get("UserAliasName")+"");
+            String userAliasDescn=(m.get("UserAliasDescn")==null?null:m.get("UserAliasDescn")+"");
             if (StringUtils.isNullOrEmptyOrSpace(userAliasName)&&StringUtils.isNullOrEmptyOrSpace(userAliasName)) {
                 map.put("ReturnType", "1005");
                 map.put("Message", "无法获得修改所需的新信息");

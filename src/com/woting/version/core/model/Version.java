@@ -133,17 +133,17 @@ public class Version extends BaseObject {
      * 转换为为显示所用的Map
      * @return
      */
-    public Map<String, Object> toViewMap4View() {
-        Map<String, Object> retM=new HashMap<String, Object>();
+    public Map<String, String> toViewMap4View() {
+        Map<String, String> retM=new HashMap<String, String>();
         if (StringUtils.isNullOrEmptyOrSpace(this.getAppName())) return null;
         if (StringUtils.isNullOrEmptyOrSpace(this.getVersion())) return null;
 
-        retM.put("VerId", this.getId());
+        retM.put("VerId", this.getId()+"");
         retM.put("AppName", this.getAppName());
         retM.put("Version", this.getVersion());
         if (!StringUtils.isNullOrEmptyOrSpace(this.getVerMemo())) retM.put("Descn", this.getVerMemo());
         if (!StringUtils.isNullOrEmptyOrSpace(this.getBugMemo())) retM.put("BugPatch", this.getBugMemo());
-        retM.put("PubFlag", this.getPubFlag());
+        retM.put("PubFlag", this.getPubFlag()+"");
         retM.put("StoreFile", this.getApkFile());
         retM.put("IsCur", ""+(this.getIsCurVer()==1));//是否是当前版本
         String _s=(new DecimalFormat("0.00")).format(((float)this.apkSize)/(2<<19));
