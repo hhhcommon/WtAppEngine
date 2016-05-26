@@ -105,7 +105,7 @@ public class ChannelService {
         param.put("assetType", assetType);
         param.put("assetId", assetId);
         param.put("flowFlag", "2");
-        return (channelDao.getCount(param)>0);
+        return (channelAssetDao.getCount(param)>0);
     }
 
     /**
@@ -120,7 +120,7 @@ public class ChannelService {
         for (Map<String, Object> asset: assetList) {
             sql+="or (assetType='"+asset.get("assetType")+"' and assetId='"+asset.get("assetId")+"')";
         }
-        sql=sql.substring(3);
+        if (sql.length()>0) sql=sql.substring(3);
         Map<String, Object> param=new HashMap<String, Object>();
         param.put("whereSql", sql);
         return channelDao.queryForListAutoTranform("pubChannels", param);

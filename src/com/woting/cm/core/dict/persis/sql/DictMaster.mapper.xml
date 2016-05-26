@@ -44,7 +44,7 @@
     </where>
   </sql>
   <!-- 获得记录条数-->
-  <select id="count" parameterType="java.util.Map" resultType="java.lang.Integer">
+  <select id="getCount" parameterType="java.util.Map" resultType="java.lang.Integer">
     select count(*) from plat_DictM <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </select>
 
