@@ -109,11 +109,11 @@ public class ChannelService {
     }
 
     /**
-     * 判断一个列表中的内容是否被发布了
-     * @param assetList 被判断的资源列表，列表中是Map，Map中包括两个字段 assetType,assetId
+     * 获得某内容列表中的内容，所对应的发布栏目信息（这里是正式发布的信息）
+     * @param assetList 内容列表，列表中是Map，Map中包括两个字段 assetType,assetId
      * @return 该资源是否发布了，返回值包括三个字段assetType,assetId,isPub，其中isPub=1是已发布，否则是未发布
      */
-    public List<Map<String, Object>> isPubList(List<Map<String, Object>> assetList) {
+    public List<Map<String, Object>> getPubChannelList(List<Map<String, Object>> assetList) {
         if (assetList==null||assetList.isEmpty()) return null;
         //拼Sql
         String sql="";
@@ -123,6 +123,6 @@ public class ChannelService {
         sql=sql.substring(3);
         Map<String, Object> param=new HashMap<String, Object>();
         param.put("whereSql", sql);
-        return channelDao.queryForListAutoTranform("isPubAssets", param);
+        return channelDao.queryForListAutoTranform("pubChannels", param);
     }
 }

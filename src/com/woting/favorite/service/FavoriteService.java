@@ -13,18 +13,15 @@ import org.springframework.stereotype.Service;
 
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.Page;
-import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.content.service.ContentService;
+import com.woting.appengine.content.ContentUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.favorite.persis.po.UserFavoritePo;
 import com.woting.passport.UGA.persistence.pojo.GroupPo;
-import com.woting.searchword.mem.SearchWordMemory;
 
 @Lazy(true)
 @Service
 public class FavoriteService {
-    SearchWordMemory swm=SearchWordMemory.getInstance();
     @Resource
     private ChannelService channelService;
     @Resource(name="defaultDAO")
@@ -51,10 +48,10 @@ public class FavoriteService {
         String CType=mediaType.toUpperCase();
         if (!CType.equals("RADIO")&&!CType.equals("AUDIO")&&!CType.equals("SEQU")&&!CType.equals("TEXT")) return -100;
 
-        String assetType=convertAssetType(mediaType);
+        String assetType=ContentUtils.getResTableName(mediaType);
         Map<String, Object> param=new HashMap<String, Object>();
-        param.put("assetType", assetType);
-        param.put("assetId", contentId);
+        param.put("resTableName", assetType);
+        param.put("resId", contentId);
         if (mk.isUser()) {
             param.put("ownerType", "201");
             param.put("ownerId", mk.getUserId());
@@ -100,7 +97,7 @@ public class FavoriteService {
         String[] types=mediaType.split(",");
         for (int i=0; i<types.length; i++) {
             if (types[i].equals("RADIO")||types[i].equals("AUDIO")||!types[i].equals("SEQU")||!types[i].equals("TEXT")) {
-                typeSql+="or assetType='"+convertAssetType(types[i])+"'";
+                typeSql+="or resTableName='"+ContentUtils.getResTableName(types[i])+"'";
             }
         }
         if (typeSql.length()>0) typeSql=typeSql.substring(3);
@@ -116,22 +113,22 @@ public class FavoriteService {
         List<Map<String, Object>> fList=(List<Map<String, Object>>)resultPage.getResult();
         String bcIds="", maIds="", smaIds="";
         for (Map<String, Object> oneCntt: fList) {
-            if (oneCntt.get("assetType")!=null&&oneCntt.get("assetId")!=null) {
-                if ((oneCntt.get("assetType")+"").equals("wt_Broadcast")) bcIds+=","+oneCntt.get("assetId");
+            if (oneCntt.get("resTableName")!=null&&oneCntt.get("resId")!=null) {
+                if ((oneCntt.get("assetType")+"").equals("wt_Broadcast")) bcIds+=",'"+oneCntt.get("assetId")+"'";
                 else
-                if ((oneCntt.get("assetType")+"").equals("wt_MediaAsset")) maIds+=","+oneCntt.get("assetId");
+                if ((oneCntt.get("assetType")+"").equals("wt_MediaAsset")) maIds+=",'"+oneCntt.get("assetId")+"'";
                 else
-                if ((oneCntt.get("assetType")+"").equals("wt_SeqMediaAsset")) smaIds+=","+oneCntt.get("assetId");
+                if ((oneCntt.get("assetType")+"").equals("wt_SeqMediaAsset")) smaIds+=",'"+oneCntt.get("assetId")+"'";
             }
         }
         if (bcIds.length()>0) bcIds=bcIds.substring(1);
         if (maIds.length()>0) maIds=maIds.substring(1);
         if (smaIds.length()>0) smaIds=smaIds.substring(1);
 
+        Map<String, Object> reParam=new HashMap<String, Object>();
         List<Map<String, Object>> personList=null;//人员
         List<Map<String, Object>> cataList=null;//分类
         if ((bcIds+maIds+smaIds).length()>0) {
-            Map<String, Object> reParam=new HashMap<String, Object>();
             if (bcIds.length()>0) reParam.put("bcIds", bcIds);
             if (maIds.length()>0) reParam.put("maIds", maIds);
             if (smaIds.length()>0) reParam.put("smaIds", smaIds);
@@ -140,19 +137,65 @@ public class FavoriteService {
             //重构分类
             cataList=groupDao.queryForListAutoTranform("refCataById", reParam);
         }
+        List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(fList);
 
-        List<Map<String, Object>> isPubList=channelService.isPubList(fList);
-        List<Map<String, Object>> favoriteList=new ArrayList<Map<String, Object>>();
-        for (Map<String, Object> oneCntt: fList) {
-            if ((oneCntt.get("assetType")+"").equals("wt_Broadcast")) {
-                ContentService.convert2MediaMap_1(oneCntt, cataList, personList);
+        List<Map<String, Object>> favoriteList=new ArrayList<Map<String, Object>>(fList.size());
+        Map<String, Object> oneContent;
+
+        List<Map<String, Object>> tempList;
+        if (bcIds.length()>0) {
+            reParam.clear();
+            reParam.put("inIds", bcIds);
+            tempList=groupDao.queryForListAutoTranform("getBcList", reParam);
+            if (tempList!=null&&!tempList.isEmpty()) {
+                for (Map<String, Object> oneCntt: tempList) {
+                    oneContent=ContentUtils.convert2Bc(oneCntt, personList, cataList, pubChannelList, favoriteList);
+                    add2FavoretList(favoriteList, oneContent, fList);
+                }
             }
         }
-
-        
+        if (maIds.length()>0) {
+            reParam.clear();
+            reParam.put("inIds", maIds);
+            tempList=groupDao.queryForListAutoTranform("getMaList", reParam);
+            if (tempList!=null&&!tempList.isEmpty()) {
+                for (Map<String, Object> oneCntt: tempList) {
+                    oneContent=ContentUtils.convert2Ma(oneCntt, personList, cataList, pubChannelList, favoriteList);
+                    add2FavoretList(favoriteList, oneContent, fList);
+                }
+            }
+        }
+        if (smaIds.length()>0) {
+            reParam.clear();
+            reParam.put("inIds", smaIds);
+            tempList=groupDao.queryForListAutoTranform("getSeqMaList", reParam);
+            if (tempList!=null&&!tempList.isEmpty()) {
+                for (Map<String, Object> oneCntt: tempList) {
+                    oneContent=ContentUtils.convert2Sma(oneCntt, personList, cataList, pubChannelList, favoriteList);
+                    add2FavoretList(favoriteList, oneContent, fList);
+                }
+            }
+        }
+        for (int i=favoriteList.size()-1; i>=0; i--) {
+            if (favoriteList.get(i)==null) favoriteList.remove(i);
+        }
         param.put("FavoriteList", favoriteList);
         
         return param;
+    }
+    private void add2FavoretList(List<Map<String, Object>> favoriteList, Map<String, Object> oneContent, List<Map<String, Object>> fList) {
+        for (int i=0; i<fList.size(); i++) {
+            if (equalContent(oneContent, fList.get(i))) {
+                favoriteList.add(i, oneContent);
+                break;
+            }
+        }
+        
+    }
+    private boolean equalContent(Map<String, Object> oneContent, Map<String, Object> oneFavorite) {
+        if (!(oneContent.get("ContentId")+"").equals((oneFavorite.get("resId")+""))) return false;
+        if (!(ContentUtils.getResTableName(oneContent.get("MediaType")+"")).equals((oneFavorite.get("resTableName")+""))) return false;
+        return true;
     }
 
     /**
@@ -168,9 +211,9 @@ public class FavoriteService {
         param.clear();
         if (distriuteData!=null&&distriuteData.size()>0) {
             for (Map<String, Object> m: distriuteData) {
-                String assetType=m.get("assetType")+"";
+                String assetType=m.get("resTableName")+"";
                 int mediaCount=Integer.parseInt(m.get("typeCount")+"");
-                param.put(convertMediaType(assetType), mediaCount);
+                param.put(ContentUtils.getMediaType(assetType), mediaCount);
             }
         }
         return param;
@@ -198,8 +241,8 @@ public class FavoriteService {
                 else {//删除
                     int delCount=0;
                     Map<String, Object> paraDel=new HashMap<String, Object>();
-                    paraDel.put("assetType", convertAssetType(CType));
-                    paraDel.put("assetId", cInfo[1]);
+                    paraDel.put("resTableName", ContentUtils.getResTableName(CType));
+                    paraDel.put("resId", cInfo[1]);
                     paraDel.put("ownerType", "202");
                     paraDel.put("ownerId", mk.getMobileId());
                     delCount+=userFavoriteDao.delete(paraDel);
@@ -214,23 +257,5 @@ public class FavoriteService {
             ret.add(oneResult);
         }
         return ret;
-    }
-    private String convertAssetType(String mediaType) {
-        if (mediaType.equals("RADIO")) return "wt_Broadcast";
-        else
-        if (mediaType.equals("AUDIO")) return "wt_MediaAsset";
-        else
-        if (mediaType.equals("SEQU")) return "wt_SeqMediaAsset";
-        else
-        return "wt_Document";
-    }
-    private String convertMediaType(String assetType) {
-        if (assetType.equals("wt_Broadcast")) return "RADIO";
-        else
-        if (assetType.equals("wt_MediaAsset")) return "AUDIO";
-        else
-        if (assetType.equals("wt_SeqMediaAsset")) return "SEQU";
-        else
-        return "TEXT";
     }
 }

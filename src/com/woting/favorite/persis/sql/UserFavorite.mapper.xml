@@ -7,17 +7,17 @@
 <mapper namespace="DA_USERFAVORITE">
   <!-- 对象定义:用户意见 -->
   <resultMap id="favoriteMap" type="DaUserFavorite">
-    <id      column="id"          property="id"          jdbcType="VARCHAR"/>
-    <result  column="ownerType"   property="ownerType"   jdbcType="INTEGER"/>
-    <result  column="ownerId"     property="ownerId"     jdbcType="VARCHAR"/>
-    <result  column="assetType"   property="assetType"   jdbcType="VARCHAR"/>
-    <result  column="assetId"     property="assetId"     jdbcType="VARCHAR"/>
-    <result  column="cTime"       property="CTime"       jdbcType="TIMESTAMP"/>
+    <id      column="id"            property="id"            jdbcType="VARCHAR"/>
+    <result  column="ownerType"     property="ownerType"     jdbcType="INTEGER"/>
+    <result  column="ownerId"       property="ownerId"       jdbcType="VARCHAR"/>
+    <result  column="resTableName"  property="resTableName"  jdbcType="VARCHAR"/>
+    <result  column="resId"         property="resId"         jdbcType="VARCHAR"/>
+    <result  column="cTime"         property="CTime"         jdbcType="TIMESTAMP"/>
   </resultMap>
 
   <!-- 所有列 -->
   <sql id="Base_Column_List">
-    id, ownerType, ownerId, assetType, assetId, cTime
+    id, ownerType, ownerId, resTableName, resId, cTime
   </sql>
 
   <!-- 条件子句 -->
@@ -27,8 +27,8 @@
         <if test="id!=null"> and id=#{id,jdbcType=VARCHAR}</if>
         <if test="ownerType!=null and ownerType!=0"> and ownerType=#{ownerType,jdbcType=INTEGER}</if>
         <if test="ownerId!=null"> and ownerId=#{ownerId,jdbcType=VARCHAR}</if>
-        <if test="assetType!=null"> and assetType=#{assetType,jdbcType=VARCHAR}</if>
-        <if test="assetId!=null"> and assetId=#{assetId,jdbcType=VARCHAR}</if>
+        <if test="resTableName!=null"> and resTableName=#{resTableName,jdbcType=VARCHAR}</if>
+        <if test="resId!=null"> and resId=#{resId,jdbcType=VARCHAR}</if>
         <if test="CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
       </trim>
     </where>
@@ -53,9 +53,9 @@
 
   <!-- 得到内容分布 -->
   <select id="getDistriuteData" resultType="java.util.HashMap" parameterType="java.util.Map">
-     select assetType, count(assetId) from da_UserFavorite
+     select resTableName, count(resId) from da_UserFavorite
      where (ownerType='202' and ownerId=#{mobileId,jdbcType=TIMESTAMP}) <if test="userId!=null"> or (ownerType='201' and ownerId=#{userId,jdbcType=TIMESTAMP})</if>
-     group by assetType
+     group by resTableName
   </select>
 
   <!-- 新增数据 -->
@@ -65,15 +65,15 @@
       <if test="id!=null">id,</if>
       <if test="ownerType!=null and ownerType!=0">ownerType,</if>
       <if test="ownerId!=null">ownerId,</if>
-      <if test="assetType!=null">assetType,</if>
-      <if test="assetId!=null">assetId,</if>
+      <if test="resTableName!=null">resTableName,</if>
+      <if test="resId!=null">resId,</if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
       <if test="ownerType!=null and ownerType!=0">#{ownerType,jdbcType=INTEGER},</if>
       <if test="ownerId!=null">#{ownerId,jdbcType=VARCHAR},</if>
-      <if test="assetType!=null">#{assetType,jdbcType=VARCHAR},</if>
-      <if test="assetId!=null">#{assetId,jdbcType=VARCHAR},</if>
+      <if test="resTableName!=null">#{resTableName,jdbcType=VARCHAR},</if>
+      <if test="resId!=null">#{resId,jdbcType=VARCHAR},</if>
     </trim>
   </insert>
 

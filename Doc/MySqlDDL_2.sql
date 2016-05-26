@@ -51,16 +51,16 @@ CREATE TABLE da_UserSearchWord (
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='DA001用户搜索词统计';
 
-/**DA002 用户内容喜欢记录表[DA_USERFAVORITE]*/
+/**DA002 用户内容喜欢记录表[DA_USERFAVORITE]*/assetType
 DROP TABLE IF EXISTS da_UserFavorite;
 CREATE TABLE da_UserFavorite (
-  id          varchar(32)   NOT NULL                                                         COMMENT '用户喜欢Id',
-  ownerType   int unsigned  NOT NULL                                                         COMMENT '所有者类型',
-  ownerId     varchar(32)   NOT NULL                                                         COMMENT '所有者Id',
-  assetType   varchar(200)  NOT NULL                                                         COMMENT '内容类型：1电台；2单体媒体资源；3专辑资源；4文本',
-  assetId     varchar(32)   NOT NULL                                                         COMMENT '内容Id',
-  cTime       timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP                              COMMENT '创建时间',
-  INDEX bizIdx (ownerType, ownerId, assetType, assetId) USING HASH,
+  id            varchar(32)   NOT NULL                             COMMENT '用户喜欢Id',
+  ownerType     int unsigned  NOT NULL                             COMMENT '所有者类型',
+  ownerId       varchar(32)   NOT NULL                             COMMENT '所有者Id',
+  resTableName  varchar(200)  NOT NULL                             COMMENT '资源类型Id：1电台；2单体媒体资源；3专辑资源，4栏目',
+  resId         varchar(32)   NOT NULL                             COMMENT '资源Id',
+  cTime         timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  INDEX bizIdx (ownerType, ownerId, resTableName, resId) USING HASH,
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='DA002用户内容喜欢记录表';
