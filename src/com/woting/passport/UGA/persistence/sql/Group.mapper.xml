@@ -235,6 +235,11 @@
     where c.id in (${inIds})
     </if>
   </select>
+  <select id="getBcList" resultType="java.util.HashMap" parameterType="java.util.Map">
+    select c.*, d.bcSource, d.flowURI from wt_Broadcast c
+    left join wt_BCLiveFlow d on c.id=d.bcId and d.isMain=1
+    where c.id in (${inIds})
+  </select>
   <select id="searchPerson" resultType="java.util.HashMap" parameterType="java.util.Map">
     select * from wt_Person_Ref a, wt_Person b
     where a.personId=b.id and (
@@ -243,6 +248,7 @@
     </foreach>
     )
   </select>
+
   <select id="searchMa" resultType="java.util.HashMap" parameterType="java.util.Map">
     select a.*, b.smType, b.maSource, b.playURI from wt_MediaAsset a
     left join wt_MaSource b on a.id=b.maId and b.isMain=1
@@ -256,6 +262,11 @@
     left join wt_MaSource d on c.id=d.maId and d.isMain=1
     where c.id in (${inIds})
     </if>
+  </select>
+  <select id="getMaList" resultType="java.util.HashMap" parameterType="java.util.Map">
+    select c.*, d.smType, d.maSource, d.playURI from wt_MediaAsset c
+    left join wt_MaSource d on c.id=d.maId and d.isMain=1
+    where c.id in (${inIds})
   </select>
 
   <select id="searchSeqMa" resultType="java.util.HashMap" parameterType="java.util.Map">
@@ -273,6 +284,12 @@
     where c.id in (${inIds})
     </if>
   </select>
+  <select id="getSeqMaList" resultType="java.util.HashMap" parameterType="java.util.Map">
+    select c.*, case when d.count is null then 0 else d.count end as count from wt_SeqMediaAsset c
+    left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) d on c.id=d.sid
+    where c.id in (${inIds})
+  </select>
+
   <!-- 重构 -->
   <select id="refPersonById" resultType="java.util.HashMap" parameterType="java.util.Map">
     select * from wt_Person_Ref a, wt_Person b
