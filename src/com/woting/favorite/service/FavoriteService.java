@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.Page;
+import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.appengine.content.ContentUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.cm.core.channel.service.ChannelService;
@@ -52,32 +53,35 @@ public class FavoriteService {
         Map<String, Object> param=new HashMap<String, Object>();
         param.put("resTableName", assetType);
         param.put("resId", contentId);
-        if (mk.isUser()) {
-            param.put("ownerType", "201");
-            param.put("ownerId", mk.getUserId());
-        } else {
-            param.put("ownerType", "202");
-            param.put("ownerId", mk.getMobileId());
-        }
-        int favoretCount=userFavoriteDao.getCount(param);
 
-        
         if (flag==1) {
             if (!channelService.isPub(assetType, contentId)) return 0;
-            if (favoretCount>0) return 2;
-            userFavoriteDao.insert(param);//加入喜欢队列
-        } else {
-            if (favoretCount==0) return -1;
-            //删除-个人
-            userFavoriteDao.delete(param);
-            //删除-设备
             if (mk.isUser()) {
+                param.put("ownerType", "201");
+                param.put("ownerId", mk.getUserId());
+            } else {
                 param.put("ownerType", "202");
                 param.put("ownerId", mk.getMobileId());
             }
-            userFavoriteDao.delete(param);
+            if (userFavoriteDao.getCount(param)>0) return 2;
+            param.put("id", SequenceUUID.getUUIDSubSegment(4));
+            userFavoriteDao.insert(param);//加入喜欢队列
+        } else {
+            param.put("mobileId", mk.getMobileId());
+            if (mk.isUser()) param.put("userId", mk.getUserId());
+            if (userFavoriteDao.getCount("getCount4Favorite", param)==0) return -1;
+            //设备删除
+            param.put("ownerType", "202");
+            param.put("ownerId", mk.getMobileId());
+            userFavoriteDao.delete("deleteByEntity",param);
+            //用户删除
+            if (mk.isUser()) {
+                param.put("ownerType", "201");
+                param.put("ownerId", mk.getUserId());
+                userFavoriteDao.delete("deleteByEntity",param);
+            }
         }
-        return 0;
+        return 1;
     }
 
     /**
@@ -103,22 +107,23 @@ public class FavoriteService {
         if (typeSql.length()>0) typeSql=typeSql.substring(3);
         param.put("mediaFilterSql", typeSql);
 
-        Page<Map<String, Object>> resultPage=userFavoriteDao.pageQueryAutoTranform(null, "getFavoriteAssets", param, page, pageSize);
+        Page<UserFavoritePo> resultPage=userFavoriteDao.pageQueryAutoTranform(null, "getFavoriteAssets", param, page, pageSize);
         if (resultPage==null||resultPage.getDataCount()==0||resultPage.getResult()==null||resultPage.getResult().isEmpty()) return null;
         param.clear();
         param.put("AllSize", resultPage.getDataCount());
         param.put("CurPage", resultPage.getPageIndex());
         param.put("PageSize", resultPage.getPageSize());
 
-        List<Map<String, Object>> fList=(List<Map<String, Object>>)resultPage.getResult();
+        List<UserFavoritePo> fList=(List<UserFavoritePo>)resultPage.getResult();
+        
         String bcIds="", maIds="", smaIds="";
-        for (Map<String, Object> oneCntt: fList) {
-            if (oneCntt.get("resTableName")!=null&&oneCntt.get("resId")!=null) {
-                if ((oneCntt.get("assetType")+"").equals("wt_Broadcast")) bcIds+=",'"+oneCntt.get("assetId")+"'";
+        for (UserFavoritePo oneUf: fList) {
+            if (oneUf.getResTableName()!=null&&oneUf.getResId()!=null) {
+                if (oneUf.getResTableName().equals("wt_Broadcast")) bcIds+=",'"+oneUf.getResId()+"'";
                 else
-                if ((oneCntt.get("assetType")+"").equals("wt_MediaAsset")) maIds+=",'"+oneCntt.get("assetId")+"'";
+                if (oneUf.getResTableName().equals("wt_MediaAsset")) maIds+=",'"+oneUf.getResId()+"'";
                 else
-                if ((oneCntt.get("assetType")+"").equals("wt_SeqMediaAsset")) smaIds+=",'"+oneCntt.get("assetId")+"'";
+                if (oneUf.getResTableName().equals("wt_SeqMediaAsset")) smaIds+=",'"+oneUf.getResId()+"'";
             }
         }
         if (bcIds.length()>0) bcIds=bcIds.substring(1);
@@ -150,7 +155,7 @@ public class FavoriteService {
             tempList=groupDao.queryForListAutoTranform("getBcList", reParam);
             if (tempList!=null&&!tempList.isEmpty()) {
                 for (Map<String, Object> oneCntt: tempList) {
-                    oneContent=ContentUtils.convert2Bc(oneCntt, personList, cataList, pubChannelList, favoriteList);
+                    oneContent=ContentUtils.convert2Bc(oneCntt, personList, cataList, pubChannelList, fList);
                     add2FavoretList(favoriteList, oneContent, fList);
                 }
             }
@@ -161,7 +166,7 @@ public class FavoriteService {
             tempList=groupDao.queryForListAutoTranform("getMaList", reParam);
             if (tempList!=null&&!tempList.isEmpty()) {
                 for (Map<String, Object> oneCntt: tempList) {
-                    oneContent=ContentUtils.convert2Ma(oneCntt, personList, cataList, pubChannelList, favoriteList);
+                    oneContent=ContentUtils.convert2Ma(oneCntt, personList, cataList, pubChannelList, fList);
                     add2FavoretList(favoriteList, oneContent, fList);
                 }
             }
@@ -172,7 +177,7 @@ public class FavoriteService {
             tempList=groupDao.queryForListAutoTranform("getSeqMaList", reParam);
             if (tempList!=null&&!tempList.isEmpty()) {
                 for (Map<String, Object> oneCntt: tempList) {
-                    oneContent=ContentUtils.convert2Sma(oneCntt, personList, cataList, pubChannelList, favoriteList);
+                    oneContent=ContentUtils.convert2Sma(oneCntt, personList, cataList, pubChannelList, fList);
                     add2FavoretList(favoriteList, oneContent, fList);
                 }
             }
@@ -184,7 +189,7 @@ public class FavoriteService {
         
         return param;
     }
-    private void add2FavoretList(List<Map<String, Object>> favoriteList, Map<String, Object> oneContent, List<Map<String, Object>> fList) {
+    private void add2FavoretList(List<Map<String, Object>> favoriteList, Map<String, Object> oneContent, List<UserFavoritePo> fList) {
         for (int i=0; i<fList.size(); i++) {
             if (equalContent(oneContent, fList.get(i))) {
                 favoriteList.add(i, oneContent);
@@ -193,9 +198,9 @@ public class FavoriteService {
         }
         
     }
-    private boolean equalContent(Map<String, Object> oneContent, Map<String, Object> oneFavorite) {
-        if (!(oneContent.get("ContentId")+"").equals((oneFavorite.get("resId")+""))) return false;
-        if (!(ContentUtils.getResTableName(oneContent.get("MediaType")+"")).equals((oneFavorite.get("resTableName")+""))) return false;
+    private boolean equalContent(Map<String, Object> oneContent, UserFavoritePo oneFavorite) {
+        if (!(oneContent.get("ContentId")+"").equals(oneFavorite.getResId())) return false;
+        if (!(ContentUtils.getResTableName(oneContent.get("MediaType")+"")).equals(oneFavorite.getResTableName())) return false;
         return true;
     }
 
@@ -240,19 +245,18 @@ public class FavoriteService {
                 String CType=cInfo[0].toUpperCase();
                 if (!CType.equals("RADIO")&&!CType.equals("AUDIO")&&!CType.equals("SEQU")&&!CType.equals("TEXT")) oneResult.put("Result", "-1");
                 else {//删除
-                    int delCount=0;
                     Map<String, Object> paraDel=new HashMap<String, Object>();
                     paraDel.put("resTableName", ContentUtils.getResTableName(CType));
                     paraDel.put("resId", cInfo[1]);
                     paraDel.put("ownerType", "202");
                     paraDel.put("ownerId", mk.getMobileId());
-                    delCount+=userFavoriteDao.delete(paraDel);
+                    userFavoriteDao.delete("deleteByEntity",paraDel);
                     if (mk.isUser()) {
                         paraDel.put("ownerType", "201");
                         paraDel.put("ownerId", mk.getUserId());
-                        delCount+=userFavoriteDao.delete(paraDel);
+                        userFavoriteDao.delete("deleteByEntity",paraDel);
                     }
-                    oneResult.put("Result", delCount+"");
+                    oneResult.put("Result", "1");
                 }
             }
             ret.add(oneResult);
