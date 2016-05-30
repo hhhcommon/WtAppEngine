@@ -35,8 +35,12 @@
   </sql>
 
   <!-- 获得记录条数-->
-  <select id="count" parameterType="java.util.Map" resultType="java.lang.Integer">
+  <select id="getCount" parameterType="java.util.Map" resultType="java.lang.Integer">
     select count(*) from da_UserFavorite <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </select>
+  <select id="getCount4Favorite" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select count(*) from da_UserFavorite <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+    and ((ownerType='202' and ownerId=#{mobileId,jdbcType=TIMESTAMP}) <if test="userId!=null"> or (ownerType='201' and ownerId=#{userId,jdbcType=TIMESTAMP})</if>)
   </select>
 
   <!-- 获得列表 -->
@@ -44,6 +48,12 @@
     select <include refid="Base_Column_List"/> from da_UserFavorite
     <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
     <if test="sortByClause!=null">order by ${sortByClause}</if>
+  </select>
+  <select id="getFavoriteAssets" parameterType="java.util.Map" resultMap="favoriteMap">
+    select <include refid="Base_Column_List"/> from da_UserFavorite
+    where ((ownerType='202' and ownerId=#{mobileId,jdbcType=TIMESTAMP}) <if test="userId!=null"> or (ownerType='201' and ownerId=#{userId,jdbcType=TIMESTAMP})</if>)
+    <if test="mediaFilterSql!=null"> and (${mediaFilterSql})</if>
+    order by CTime desc
   </select>
 
   <!-- 获得一条数据 -->
@@ -53,9 +63,9 @@
 
   <!-- 得到内容分布 -->
   <select id="getDistriuteData" resultType="java.util.HashMap" parameterType="java.util.Map">
-     select resTableName, count(resId) from da_UserFavorite
-     where (ownerType='202' and ownerId=#{mobileId,jdbcType=TIMESTAMP}) <if test="userId!=null"> or (ownerType='201' and ownerId=#{userId,jdbcType=TIMESTAMP})</if>
-     group by resTableName
+    select resTableName, count(resId) as typeCount from da_UserFavorite
+    where (ownerType='202' and ownerId=#{mobileId,jdbcType=TIMESTAMP}) <if test="userId!=null"> or (ownerType='201' and ownerId=#{userId,jdbcType=TIMESTAMP})</if>
+    group by resTableName
   </select>
 
   <!-- 新增数据 -->

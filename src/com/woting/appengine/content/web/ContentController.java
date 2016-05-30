@@ -311,8 +311,8 @@ public class ContentController {
             MobileKey mk=MobileUtils.getMobileKey(m);
             //1-得到内容类别
             String mediaType=(m.get("MediaType")==null?null:m.get("MediaType")+"");
-            //2-得到每页记录数
-            int pageSize=-1;
+            //2-得到每页记录数，默认每页10条记录
+            int pageSize=10;
             try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
             //3-得到当前页数
             int page=1;

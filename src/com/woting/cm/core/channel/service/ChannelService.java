@@ -21,6 +21,7 @@ import com.woting.cm.core.channel.persis.po.ChannelAssetPo;
 import com.woting.cm.core.channel.persis.po.ChannelPo;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.exceptionC.Wtcm1000CException;
+import com.woting.favorite.persis.po.UserFavoritePo;
 
 @Service
 public class ChannelService {
@@ -105,7 +106,7 @@ public class ChannelService {
         param.put("assetType", assetType);
         param.put("assetId", assetId);
         param.put("flowFlag", "2");
-        return (channelDao.getCount(param)>0);
+        return (channelAssetDao.getCount(param)>0);
     }
 
     /**
@@ -113,16 +114,16 @@ public class ChannelService {
      * @param assetList 内容列表，列表中是Map，Map中包括两个字段 assetType,assetId
      * @return 该资源是否发布了，返回值包括三个字段assetType,assetId,isPub，其中isPub=1是已发布，否则是未发布
      */
-    public List<Map<String, Object>> getPubChannelList(List<Map<String, Object>> assetList) {
+    public List<Map<String, Object>> getPubChannelList(List<UserFavoritePo> assetList) {
         if (assetList==null||assetList.isEmpty()) return null;
         //拼Sql
         String sql="";
-        for (Map<String, Object> asset: assetList) {
-            sql+="or (assetType='"+asset.get("assetType")+"' and assetId='"+asset.get("assetId")+"')";
+        for (UserFavoritePo asset: assetList) {
+            sql+="or (assetType='"+asset.getResTableName()+"' and assetId='"+asset.getResId()+"')";
         }
-        sql=sql.substring(3);
+        if (sql.length()>0) sql=sql.substring(3);
         Map<String, Object> param=new HashMap<String, Object>();
         param.put("whereSql", sql);
-        return channelDao.queryForListAutoTranform("pubChannels", param);
+        return channelAssetDao.queryForListAutoTranform("pubChannels", param);
     }
 }

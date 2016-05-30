@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.woting.appengine.content.service.ContentService;
+import com.woting.favorite.persis.po.UserFavoritePo;
 
 /**
  * 内容方法类：内容数据的转换，主要——存储对象转换为显示对象。
@@ -26,16 +26,16 @@ public abstract class ContentUtils {
                                       List<Map<String, Object>> personList,
                                       List<Map<String, Object>> cataList,
                                       List<Map<String, Object>> pubChannelList,
-                                      List<Map<String, Object>> favoriteList) {
+                                      List<UserFavoritePo> favoriteList) {
         //P12-公共：相关人员列表
         Object temp=fetchPersons(personList, getResTableName(mediaType), one.get("ContentId")+"");
         one.put("ContentPersons", temp==null?"":temp);
         //P13-公共：所有分类列表
         temp=fetchCatas(cataList, getResTableName(mediaType), one.get("ContentId")+"");
         one.put("ContentCatalogs", temp==null?"":temp);
-        //P14-公共：是否喜欢
+        //P14-公共：发布情况
         Object cnls=fetchChannels(pubChannelList, getResTableName(mediaType), one.get("ContentId")+"");
-        one.put("ContentPubChannels", temp==null?"":temp);
+        one.put("ContentPubChannels", cnls==null?"":cnls);
         //P15-公共：是否喜欢
         temp=fetchFavorite(favoriteList, getResTableName(mediaType), one.get("ContentId")+"");
         one.put("ContentFavorite", (temp==null?0:(((Integer)temp)==1?(cnls==null?"您喜欢的内容已经下架":1):0))+"");
@@ -57,7 +57,7 @@ public abstract class ContentUtils {
                                                   List<Map<String, Object>> personList,
                                                   List<Map<String, Object>> cataList,
                                                   List<Map<String, Object>> pubChannelList,
-                                                  List<Map<String, Object>> favoriteList) {
+                                                  List<UserFavoritePo> favoriteList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
         retM.put("MediaType", "RADIO");
@@ -98,7 +98,7 @@ public abstract class ContentUtils {
                                                   List<Map<String, Object>> personList,
                                                   List<Map<String, Object>> cataList,
                                                   List<Map<String, Object>> pubChannelList,
-                                                  List<Map<String, Object>> favoriteList) {
+                                                  List<UserFavoritePo> favoriteList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
         retM.put("MediaType", "AUDIO");
@@ -142,7 +142,7 @@ public abstract class ContentUtils {
                                                    List<Map<String, Object>> personList,
                                                    List<Map<String, Object>> cataList,
                                                    List<Map<String, Object>> pubChannelList,
-                                                   List<Map<String, Object>> favoriteList) {
+                                                   List<UserFavoritePo> favoriteList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
         retM.put("MediaType", "SEQU");
@@ -158,7 +158,7 @@ public abstract class ContentUtils {
         retM.put("ContentShareURL", getShareUrl_ZJ(preAddr, one.get("id")+""));//分享地址
         retM.put("ContentDesc", one.get("descn"));//P11-公共：说明
 
-        fillExtInfo(retM, "AUDIO", personList, cataList, pubChannelList, favoriteList);//填充扩展信息
+        fillExtInfo(retM, "SEQU", personList, cataList, pubChannelList, favoriteList);//填充扩展信息
 
         retM.put("ContentSubCount", one.get("count"));//S01-特有：下级节目的个数
 
@@ -210,11 +210,11 @@ public abstract class ContentUtils {
         }
         return ret.size()>0?ret:null;
     }
-    private static int fetchFavorite(List<Map<String, Object>> favoriteList, String resTableName, String resId) {//喜欢处理
+    private static int fetchFavorite(List<UserFavoritePo> favoriteList, String resTableName, String resId) {//喜欢处理
         if (favoriteList==null||favoriteList.size()==0) return 0;
         int ret=0;
-        for (Map<String, Object> _f: favoriteList) {
-            if ((_f.get("resTableName")+"").equals(resTableName)&&(_f.get("resId")+"").equals(resId)) {
+        for (UserFavoritePo _f: favoriteList) {
+            if (_f.getResTableName().equals(resTableName)&&_f.getResId().equals(resId)) {
                 ret=1;
             }
         }
