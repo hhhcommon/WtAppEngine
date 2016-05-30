@@ -205,6 +205,20 @@ public class FavoriteService {
     }
 
     /**
+     * 得到某人或设备的喜欢内容按列表，只获得喜欢的Po，为内容列表填充做准备
+     * @param mk 用户标识，可以是登录用户，也可以是手机设备
+     * @return 某人的喜欢内容
+     */
+    public List<UserFavoritePo> getPureFavoriteList(MobileKey mk) {
+        if (mk==null) return null;
+
+        Map<String, Object> param=new HashMap<String, Object>();
+        param.put("mobileId", mk.getMobileId());
+        if (mk.isUser()) param.put("userId", mk.getUserId());
+        return userFavoriteDao.queryForList("getFavoriteAssets", param);
+    }
+
+    /**
      * 得到某人或设备的喜欢内容按内容类型的分布情况
      * @param mk 用户标识，可以是登录用户，也可以是手机设备
      * @return 若无数据，返回空Map，否则返回各内容类型的个数，若某内荣分类无数据，则不返回该项的数据
@@ -262,39 +276,5 @@ public class FavoriteService {
             ret.add(oneResult);
         }
         return ret;
-    }
-
-    /**
-     * 获得指定的内容列表中(contentList)，该用户(mk)是否有所喜欢的内容
-     * @param contentList 内容列表，至少要包括ContentId和(MediaType或ResTableName:若有ResTableName，以此为准)
-     * @param mk 用户标识，可以是登录用户，也可以是手机设备
-     * @return 喜欢内容的列表，包括MediaType和ContentId
-     */
-    public List<Map<String, Object>> getFavoriteList(List<Map<String, Object>> contentList, MobileKey mk) {
-        if (contentList==null||contentList.isEmpty()) return null;
-        if (mk==null) return null;
-
-        Map<String, Object> param=new HashMap<String, Object>();
-        param.put("mobileId", mk.getMobileId());
-        if (mk.isUser()) param.put("userId", mk.getUserId());
-
-        //拼Sql
-        String sql="";
-        for (Map<String, Object> c: contentList) {
-            String tn, cid;
-            if (c.get("ResTableName")!=null) tn=c.get("ResTableName")+"";
-            else if (c.get("MediaType")!=null) tn=ContentUtils.getResTableName(c.get("ResTableName")+"");
-            else continue;
-            if (c.get("ContentId")!=null) cid=c.get("ContentId")+"";
-            else continue;
-            sql+="or (resTableName='"+tn+"' and resId='"+cid+"')";
-        }
-        if (sql.length()>0) {
-            sql=sql.substring(3);
-            param.put("contents", sql);
-            
-            return userFavoriteDao.queryForListAutoTranform("getFavoriteAssets", param);
-        }
-        return null;
     }
 }

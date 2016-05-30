@@ -148,7 +148,8 @@ public class ContentController {
             int pageType=1;
             try {pageType=Integer.parseInt(m.get("PageType")+"");} catch(Exception e) {};
 
-            Map<String, Object> contents=contentService.getContents(catalogType, catalogId, resultType, mediaType, perSize, pageSize, page, beginCatalogId, pageType);
+            MobileKey mk=MobileUtils.getMobileKey(m);
+            Map<String, Object> contents=contentService.getContents(catalogType, catalogId, resultType, mediaType, perSize, pageSize, page, beginCatalogId, pageType, mk);
             if (contents!=null&&contents.size()>0) {
                 map.put("ResultList", contents);
                 map.put("ReturnType", "1001");
@@ -205,7 +206,8 @@ public class ContentController {
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
 
             Map<String, Object> contentInfo=null;
-            if (mediaType.equals("SEQU")) contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page);
+            MobileKey mk=MobileUtils.getMobileKey(m);
+            if (mediaType.equals("SEQU")) contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page, mk);
             else
             if (mediaType.equals("TTS"))  contentInfo=SearchUtils.getNewsInfo(contentId);
 

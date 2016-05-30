@@ -13,6 +13,7 @@ import org.springframework.util.SerializationUtils;
 
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
+import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.service.BaiDuNewsService;
@@ -356,14 +357,14 @@ public abstract class SearchUtils {
 	 * @param searchStr
 	 * @return
 	 */
-	public static boolean searchContent(String searchStr) {
+	public static boolean searchContent(String searchStr, MobileKey mk) {
 		createSearchTime(searchStr);
 		createBeginSearch(searchStr);
 		KaoLaService.begin(searchStr);
 		XiMaLaYaService.begin(searchStr);
 		QingTingService.begin(searchStr);
 		BaiDuNewsService.begin(searchStr);
-		LocalSearch.begin(searchStr, 0, 0);
+		LocalSearch.begin(searchStr, 0, 0, mk);
 		return true;
 	}
 

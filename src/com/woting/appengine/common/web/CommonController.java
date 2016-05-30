@@ -20,6 +20,7 @@ import com.woting.WtAppEngineConstants;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.common.util.RequestUtils;
 import com.woting.appengine.content.service.ContentService;
+import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.appengine.searchcrawler.service.BaiDuNewsService;
 import com.woting.appengine.searchcrawler.service.SearchCrawlerService;
@@ -144,7 +145,8 @@ public class CommonController {
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
 
-            Map<String, Object> cl=contentService.getMainPage(ms.getKey().getUserId(), pageType, pageSize, page);
+            MobileKey mk=MobileUtils.getMobileKey(m);
+            Map<String, Object> cl=contentService.getMainPage(ms.getKey().getUserId(), pageType, pageSize, page, mk);
 
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultList", cl);
@@ -508,10 +510,11 @@ public class CommonController {
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
 
+            MobileKey mk=MobileUtils.getMobileKey(m);
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
-            if(page>0 && pageSize>0 && resultType==0 && pageType==0)cl=scs.searchCrawler(searchStr, resultType, pageType, page, pageSize);
-            else cl=contentService.searchAll(searchStr, resultType, pageType);
+            if(page>0 && pageSize>0 && resultType==0 && pageType==0)cl=scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mk);
+            else cl=contentService.searchAll(searchStr, resultType, pageType, mk);
             a=System.currentTimeMillis()-a;
 
             if (cl!=null&&cl.size()>0) {
@@ -581,13 +584,11 @@ public class CommonController {
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
 
+            MobileKey mk=MobileUtils.getMobileKey(m);
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
-            if(resultType==0 && pageType==0){
-            	cl = scs.searchCrawler(searchStr, resultType, pageType, page, pageSize);
-            }else{
-            	cl=contentService.searchAll(searchStr, resultType, pageType);
-            }
+            if(resultType==0 && pageType==0) cl = scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mk);
+            else cl=contentService.searchAll(searchStr, resultType, pageType, mk);
             a=System.currentTimeMillis()-a;
 
             if (cl!=null&&cl.size()>0) {

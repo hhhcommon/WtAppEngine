@@ -7,26 +7,30 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.woting.appengine.content.service.ContentService;
+import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 public class LocalSearch extends Thread {
 
 	private static String searchStr;
 	private static int resultType;
-	private static int pageType;
+    private static int pageType;
+    private static MobileKey mk;
 
-	public static void begin(String searchStr, int resultType, int pageType) {
+	public static void begin(String searchStr, int resultType, int pageType, MobileKey mk) {
 		LocalSearch.searchStr = searchStr;
 		LocalSearch.resultType = resultType;
-		LocalSearch.pageType = pageType;
+        LocalSearch.pageType = pageType;
+        LocalSearch.mk = mk;
+		
 		new LocalSearch().start();
 	}
 
-	public Map<String, Object> localService(String searchStr, int resultType, int pageType) {
+	private Map<String, Object> localService() {
 		ServletContext sc = (ServletContext) SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
 		if (WebApplicationContextUtils.getWebApplicationContext(sc) != null) {
 			ContentService contentService = (ContentService) WebApplicationContextUtils.getWebApplicationContext(sc).getBean("contentService");
-			return contentService.searchAll(searchStr, resultType, pageType);
+			return contentService.searchAll(searchStr, resultType, pageType, mk);
 		} else {
 			return null;
 		}
@@ -34,7 +38,7 @@ public class LocalSearch extends Thread {
 
 	@Override
 	public void run() {
-		Map<String, Object> map = localService(searchStr, resultType, pageType);
+		Map<String, Object> map = localService();
 		try {
 			if (map.get("ReturnType").equals("1001")) {
 				List<Map<String, Object>> list = (List<Map<String, Object>>) map.get("List");
