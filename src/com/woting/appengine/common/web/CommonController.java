@@ -50,8 +50,6 @@ public class CommonController {
     private WordService wordService;
     @Resource
     private SearchCrawlerService scs;
-    @Resource
-    private BaiDuNewsService baiduNewsService;
     
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;

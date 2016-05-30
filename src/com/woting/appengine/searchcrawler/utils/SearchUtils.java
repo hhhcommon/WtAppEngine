@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.springframework.util.SerializationUtils;
-
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.mobile.model.MobileKey;
@@ -314,13 +312,10 @@ public abstract class SearchUtils {
 	 */
 	private static List<Map<String, Object>> convertJsonList(List<String> l) {
 		List<Map<String, Object>> retM = new ArrayList<Map<String,Object>>();
-		System.out.println(l);
-		System.out.println("##"+l.size());
 		if (l != null && l.size() > 0) {
 			for (String josnS : l) {
 				Map<String, Object> m = (Map<String, Object>) JsonUtils.jsonToObj(josnS, Map.class);
 				if (m!=null) retM.add(m);
-				System.out.println(m);
 			}
 			return retM;
 		}
