@@ -29,13 +29,13 @@ public abstract class ContentUtils {
                                       List<UserFavoritePo> favoriteList) {
         //P12-公共：相关人员列表
         Object temp=fetchPersons(personList, getResTableName(mediaType), one.get("ContentId")+"");
-        one.put("ContentPersons", temp==null?"":temp);
+        if (temp!=null) one.put("ContentPersons", temp);
         //P13-公共：所有分类列表
         temp=fetchCatas(cataList, getResTableName(mediaType), one.get("ContentId")+"");
-        one.put("ContentCatalogs", temp==null?"":temp);
+        if (temp!=null) one.put("ContentCatalogs", temp);
         //P14-公共：发布情况
         Object cnls=fetchChannels(pubChannelList, getResTableName(mediaType), one.get("ContentId")+"");
-        one.put("ContentPubChannels", cnls==null?"":cnls);
+        if (cnls!=null) one.put("ContentPubChannels", cnls);
         //P15-公共：是否喜欢
         temp=fetchFavorite(favoriteList, getResTableName(mediaType), one.get("ContentId")+"");
         one.put("ContentFavorite", (temp==null?0:(((Integer)temp)==1?(cnls==null?"您喜欢的内容已经下架":1):0))+"");

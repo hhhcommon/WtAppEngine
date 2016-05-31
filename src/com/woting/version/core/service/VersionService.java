@@ -92,9 +92,10 @@ public class VersionService {
 
             retm.put("MastUpdate", mastUpdate?"1":"0");
             retm.put("NoVersionList", noVersionList);
-            VersionConfig vc=(VersionConfig)SystemCache.getCache(WtAppEngineConstants.APP_VERSIONCONFIG).getContent();
-            retm.put("DownLoadUrl", vc.getPubUrl());
             retm.put("CurVersion", curVer.toViewMap4App());
+            VersionConfig vc=(SystemCache.getCache(WtAppEngineConstants.APP_VERSIONCONFIG)==null?null:(VersionConfig)SystemCache.getCache(WtAppEngineConstants.APP_VERSIONCONFIG).getContent());
+            if (vc==null) vc=getVerConfig();
+            if (vc!=null) retm.put("DownLoadUrl", vc.getPubUrl());
         } catch(Exception e) {
             e.printStackTrace();
         }

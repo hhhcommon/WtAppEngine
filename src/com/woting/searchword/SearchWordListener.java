@@ -17,7 +17,7 @@ public class SearchWordListener extends Thread {
     private static WordService wordService;
 
     public static void begin() {
-        ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
+        ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
         if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
             SearchWordListener.wordService=(WordService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("wordService");
         }
@@ -30,7 +30,7 @@ public class SearchWordListener extends Thread {
         try {
             sleep(200);
             if (SearchWordListener.wordService==null) {
-                ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
+                ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
                 if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
                     SearchWordListener.wordService=(WordService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("wordService");
                 }

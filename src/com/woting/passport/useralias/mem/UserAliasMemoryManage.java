@@ -15,7 +15,7 @@ import com.woting.passport.useralias.service.UserAliasService;
 public class UserAliasMemoryManage {
     //java的占位单例模式===begin
     private static class InstanceHolder {
-        public static UserAliasMemoryManage instance = new UserAliasMemoryManage();
+        public static UserAliasMemoryManage instance=new UserAliasMemoryManage();
     }
     public static UserAliasMemoryManage getInstance() {
         return InstanceHolder.instance;
@@ -39,10 +39,10 @@ public class UserAliasMemoryManage {
      */
     public synchronized void initMemory() {
         if (this.inited) return;
-        ServletContext sc = (ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
+        ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
         if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-            UserAliasService userAliasService = (UserAliasService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("userAliasService");
-            List<UserAliasPo> ual = userAliasService.getAllAlias();
+            UserAliasService userAliasService=(UserAliasService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("userAliasService");
+            List<UserAliasPo> ual=userAliasService.getAllAlias();
             if (ual!=null&&ual.size()>0) {
                 for (UserAliasPo uaPo: ual) {
                     this.addOneUserAlias(uaPo);

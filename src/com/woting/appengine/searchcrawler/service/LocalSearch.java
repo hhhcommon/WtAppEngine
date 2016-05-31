@@ -18,18 +18,18 @@ public class LocalSearch extends Thread {
     private static MobileKey mk;
 
 	public static void begin(String searchStr, int resultType, int pageType, MobileKey mk) {
-		LocalSearch.searchStr = searchStr;
-		LocalSearch.resultType = resultType;
-        LocalSearch.pageType = pageType;
-        LocalSearch.mk = mk;
+		LocalSearch.searchStr=searchStr;
+		LocalSearch.resultType=resultType;
+        LocalSearch.pageType=pageType;
+        LocalSearch.mk=mk;
 		
 		new LocalSearch().start();
 	}
 
 	private Map<String, Object> localService() {
-		ServletContext sc = (ServletContext) SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
+		ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
 		if (WebApplicationContextUtils.getWebApplicationContext(sc) != null) {
-			ContentService contentService = (ContentService) WebApplicationContextUtils.getWebApplicationContext(sc).getBean("contentService");
+			ContentService contentService=(ContentService) WebApplicationContextUtils.getWebApplicationContext(sc).getBean("contentService");
 			return contentService.searchAll(searchStr, resultType, pageType, mk);
 		} else {
 			return null;
@@ -38,10 +38,10 @@ public class LocalSearch extends Thread {
 
 	@Override
 	public void run() {
-		Map<String, Object> map = localService();
+		Map<String, Object> map=localService();
 		try {
 			if (map.get("ReturnType").equals("1001")) {
-				List<Map<String, Object>> list = (List<Map<String, Object>>) map.get("List");
+				List<Map<String, Object>> list=(List<Map<String, Object>>) map.get("List");
 				for (Map<String, Object> m : list) {
 					SearchUtils.addListInfo(searchStr, m);
 				}

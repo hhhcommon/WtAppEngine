@@ -358,6 +358,13 @@ CREATE TABLE wt_SeqMA_Ref (
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='020专辑与单体媒体对应表';
 
+/**021 vWT_FIRSTMAINSEQU(专辑中最新一条内容视图)*/
+CREATE OR REPLACE ALGORITHM=UNDEFINED SQL SECURITY DEFINER
+VIEW vWt_FirstMaInSequ AS 
+  select sid, max(CONCAT('C:', (10000+columnNum),'|D:', cTime)) as firstMa from wt_SeqMA_Ref
+  group by sid
+;
+
 /**== 四.4、外围对象 =============================================*/
 /**021 WT_PERSON(干系人，主要是人的自然信息，和User不同)*/
 DROP TABLE IF EXISTS wt_Person;
@@ -425,7 +432,7 @@ CREATE TABLE wt_ResDict_Ref (
   pathNames     varchar(1000)  NOT NULL  COMMENT '字典项全名称',
   pathIds       varchar(100)   NOT NULL  COMMENT '字典项路径Id',
   cTime         timestamp      NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
-  INDEX dataIdx (refName, resTableName, resId, dictMid, dictDid) USING HASH,
+  UNIQUE INDEX dataIdx (refName, resTableName, resId, dictMid, dictDid) USING HASH,
   PRIMARY KEY(id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='024资源字典项对应关系';
@@ -480,6 +487,7 @@ CREATE TABLE wt_ChannelAsset (
   pubTime       timestamp                             COMMENT '发布时间，发布时的时间，若多次发布，则是最新的发布时间',
   ？？？lmTime        timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改时间，任何字段进行了修改都要改这个字段',
   INDEX pubAsset (assetType, assetId, flowFlag) USING HASH,
+  INDEX bizIdx (assetType, assetId, channelId) USING BTREE,
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='027栏目内容发布';

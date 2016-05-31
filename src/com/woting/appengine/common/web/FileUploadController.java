@@ -67,9 +67,9 @@ public class FileUploadController extends AbstractFileUploadController {
             String extName=p.get("ExtName")+"";
             if (fType.equals("UserP")) {//========================================处理用户头像
                 try {
-                    String bigImgFileName=((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent();
-                    bigImgFileName = "asset"+File.separatorChar+"members"+File.separatorChar+userId+File.separatorChar+"Portrait"+File.separatorChar+"bigImg"+SequenceUUID.getUUIDSubSegment(2)+(extName.startsWith(".")?extName:"."+extName);
-                    FileUtils.copyFile(new File(tempFileName), new File(FileNameUtils.concatPath(((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent(),bigImgFileName)));
+                    String appPath=(SystemCache.getCache(FConstants.APPOSPATH)==null?"":((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent());
+                    String bigImgFileName = "asset"+File.separatorChar+"members"+File.separatorChar+userId+File.separatorChar+"Portrait"+File.separatorChar+"bigImg"+SequenceUUID.getUUIDSubSegment(2)+(extName.startsWith(".")?extName:"."+extName);
+                    FileUtils.copyFile(new File(tempFileName), new File(FileNameUtils.concatPath(appPath,bigImgFileName)));
                     //图片文件缩略存储
                     //文件保存到数据库中
                     UserPo u=(UserPo)ms.getAttribute("user");

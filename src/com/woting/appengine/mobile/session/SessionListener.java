@@ -47,7 +47,7 @@ public class SessionListener extends Thread {
         try {
             sleep(3000);//多少毫秒后启动任务处理，先让系统的其他启动任务完成
             //读取版本配置，并存入内存
-            ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
+            ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
             if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
                 VersionService versionService=(VersionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("versionService");
                 SystemCache.setCache(

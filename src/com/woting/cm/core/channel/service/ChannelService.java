@@ -10,10 +10,13 @@ import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
 
+import com.spiritdata.framework.core.cache.CacheEle;
+import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.util.TreeUtils;
+import com.woting.WtAppEngineConstants;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.channel.model.Channel;
 import com.woting.cm.core.channel.model.ChannelAsset;
@@ -21,7 +24,6 @@ import com.woting.cm.core.channel.persis.po.ChannelAssetPo;
 import com.woting.cm.core.channel.persis.po.ChannelPo;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.exceptionC.Wtcm1000CException;
-import com.woting.favorite.persis.po.UserFavoritePo;
 
 @Service
 public class ChannelService {
@@ -30,10 +32,13 @@ public class ChannelService {
     @Resource(name="defaultDAO")
     private MybatisDAO<ChannelAssetPo> channelAssetDao;
 
-    @PostConstruct
+    private _CacheChannel _cc=null;
+
+    @PostConstruct 
     public void initParam() {
         channelDao.setNamespace("A_CHANNEL");
         channelAssetDao.setNamespace("A_CHANNELASSET");
+        _cc=(SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)==null?null:((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)).getContent());
     }
 
     /**
@@ -114,16 +119,29 @@ public class ChannelService {
      * @param assetList 内容列表，列表中是Map，Map中包括两个字段 assetType,assetId
      * @return 该资源是否发布了，返回值包括三个字段assetType,assetId,isPub，其中isPub=1是已发布，否则是未发布
      */
-    public List<Map<String, Object>> getPubChannelList(List<UserFavoritePo> assetList) {
+    public List<Map<String, Object>> getPubChannelList(List<Map<String, Object>> assetList) {
         if (assetList==null||assetList.isEmpty()) return null;
         //拼Sql
         String sql="";
-        for (UserFavoritePo asset: assetList) {
-            sql+="or (assetType='"+asset.getResTableName()+"' and assetId='"+asset.getResId()+"')";
+        for (Map<String, Object> asset: assetList) {
+            sql+="or (assetType='"+asset.get("resTableName")+"' and assetId='"+asset.get("resId")+"')";
         }
         if (sql.length()>0) sql=sql.substring(3);
         Map<String, Object> param=new HashMap<String, Object>();
         param.put("whereSql", sql);
-        return channelAssetDao.queryForListAutoTranform("pubChannels", param);
+        List<ChannelAssetPo> pubChannels=channelAssetDao.queryForListAutoTranform("pubChannels", param);
+        if (pubChannels==null||pubChannels.isEmpty()) return null;
+
+        List<Map<String, Object>> ret=new ArrayList<Map<String, Object>>();
+        if (_cc==null) _cc=(SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)==null?null:((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)).getContent());
+        for (ChannelAssetPo caPo: pubChannels) {
+            Map<String, Object> one=caPo.toHashMap();
+            if (_cc!=null) {
+                TreeNode<Channel> _c=(TreeNode<Channel>)_cc.channelTree.findNode(caPo.getChannelId());
+                if (_c!=null) one.put("channelName", _c.getNodeName());
+            }
+            ret.add(one);
+        }
+        return ret;
     }
 }
