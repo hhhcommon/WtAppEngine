@@ -3,14 +3,12 @@ package com.woting.appengine.searchcrawler.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 public class SearchCrawlerService {
 
 	/**
-	 * 
 	 * @param searchStr
 	 * @param resultType
 	 * @param pageType
@@ -22,18 +20,16 @@ public class SearchCrawlerService {
 		Map<String, Object> map = new HashMap<String, Object>();
 		List<Map<String, Object>> list = SearchUtils.getListPage(searchStr, page, pageSize);
 		if (list==null) {
-			long a = System.currentTimeMillis(), b, num;
+			long a = System.currentTimeMillis(), num;
 			if (SearchUtils.getListNum(searchStr) == 0) {
 				SearchUtils.searchContent(searchStr, mk);
 				System.out.println("开启搜索");
 				while (true) {
 					try {
 						Thread.sleep(50);
-						if ((num = SearchUtils.getListNum(searchStr)) > 0) {
-						if (num >= pageSize) break;
-					    }
-					    b = System.currentTimeMillis() - a;
-					    if (b > 3 * 1000) break;
+						if ((num = SearchUtils.getListNum(searchStr)) > 0) 
+						    if (num >= pageSize) break;
+					    if ((System.currentTimeMillis() - a) > 3 * 1000) break;
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}

@@ -1,31 +1,26 @@
 package com.woting.appengine.searchcrawler.service;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 
-public class XiMaLaYaService extends Thread {
+public class XiMaLaYaSearch extends Thread {
 
-	private final int S_S_NUM = 4; // 搜索频道的数目
-	private final int S_F_NUM = 2; // 搜索频道内节目的数目
-	private final int F_NUM = 4; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
-	private final int T =5000;
-	private static String constr;
-	Map<String, Object> map = new HashMap<String,Object>();
+	private static int S_S_NUM = 4; // 搜索频道的数目
+	private static int S_F_NUM = 2; // 搜索频道内节目的数目
+	private static int F_NUM = 4; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
+	private static int T =5000;
+	private String constr;
 
-	public static void begin(String constr){
-		XiMaLaYaService.constr = constr;
-		XiMaLaYaService xiMaLaYaService = new XiMaLaYaService();
-		xiMaLaYaService.start();
+	public XiMaLaYaSearch(String constr) {
+		this.constr = constr;
 	}
 	
 	private void ximalayaService(String content){
@@ -77,10 +72,8 @@ public class XiMaLaYaService extends Thread {
 				Festival festival = new Festival();
 				Element element = elements.get(i).select("a[class=forwardBtn]").get(0);
 				festival.setAudioId(element.attr("track_id")); // 节目id
-	//			festival.setAudioName(element.attr("track_title")); // 节目名称
 				Elements elementsspan = elements.select("span");
 				festival.setUpdateTime(elementsspan.get(0).html()); // 节目创建时间
-	//			festival.setPlaynum(elementsspan.get(1).html()); // 节目播放次数
 				festivals[i] = festivalS(festival.getAudioId(), festival);
 			}
 		} catch (IOException e) {
@@ -89,13 +82,18 @@ public class XiMaLaYaService extends Thread {
 		return festivals;
 	}
 
+	/**
+	 * 根据节目id进行节目信息获取
+	 * @param contendid
+	 * @param festival
+	 * @return
+	 */
 	private Festival festivalS(String contendid, Festival festival) {
 		String url = "http://www.ximalaya.com/tracks/" + contendid + ".json";
 		String jsonstr = SearchUtils.jsoupTOstr(url);
 		Map<String, Object> map = SearchUtils.jsonTOmap(jsonstr);
-		if (map == null) {
-			return null;
-		} else {
+		if (map == null) return null; 
+		else {
 			festival.setAudioId(contendid);	//	节目id
 			festival.setAudioName(map.get("title")+"");
 			festival.setPlayUrl(map.get("play_path") + ""); // 节目音频地址
@@ -119,18 +117,13 @@ public class XiMaLaYaService extends Thread {
 				for (int i = 0; i < (elements.size() > F_NUM ? F_NUM : elements.size()); i++) {
 					Festival festival = new Festival();
 					Element elf = elements.get(i);
-//					String name = elf.select("a[class=soundReport_soundname]").get(0).html();
 					String id = elf.select("a[class=soundReport_soundname]").get(0).attr("href").split("/")[3];
-					String desc = elf.select("a[class=soundReport_tag]").isEmpty() ? null
-							: elf.select("a[class=soundReport_tag]").get(0).html();
-					String host = elf.select("div[class=col soundReport_author]").isEmpty() ? null
-							: elf.select("div[class=col soundReport_author]").get(0).select("a").get(0).html();
-					String playnum = elf.select("div[class=col soundReport_playCount]").get(0).select("span").get(0)
-							.html();
-		//			festival.setAudioName(name);
+					String desc = elf.select("a[class=soundReport_tag]").size()==0?null:elf.select("a[class=soundReport_tag]").get(0).html();
+					String host = elf.select("div[class=col soundReport_author]").size()==0?null:elf.select("div[class=col soundReport_author]").get(0).select("a").get(0).html();
+					String playnum = elf.select("div[class=col soundReport_playCount]").get(0).select("span").get(0).html();
 					festival.setAudioId(id);
 					festival.setAudioDes(desc);
-					festival.setHost(host == null ? null : host.split(" ")[0]);
+					festival.setHost(host==null?null:host.split(" ")[0]);
 					festival.setPlaynum(playnum);
 					festival = festivalS(festival.getAudioId(), festival);
 					if(festival!=null) SearchUtils.addListInfo(content, festival); // 保存到在redis里key为constr的list里
@@ -150,9 +143,7 @@ public class XiMaLaYaService extends Thread {
 			System.out.println("喜马拉雅搜索异常");
 		}finally {
 			SearchUtils.updateSearchFinish(constr);
-	     	System.err.println("喜马拉雅搜索结束");
+	     	System.out.println("喜马拉雅搜索结束");
 		}
-		
 	}
-
 }

@@ -13,18 +13,15 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
  *
  */
 
-public class KaoLaService extends Thread {
+public class KaoLaSearch extends Thread {
 
-	private final int S_S_NUM = 4; // 搜索频道的数目
-	private final int S_F_NUM = 2; // 搜索频道内节目的数目
-	private final int F_NUM = 4; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
-	private int num = 0;
-	private static String constr;
+	private static int S_S_NUM = 4; // 搜索频道的数目
+	private static int S_F_NUM = 2; // 搜索频道内节目的数目
+	private static int F_NUM = 4; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
+	private String constr;
 
-	public static void begin(String constr){
-		KaoLaService.constr = constr;
-		KaoLaService kl = new KaoLaService();
-		kl.start();
+	public KaoLaSearch(String constr) {
+		this.constr = constr;
 	}
 	
 	private void kaolaService(String content){
@@ -36,8 +33,7 @@ public class KaoLaService extends Thread {
 	/**
 	 * 频道信息及级下节目的搜索
 	 * 
-	 * @param content
-	 *            搜索内容的url编码
+	 * @param content 搜索内容的url编码
 	 * @return 返回搜索到的频道及级下节目
 	 */
 	private void StationS(String content) {
@@ -78,34 +74,27 @@ public class KaoLaService extends Thread {
 						festival.setContentPub("考拉FM");
 						festival.setAudioId(list_href2.get(j).get("audioId").toString());
 						festival.setAudioName(list_href2.get(j).get("audioName").toString());
-						festival.setAudioPic(list_href2.get(j).get("audioPic") == null ? null
-								: list_href2.get(j).get("audioPic").toString()); // 频道里节目信息没有图片链接
+						festival.setAudioPic(list_href2.get(j).get("audioPic")==null?null:list_href2.get(j).get("audioPic").toString()); // 频道里节目信息没有图片链接
 						festival.setAudioDes(list_href2.get(j).get("audioDes").toString());
-						festival.setAlbumName(list_href2.get(j).get("albumName") == null ? null
-								: list_href2.get(j).get("albumName").toString());
-						festival.setAlbumPic(list_href2.get(j).get("albumPic") == null ? null
-								: list_href2.get(j).get("albumPic").toString());
+						festival.setAlbumName(list_href2.get(j).get("albumName")==null?null:list_href2.get(j).get("albumName").toString());
+						festival.setAlbumPic(list_href2.get(j).get("albumPic")==null?null:list_href2.get(j).get("albumPic").toString());
 						festival.setPlayUrl((list_href2.get(j).get("m3u8PlayUrl").toString()));
 						festival.setFileSize((list_href2.get(j).get("fileSize").toString()));
 						festival.setDuration(((list_href2.get(j).get("duration").toString())));
 						festival.setUpdateTime(((list_href2.get(j).get("updateTime").toString())));
 						festival.setListenNum(((list_href2.get(j).get("listenNum").toString())));
 						List<Map<String, Object>> F_list_host = (List<Map<String, Object>>) list_href2.get(j).get("host");
-						for (Map<String, Object> map : F_list_host) {
+						for (Map<String, Object> map : F_list_host)
 							F_host_name += "," + map.get("name").toString();
-						}
-						if (F_host_name.length() > 0) {
+						if (F_host_name.length() > 0)
 							F_host_name = F_host_name.substring(1);
-						}
 						festival.setHost(F_host_name);
 						festivals[j] = festival;
 					}
 					station.setFestival(festivals);
 				}
-				if (station!=null) {
+				if (station!=null) 
 					SearchUtils.addListInfo(constr, station); // 保存到在redis里key为constr的list里
-					num++;
-				} 
 			}
 		} 
 	}
@@ -134,26 +123,22 @@ public class KaoLaService extends Thread {
 				festival.setContentPub("考拉FM");
 				festival.setAudioId(map.get("audioId").toString());
 				festival.setAudioName(map.get("audioName").toString());
-				festival.setAudioPic(map.get("audioPic") == null ? "" : map.get("audioPic").toString());
+				festival.setAudioPic(map.get("audioPic")==null?"":map.get("audioPic").toString());
 				festival.setAudioDes(map.get("audioDes").toString());
 				festival.setAlbumName(map.get("albumName").toString());
-				festival.setAlbumPic(map.get("albumPic") == null ? "" : map.get("albumPic").toString());
+				festival.setAlbumPic(map.get("albumPic")==null?"":map.get("albumPic").toString());
 				festival.setPlayUrl(map.get("m3u8PlayUrl").toString());
 				festival.setFileSize(map.get("fileSize").toString());
 				festival.setDuration(map.get("duration").toString());
 				festival.setUpdateTime(map.get("updateTime").toString());
 				festival.setListenNum(map.get("listenNum").toString());
-				for (Map<String, Object> map2 : list_host) {
+				for (Map<String, Object> map2 : list_host)
 					host_name += "," + map2.get("name").toString();
-				}
-				if (host_name.length() > 0) {
+				if (host_name.length() > 0)
 					host_name = host_name.substring(1);
-				}
 				festival.setHost(host_name);
-				if (festival!=null) {
+				if (festival!=null)
 					SearchUtils.addListInfo(constr, festival); // 保存到在redis里key为constr的list里
-					num++;
-				}
 			}
 		}
 	}

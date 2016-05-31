@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import com.spiritdata.framework.util.JsonUtils;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
@@ -20,19 +19,13 @@ public abstract class DataTransform {
 	/**
 	 * 多festival转audio
 	 * 
-	 * @param list_Festival
-	 *            搜索到的节目信息
-	 * @param list_Station
-	 *            搜索到的频道信息
-	 * @param PageType
-	 *            如果PageType=0,把专辑的第一个节目提取出来，如果等于1，频道信息在此方法不处理
+	 * @param list_Festival 搜索到的节目信息
+	 * @param list_Station 搜索到的频道信息
+	 * @param PageType 如果PageType=0,把专辑的第一个节目提取出来，如果等于1，频道信息在此方法不处理
 	 * @return 返回处理好的audio信息
 	 */
-	public static List<Map<String, Object>> datas2Audio(List<Festival> list_Festival, List<Station> list_Station,
-			int PageType) {
-		if (list_Festival == null || list_Station == null) {
-			return null;
-		}
+	public static List<Map<String, Object>> datas2Audio(List<Festival> list_Festival, List<Station> list_Station, int PageType) {
+		if (list_Festival == null || list_Station == null) return null;
 		List<Map<String, Object>> list_AudioData = new ArrayList<Map<String, Object>>();
 		if (list_Festival.size() > 0) {
 			for (Festival festival : list_Festival) {
@@ -106,19 +99,14 @@ public abstract class DataTransform {
 	 * @return
 	 */
 	public static Map<String, Object> datas2Sequ_Audio(Station station) {
-		if (station.getFestival() == null) {
-			return null;
-		}
+		if (station.getFestival() == null) return null;
 		Map<String, Object> map = new HashMap<String, Object>();
 		if (station.getFestival()[0] != null) {
 			Festival festival = station.getFestival()[0];
 			map = festival2Audio(festival);
 			map.put("SeqInfo", station2Sequ(station));
 			return map;
-		} else {
-			return null;
-		}
-
+		} else return null;
 	}
 
 	/**
@@ -129,9 +117,7 @@ public abstract class DataTransform {
 	 */
 	public static Map<String, Object> festival2Audio(Festival festival) {
 		// ContentCatalogs内容分类、ContentKeyWord关键词、ContentSubjectWord主题词和PlayCount播放次数未定义参数
-		if (festival == null) {
-			return null;
-		}
+		if (festival == null) return null;
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("ContentId", festival.getAudioId());
 		map.put("ContentName", festival.getAudioName());
@@ -161,9 +147,7 @@ public abstract class DataTransform {
 	 */
 	public static Map<String, Object> station2Sequ(Station station) {
 		// ContentCatalogs内容分类、ContentKeyWord关键词、ContentSubjectWord主题词和PlayCount播放次数
-		if (station == null) {
-			return null;
-		}
+		if (station == null) return null;
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("ContentSubCount", (station.getFestival().length) + "");
 		map.put("ContentURI", "content/getContentInfo.do?MediaType=SEQU&ContentId=" + station.getId());

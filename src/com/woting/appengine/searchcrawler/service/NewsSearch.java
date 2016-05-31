@@ -9,12 +9,12 @@ import org.jsoup.select.Elements;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
-public class SearchNews extends Thread {
+public class NewsSearch extends Thread {
 
 	private  Map<String, Object> map;
 	private  String constr;
 	
-	public SearchNews(String constr, Map<String, Object> map) {
+	public NewsSearch(String constr, Map<String, Object> map) {
 		this.constr = constr;
 		this.map = map;
 	}
@@ -29,11 +29,11 @@ public class SearchNews extends Thread {
 			Elements elements = doc.getElementsByTag("p");
 			if(elements!=null){
 				for (Element element : elements) {
-					if (!element.hasAttr("class")){//element.attr("class").equals("p15") || !element.hasAttr("class")) { // p15  工业和信息化部
+					if (!element.hasAttr("class")){ //element.attr("class").equals("p15") || !element.hasAttr("class")) { // p15  工业和信息化部
 						String constr = SearchUtils.cleanTag(element.toString());
 						if (!SearchUtils.isOrNORemove(constr)) {
 							if (!constr.equals("") && constr.length() > 9) {
-								contentinfo += constr ;// + "\n";
+								contentinfo += constr ;
 							}
 						}
 					}
@@ -51,7 +51,6 @@ public class SearchNews extends Thread {
 		if (!StringUtils.isNullOrEmptyOrSpace(url)) {
 			String contenturi = getContentInfo(url);
 			if(!StringUtils.isNullOrEmptyOrSpace(contenturi) && contenturi.length()>30){ // contenturi为抓取到的新闻内容
-			//	map.put("ContentURI", contenturi);
 				map.remove("ContentURL");
 				SearchUtils.addListInfo(constr, map);
 				SearchUtils.createNewsInfo(map.get("ContentId")+"", contenturi);
