@@ -1,34 +1,26 @@
 package com.woting.appengine.searchcrawler.service;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.stereotype.Service;
-
 import com.spiritdata.framework.util.JsonUtils;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
-@Service
-public class QingTingService extends Thread {
+public class QingTingSearch extends Thread {
 
-	private final int S_S_NUM = 4; // 搜索频道的数目
-	private final int F_NUM = 4; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
-	private final int T = 5000;
-	private static String constr = "";
-	private int num = 0;
-	Map<String, Object> map = new HashMap<String,Object>();
+	private static int S_S_NUM = 4; // 搜索频道的数目
+	private static int F_NUM = 4; // 搜索节目的数目 以上排列顺序按照搜索到的排列顺序
+	private static int T = 5000;
+	private String constr = "";
 
-	public static void begin(String constr){
-		QingTingService.constr = constr;
-		QingTingService qts= new QingTingService();
-		qts.start();
+	public QingTingSearch(String constr) {
+		this.constr = constr;
 	}
 
 	// 电台搜索链接请求
@@ -40,15 +32,12 @@ public class QingTingService extends Thread {
 			doc = Jsoup.connect(station_url).ignoreContentType(true).timeout(T).get();
 			// 获取频道json数据
 			Elements elements = doc.select("ul[class=nav]");
-			Elements elements_festivals = elements.get(0).select("li[jump-to=search-virtualprograms]");
 			Elements elements_stations = elements.get(0).select("li[jump-to=search-virtualchannels]");
 			Elements elements_radios = elements.get(0).select("li[jump-to=search-channels]");
-			String festival_num = elements_festivals.select("a[href]").html();
 			String station_num = elements_stations.select("a[href]").html();
 			String radio_num = elements_radios.select("a[href]").html();
 			int r_num = SearchUtils.findint(radio_num); // 电台数量
 			int s_num = SearchUtils.findint(station_num); // 频道数量
-			int f_num = SearchUtils.findint(festival_num);// 节目数量 暂时没用
 			elements = doc.select("li[class=playable clearfix]");
 			for (int i = r_num; i < r_num + s_num + F_NUM; i++) {
 				String title = elements.get(i).select("a[href]").get(0).select("span").get(0).html();
@@ -77,7 +66,7 @@ public class QingTingService extends Thread {
 	}
 
 	/**
-	 * 节目信息转换
+	 * 节目信息获取
 	 * 
 	 * @param url
 	 * @return

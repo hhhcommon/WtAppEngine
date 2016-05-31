@@ -22,7 +22,6 @@ import com.woting.appengine.common.util.RequestUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.session.model.MobileSession;
-import com.woting.appengine.searchcrawler.service.BaiDuNewsService;
 import com.woting.appengine.searchcrawler.service.SearchCrawlerService;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;

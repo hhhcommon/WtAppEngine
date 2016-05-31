@@ -12,25 +12,19 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 public class LocalSearch extends Thread {
 
-	private static String searchStr;
-	private static int resultType;
-    private static int pageType;
-    private static MobileKey mk;
+	private String searchStr;
+    private MobileKey mk;
 
-	public static void begin(String searchStr, int resultType, int pageType, MobileKey mk) {
-		LocalSearch.searchStr = searchStr;
-		LocalSearch.resultType = resultType;
-        LocalSearch.pageType = pageType;
-        LocalSearch.mk = mk;
-		
-		new LocalSearch().start();
+	public LocalSearch(String searchStr, MobileKey mk) {
+		this.searchStr = searchStr;
+		this.mk = mk;
 	}
 
 	private Map<String, Object> localService() {
 		ServletContext sc = (ServletContext) SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
 		if (WebApplicationContextUtils.getWebApplicationContext(sc) != null) {
 			ContentService contentService = (ContentService) WebApplicationContextUtils.getWebApplicationContext(sc).getBean("contentService");
-			return contentService.searchAll(searchStr, resultType, pageType, mk);
+			return contentService.searchAll(searchStr, 0, 0, mk);
 		} else {
 			return null;
 		}
@@ -38,6 +32,7 @@ public class LocalSearch extends Thread {
 
 	@Override
 	public void run() {
+		System.out.println("本地搜索开始");
 		Map<String, Object> map = localService();
 		try {
 			if (map.get("ReturnType").equals("1001")) {
@@ -46,7 +41,9 @@ public class LocalSearch extends Thread {
 					SearchUtils.addListInfo(searchStr, m);
 				}
 			}
-		} catch (Exception e) {}
+		} catch (Exception e) {
+			System.out.println("本地搜索异常");
+		}
 		finally {
 			SearchUtils.updateSearchFinish(searchStr);
 			System.out.println("本地搜索完成");
