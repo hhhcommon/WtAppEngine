@@ -21,7 +21,7 @@ public class LocalSearch extends Thread {
 	}
 
 	private Map<String, Object> localService() {
-		ServletContext sc = (ServletContext) SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
+		ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
 		if (WebApplicationContextUtils.getWebApplicationContext(sc) != null) {
 			ContentService contentService = (ContentService) WebApplicationContextUtils.getWebApplicationContext(sc).getBean("contentService");
 			return contentService.searchAll(searchStr, 0, 0, mk);
@@ -36,7 +36,7 @@ public class LocalSearch extends Thread {
 		Map<String, Object> map = localService();
 		try {
 			if (map.get("ReturnType").equals("1001")) {
-				List<Map<String, Object>> list = (List<Map<String, Object>>) map.get("List");
+				List<Map<String, Object>> list=(List<Map<String, Object>>) map.get("List");
 				for (Map<String, Object> m : list) {
 					SearchUtils.addListInfo(searchStr, m);
 				}

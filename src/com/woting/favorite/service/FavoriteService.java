@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.util.SequenceUUID;
+import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.content.ContentUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.cm.core.channel.service.ChannelService;
@@ -97,18 +98,24 @@ public class FavoriteService {
         param.put("mobileId", mk.getMobileId());
         if (mk.isUser()) param.put("userId", mk.getUserId());
         //处理过滤条件
-        String typeSql="";
-        String[] types=mediaType.split(",");
-        for (int i=0; i<types.length; i++) {
-            if (types[i].equals("RADIO")||types[i].equals("AUDIO")||!types[i].equals("SEQU")||!types[i].equals("TEXT")) {
-                typeSql+="or resTableName='"+ContentUtils.getResTableName(types[i])+"'";
+        if (!StringUtils.isNullOrEmptyOrSpace(mediaType)) {
+            String typeSql="";
+            String[] types=mediaType.split(",");
+            for (int i=0; i<types.length; i++) {
+                if (types[i].equals("RADIO")||types[i].equals("AUDIO")||!types[i].equals("SEQU")||!types[i].equals("TEXT")) {
+                    typeSql+="or resTableName='"+ContentUtils.getResTableName(types[i])+"'";
+                }
+            }
+            if (typeSql.length()>0) {
+                typeSql=typeSql.substring(3);
+                param.put("mediaFilterSql", typeSql);
             }
         }
-        if (typeSql.length()>0) typeSql=typeSql.substring(3);
-        param.put("mediaFilterSql", typeSql);
-
+        //得到喜欢列列表
         Page<UserFavoritePo> resultPage=userFavoriteDao.pageQueryAutoTranform(null, "getFavoriteAssets", param, page, pageSize);
         if (resultPage==null||resultPage.getDataCount()==0||resultPage.getResult()==null||resultPage.getResult().isEmpty()) return null;
+
+        //组装数据
         param.clear();
         param.put("AllSize", resultPage.getDataCount());
         param.put("CurPage", resultPage.getPageIndex());
@@ -142,7 +149,14 @@ public class FavoriteService {
             //重构分类
             cataList=groupDao.queryForListAutoTranform("refCataById", reParam);
         }
-        List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(fList);
+        List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
+        for (UserFavoritePo ufPo: fList) {
+            Map<String, Object> oneAsset=new HashMap<String, Object>();
+            oneAsset.put("resTableName", ufPo.getResTableName());
+            oneAsset.put("resId", ufPo.getResId());
+            assetList.add(oneAsset);
+        }
+        List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
 
         //组装内容
         List<Map<String, Object>> favoriteList=new ArrayList<Map<String, Object>>(fList.size());

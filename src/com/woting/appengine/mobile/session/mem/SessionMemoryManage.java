@@ -52,7 +52,7 @@ public class SessionMemoryManage {
         //加载版本配置
         if (versionService==null) {
             //加载版本配置
-            ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
+            ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
             if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
                 versionService=(VersionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("versionService");
             }

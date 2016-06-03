@@ -200,7 +200,7 @@ public abstract class MobileUtils {
 
         if (type==1) {
             try {
-                ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
+                ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
                 if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
                     MobileUsedService muService=(MobileUsedService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("mobileUsedService");
                     MobileUsedPo mu=muService.getUsedInfo(_mKey.getMobileId(), _mKey.getPCDType());

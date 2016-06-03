@@ -15,7 +15,7 @@ import com.woting.passport.UGA.service.GroupService;
 public class GroupMemoryManage {
     //java的占位单例模式===begin
     private static class InstanceHolder {
-        public static GroupMemoryManage instance = new GroupMemoryManage();
+        public static GroupMemoryManage instance=new GroupMemoryManage();
     }
     public static GroupMemoryManage getInstance() {
         return InstanceHolder.instance;
@@ -39,10 +39,10 @@ public class GroupMemoryManage {
      */
     public synchronized void initMemory() {
         if (this.inited) return;
-        ServletContext sc = (ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
+        ServletContext sc=(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent();
         if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-            GroupService groupService = (GroupService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("groupService");
-            List<Group> groups = groupService.getAllGroup();
+            GroupService groupService=(GroupService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("groupService");
+            List<Group> groups=groupService.getAllGroup();
             if (groups!=null&&groups.size()>0) {
                 for (Group g: groups) {
                     this.addOneGroup(g);
@@ -54,7 +54,7 @@ public class GroupMemoryManage {
 
     //把一个用户组对象加入gicMap
     public void addOneGroup(Group g) {
-        GroupInterCom gic = new GroupInterCom(g);
+        GroupInterCom gic=new GroupInterCom(g);
         this.gm.gicMap.put(g.getGroupId(), gic);
     }
 
