@@ -80,6 +80,9 @@
   <select id="getCount" parameterType="java.util.Map" resultType="java.lang.Integer">
     select count(*) from wt_ChannelAsset <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </select>
+  <select id="belongSeqPubCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select count(*) from wt_ChannelAsset where assetType='wt_SeqMediaAsset' and assetId in (select sId from wt_SeqMA_Ref where mId=#{assetId,jdbcType=VARCHAR})
+  </select>
 
   <!-- 获得列表 -->
   <select id="getList" parameterType="java.util.Map" resultMap="channelAssetMap">

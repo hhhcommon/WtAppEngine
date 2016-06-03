@@ -117,8 +117,8 @@ public class FavoriteService {
 
         //组装数据
         param.clear();
-        param.put("AllSize", resultPage.getDataCount());
-        param.put("CurPage", resultPage.getPageIndex());
+        param.put("AllCount", resultPage.getDataCount());
+        param.put("Page", resultPage.getPageIndex());
         param.put("PageSize", resultPage.getPageSize());
 
         List<UserFavoritePo> fList=(List<UserFavoritePo>)resultPage.getResult();
@@ -159,7 +159,7 @@ public class FavoriteService {
         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
 
         //组装内容
-        List<Map<String, Object>> favoriteList=new ArrayList<Map<String, Object>>(fList.size());
+        Map<String, Object>[] favoriteArray=new Map[fList.size()];
         Map<String, Object> oneContent;
 
         List<Map<String, Object>> tempList;
@@ -170,7 +170,7 @@ public class FavoriteService {
             if (tempList!=null&&!tempList.isEmpty()) {
                 for (Map<String, Object> oneCntt: tempList) {
                     oneContent=ContentUtils.convert2Bc(oneCntt, personList, cataList, pubChannelList, fList);
-                    add2FavoretList(favoriteList, oneContent, fList);
+                    add2FavoretList(favoriteArray, oneContent, fList);
                 }
             }
         }
@@ -181,7 +181,7 @@ public class FavoriteService {
             if (tempList!=null&&!tempList.isEmpty()) {
                 for (Map<String, Object> oneCntt: tempList) {
                     oneContent=ContentUtils.convert2Ma(oneCntt, personList, cataList, pubChannelList, fList);
-                    add2FavoretList(favoriteList, oneContent, fList);
+                    add2FavoretList(favoriteArray, oneContent, fList);
                 }
             }
         }
@@ -192,21 +192,22 @@ public class FavoriteService {
             if (tempList!=null&&!tempList.isEmpty()) {
                 for (Map<String, Object> oneCntt: tempList) {
                     oneContent=ContentUtils.convert2Sma(oneCntt, personList, cataList, pubChannelList, fList);
-                    add2FavoretList(favoriteList, oneContent, fList);
+                    add2FavoretList(favoriteArray, oneContent, fList);
                 }
             }
         }
-        for (int i=favoriteList.size()-1; i>=0; i--) {
-            if (favoriteList.get(i)==null) favoriteList.remove(i);
+        List<Map<String, Object>> favoriteList=new ArrayList<Map<String, Object>>();
+        for (int i=0; i<favoriteArray.length; i++) {
+            if (favoriteArray[i]!=null) favoriteList.add(favoriteArray[i]);
         }
         param.put("FavoriteList", favoriteList);
         
         return param;
     }
-    private void add2FavoretList(List<Map<String, Object>> favoriteList, Map<String, Object> oneContent, List<UserFavoritePo> fList) {
+    private void add2FavoretList(Map<String, Object>[] favoriteArray, Map<String, Object> oneContent, List<UserFavoritePo> fList) {
         for (int i=0; i<fList.size(); i++) {
             if (equalContent(oneContent, fList.get(i))) {
-                favoriteList.add(i, oneContent);
+                favoriteArray[i]=oneContent;
                 break;
             }
         }
