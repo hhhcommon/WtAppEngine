@@ -19,7 +19,7 @@ import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.content.ContentUtils;
+import com.woting.cm.core.utils.ContentUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.favorite.persis.po.UserFavoritePo;
@@ -111,11 +111,11 @@ public class FavoriteService {
         if (mk.isUser()) param.put("userId", mk.getUserId());
 
         Page<UserFavoritePo> resultPage=null;
-        List<UserFavoritePo> fList=null;
+        List<Map<String, Object>> fList=null;
 
         //一、根据不同的条件获得喜欢内容的标引列表
         if (resultType==2) {//得到喜欢的分类列表
-            fList=new ArrayList<UserFavoritePo>();
+            fList=new ArrayList<Map<String, Object>>();
 
             param.put("sortByClause", "CTime desc");
 
@@ -152,20 +152,22 @@ public class FavoriteService {
             }
             resultPage=userFavoriteDao.pageQueryAutoTranform(null, "getFavoriteAssets", param, page, pageSize);
             if (!(resultPage==null||resultPage.getDataCount()==0||resultPage.getResult()==null||resultPage.getResult().isEmpty())) {
-                fList=(List<UserFavoritePo>)resultPage.getResult();
+                for (UserFavoritePo ufPo: resultPage.getResult()) {
+                    fList.add(ufPo.toHashMapAsBean());
+                }
             }
         }
         if (fList==null||fList.isEmpty()) return null;
 
         //二、得到关联数据
         String bcIds="", maIds="", smaIds="";
-        for (UserFavoritePo oneUf: fList) {
-            if (oneUf.getResTableName()!=null&&oneUf.getResId()!=null) {
-                if (oneUf.getResTableName().equals("wt_Broadcast")) bcIds+=",'"+oneUf.getResId()+"'";
+        for (Map<String, Object> oneF: fList) {
+            if (oneF.get("resTableName")!=null&&oneF.get("resId")!=null) {
+                if ((oneF.get("resTableName")+"").equals("wt_Broadcast")) bcIds+=",'"+oneF.get("resId")+"'";
                 else
-                if (oneUf.getResTableName().equals("wt_MediaAsset")) maIds+=",'"+oneUf.getResId()+"'";
+                if ((oneF.get("resTableName")+"").equals("wt_MediaAsset")) maIds+=",'"+oneF.get("resId")+"'";
                 else
-                if (oneUf.getResTableName().equals("wt_SeqMediaAsset")) smaIds+=",'"+oneUf.getResId()+"'";
+                if ((oneF.get("resTableName")+"").equals("wt_SeqMediaAsset")) smaIds+=",'"+oneF.get("resId")+"'";
             }
         }
         if (bcIds.length()>0) bcIds=bcIds.substring(1);
@@ -185,10 +187,10 @@ public class FavoriteService {
             cataList=groupDao.queryForListAutoTranform("refCataById", reParam);
         }
         List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
-        for (UserFavoritePo ufPo: fList) {
+        for (Map<String, Object> oneF: fList) {
             Map<String, Object> oneAsset=new HashMap<String, Object>();
-            oneAsset.put("resTableName", ufPo.getResTableName());
-            oneAsset.put("resId", ufPo.getResId());
+            oneAsset.put("resTableName", oneF.get("resTableName"));
+            oneAsset.put("resId", oneF.get("resId"));
             assetList.add(oneAsset);
         }
         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
@@ -282,7 +284,7 @@ public class FavoriteService {
                         if (ps!=null) try {ps.close();ps=null;} catch(Exception e) {ps=null;} finally {ps=null;};
                         if (conn!=null) try {conn.close();conn=null;} catch(Exception e) {conn=null;} finally {conn=null;};
                     }
-                    List<UserFavoritePo> _fList=null;
+                    List<Map<String, Object>> _fList=null;
                     if (!maMap.isEmpty()) {
                         maIds=maIds.substring(1);
                         reParam.clear();
@@ -294,7 +296,10 @@ public class FavoriteService {
                         //重构发布
                         pubChannelList=channelService.getPubChannelList(assetList);
                         //重构喜欢
-                        _fList=getPureFavoriteList(mk);
+                        List<UserFavoritePo> __fList=getPureFavoriteList(mk);
+                        if (__fList!=null&&__fList.size()>0) {
+                            for (UserFavoritePo ufPo: __fList) _fList.add(ufPo.toHashMapAsBean());
+                        }
                     }
                     Map<String, Object> maData, smaData;
                     for (Map<String, Object> oneSeqMa: tempList) {
@@ -366,7 +371,7 @@ public class FavoriteService {
         //五、返回数据
         return param;
     }
-    private void add2FavoretList(Map<String, Object>[] favoriteArray, Map<String, Object> oneContent, List<UserFavoritePo> fList) {
+    private void add2FavoretList(Map<String, Object>[] favoriteArray, Map<String, Object> oneContent, List<Map<String, Object>> fList) {
         for (int i=0; i<fList.size(); i++) {
             if (equalContent(oneContent, fList.get(i))) {
                 favoriteArray[i]=oneContent;
@@ -375,7 +380,7 @@ public class FavoriteService {
         }
         
     }
-    private void add2FavoretList4Extract(Map<String, Object>[] favoriteArray, Map<String, Object> oneContent, List<UserFavoritePo> fList) {
+    private void add2FavoretList4Extract(Map<String, Object>[] favoriteArray, Map<String, Object> oneContent, List<Map<String, Object>> fList) {
         for (int i=0; i<fList.size(); i++) {
             Map<String, Object> srcConn=(Map<String, Object>)oneContent.get("SeqInfo");
             if (equalContent(srcConn, fList.get(i))) {
@@ -385,16 +390,18 @@ public class FavoriteService {
         }
         
     }
-    private boolean equalContent(Map<String, Object> oneContent, UserFavoritePo oneFavorite) {
-        if (!(oneContent.get("ContentId")+"").equals(oneFavorite.getResId())) return false;
-        if (!(ContentUtils.getResTableName(oneContent.get("MediaType")+"")).equals(oneFavorite.getResTableName())) return false;
+    private boolean equalContent(Map<String, Object> oneContent, Map<String, Object> oneFavorite) {
+        if (!(oneContent.get("ContentId")+"").equals(oneFavorite.get("resId")+"")) return false;
+        if (!(ContentUtils.getResTableName(oneContent.get("MediaType")+"")).equals(oneFavorite.get("resTableName")+"")) return false;
         return true;
     }
-    private boolean fillTypeList(String cnttType, List<UserFavoritePo> fList, int perSize, int pageSize, Map<String, Object> param) {
+    private boolean fillTypeList(String cnttType, List<Map<String, Object>> fList, int perSize, int pageSize, Map<String, Object> param) {
         param.put("resTableName", ContentUtils.getResTableName(cnttType));
         List<UserFavoritePo> thisTypeList=userFavoriteDao.queryForList(param);
         for (int i=perSize-1; i<thisTypeList.size()-1; i++) thisTypeList.remove(i);
-        fList.addAll(thisTypeList);
+        for (int i=0; i<thisTypeList.size(); i++) {
+            fList.add(thisTypeList.get(i).toHashMapAsBean());
+        }
         if (fList.size()>pageSize) return false;
         return true;
     }

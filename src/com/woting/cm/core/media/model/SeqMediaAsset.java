@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.spiritdata.framework.core.model.BaseObject;
 import com.spiritdata.framework.core.model.ModelSwapPo;
 import com.spiritdata.framework.exceptionC.Plat0006CException;
 import com.spiritdata.framework.util.SequenceUUID;
@@ -13,7 +14,7 @@ import com.woting.cm.core.dict.model.DictDetail;
 import com.woting.cm.core.media.persis.po.SeqMediaAssetPo;
 import com.woting.cm.core.perimeter.model.Organize;
 
-public class SeqMediaAsset implements Serializable, ModelSwapPo {
+public class SeqMediaAsset extends BaseObject implements Serializable, ModelSwapPo {
     private static final long serialVersionUID=8591338480388239961L;
 
     private String id; //uuid(主键)

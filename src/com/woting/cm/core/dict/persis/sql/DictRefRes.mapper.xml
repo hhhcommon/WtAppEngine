@@ -19,6 +19,31 @@
     <result  column="cTime"         property="CTime"         jdbcType="TIMESTAMP"/>
   </resultMap>
 
+  <!-- 所有列 -->
+  <sql id="Base_Column_List">
+    id, refName, resTableName, resId, dictMid, dictMName, dictDid, title, bCode, pathNames, pathIds, cTime
+  </sql>
+
+  <!-- 条件子句 -->
+  <sql id="WhereClauseByEntiey">
+    <where>
+      <trim prefix="(" suffix=")" prefixOverrides="and">
+        <if test="id!=null"> and id=#{id,jdbcType=VARCHAR}</if>
+        <if test="refName!=null"> and refName=#{refName,jdbcType=VARCHAR}</if>
+        <if test="resTableName!=null"> and resTableName=#{resTableName,jdbcType=VARCHAR}</if>
+        <if test="resId!=null"> and resId=#{resId,jdbcType=VARCHAR}</if>
+        <if test="dictMid!=null"> and dictMid=#{dictMid,jdbcType=VARCHAR}</if>
+        <if test="dictMName!=null"> and dictMName=#{dictMName,jdbcType=VARCHAR}</if>
+        <if test="dictDid!=null"> and dictDid=#{dictDid,jdbcType=VARCHAR}</if>
+        <if test="title!=null"> and title=#{title,jdbcType=VARCHAR}</if>
+        <if test="BCode!=null"> and bCode=#{BCode,jdbcType=VARCHAR}</if>
+        <if test="pathNames!=null"> and pathNames=#{pathNames,jdbcType=VARCHAR}</if>
+        <if test="pathIds!=null"> and pathIds=#{pathIds,jdbcType=VARCHAR}</if>
+        <if test="CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
+      </trim>
+    </where>
+  </sql>
+
   <!-- 新增 对应关系 -->
   <insert id="insert" parameterType="java.util.Map">
     insert into wt_ResDict_Ref
@@ -49,4 +74,49 @@
       <if test="pathIds!=null">#{pathIds,jdbcType=VARCHAR},</if>
     </trim>
   </insert>
+
+  <!-- 修改 根据主键-->
+  <update id="update" parameterType="java.util.Map">
+    update wt_ResDict_Ref
+    <set>
+      <if test="refName!=null">refName=#{refName,jdbcType=VARCHAR},</if>
+      <if test="resTableName!=null">resTableName=#{resTableName,jdbcType=VARCHAR},</if>
+      <if test="resId!=null">resId=#{resId,jdbcType=VARCHAR},</if>
+      <if test="dictMid!=null">pId=#{dictMid,jdbcType=VARCHAR},</if>
+      <if test="dictMName!=null">dictMName=#{dictMName,jdbcType=VARCHAR},</if>
+      <if test="dictDid!=null">dictDid=#{dictDid,jdbcType=VARCHAR},</if>
+      <if test="title!=null">title=#{title,jdbcType=VARCHAR},</if>
+      <if test="BCode!=null">bCode=#{BCode,jdbcType=VARCHAR},</if>
+      <if test="pathNames!=null">pathNames=#{pathNames,jdbcType=VARCHAR},</if>
+      <if test="pathIds!=null">pathIds=#{pathIds,jdbcType=VARCHAR},</if>
+      <if test="CTime=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id=#{id,jdbcType=VARCHAR}
+  </update>
+
+  <!-- 获得列表 -->
+  <select id="getList" resultMap="dictRefResMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_ResDict_Ref
+    <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/>
+    <if test="orderByClause!=null">order by ${orderByClause}</if>
+    </if>
+  </select>
+  <select id="getListByResIds" resultMap="dictRefResMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_ResDict_Ref
+    where resTableName=#{resTableName,jdbcType=VARCHAR} and resId in (${resIds})
+    <if test="orderByClause!=null">order by ${orderByClause}</if>
+  </select>
+
+  <!-- 获得一条数据 -->
+  <select id="getInfo" resultMap="dictRefResMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_ResDict_Ref <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </select>
+  <select id="getInfoById" resultMap="dictRefResMap" parameterType="java.lang.String">
+    select <include refid="Base_Column_List"/> from wt_ResDict_Ref where id=#{id,jdbcType=VARCHAR}
+  </select>
+
+  <!-- 删除数据 -->
+  <delete id="multiDelBc" parameterType="java.lang.String">
+    delete from wt_ResDict_Ref where resId in (${value}) and resTableName='wt_Broadcast'
+  </delete>
 </mapper>

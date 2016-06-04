@@ -3,6 +3,7 @@ package com.woting.cm.core.dict.model;
 import java.io.Serializable;
 import java.sql.Timestamp;
 
+import com.spiritdata.framework.core.model.BaseObject;
 import com.spiritdata.framework.core.model.ModelSwapPo;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.exceptionC.Plat0006CException;
@@ -10,11 +11,11 @@ import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.cm.core.dict.persis.po.DictRefResPo;
 
-public class DictRefRes implements Serializable, ModelSwapPo {
+public class DictRefRes extends BaseObject implements Serializable, ModelSwapPo {
     private static final long serialVersionUID=5201517946401777207L;
 
     private String id; //uuid(主键)
-    private String refName; //关系名称：resType+dictMId=唯一关系名称，既相当于某类资源的一个字段
+    private String refName; //关系名称：resTableName+dictMId=唯一关系名称，既相当于某类资源的一个字段
     private String resTableName; //资源类型Id：1电台；2单体媒体资源；3专辑资源
     private String resId; //资源Id
     private DictModel dm;

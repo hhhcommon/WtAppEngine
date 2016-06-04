@@ -26,7 +26,7 @@ import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
-import com.woting.appengine.content.ContentUtils;
+import com.woting.cm.core.utils.ContentUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.channel.service.ChannelService;
@@ -68,7 +68,14 @@ public class ContentService {
      */
     public Map<String, Object> searchAll(String searchStr, int resultType, int pageType, MobileKey mk) {
         //得到喜欢列表
-        List<UserFavoritePo> fList=favoriteService.getPureFavoriteList(mk);
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mk);
+        List<Map<String, Object>> fList=null;
+        if (_fList!=null&&!_fList.isEmpty()) {
+            fList=new ArrayList<Map<String, Object>>();
+            for (UserFavoritePo ufPo: _fList) {
+                fList.add(ufPo.toHashMapAsBean());
+            }
+        }
 
         String __s[]=searchStr.split(",");
         String _s[]=new String[__s.length];
@@ -497,7 +504,14 @@ public class ContentService {
         Map<String, Object> paraM=new HashMap<String, Object>();
 
         //0、得到喜欢列表
-        List<UserFavoritePo> fList=favoriteService.getPureFavoriteList(mk);
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mk);
+        List<Map<String, Object>> fList=null;
+        if (_fList!=null&&!_fList.isEmpty()) {
+            fList=new ArrayList<Map<String, Object>>();
+            for (UserFavoritePo ufPo: _fList) {
+                fList.add(ufPo.toHashMapAsBean());
+            }
+        }
         //1、得主内容
         Map<String, Object> tempMap=groupDao.queryForObjectAutoTranform("getSmById", contentId);
         if (tempMap==null||tempMap.size()==0) return null;
@@ -558,7 +572,14 @@ public class ContentService {
 
     public Map<String, Object> getContents(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId, int pageType, MobileKey mk) {
         //得到喜欢列表
-        List<UserFavoritePo> fList=favoriteService.getPureFavoriteList(mk);
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mk);
+        List<Map<String, Object>> fList=null;
+        if (_fList!=null&&!_fList.isEmpty()) {
+            fList=new ArrayList<Map<String, Object>>();
+            for (UserFavoritePo ufPo: _fList) {
+                fList.add(ufPo.toHashMapAsBean());
+            }
+        }
 
         Map<String, Object> ret=new HashMap<String, Object>();
         //首先根据参数获得范围

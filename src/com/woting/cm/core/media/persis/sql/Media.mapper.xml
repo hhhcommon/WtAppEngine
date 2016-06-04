@@ -22,6 +22,12 @@
     <result  column="pubCount"       property="pubCount"       jdbcType="INTEGER"/>
     <result  column="cTime"          property="CTime"          jdbcType="TIMESTAMP"/>
   </resultMap>
+  
+   <!-- 所有列 -->
+  <sql id="Base_Media_List">
+    id, maTitle, maPubType, maPubId, maPublisher, maPublishTime, maImg, maURL, subjectWords, keyWords, langDid, language, timeLong, descn, pubCount, cTime
+  </sql>
+  
 
   <!-- 单体节目播放源 -->
   <resultMap id="maSourceMap" type="maSource">
@@ -36,6 +42,10 @@
     <result  column="descn"      property="descn"      jdbcType="VARCHAR"/>
     <result  column="cTime"      property="CTime"      jdbcType="TIMESTAMP"/>
   </resultMap>
+
+  <sql id="Base_MaSource_List">
+    id, maId, maSrcType, maSrcId, maSource, smType, playURI, isMain, descn, cTime
+  </sql>
 
   <!-- 专辑 -->
   <resultMap id="seqMediaAssetMap" type="seqMediaAsset">
@@ -55,6 +65,10 @@
     <result  column="pubCount"        property="pubCount"        jdbcType="INTEGER"/>
     <result  column="cTime"           property="CTime"           jdbcType="TIMESTAMP"/>
   </resultMap>
+  
+  <sql id="Base_SequMedia_List">
+    id, smaTitle, smaPubType, smaPubId, smaPublisher, smaPublishTime, smaImg, smaAllCount, subjectWords, keyWords, langDid, language, descn, pubCount, cTime
+  </sql>
 
   <!-- 专辑和单体节目关系 -->
   <resultMap id="seqMaRefMap" type="seqMaRef">
@@ -65,6 +79,10 @@
     <result  column="descn"      property="descn"      jdbcType="VARCHAR"/>
     <result  column="cTime"      property="CTime"      jdbcType="TIMESTAMP"/>
   </resultMap>
+  
+  <sql id="Base_SeqMaRef_List">
+    id, sId, mId, columnNum, descn, cTime
+  </sql>
 
   <!-- 新增 单体节目 -->
   <insert id="insertMa" parameterType="java.util.Map">
@@ -183,4 +201,92 @@
       <if test="descn!=null">#{descn,jdbcType=VARCHAR},</if>
     </trim>
   </insert>
+  
+  <select id="getMaInfoById" parameterType="java.lang.String" resultMap="mediaAssetMap">
+    select <include refid="Base_Media_List"/>from wt_MediaAsset where id=#{id,jdbcType=VARCHAR} limit 1
+  </select>
+  
+  <!-- 根据主播id获取 -->
+  <select id="getMaListByMaPubId" parameterType="java.lang.String" resultMap="mediaAssetMap">
+    select <include refid="Base_Media_List"/>from wt_MediaAsset where maPubId=#{maPubId,jdbcType=VARCHAR} order by cTime desc
+  </select>
+  
+  <select id="getSmaListBySmaPubId" parameterType="java.lang.String" resultMap="seqMediaAssetMap">
+    select <include refid="Base_SequMedia_List"/>from wt_SeqMediaAsset where smaPubId=#{smaPubId,jdbcType=VARCHAR} order by cTime desc
+  </select>
+  
+  <select id="getSmaInfoById" parameterType="java.lang.String" resultMap="seqMediaAssetMap">
+    select <include refid="Base_SequMedia_List"/>from wt_SeqMediaAsset where id=#{id,jdbcType=VARCHAR} limit 1
+  </select>
+  
+  <select id="getS2MRefInfoByMId" parameterType="java.lang.String" resultMap="seqMaRefMap">
+    select <include refid="Base_SeqMaRef_List"/>from wt_SeqMA_Ref where mid=#{mid,jdbcType=VARCHAR} limit 1
+  </select>
+  
+  <!-- 修改 根据主键-->
+  <update id="updateMa" parameterType="java.util.Map">
+    update wt_MediaAsset
+    <set>
+      <if test="id!=null">id=#{id,jdbcType=VARCHAR},</if>
+      <if test="maTitle!=null">maTitle=#{maTitle,jdbcType=VARCHAR},</if>
+      <if test="maPubType!=null and maPubType!=0">maPubType=#{maPubType,jdbcType=INTEGER},</if>
+      <if test="maPubId!=null">maPubId=#{maPubId,jdbcType=VARCHAR},</if>
+      <if test="maPublisher!=null">maPublisher=#{maPublisher,jdbcType=VARCHAR},</if>
+      <if test="maImg!=null">maImg=#{maImg,jdbcType=VARCHAR},</if>
+      <if test="maURL!=null">maURL=#{maURL,jdbcType=VARCHAR},</if>
+      <if test="subjectWords!=null">subjectWords=#{subjectWords,jdbcType=VARCHAR},</if>
+      <if test="keyWords!=null">keyWords=#{keyWords,jdbcType=VARCHAR},</if>
+      <if test="langDid!=null">langDid=#{langDid,jdbcType=VARCHAR},</if>
+      <if test="language!=null">language=#{language,jdbcType=VARCHAR},</if>
+      <if test="timeLong!=null">timeLong=#{timeLong,jdbcType=VARCHAR},</if>
+      <if test="descn!=null">descn=#{descn,jdbcType=VARCHAR},</if>
+      <if test="pubCount!=null and pubCount>0">pubCount=#{pubCount,jdbcType=VARCHAR},</if>
+    </set>
+    where id=#{id,jdbcType=VARCHAR}
+  </update>
+  
+  <update id="updateMas" parameterType="java.util.Map">
+    update wt_wt_MaSource
+    <set>
+      <if test="id!=null">id=#{id,jdbcType=VARCHAR},</if>
+      <if test="maId!=null">maId=#{maId,jdbcType=VARCHAR},</if>
+      <if test="maSrcType!=null and maSrcType!=0">maSrcType=#{maSrcType,jdbcType=INTEGER},</if>
+      <if test="maSrcId!=null">maSrcId=#{maSrcId,jdbcType=VARCHAR},</if>
+      <if test="maSource!=null">maSource=#{maSource,jdbcType=VARCHAR},</if>
+      <if test="smType!=null">smType=#{smType,jdbcType=VARCHAR},</if>
+      <if test="playURI!=null">playURI=#{playURI,jdbcType=VARCHAR},</if>
+      <if test="isMain!=null and isMain!=0">isMain=#{isMain,jdbcType=INTEGER},</if>
+      <if test="descn!=null">descn=#{descn,jdbcType=VARCHAR},</if>
+    </set>
+    where id=#{id,jdbcType=VARCHAR}
+  </update>
+  
+  <update id="updateSeqMaRef" parameterType="java.util.Map">
+    update wt_wt_MaSource
+    <set>
+      <if test="id!=null">id=#{id,jdbcType=VARCHAR},</if>
+      <if test="SId!=null">SId=#{SId,jdbcType=VARCHAR},</if>
+      <if test="MId!=null">MId=#{MId,jdbcType=VARCHAR},</if>
+      <if test="columnNum!=null and columnNum>0">columnNum=#{columnNum,jdbcType=VARCHAR},</if>
+      <if test="descn!=null">descn=#{descn,jdbcType=VARCHAR},</if>
+    </set>
+    where MId=#{MId,jdbcType=VARCHAR}
+  </update>
+  
+  <delete id="multiMaById" parameterType="java.lang.String">
+      delete from wt_MediaAsset where id=#{id,jdbcType=VARCHAR}
+  </delete>
+  
+  <delete id="multiSmaById" parameterType="java.lang.String">
+      delete from wt_SeqMediaAsset where id=#{id,jdbcType=VARCHAR}
+  </delete>
+  
+  <delete id="multiMasByMaId" parameterType="java.lang.String">
+      delete from wt_MaSource where maid=#{maid,jdbcType=VARCHAR}
+  </delete>
+  
+  <delete id="multiM2SRefByMId" parameterType="java.lang.String">
+      delete from wt_SeqMA_Ref where mid=#{mid,jdbcType=VARCHAR}
+  </delete>
+  
 </mapper>
