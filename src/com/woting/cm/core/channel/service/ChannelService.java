@@ -111,7 +111,9 @@ public class ChannelService {
         param.put("assetType", assetType);
         param.put("assetId", assetId);
         param.put("flowFlag", "2");
-        return (channelAssetDao.getCount(param)>0);
+        if (assetType.equals("wt_MediaAsset")) {
+            return (channelAssetDao.getCount("belongSeqPubCount", param)>0);
+        } else return (channelAssetDao.getCount(param)>0);
     }
 
     /**

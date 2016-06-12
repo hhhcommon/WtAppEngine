@@ -311,17 +311,29 @@ public class ContentController {
             if (map.get("ReturnType")!=null) return map;
 
             MobileKey mk=MobileUtils.getMobileKey(m);
-            //1-得到内容类别
+            //1-得到返回类型
+            int resultType=3;
+            try {resultType=Integer.parseInt(m.get("ResultType")+"");} catch(Exception e) {}
+            //2-获得页面类型
+            int pageType=1;
+            try {pageType=Integer.parseInt(m.get("PageType")+"");} catch(Exception e) {};
+            //3-得到内容类别
             String mediaType=(m.get("MediaType")==null?null:m.get("MediaType")+"");
-            //2-得到每页记录数，默认每页10条记录
+            //4-得到每页记录数，默认每页10条记录
             int pageSize=10;
             try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
-            //3-得到当前页数
+            //5-得到当前页数
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            //6-得到每分类条目数
+            int perSize=3;
+            try {perSize=Integer.parseInt(m.get("PerSize")+"");} catch(Exception e) {}
+            //7-得到开始分类Id
+            String beginCatalogId=(m.get("BeginCatalogId")==null?null:m.get("BeginCatalogId")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(beginCatalogId)) beginCatalogId=null;
 
 
-            Map<String, Object> result=favoriteService.getFavoriteList(mediaType, pageSize, page, mk);
+            Map<String, Object> result=favoriteService.getFavoriteList(resultType, pageType, mediaType, pageSize, page, perSize, beginCatalogId, mk);
             
             if (result==null||result.isEmpty()) {
                 map.put("ReturnType", "1011");

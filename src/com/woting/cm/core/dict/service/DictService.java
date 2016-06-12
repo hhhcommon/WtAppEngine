@@ -12,7 +12,6 @@ import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.util.TreeUtils;
-import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictDetail;
 import com.woting.cm.core.dict.model.DictMaster;
@@ -23,7 +22,6 @@ import com.woting.cm.core.dict.persis.po.DictMasterPo;
 import com.woting.cm.core.dict.persis.po.DictRefResPo;
 import com.woting.exceptionC.Wtcm0301CException;
 import com.woting.exceptionC.Wtcm1000CException;
-import com.woting.searchword.service.WordService;
 
 @Service
 public class DictService {
@@ -33,9 +31,6 @@ public class DictService {
     private MybatisDAO<DictDetailPo> dictDDao;
     @Resource(name="defaultDAO")
     private MybatisDAO<DictRefResPo> dictRefDao;
-
-    @Resource
-    private WordService wordService;
     
     @PostConstruct
     public void initParam() {
@@ -89,25 +84,21 @@ public class DictService {
                 param.put("ownerId", "cm");
                 param.put("ownerType", "100");
                 int i=1;
-                Page<DictDetailPo> ddPage=dictDDao.pageQuery("getListByOnwer", param, i++, 10000);
+                Page<DictDetailPo> ddPage=dictDDao.pageQuery("getListByOnwerDemo", param, i++, 10000);
                 List<DictDetailPo> ddpol=new ArrayList<DictDetailPo>();
                 boolean hasDD=!ddPage.getResult().isEmpty();
                 //分页处理
                 while (hasDD) {
                     ddpol.addAll(ddPage.getResult());
-                    ddPage=dictDDao.pageQuery("getListByOnwer", param, i++,10000);
+                    ddPage=dictDDao.pageQuery("getListByOnwerDemo", param, i++,10000);
                     hasDD=!ddPage.getResult().isEmpty();
                 }
                 if (ddpol==null||ddpol.size()==0) return _cd;
                 List<DictDetail> ddl=new ArrayList<DictDetail>();
-                Owner sysO=new Owner(100, "cm");
                 for (DictDetailPo ddp: ddpol) {
                     DictDetail dd=new DictDetail();
                     dd.buildFromPo(ddp);
                     ddl.add(dd);
-//                    //敏感词处理，临时
-//                    Word w=new Word(dd.getNodeName());
-//                    wordService.addWord2LoadQueue(w, sysO);
                 }
 
                 List<DictDetail> templ=new ArrayList<DictDetail>();

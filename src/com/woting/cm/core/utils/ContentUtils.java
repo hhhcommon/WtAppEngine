@@ -1,11 +1,9 @@
-package com.woting.appengine.content;
+package com.woting.cm.core.utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.woting.favorite.persis.po.UserFavoritePo;
 
 /**
  * 内容方法类：内容数据的转换，主要——存储对象转换为显示对象。
@@ -26,7 +24,7 @@ public abstract class ContentUtils {
                                       List<Map<String, Object>> personList,
                                       List<Map<String, Object>> cataList,
                                       List<Map<String, Object>> pubChannelList,
-                                      List<UserFavoritePo> favoriteList) {
+                                      List<Map<String, Object>> favoriteList) {
         //P12-公共：相关人员列表
         Object temp=fetchPersons(personList, getResTableName(mediaType), one.get("ContentId")+"");
         if (temp!=null) one.put("ContentPersons", temp);
@@ -57,7 +55,7 @@ public abstract class ContentUtils {
                                                   List<Map<String, Object>> personList,
                                                   List<Map<String, Object>> cataList,
                                                   List<Map<String, Object>> pubChannelList,
-                                                  List<UserFavoritePo> favoriteList) {
+                                                  List<Map<String, Object>> favoriteList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
         retM.put("MediaType", "RADIO");
@@ -78,7 +76,7 @@ public abstract class ContentUtils {
         retM.put("ContentFreqs", one.get(""));//S02-特有：频率列表，目前为空
         retM.put("ContentList", one.get(""));//S03-特有：节目单列表，目前为空
 
-        retM.put("CTime", one.get("cTime"));//A1-管控：节目创建时间，目前以此进行排序
+        retM.put("CTime", one.get("CTime"));//A1-管控：节目创建时间，目前以此进行排序
 
         return retM;
     }
@@ -98,7 +96,7 @@ public abstract class ContentUtils {
                                                   List<Map<String, Object>> personList,
                                                   List<Map<String, Object>> cataList,
                                                   List<Map<String, Object>> pubChannelList,
-                                                  List<UserFavoritePo> favoriteList) {
+                                                  List<Map<String, Object>> favoriteList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
         retM.put("MediaType", "AUDIO");
@@ -122,7 +120,7 @@ public abstract class ContentUtils {
 
         retM.put("ContentTimes", one.get("timeLong"));//S01-特有：播放时长
 
-        retM.put("CTime", one.get("cTime"));//A1-管控：节目创建时间，目前以此进行排序
+        retM.put("CTime", one.get("CTime"));//A1-管控：节目创建时间，目前以此进行排序
 
         return retM;
     }
@@ -142,7 +140,7 @@ public abstract class ContentUtils {
                                                    List<Map<String, Object>> personList,
                                                    List<Map<String, Object>> cataList,
                                                    List<Map<String, Object>> pubChannelList,
-                                                   List<UserFavoritePo> favoriteList) {
+                                                   List<Map<String, Object>> favoriteList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
         retM.put("MediaType", "SEQU");
@@ -162,7 +160,7 @@ public abstract class ContentUtils {
 
         retM.put("ContentSubCount", one.get("count"));//S01-特有：下级节目的个数
 
-        retM.put("CTime", one.get("cTime"));//A1-管控：节目创建时间，目前以此进行排序
+        retM.put("CTime", one.get("CTime"));//A1-管控：节目创建时间，目前以此进行排序
 
         return retM;
     }
@@ -188,8 +186,10 @@ public abstract class ContentUtils {
         for (Map<String, Object> _c: cataList) {
             if ((_c.get("resTableName")+"").equals(resTableName)&&(_c.get("resId")+"").equals(resId)) {
                 oneCata=new HashMap<String, Object>();
-                oneCata.put("CataMName", _c.get("dictMName"));//大分类名称
-                oneCata.put("CataTitle", _c.get("pathNames"));//分类名称，树结构名称
+                oneCata.put("CataMName", _c.get("dictMName"));//大分类名称，树结构名称
+                oneCata.put("CataMId", _c.get("dictMid"));//大分类Id
+                oneCata.put("CataTitle", _c.get("pathNames"));//分类名称
+                oneCata.put("CataDid", _c.get("dictDid"));//分类Id
                 ret.add(oneCata);
             }
         }
@@ -210,12 +210,13 @@ public abstract class ContentUtils {
         }
         return ret.size()>0?ret:null;
     }
-    private static int fetchFavorite(List<UserFavoritePo> favoriteList, String resTableName, String resId) {//喜欢处理
+    private static int fetchFavorite(List<Map<String, Object>> favoriteList, String resTableName, String resId) {//喜欢处理
         if (favoriteList==null||favoriteList.size()==0) return 0;
         int ret=0;
-        for (UserFavoritePo _f: favoriteList) {
-            if (_f.getResTableName().equals(resTableName)&&_f.getResId().equals(resId)) {
+        for (Map<String, Object> _f: favoriteList) {
+            if ((_f.get("resTableName")+"").equals(resTableName)&&(_f.get("resId")+"").equals(resId)) {
                 ret=1;
+                break;
             }
         }
         return ret;

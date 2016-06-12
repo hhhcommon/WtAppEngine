@@ -26,7 +26,7 @@ import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
-import com.woting.appengine.content.ContentUtils;
+import com.woting.cm.core.utils.ContentUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.channel.service.ChannelService;
@@ -68,7 +68,14 @@ public class ContentService {
      */
     public Map<String, Object> searchAll(String searchStr, int resultType, int pageType, MobileKey mk) {
         //得到喜欢列表
-        List<UserFavoritePo> fList=favoriteService.getPureFavoriteList(mk);
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mk);
+        List<Map<String, Object>> fList=null;
+        if (_fList!=null&&!_fList.isEmpty()) {
+            fList=new ArrayList<Map<String, Object>>();
+            for (UserFavoritePo ufPo: _fList) {
+                fList.add(ufPo.toHashMapAsBean());
+            }
+        }
 
         String __s[]=searchStr.split(",");
         String _s[]=new String[__s.length];
@@ -278,10 +285,12 @@ public class ContentService {
             }
             rs.close(); rs=null;
             if (pageType==0&&!StringUtils.isNullOrEmptyOrSpace(_orSql)) {//为提升速度，提取单体节目
-                _orSql="select sma.sId, ma.* from wt_MediaAsset as ma, (select * from( select * from  wt_SeqMA_Ref where columnNum=(select b.columnNum from vWt_FirstMaInSequ as b where wt_SeqMA_Ref.sId=b.sId)) as a group by a.sId) as sma"
-                      +" where ma.id=sma.mId and ("+_orSql.substring(4)+")";
+                _orSql="select b.sId, ma.* from wt_MediaAsset as ma, ("+
+                        "select max(a.mId) as mId, a.sId from wt_SeqMA_Ref as a, vWt_FirstMaInSequ as sma "+
+                        "where CONCAT('SID:', a.sId, '|C:', 10000+a.columnNum,'|D:', a.cTime)=CONCAT('SID:', sma.sId, '|', sma.firstMa) and ("+_orSql.substring(4)+") group by a.sId "+
+                      ") as b where ma.id=b.mId";
+                
                 ps2=conn.prepareStatement(_orSql);
-                ps.setQueryTimeout(10);
                 rs=ps2.executeQuery();
                 while (rs!=null&&rs.next()) {
                     String maId=rs.getString("id");
@@ -473,6 +482,7 @@ public class ContentService {
         
         return ret;
     }
+
     /**
      * 获得主页信息
      * @param userId 用户Id
@@ -494,7 +504,14 @@ public class ContentService {
         Map<String, Object> paraM=new HashMap<String, Object>();
 
         //0、得到喜欢列表
-        List<UserFavoritePo> fList=favoriteService.getPureFavoriteList(mk);
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mk);
+        List<Map<String, Object>> fList=null;
+        if (_fList!=null&&!_fList.isEmpty()) {
+            fList=new ArrayList<Map<String, Object>>();
+            for (UserFavoritePo ufPo: _fList) {
+                fList.add(ufPo.toHashMapAsBean());
+            }
+        }
         //1、得主内容
         Map<String, Object> tempMap=groupDao.queryForObjectAutoTranform("getSmById", contentId);
         if (tempMap==null||tempMap.size()==0) return null;
@@ -555,7 +572,14 @@ public class ContentService {
 
     public Map<String, Object> getContents(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId, int pageType, MobileKey mk) {
         //得到喜欢列表
-        List<UserFavoritePo> fList=favoriteService.getPureFavoriteList(mk);
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mk);
+        List<Map<String, Object>> fList=null;
+        if (_fList!=null&&!_fList.isEmpty()) {
+            fList=new ArrayList<Map<String, Object>>();
+            for (UserFavoritePo ufPo: _fList) {
+                fList.add(ufPo.toHashMapAsBean());
+            }
+        }
 
         Map<String, Object> ret=new HashMap<String, Object>();
         //首先根据参数获得范围
