@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import com.spiritdata.framework.util.JsonUtils;
@@ -38,7 +39,7 @@ public abstract class SearchUtils {
 			JedisPoolConfig config = new JedisPoolConfig();
 			// 控制一个pool可分配多少个jedis实例，通过pool.getResource()来获取；
 			// 如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted(耗尽)。
-			config.setMaxTotal(500);
+			config.setMaxTotal(1000);
 			// 控制一个pool最多有多少个状态为idle(空闲的)的jedis实例。
 			config.setMaxIdle(5);
 			// 表示当borrow(引入)一个jedis实例时，最大的等待时间，如果超过等待时间，则直接抛出JedisConnectionException；
@@ -56,8 +57,8 @@ public abstract class SearchUtils {
 	 * @param jedis
 	 */
 	private static void release(Jedis jedis) {
-		if (jedis.isConnected())
-			jedis.disconnect();
+		if(jedis!=null)
+			jedisPool.returnResource(jedis);
 	}
 
 	/**
@@ -165,8 +166,8 @@ public abstract class SearchUtils {
 	 */
 	public static long getListNum(String key) {
 		Jedis jedis = jedisPool.getResource();
-		if (jedis.exists(("Search_" + key + "_Data").getBytes())) {
-			long num = jedis.llen(("Search_" + key + "_Data").getBytes());
+		if (jedis.exists("Search_" + key + "_Data")) {
+			long num = jedis.llen(("Search_" + key + "_Data"));
 			release(jedis);
 			return num;
 		} else {
@@ -194,7 +195,6 @@ public abstract class SearchUtils {
 				num = num - (page - 1) * pageSize;
 				if (num <= 0) {
 					if (isOrNoSearchFinish(key)) {
-						release(jedis);
 						return null;
 					} else {
 						long time = System.currentTimeMillis();
@@ -202,12 +202,10 @@ public abstract class SearchUtils {
 							num = jedis.llen(datastr)-(page-1)*pageSize;
 							if (num>=pageSize) {
 								list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,page*pageSize-1));
-								release(jedis);
 								return list;
 							} else {
 								if(isOrNoSearchFinish(key)) {
 									list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
-									release(jedis);
 									return list;
 								} else Thread.sleep(50);
 							}
@@ -215,27 +213,22 @@ public abstract class SearchUtils {
 						//num<=0时未完成等待5s超时处理
 						if (num>=pageSize) {
 							list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,page*pageSize-1));
-							release(jedis);
 							return list;
 						} else {
 							if ((num>0)&&(num<pageSize)) {
 								list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
-								release(jedis);
 								return list;
 							} else {
-								release(jedis);
 								return null;
 							}
 						}
 					}
 				} else if (num>=pageSize) {
 					list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,page*pageSize-1));
-					release(jedis);
 					return list;
 				} else if (num<pageSize) {
 					if (isOrNoSearchFinish(key)) {
 						list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
-						release(jedis);
 						return list;
 					} else {
 						long time = System.currentTimeMillis();
@@ -243,13 +236,11 @@ public abstract class SearchUtils {
 							num = jedis.llen(datastr)-(page-1)*pageSize;
 							if (num>=pageSize) {
 								list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,page*pageSize-1));
-								release(jedis);
 								return list;
 							} else {
 								if(isOrNoSearchFinish(key))
 								{
 									list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
-									release(jedis);
 									return list;
 								} else Thread.sleep(50);
 							}
@@ -258,16 +249,14 @@ public abstract class SearchUtils {
 						num = jedis.llen(datastr)-(page-1)*pageSize;
 						if(num>=pageSize){
 							list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,page*pageSize-1));
-						    release(jedis);
 						    return list;
 						} else {
 							list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
-							release(jedis);
 							return list;
 						}
 					}
 				}
-			}		
+			} 
 		} catch (InterruptedException e) {} finally {release(jedis);}
 		return null;
 	}
@@ -310,7 +299,7 @@ public abstract class SearchUtils {
 	 * @param l
 	 * @return
 	 */
-	private static List<Map<String, Object>> convertJsonList(List<String> l) {
+	public static List<Map<String, Object>> convertJsonList(List<String> l) {
 		List<Map<String, Object>> retM = new ArrayList<Map<String,Object>>();
 		if (l != null && l.size() > 0) {
 			for (String josnS : l) {
@@ -332,16 +321,22 @@ public abstract class SearchUtils {
 	public static <T> boolean addListInfo(String key, T T) {
 		Jedis jedis = jedisPool.getResource();
 		String value = "";
-		String classname = T.getClass().getSimpleName();
-		if (classname.equals("Festival"))
-			value = JsonUtils.objToJson(DataTransform.festival2Audio((Festival) T));
-		else if (classname.equals("Station"))
-			value = JsonUtils.objToJson(DataTransform.datas2Sequ_Audio((Station) T));
-		else if (classname.equals("HashMap"))
-			value = JsonUtils.objToJson(T);
-		if (!StringUtils.isNullOrEmptyOrSpace(value)&&!value.toLowerCase().equals("null"))
-			jedis.rpush("Search_" + key + "_Data", value);
-		release(jedis);
+		
+		try {
+			String classname = T.getClass().getSimpleName();
+		    if (classname.equals("Festival"))
+			    value = JsonUtils.objToJson(DataTransform.festival2Audio((Festival) T));
+		    else if (classname.equals("Station"))
+			    value = JsonUtils.objToJson(DataTransform.datas2Sequ_Audio((Station) T));
+		    else if (classname.equals("HashMap"))
+			    value = JsonUtils.objToJson(T);
+		    if (!StringUtils.isNullOrEmptyOrSpace(value)&&!value.toLowerCase().equals("null")) {
+			    jedis.rpush("Search_" + key + "_Data", value);
+		    }
+		} catch (Exception e) {
+		}finally {
+			release(jedis);
+		}
 		return true;
 	}
 
@@ -382,16 +377,25 @@ public abstract class SearchUtils {
 	 */
 	public static boolean isOrNoSearchFinish(String key) {
 		Jedis jedis = jedisPool.getResource();
-		if (jedis.exists("Search_" + key + "_Finish")) {
-			if (jedis.get("Search_" + key + "_Finish").equals("5")) { // 喜马拉雅，考拉，蜻蜓，百度新闻，服务器数据库
-				System.out.println("key:已搜索完成 ");
-				release(jedis);
-				return true;
-			}
-		}
-		release(jedis);
+		try {
+			if (jedis.exists("Search_" + key + "_Finish")) {
+				if (jedis.get("Search_" + key + "_Finish").equals("5")) { // 喜马拉雅，考拉，蜻蜓，百度新闻，服务器数据库
+					System.out.println("key:已搜索完成 ");
+					return true;
+					}
+				}
+			} catch (Exception e) {}finally {release(jedis);}
 		return false;
 	}
+	
+//	private static void recordMD5Tag(String key,String str){
+//		Jedis jedis = jedisPool.getResource();
+//		String md5str = jedis.get("Search_"+key+"_MD5")+","+DigestUtils.md5Hex(str);
+//		if (md5str.indexOf(",")==0) md5str.substring(1);
+//		jedis.set("Search_"+key+"_MD5", md5str);
+//	}
+//	
+	
 
 	/**
 	 * 放入缓存开始搜索标志

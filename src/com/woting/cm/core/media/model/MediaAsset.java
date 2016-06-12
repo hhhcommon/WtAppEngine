@@ -29,6 +29,7 @@ public class MediaAsset implements Serializable, ModelSwapPo {
     private long timeLong; //时长，毫秒数
     private String descn; //说明
     private int pubCount=0; //发布状态：0未发布;>0被发布到多少个栏目中（系列节目的发布，这里的单曲也要被加1）
+    private int maStatus=0; //资源状态：0草稿;1提交（包括发布和未发布）
     private Timestamp CTime; //记录创建时间
 
     private Organize publisher; //发布者类型，比如逻辑思维团队
@@ -114,7 +115,13 @@ public class MediaAsset implements Serializable, ModelSwapPo {
     public void setPubCount(int pubCount) {
         this.pubCount=pubCount;
     }
-    public Timestamp getCTime() {
+    public int getMaStatus() {
+		return maStatus;
+	}
+	public void setMaStatus(int maStatus) {
+		this.maStatus = maStatus;
+	}
+	public Timestamp getCTime() {
         return CTime;
     }
     public void setCTime(Timestamp cTime) {
@@ -211,6 +218,7 @@ public class MediaAsset implements Serializable, ModelSwapPo {
         ret.setDescn(descn);
         ret.setCTime(CTime);
         ret.setPubCount(pubCount);
+        ret.setMaStatus(maStatus);
 
         return ret;
     }
@@ -247,6 +255,7 @@ public class MediaAsset implements Serializable, ModelSwapPo {
         descn=_po.getDescn();
         pubCount=_po.getPubCount();
         CTime=_po.getCTime();
+        maStatus=_po.getMaStatus();
 
         //所属专辑、发布栏目、声音源等信息无法从这里得到
     }

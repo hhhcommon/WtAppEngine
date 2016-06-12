@@ -21,13 +21,13 @@ public class SearchCrawlerService {
 		List<Map<String, Object>> list = SearchUtils.getListPage(searchStr, page, pageSize);
 		if (list==null) {
 			long a = System.currentTimeMillis(), num;
-			if (SearchUtils.getListNum(searchStr) == 0) {
+			if ( SearchUtils.getListNum(searchStr)== 0) {
 				SearchUtils.searchContent(searchStr, mk);
 				System.out.println("开启搜索");
 				while (true) {
 					try {
 						Thread.sleep(50);
-						if ((num = SearchUtils.getListNum(searchStr)) > 0) 
+						if ((num = SearchUtils.getListNum(searchStr)) > 0)
 						    if (num >= pageSize) break;
 					    if ((System.currentTimeMillis() - a) > 3 * 1000) break;
 					} catch (InterruptedException e) {

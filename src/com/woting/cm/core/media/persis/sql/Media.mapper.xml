@@ -20,6 +20,7 @@
     <result  column="timeLong"       property="timeLong"       jdbcType="VARCHAR"/>
     <result  column="descn"          property="descn"          jdbcType="VARCHAR"/>
     <result  column="pubCount"       property="pubCount"       jdbcType="INTEGER"/>
+    <result  column="maStatus"       property="maStatus"       jdbcType="INTEGER"/>
     <result  column="cTime"          property="CTime"          jdbcType="TIMESTAMP"/>
   </resultMap>
 
@@ -53,6 +54,7 @@
     <result  column="language"        property="language"        jdbcType="VARCHAR"/>
     <result  column="descn"           property="descn"           jdbcType="VARCHAR"/>
     <result  column="pubCount"        property="pubCount"        jdbcType="INTEGER"/>
+    <result  column="smaStatus"       property="smaStatus"       jdbcType="INTEGER"/>
     <result  column="cTime"           property="CTime"           jdbcType="TIMESTAMP"/>
   </resultMap>
 
@@ -84,6 +86,7 @@
       <if test="timeLong!=null">timeLong,</if>
       <if test="descn!=null">descn,</if>
       <if test="pubCount!=null and pubCount>0">pubCount,</if>
+      <if test="maStatus!=null and maStatus>0">maStatus,</if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
@@ -100,6 +103,7 @@
       <if test="timeLong!=null">#{timeLong,jdbcType=VARCHAR},</if>
       <if test="descn!=null">#{descn,jdbcType=VARCHAR},</if>
       <if test="pubCount!=null and pubCount>0">#{pubCount,jdbcType=VARCHAR},</if>
+      <if test="maStatus!=null and maStatus>0">#{maStatus,jdbcType=VARCHAR},</if>
     </trim>
   </insert>
 
@@ -147,6 +151,7 @@
       <if test="language!=null">language,</if>
       <if test="descn!=null">descn,</if>
       <if test="pubCount!=null and pubCount>0">pubCount,</if>
+      <if test="smaStatus!=null and smaStatus>0">smaStatus,</if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
@@ -162,6 +167,7 @@
       <if test="language!=null">#{language,jdbcType=VARCHAR},</if>
       <if test="descn!=null">#{descn,jdbcType=VARCHAR},</if>
       <if test="pubCount!=null and pubCount>0">#{pubCount,jdbcType=VARCHAR},</if>
+      <if test="smaStatus!=null and smaStatus>0">#{smaStatus,jdbcType=VARCHAR},</if>
     </trim>
   </insert>
 
