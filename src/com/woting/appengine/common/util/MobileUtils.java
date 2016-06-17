@@ -187,6 +187,7 @@ public abstract class MobileUtils {
     }
 
     private static Map<String, Object> _dealMobileLinked(MobileKey mKey, int type) {
+        if (mKey==null) return null;
         MobileKey _mKey=new MobileKey();
         _mKey.setMobileId(mKey.getMobileId());
         _mKey.setPCDType(mKey.getPCDType());

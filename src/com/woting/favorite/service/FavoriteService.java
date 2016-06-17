@@ -111,12 +111,10 @@ public class FavoriteService {
         if (mk.isUser()) param.put("userId", mk.getUserId());
 
         Page<UserFavoritePo> resultPage=null;
-        List<Map<String, Object>> fList=null;
+        List<Map<String, Object>> fList=new ArrayList<Map<String, Object>>();
 
         //一、根据不同的条件获得喜欢内容的标引列表
         if (resultType==2) {//得到喜欢的分类列表
-            fList=new ArrayList<Map<String, Object>>();
-
             param.put("sortByClause", "CTime desc");
 
             boolean isBeginCatalog=StringUtils.isNullOrEmptyOrSpace(beginCatalogId)||beginCatalogId.equals("RADIO");

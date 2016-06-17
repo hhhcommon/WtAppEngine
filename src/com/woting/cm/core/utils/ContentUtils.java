@@ -202,7 +202,7 @@ public abstract class ContentUtils {
         for (Map<String, Object> _c: channelList) {
             if ((_c.get("assetType")+"").equals(resTableName)&&(_c.get("assetId")+"").equals(resId)) {
                 oneChn=new HashMap<String, Object>();
-                oneChn.put("ChannelName", _c.get("channelName"));
+                if (_c.get("channelName")!=null) oneChn.put("ChannelName", _c.get("channelName"));
                 oneChn.put("PubTime", _c.get("pubTime"));
                 oneChn.put("FlowFlag", _c.get("flowFlag"));
                 ret.add(oneChn);

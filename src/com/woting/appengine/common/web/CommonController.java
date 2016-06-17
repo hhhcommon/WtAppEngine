@@ -543,6 +543,8 @@ public class CommonController {
     public Map<String,Object> searchByVoice(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
+            //    @RequestMapping(value="/lqTTS.do")
+
             //0-获取参数
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
