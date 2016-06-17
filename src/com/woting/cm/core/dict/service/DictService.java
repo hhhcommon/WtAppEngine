@@ -84,13 +84,13 @@ public class DictService {
                 param.put("ownerId", "cm");
                 param.put("ownerType", "100");
                 int i=1;
-                Page<DictDetailPo> ddPage=dictDDao.pageQuery("getListByOnwerDemo", param, i++, 10000);
+                Page<DictDetailPo> ddPage=dictDDao.pageQuery("getListByOnwer", param, i++, 10000);
                 List<DictDetailPo> ddpol=new ArrayList<DictDetailPo>();
                 boolean hasDD=!ddPage.getResult().isEmpty();
                 //分页处理
                 while (hasDD) {
                     ddpol.addAll(ddPage.getResult());
-                    ddPage=dictDDao.pageQuery("getListByOnwerDemo", param, i++,10000);
+                    ddPage=dictDDao.pageQuery("getListByOnwer", param, i++,10000);
                     hasDD=!ddPage.getResult().isEmpty();
                 }
                 if (ddpol==null||ddpol.size()==0) return _cd;
@@ -100,9 +100,9 @@ public class DictService {
                     dd.buildFromPo(ddp);
                     ddl.add(dd);
                 }
+                _cd.ddList=(ddl.size()==0?null:ddl);//字典项列表，按照层级结果，按照排序的广度遍历树
 
                 List<DictDetail> templ=new ArrayList<DictDetail>();
-                _cd.ddList=(ddl.size()==0?null:ddl);//字典项列表，按照层级结果，按照排序的广度遍历树
                 if (_cd.ddList!=null&&_cd.ddList.size()>0) {
                     for (DictDetail dd: _cd.ddList) {
                         if (tempDmId.equals(dd.getMId())) templ.add(dd);

@@ -96,8 +96,8 @@
   <!-- 获得列表：按所有者 -->
   <select id="getListByOnwerDemo" resultMap="baseResultMap" parameterType="java.util.Map">
     select <include refid="Base_Column_List_A"/> from plat_DictD a, plat_DictM b
-    where a.mId=b.id and b.ownerId=#{ownerId,jdbcType=VARCHAR} and b.ownerType=#{ownerType,jdbcType=INTEGER} and (b.id=1 or b.id=3)
-    order by a.ddName desc
+    where a.mId=b.id and b.ownerId=#{ownerId,jdbcType=VARCHAR} and b.ownerType=#{ownerType,jdbcType=INTEGER} and (b.id!=6)
+    order by a.mId, a.pid, a.sort desc
   </select>
 
   <!-- 根据所有者信息获得列表 -->

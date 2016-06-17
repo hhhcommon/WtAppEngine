@@ -634,19 +634,25 @@ public class ContentService {
             if (orSql.length()>0) orSql=orSql.substring(4);
 
             //得到获得内容Id的Sql
-            String sql="select assetType,assetId, max(pubTime) pubTime, max(sort) sort, flowFlag from wt_ChannelAsset where isValidate=1 and flowFlag=2 group by assetType,assetId,flowFlag";//栏目
-            if (!catalogType.equals("-1")) sql="select distinct resTableName,resId from wt_ResDict_Ref where dictMid="+catalogType;//分类
-
+            String sql=null;
+            if (catalogType.equals("-1")) {//按发布栏目
+                sql="select assetType,assetId, max(pubTime) pubTime, max(sort) sort, flowFlag from wt_ChannelAsset where isValidate=1 and flowFlag=2 group by assetType,assetId,flowFlag";
+            } else {//按分类
+                sql="select distinct resTableName,resId from wt_ResDict_Ref where dictMid="+catalogType;
+            }
             if (orSql.length()>0) sql+=" and ("+orSql+")";
             if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
-
             if (catalogType.equals("-1")) sql+=" order by sort desc, pubTime desc";//栏目
             else sql+=" order by cTime desc";//分类
-
             sql+=" limit "+(((page<=0?1:page)-1)*pageSize)+","+pageSize; //分页
 
-            //得到获得内容条数的Id
-            String sqlCount="select count(distinct assetType,assetId) from wt_ChannelAsset where isValidate=1 and flowFlag=2";
+            //得到获得内容条数的Sql
+            String sqlCount=null;
+            if (catalogType.equals("-1")) {//按发布栏目
+                sqlCount="select count(distinct assetType,assetId) from wt_ChannelAsset where isValidate=1 and flowFlag=2";
+            } else {//按分类
+                sqlCount="select count(distinct resTableName,resId) from wt_ResDict_Ref where dictMid="+catalogType;
+            }
             if (orSql.length()>0) sqlCount+=" and ("+orSql+")";
             if (mediaFilterSql.length()>0) sqlCount+=" and ("+mediaFilterSql+")";
 
