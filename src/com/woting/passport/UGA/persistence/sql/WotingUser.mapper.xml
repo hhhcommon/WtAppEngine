@@ -12,14 +12,9 @@
     <result  column="password"       property="password"       jdbcType="VARCHAR"/>
     <result  column="mainPhoneNum"   property="mainPhoneNum"   jdbcType="VARCHAR"/>
     <result  column="mailAddress"    property="mailAddress"    jdbcType="VARCHAR"/>
-    <result  column="userNature"     property="userNature"     jdbcType="INTEGER"/>
     <result  column="userType"       property="userType"       jdbcType="INTEGER"/>
     <result  column="userState"      property="userState"      jdbcType="INTEGER"/>
     <result  column="portraitBig"    property="portraitBig"    jdbcType="VARCHAR"/>
-    <result  column="portraitMini"   property="portraitMini"   jdbcType="VARCHAR"/>
-    <result  column="age"            property="age"            jdbcType="VARCHAR"/>
-    <result  column="portraitMini"   property="portraitMini"   jdbcType="VARCHAR"/>
-    <result  column="portraitMini"   property="portraitMini"   jdbcType="VARCHAR"/>
     <result  column="portraitMini"   property="portraitMini"   jdbcType="VARCHAR"/>
     <result  column="descn"          property="descn"          jdbcType="VARCHAR"/>
     <result  column="cTime"          property="CTime"          jdbcType="TIMESTAMP"/>

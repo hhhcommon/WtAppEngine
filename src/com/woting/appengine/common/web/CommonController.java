@@ -10,6 +10,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+import org.omg.IOP.IOR;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +26,7 @@ import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.appengine.searchcrawler.service.SearchCrawlerService;
+import com.woting.appengine.searchcrawler.utils.SearchUtils;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
@@ -617,29 +619,22 @@ public class CommonController {
     public Map<String,Object> getlkTTSInfo(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            String[] str = {
-            		"目前从四环内环上万泉寺路暂无匝道，如果开车从四环奔颐和园、圆明园等景区，需要先从万泉河出口出来，走一段四环辅路，经过3个红绿灯才能拐到万泉河路上。“我们计划修一条西向北的高架匝道，方便驾车直接从四环进入万泉河路。”",
-            		"晚高峰期间，北京国贸桥附近路段车行缓慢",
-            		"京哈高速京秦段北京、沈阳方向，已于2016年06月17日15时12分恢复正常通行。该路段曾于2016年06月17日12时56分因高速交警管制，榛子镇站双向禁止货车上道",
-            		"G25长深高速沂水收费站-沂水北收费站K1510+700长春方向发生一货车侧翻事故，占用应急车道，请过往车辆减速慢行",
-            		"S12滨德高速阳信收费站-庆云收费K28+000-K38+000滨州方向养护施工，占用应急车道，超车道和行车道可正常通行，请过往车辆谨慎慢行",
-            		"S7602青岛前港湾区疏港高速K24+400-K25+900双向全封闭施工，工期约8个月，途经车辆可由辅路通行，并按照施工现场设置的引导标志指示减速慢行，注意安全",
-            		"G22青兰高速K221+597-K222+297青岛方向因隧道养护施工，占用两条行车道，超车道可正常通行，请减速慢行",
-            		"G20青银高速禹城南站因省道S101地方道路施工，施工日期至2017年4月17日，出入口无法通行",
-            		"京哈高速京秦段北京、沈阳方向，已于2016年06月17日14时44分恢复正常通行。该路段曾于2016年06月17日14时10分因高速交警管制，玉田站双向禁止五轴（含）以上货车及危险品车辆上道",
-            		"唐津高速唐山、天津方向，已于2016年06月17日14时45分恢复正常通行。该路段曾于2016年06月17日12时40分因高速交警管制，唐山东站双向禁止货车上道，唐港站双向关闭",
-            		"长深高速承唐唐山段承德方向，已于2016年06月17日14时43分恢复正常通行。该路段曾于2016年06月17日14时08分因高速交警管制，南湖站附近K973处实行交通管制，禁止车辆通行",
-            		"S1济聊高速茌平收费站-齐河西收费站K23+600济南方向养护施工，占用应急车道和行车道，超车道可正常通行",
-            		"S12滨德高速阳信收费站-庆云收费K28+000-K38+000滨州方向养护施工，占用应急车道，超车道和行车道可正常通行，请过往车辆谨慎慢行",
-            		"S29滨莱高速高青北收费站-和庄收费站K14+700-K108+579滨州方向因路面养护施工，四分之一幅封闭施工，四分之三幅可通行，请减速慢行或择路绕行",
-            		"G2501南京绕城高速东北段由南京四桥往六合方向17K过新篁收费站1公里附近发生1起事故，现场占用第三、应急车道，暂不影响通行，事故正在处理中",
-            		"张涿高速保定段涿州方向，已于2016年06月17日14时31分恢复正常通行。该路段曾于2016年06月17日10时00分北龙门隧道K82+714至K87+383处养护施工，占用行车道和应急车道",
-            		"保沧高速沧州方向，该路段于2016年06月17日14时22分因与京港澳高速京石段互通附近K19至K17处养护施工，占用超车道和应急车道",
-            		"青银高速青岛、银川方向，已于2016年06月17日13时52分恢复正常通行。该路段曾于2016年06月17日12时09分因车流量大，窦妪站下道口K614+932处车辆缓慢通行",
-            		"宜昌长江公路大桥G50：2016年03月18日至2016年06月30日,G50沪渝高速（宜昌长江公路大桥）往宜昌方向虎牙互通匝道封闭施工，往伍家岗、宜昌、三峡大坝方向的车辆，请转G50汉宜高速武汉方向行驶3公里至猇亭收费站绕行。预计工期105天",
-            		"荆宜高速公路G42：荆宜向虎牙互通匝道施工封闭，转G50汉宜高速往武汉方向车辆，请直行3.5公里绕至宜昌大桥桥北收费站"};
-            int random=SpiritRandom.getRandom(new Random(), 0, 19);
-            String uri = str[random];
+            String[] str = SearchUtils.readFile("/opt/apache-tomcat-8.0.26/webapps/wt/mweb/lkinfo.txt");
+            String uri = "";
+            int[] random = new int[10];
+            for (int i=0;i<10;i++) {
+				random[i]=SpiritRandom.getRandom(new Random(), 0, 19);
+			}
+            for(int i=0;i<random.length;i++){
+            	for(int j=i+1;j<random.length;j++){
+            		if(random[i]>0){
+            			if(random[i]==random[j])random[j]=-1;
+            		}
+            	}
+            }
+            for (int i = 0; i < random.length; i++) {
+				if (random[i]>=0) uri+=str[random[i]];
+			}
             map.put("ContentURI", uri);
         } catch(Exception e) {
             e.printStackTrace();
