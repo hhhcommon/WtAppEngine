@@ -13,15 +13,10 @@ public class UserPo extends UgaUser {
     private String userNum; //用户号，用于公开的号码
     private String mainPhoneNum; //用户主手机号码，用户可能有多个手机号码
     private String mailAddress; //用户邮箱
-    private int userNature; //用户性质： 1=自然人用户;2=机构用户
-    private int userType; //用户分类：1=用户;2=外围人员;3=管理员
+    private int userType; //用户分类：1=普通用户;2=编辑用户
     private int userState;//用户状态，0~2
     private String portraitBig;//用户头像大
     private String portraitMini;//用户头像小
-    private String age; //用户年龄
-    private String birthday; //生日
-    private String sex; //性别
-    private String homepage; //个人主页
     private String descn; //用户描述
     private Timestamp CTime; //记录创建时间
     private Timestamp lmTime; //最后修改时间:last modify time
@@ -68,37 +63,7 @@ public class UserPo extends UgaUser {
     public void setPortraitMini(String portraitMini) {
         this.portraitMini = portraitMini;
     }
-    public int getUserNature() {
-		return userNature;
-	}
-	public void setUserNature(int userNature) {
-		this.userNature = userNature;
-	}
-	public String getAge() {
-		return age;
-	}
-	public void setAge(String age) {
-		this.age = age;
-	}
-	public String getBirthday() {
-		return birthday;
-	}
-	public void setBirthday(String birthday) {
-		this.birthday = birthday;
-	}
-	public String getSex() {
-		return sex;
-	}
-	public void setSex(String sex) {
-		this.sex = sex;
-	}
-	public String getHomepage() {
-		return homepage;
-	}
-	public void setHomepage(String homepage) {
-		this.homepage = homepage;
-	}
-	public String getDescn() {
+    public String getDescn() {
         return descn;
     }
     public void setDescn(String descn) {
@@ -125,13 +90,9 @@ public class UserPo extends UgaUser {
         if (!StringUtils.isNullOrEmptyOrSpace(this.loginName)) retM.put("UserName", this.loginName);
         if (!StringUtils.isNullOrEmptyOrSpace(this.mainPhoneNum)) retM.put("PhoneNum", this.mainPhoneNum);
         if (!StringUtils.isNullOrEmptyOrSpace(this.mailAddress)) retM.put("Email", this.mailAddress);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.descn)) retM.put("Descn", this.descn);
         if (!StringUtils.isNullOrEmptyOrSpace(this.portraitBig)) retM.put("PortraitBig", this.portraitBig);
         if (!StringUtils.isNullOrEmptyOrSpace(this.portraitMini)) retM.put("PortraitMini", this.portraitMini);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.age)) retM.put("Age", this.age);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.birthday)) retM.put("Birthday", this.birthday);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.sex)) retM.put("Sex", this.sex);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.homepage)) retM.put("HomePage", this.homepage);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.descn)) retM.put("Descn", this.descn);
         return retM;
     }
 }
