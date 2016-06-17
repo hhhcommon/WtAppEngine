@@ -80,7 +80,7 @@ public class VersionController {
                 } catch(Exception e) {}
 
                 //1-获取App版本号
-                String version=m.get("AppVersion")+"";
+                String version=m.get("Version")==null?null:(m.get("Version")+"");
                 if (StringUtils.isNullOrEmptyOrSpace(version)) {
                     map.put("ReturnType", "1002");
                     map.put("Message", "无法获得版本号信息");
