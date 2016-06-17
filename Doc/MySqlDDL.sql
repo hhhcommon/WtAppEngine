@@ -300,6 +300,7 @@ CREATE TABLE wt_MediaAsset (
   timeLong       long                                  COMMENT '时长，毫秒数',
   descn          varchar(4000)                         COMMENT '说明',
   pubCount       int unsigned     NOT NULL  DEFAULT 0  COMMENT '发布状态：0未发布;>0被发布到多少个栏目中（系列节目的发布，这里的单曲也要被加1）',
+  maStatus       int unsigned     NOT NULL  DEFAULT 0  COMMENT '资源状态：0草稿;1提交（包括发布和未发布）',
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
@@ -340,6 +341,7 @@ CREATE TABLE wt_SeqMediaAsset (
   language        varchar(32)                           COMMENT '语言名称',
   descn           varchar(4000)                         COMMENT '说明',
   pubCount        int unsigned     NOT NULL  DEFAULT 0  COMMENT '发布状态：0未发布;>0被发布到多少个栏目中，小于0是未生效',
+  smaStatus       int unsigned     NOT NULL  DEFAULT 0  COMMENT '资源状态：0草稿;1提交（包括发布和未发布）',
   cTime           timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )

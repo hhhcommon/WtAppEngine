@@ -46,7 +46,7 @@ public class QingTingSearch extends Thread {
 					Festival festival = new Festival();
 					festival = festivalS(href);
 					festival.setAudioName(title);
-					if(festival!=null)SearchUtils.addListInfo(constr, festival); // 保存到在redis里key为constr的list里
+					if(festival!=null) SearchUtils.addListInfo(constr, festival); // 保存到在redis里key为constr的list里
 				}
 				if (i < r_num + s_num) {
 					Station station = new Station();
@@ -54,7 +54,7 @@ public class QingTingSearch extends Thread {
 					station.setId(href.replaceAll("http://www.qingting.fm/s/vchannels/", ""));
 					station.setName(title);
 					station.setContentPub("蜻蜓FM");
-					if(station!=null)SearchUtils.addListInfo(constr, station); // 保存到在redis里key为constr的list里
+					if(station!=null) SearchUtils.addListInfo(constr, station); // 保存到在redis里key为constr的list里
 					if (i == r_num + (s_num > (S_S_NUM - 1) ? (S_S_NUM - 1) : s_num) && (r_num + s_num) > 0) {
 						i = r_num + s_num - 1;
 					}

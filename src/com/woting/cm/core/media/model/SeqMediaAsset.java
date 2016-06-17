@@ -29,6 +29,7 @@ public class SeqMediaAsset extends BaseObject implements Serializable, ModelSwap
     private String keyWords; //关键词
     private String descn; //说明
     private int pubCount; //发布状态：0未发布;>0被发布到多少个栏目中（系列节目的发布，这里的单曲也要被加1）
+    private int smaStatus; //资源状态：0草稿;1提交（包括发布和未发布）
     private Timestamp CTime; //记录创建时间
 
     private Organize publisher; //发布者类型，比如逻辑思维团队
@@ -107,7 +108,13 @@ public class SeqMediaAsset extends BaseObject implements Serializable, ModelSwap
     public void setPubCount(int pubCount) {
         this.pubCount=pubCount;
     }
-    public Timestamp getCTime() {
+    public int getSmaStatus() {
+		return smaStatus;
+	}
+	public void setSmaStatus(int smaStatus) {
+		this.smaStatus = smaStatus;
+	}
+	public Timestamp getCTime() {
         return CTime;
     }
     public void setCTime(Timestamp cTime) {
@@ -181,6 +188,7 @@ public class SeqMediaAsset extends BaseObject implements Serializable, ModelSwap
         ret.setDescn(descn);
         ret.setCTime(CTime);
         ret.setPubCount(pubCount);
+        ret.setSmaStatus(smaStatus);
 
         return ret;
     }
@@ -214,6 +222,7 @@ public class SeqMediaAsset extends BaseObject implements Serializable, ModelSwap
         this.lang=dd;
         this.descn=_po.getDescn();
         this.pubCount=_po.getPubCount();
+        this.smaStatus=_po.getSmaStatus();
         this.CTime=_po.getCTime();
     }
 
