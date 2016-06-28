@@ -19,7 +19,7 @@ import com.woting.appengine.mobile.push.model.Message;
  */
 public class WholeTalk {
     private Object lock=new Object();
-    protected int maxReSend=3;//最多重传次数
+    protected int maxReSend=0;//最多重传次数
     protected long oneT=80;//一个周期的毫秒数
     private int expiresT=100; //过期周期
     private int reSendContinueExpiresT=3; //持续重转过期周期
@@ -271,7 +271,7 @@ public class WholeTalk {
                                         Map<String, Object> dataMap=new HashMap<String, Object>();
                                         dataMap.put("TalkId", talkId);
                                         dataMap.put("ObjId", _wt.getObjId());
-                                        dataMap.put("SeqNum", ts.getSeqNum());
+                                        dataMap.put("SeqNum", ts.getSeqNum()+"");
                                         dataMap.put("AudioData", new String(ts.getData()));
                                         System.out.println("======重发[seqNum="+ts.getSeqNum()+"]="+ts.getSendTimeMap().get(k).size()+"次===============================================");
                                         bMsg.setMsgContent(dataMap);
