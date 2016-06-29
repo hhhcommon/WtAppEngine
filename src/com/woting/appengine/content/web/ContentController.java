@@ -147,9 +147,14 @@ public class ContentController {
             //9-获得页面类型
             int pageType=1;
             try {pageType=Integer.parseInt(m.get("PageType")+"");} catch(Exception e) {};
+            //10-获得过滤条件
+            Map<String, Object> filter=null;
+            try {
+                filter=(Map)m.get("FilterData");
+            } catch(Exception e) {}
 
             MobileKey mk=MobileUtils.getMobileKey(m);
-            Map<String, Object> contents=contentService.getContents(catalogType, catalogId, resultType, mediaType, perSize, pageSize, page, beginCatalogId, pageType, mk);
+            Map<String, Object> contents=contentService.getContents(catalogType, catalogId, resultType, mediaType, perSize, pageSize, page, beginCatalogId, pageType, mk, filter);
             if (contents!=null&&contents.size()>0) {
                 map.put("ResultList", contents);
                 map.put("ReturnType", "1001");

@@ -189,7 +189,7 @@ public abstract class ContentUtils {
                 oneCata.put("CataMName", _c.get("dictMName"));//大分类名称，树结构名称
                 oneCata.put("CataMId", _c.get("dictMid"));//大分类Id
                 oneCata.put("CataTitle", _c.get("pathNames"));//分类名称
-                oneCata.put("CataDid", _c.get("dictDid"));//分类Id
+                oneCata.put("CataDId", _c.get("dictDid"));//分类Id
                 ret.add(oneCata);
             }
         }
