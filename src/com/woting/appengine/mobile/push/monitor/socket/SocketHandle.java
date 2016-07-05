@@ -13,8 +13,6 @@ import java.net.SocketException;
 import java.util.Date;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
-
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.JsonUtils;
@@ -161,7 +159,9 @@ public class SocketHandle extends Thread {
                         if (SocketHandle.this.mk!=null) {
                             //获得消息
                             Message m=pmm.getSendMessages(mk);
+                            String mStr="";
                             if (m!=null) {
+                                mStr=m.toJson();
                                 //发送消息
                                 synchronized(socketSendLock) {
                                     boolean canSend=true;
@@ -169,46 +169,19 @@ public class SocketHandle extends Thread {
                                     if (m.getMsgBizType().equals("AUDIOFLOW")) {
                                         if (t-m.getSendTime()>60*1000) {
                                             canSend=false;
-                                            System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[放弃发送语音消息]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+m.toJson());
                                         }
                                     }
                                     if (canSend) {
                                         if (out==null) out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
-                                        out.println(m.toJson());
+                                        out.println(mStr);
                                         out.flush();
+                                        try {
+                                            pmm.logQueue.add(t+"::send::"+mk.toString()+"::"+mStr);
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
                                         if (m.getMsgBizType().equals("AUDIOFLOW")&&m.getCommand().equals("b1")) {//对语音广播包做特殊处理
                                             try {
-                                                //=====================临时
-                                                //读取文件
-                                                String filePath=m.getCmdType()+"_"+((Map)m.getMsgContent()).get("TalkId")+"_sending-"+MobileUtils.getMobileKey(m, 2).toString();
-                                                filePath=filePath.replaceAll("::", "_");
-                                                filePath=FileNameUtils.concatPath("/opt/logs/AppEngine/audioflow/", filePath);
-                                                File dir=new File(FileNameUtils.getFilePath(filePath));
-                                                if (!dir.isDirectory()) dir.mkdirs();
-                                                File f=new File(filePath);
-                                                if (!f.exists()) f.createNewFile();
-
-                                                int seqN=Integer.parseInt(((Map)m.getMsgContent()).get("SeqNum")+"");
-                                                if (seqN>=0) filePath="+"+((100000+seqN)+"").substring(1);
-                                                else filePath="-"+((100000+(-seqN))+"").substring(1);
-                                                filePath+="::"+t+"["+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+"]::"+m.getSendTime()+"["+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(m.getSendTime()))+"]";
-
-                                                FileWriter fw = null;
-                                                try {
-                                                    fw = new FileWriter(f, true);
-                                                    fw.write(filePath+"\n");
-                                                    fw.flush();
-                                                } catch (Exception e) {
-                                                    e.printStackTrace();
-                                                }finally{
-                                                    try {
-                                                        fw.close();
-                                                    } catch (IOException e) {
-                                                        e.printStackTrace();
-                                                    }
-                                                }
-                                                //=====================临时
-
                                                 String talkId=((Map)m.getMsgContent()).get("TalkId")+"";
                                                 String seqNum=((Map)m.getMsgContent()).get("SeqNum")+"";
                                                 TalkMemoryManage tmm=TalkMemoryManage.getInstance();
@@ -217,7 +190,6 @@ public class SocketHandle extends Thread {
                                                 if (ts.getSendFlagMap().get(mk.toString())!=null) ts.getSendFlagMap().put(mk.toString(), 1);
                                             } catch(Exception e) {e.printStackTrace();}
                                         }
-                                        System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+m.toJson());
                                     }
                                     try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
                                 }
@@ -226,12 +198,17 @@ public class SocketHandle extends Thread {
                             if (mk.isUser()) {
                                 Message nm=pmm.getNotifyMessages(mk.getUserId());
                                 if (nm!=null) {
+                                    mStr=nm.toJson();
                                     nm.setToAddr(MobileUtils.getAddr(mk));
                                     synchronized(socketSendLock) {
                                         if (out==null) out=new PrintWriter(new BufferedWriter(new OutputStreamWriter(SocketHandle.this.socket.getOutputStream(), "UTF-8")), true);
-                                        out.println(nm.toJson());
+                                        out.println(mStr);
                                         out.flush();
-                                        System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送通知消息]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+nm.toJson());
+                                        try {
+                                            pmm.logQueue.add(t+"::send::"+mk.toString()+"::"+mStr);
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
                                         try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
                                     }
                                 }
@@ -281,17 +258,12 @@ public class SocketHandle extends Thread {
                 //若总线程运行(并且)Socket处理主线程可运行(并且)本线程可运行(并且)本线程逻辑正确[未中断(并且)可以继续]
                 while(pmm.isServerRuning()&&SocketHandle.this.running&&(!isInterrupted&&canContinue)) {
                     try {
-                        try { sleep(10); } catch (InterruptedException e) {};
-                        //String msgId=null;
-                        //boolean isAffirm=false;
-                        MobileKey mk=null;
                         //接收消息数据
                         String revMsgStr="";
                         if (in==null) in=new BufferedReader(new InputStreamReader(SocketHandle.this.socket.getInputStream(), "UTF-8"));
                         revMsgStr=in.readLine();
-                        if (revMsgStr==null) continue;
                         long t=System.currentTimeMillis();
-                        System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[接收]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+revMsgStr);
+                        if (revMsgStr==null) continue;
 
                         SocketHandle.this.lastVisitTime=t;
                         //判断是否是心跳信号
@@ -303,19 +275,21 @@ public class SocketHandle extends Thread {
                                 System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送回执心跳]");
                                 try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
                             }
-                            //以下设置lastTime.要删除掉
-                            if (SocketHandle.this.mk!=null) {
-                                GroupMemoryManage gmm=GroupMemoryManage.getInstance();
-                                gmm.setLastTalkTime(SocketHandle.this.mk);
-                            }
                             continue;
                         }
 
+                        try {
+                            String temp123=SocketHandle.this.mk==null?"NULL":SocketHandle.this.mk.toString();
+                            pmm.logQueue.add(t+"::recv::"+temp123+"::"+revMsgStr);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         //以下try要修改
                         try {
                             @SuppressWarnings("unchecked")
                             Map<String, Object> recMap=(Map<String, Object>)JsonUtils.jsonToObj(revMsgStr, Map.class);
                             if (recMap!=null&&recMap.size()>0) {
+                                //处理注册
                                 Map<String, Object> retM = MobileUtils.dealMobileLinked(recMap, 1);
                                 if ((""+retM.get("ReturnType")).equals("2003")) {
                                     String outStr="[{\"MsgId\":\""+SequenceUUID.getUUIDSubSegment(4)+"\",\"ReMsgId\":\""+recMap.get("MsgId")+"\",\"BizType\":\"NOLOG\"}]";//空，无内容包括已经收到
@@ -326,42 +300,9 @@ public class SocketHandle extends Thread {
                                         try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
                                     }
                                 } else {
-                                    mk=MobileUtils.getMobileKey(recMap);
-                                    if (mk!=null) { //存入接收队列
-                                        SocketHandle.this.mk=mk;//设置全局作用域下的移动Key
-                                        //处理注册
+                                    SocketHandle.this.mk=MobileUtils.getMobileKey(recMap);
+                                    if (SocketHandle.this.mk!=null) {//存入接收队列
                                         if (!(recMap.get("BizType")+"").equals("REGIST")) pmm.getReceiveMemory().addPureQueue(recMap);
-                                        //加日志--临时
-                                        if (recMap.get("BizType").equals("AUDIOFLOW")&&recMap.get("Command").equals("1")) {
-                                            //读取文件
-                                            String filePath=recMap.get("CmdType")+"_"+(((Map)recMap.get("Data")).get("TalkId")+"")+"_receive";
-                                            filePath=FileNameUtils.concatPath("/opt/logs/AppEngine/audioflow/", filePath);
-                                            File dir=new File(FileNameUtils.getFilePath(filePath));
-                                            if (!dir.isDirectory()) dir.mkdirs();
-                                            File f=new File(filePath);
-                                            if (!f.exists()) f.createNewFile();
-
-                                            int seqN=Integer.parseInt(((Map)recMap.get("Data")).get("SeqNum")+"");
-                                            if (seqN>=0) filePath="+"+((100000+seqN)+"").substring(1);
-                                            else filePath="-"+((100000+(-seqN))+"").substring(1);
-                                            long sendTime=Long.parseLong(recMap.get("SendTime")+"");
-                                            filePath+="::"+t+"["+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+"]::"+sendTime+"["+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(sendTime))+"]";
-
-                                            FileWriter fw = null;
-                                            try {
-                                                fw = new FileWriter(f, true);
-                                                fw.write(filePath+"\n");
-                                                fw.flush();
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                            }finally{
-                                                try {
-                                                    fw.close();
-                                                } catch (IOException e) {
-                                                    e.printStackTrace();
-                                                }
-                                            }
-                                        }
                                     }
                                 }
                             }
@@ -384,6 +325,7 @@ public class SocketHandle extends Thread {
                              }
                         }
                     }//end try
+                    try { sleep(10); } catch (InterruptedException e) {};
                 }//end while
             } catch(Exception e) {
                 long t=System.currentTimeMillis();

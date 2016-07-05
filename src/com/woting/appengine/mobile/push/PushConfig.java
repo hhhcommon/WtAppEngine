@@ -5,7 +5,7 @@ package com.woting.appengine.mobile.push;
  * @author wanghui
  */
 public class PushConfig {
-    private int THREADCOUNT_DEALRECEIVEQUEUE=2;//处理原生接收队列线程的个数
+    private int THREADCOUNT_DEALRECEIVEQUEUE=4;//处理原生接收队列线程的个数
     public int getTHREADCOUNT_DEALRECEIVEQUEUE() {
         return THREADCOUNT_DEALRECEIVEQUEUE;
     }
