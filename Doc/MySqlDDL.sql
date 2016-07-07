@@ -1,4 +1,4 @@
-﻿/**== 一、字典类=============================================*/
+/**== 一、字典类=============================================*/
 /**001 字典组[PLAT_DICTM]*/
 DROP TABLE IF EXISTS plat_DictM;
 CREATE TABLE plat_DictM (
@@ -51,11 +51,16 @@ CREATE TABLE plat_User (
   password       varchar(100)               DEFAULT NULL  COMMENT '密码',
   mailAddress    varchar(100)               DEFAULT NULL  COMMENT '邮箱(非空为一索引)',
   mainPhoneNum   varchar(100)               DEFAULT NULL  COMMENT '用户主手机号码',
-  userType       int(1) unsigned  NOT NULL                COMMENT '用户分类：1自然人用户，2机构用户',
+  age            varchar(15)                              COMMENT '年龄',
+  birthday       varchar(30)                DEFAULT NULL  COMMENT '生日',
+  sex            varchar(100)                             COMMENT '性别',
+  userNature     int(1) unsigned                          COMMENT '用户性质：1自然人用户，2机构用户',
+  userType       int(1) unsigned                          COMMENT '用户分类：1用户，2外围人员，3管理员',
   userState      int(1)           NOT NULL  DEFAULT '0'   COMMENT '用户状态，0-2,0代表未激活的用户，1代表已激用户，2代表失效用户,3根据邮箱找密码的用户',
   portraitBig    varchar(300)                             COMMENT '用户头像大',
   portraitMini   varchar(300)                             COMMENT '用户头像小',
   descn          varchar(2000)              DEFAULT NULL  COMMENT '备注',
+  homepage       varchar(100)                             COMMENT '个人主页',
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
   lmTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改：每次更新的时间',
   PRIMARY KEY(id),
@@ -184,9 +189,9 @@ CREATE TABLE wt_Friend_Rel (
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='009好友列表';
 /**此表信息可以根据005表生成，既邀请成功的信息倒入此表*/
 
-/**010 WT_PERSONALIAS(人员别名表)*/
-DROP TABLE IF EXISTS wt_PersonAlias;
-CREATE TABLE wt_PersonAlias (
+/**010 WT_USERALIAS(人员别名表)*/
+DROP TABLE IF EXISTS wt_UserAlias;
+CREATE TABLE wt_UserAlias (
   id              varchar(32)  NOT NULL  COMMENT 'uuid(主键)',
   typeId          varchar(32)  NOT NULL  COMMENT '组或分类ID，这个需要特别说明，当为"FRIEND"时，是好友的别名，当为12位时是组Id',
   mainUserId      varchar(32)  NOT NULL  COMMENT '主用户Id',
@@ -254,15 +259,16 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='014电台主表';
 /**015 WT_BCLIVEFLOW(电台直播流子表)*/
 DROP TABLE IF EXISTS wt_BCLiveFlow;
 CREATE TABLE wt_BCLiveFlow (
-  id         varchar(32)      NOT NULL             COMMENT 'uuid(主键)',
-  bcId       varchar(32)      NOT NULL             COMMENT '电台Id,外键',
-  bcSrcType  int(1) unsigned  NOT NULL             COMMENT '来源，类型：1-组织表；2-文本',
-  bcSrcId    varchar(32)                           COMMENT '来源Id，当bcScrType=1',
-  bcSource   varchar(100)     NOT NULL             COMMENT '来源，名称',
-  flowURI    varchar(300)     NOT NULL             COMMENT '直播流URL',
-  isMain     int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '是否是主直播流；1是主直播流',
-  descn      varchar(4000)                         COMMENT '直播流描述',
-  cTime      timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  id                varchar(32)      NOT NULL             COMMENT 'uuid(主键)',
+  bcId              varchar(32)      NOT NULL             COMMENT '电台Id,外键',
+  bcSrcType         int(1) unsigned  NOT NULL             COMMENT '来源，类型：1-组织表；2-文本',
+  bcSrcId           varchar(32)                           COMMENT '来源Id，当bcScrType=1',
+  bcSource          varchar(100)     NOT NULL             COMMENT '来源，名称',
+  flowURI           varchar(300)     NOT NULL             COMMENT '直播流URL',
+  bcSrcChannelId	varchar(32)			                  COMMENT '外抓平台电台对外Id',
+  isMain            int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '是否是主直播流；1是主直播流',
+  descn             varchar(4000)                         COMMENT '直播流描述',
+  cTime             timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='015电台直播流子表';
@@ -403,11 +409,11 @@ CREATE TABLE wt_Organize (
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='022组织机构';
 
 /**== 四.5、各类关系关联 =============================================*/
-/**023 WT_PERSON_REF(干系人与资源关系)*/
-DROP TABLE IF EXISTS wt_Person_Ref;
-CREATE TABLE wt_Person_Ref (
+/**023 WT_USER_REF(干系人与资源关系)*/
+DROP TABLE IF EXISTS wt_User_Ref;
+CREATE TABLE wt_User_Ref (
   id            varchar(32)    NOT NULL                COMMENT 'uuid(id)',
-  personId      varchar(32)    NOT NULL                COMMENT '用户Id',
+  userId      varchar(32)    NOT NULL                COMMENT '用户Id',
   resTableName  varchar(200)   NOT NULL                COMMENT '资源类型Id：1电台；2单体媒体资源；3专辑资源，4栏目',
   resId         varchar(32)    NOT NULL                COMMENT '资源Id',
   refTypeId     varchar(32)    NOT NULL                COMMENT '关联类型，是字典项，是专门的一个字典组',
