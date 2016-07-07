@@ -97,7 +97,7 @@ public class DealMediaflow extends Thread {
             retMsg.setCommand("-1");
             dataMap.put("TalkId", talkId);
             dataMap.put("ObjId", objId);
-            dataMap.put("SeqNum", seqNum);
+            dataMap.put("SeqNum", seqNum+"");
             retMsg.setMsgContent(dataMap);
 
             GroupInterCom gic=null;
@@ -175,7 +175,7 @@ public class DealMediaflow extends Thread {
             dataMap=new HashMap<String, Object>();
             dataMap.put("TalkId", talkId);
             dataMap.put("ObjId", objId);
-            dataMap.put("SeqNum", seqNum);
+            dataMap.put("SeqNum", seqNum+"");
             dataMap.put("AudioData", ((Map)sourceMsg.getMsgContent()).get("AudioData"));
             bMsg.setMsgContent(dataMap);
             for (String k: ts.getSendUserMap().keySet()) {

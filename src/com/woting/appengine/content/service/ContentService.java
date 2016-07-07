@@ -489,7 +489,7 @@ public class ContentService {
      * @return
      */
     public Map<String, Object> getMainPage(String userId, int pageType, int pageSize, int page, MobileKey mk) {
-        return getContents("-1", null, 3, null, 3, pageSize, page, null, pageType, mk);
+        return getContents("-1", null, 3, null, 3, pageSize, page, null, pageType, mk, null);
     }
 
     /**
@@ -570,8 +570,9 @@ public class ContentService {
         return retInfo;
     }
 
-    public Map<String, Object> getContents(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId, int pageType, MobileKey mk) {
-        //得到喜欢列表
+    public Map<String, Object> getContents(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId, int pageType,
+                                            MobileKey mk, Map<String, Object> filterData) {
+        //1-得到喜欢列表
         List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mk);
         List<Map<String, Object>> fList=null;
         if (_fList!=null&&!_fList.isEmpty()) {
@@ -582,8 +583,8 @@ public class ContentService {
         }
 
         Map<String, Object> ret=new HashMap<String, Object>();
-        //首先根据参数获得范围
-        //根据分类获得根
+        //2-根据参数获得范围
+        //2.1-根据分类获得根
         TreeNode<? extends TreeNodeBean> root=null;
         if (catalogType.equals("-1")) {
             root=_cc.channelTree;
@@ -591,28 +592,60 @@ public class ContentService {
             DictModel dm=_cd.getDictModelById(catalogType);
             if (dm!=null&&dm.dictTree!=null) root=dm.dictTree;
         }
-        //获得相应的结点，通过查找
+        //2.2-获得相应的结点，通过查找
         if (root!=null&&catalogId!=null) root=root.findNode(catalogId);
         if (root==null) return null;
         if (root.isLeaf()) resultType=3;
-
-        //得到分类id的语句
+        //3-得到分类id的语句
         String idCName="dictDid", typeCName="resTableName", resIdCName="resId";
         if (catalogType.equals("-1")) {
             idCName="channelId";typeCName="assetType";resIdCName="assetId";
         }
+        //4-获得过滤内容
+        String filterStr="";
+        List<TreeNode<? extends TreeNodeBean>> allTn=null;
+        String filterSql_inwhere="";
+        String f_catalogType="", f_catalogId="";
+        if (filterData!=null) {//若有过滤，类别过滤
+            f_catalogType=filterData.get("CatalogType")==null?"-1":(filterData.get("CatalogType")+"");
+            f_catalogId=filterData.get("CatalogId")==null?null:(filterData.get("CatalogId")+"");
 
-        //得到媒体类型过滤串
+            TreeNode<? extends TreeNodeBean> _root=null;
+            if (!StringUtils.isNullOrEmptyOrSpace(f_catalogType)) {
+                //根据分类获得根
+                if (f_catalogType.equals("-1")) {
+                    _root=_cc.channelTree;
+                } else {
+                    DictModel dm=_cd.getDictModelById(f_catalogType);
+                    if (dm!=null&&dm.dictTree!=null) _root=dm.dictTree;
+                }
+                if (_root!=null&&!StringUtils.isNullOrEmptyOrSpace(f_catalogId)) _root=_root.findNode(f_catalogId);
+            }
+            if (_root!=null) {
+                String _idCName=f_catalogType.equals("-1")?"channelId":"dictDid";
+                if (!f_catalogType.equals("-1"))  filterSql_inwhere="b.dictMid='"+f_catalogType+"' and (";
+                filterSql_inwhere+="b."+_idCName+"='"+_root.getId()+"'";
+                allTn=TreeUtils.getDeepList(_root);
+                if (allTn!=null&&!allTn.isEmpty()) {
+                    for (TreeNode<? extends TreeNodeBean> tn: allTn) {
+                        filterSql_inwhere+=" or b."+_idCName+"='"+tn.getId()+"'";
+                    }
+                }
+                if (!f_catalogType.equals("-1")) filterSql_inwhere+=")";
+                filterSql_inwhere="("+filterSql_inwhere+")";
+            }
+        }
+        //5-得到媒体类型过滤串
         String mediaFilterSql="";
         if (!StringUtils.isNullOrEmptyOrSpace(mediaType)) {
             String[] _mt=mediaType.split(",");
             for (int i=0; i<_mt.length; i++) {
                 if (_mt[i].trim().equals("RADIO")&&(mediaFilterSql.indexOf("wt_Broadcast")==-1)) {
-                    mediaFilterSql+="or "+typeCName+"='wt_Broadcast'";
+                    mediaFilterSql+="or a."+typeCName+"='wt_Broadcast'";
                 } else if (_mt[i].trim().equals("AUDIO")&&(mediaFilterSql.indexOf("wt_MediaAsset")==-1)) {
-                    mediaFilterSql+="or "+typeCName+"='wt_MediaAsset'";
+                    mediaFilterSql+="or a."+typeCName+"='wt_MediaAsset'";
                 } else if (_mt[i].trim().equals("SEQU")&&(mediaFilterSql.indexOf("wt_SeqMediaAsset")==-1)) {
-                    mediaFilterSql+="or "+typeCName+"='wt_SeqMediaAsset'";
+                    mediaFilterSql+="or a."+typeCName+"='wt_SeqMediaAsset'";
                 }
             }
             if (mediaFilterSql.indexOf("wt_Broadcast")!=-1&&mediaFilterSql.indexOf("wt_MediaAsset")!=-1&&mediaFilterSql.indexOf("wt_SeqMediaAsset")!=-1) mediaFilterSql="";
@@ -620,42 +653,101 @@ public class ContentService {
         }
 
         List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();//指标列表
-        if (resultType==3) { //按列表处理
+        if (resultType==3) {//按列表处理
             //得到所有下级结点的Id
-            List<TreeNode<? extends TreeNodeBean>> allTn=TreeUtils.getDeepList(root);
+            allTn=TreeUtils.getDeepList(root);
             //得到分类id的语句
             String orSql="";
-            orSql+=" or "+idCName+"='"+root.getId()+"'";
+            orSql+=" or a."+idCName+"='"+root.getId()+"'";
             if (allTn!=null&&!allTn.isEmpty()) {
                 for (TreeNode<? extends TreeNodeBean> tn: allTn) {
-                    orSql+=" or "+idCName+"='"+tn.getId()+"'";
+                    orSql+=" or a."+idCName+"='"+tn.getId()+"'";
                 }
             }
             if (orSql.length()>0) orSql=orSql.substring(4);
 
-            //得到获得内容Id的Sql
-            String sql=null;
-            if (catalogType.equals("-1")) {//按发布栏目
-                sql="select assetType,assetId, max(pubTime) pubTime, max(sort) sort, flowFlag from wt_ChannelAsset where isValidate=1 and flowFlag=2 group by assetType,assetId,flowFlag";
-            } else {//按分类
-                sql="select distinct resTableName,resId from wt_ResDict_Ref where dictMid="+catalogType;
-            }
-            if (orSql.length()>0) sql+=" and ("+orSql+")";
-            if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
-            if (catalogType.equals("-1")) sql+=" order by sort desc, pubTime desc";//栏目
-            else sql+=" order by cTime desc";//分类
-            sql+=" limit "+(((page<=0?1:page)-1)*pageSize)+","+pageSize; //分页
-
-            //得到获得内容条数的Sql
+            //得到获得数据条数的Sql
             String sqlCount=null;
             if (catalogType.equals("-1")) {//按发布栏目
-                sqlCount="select count(distinct assetType,assetId) from wt_ChannelAsset where isValidate=1 and flowFlag=2";
+                sqlCount="select count(distinct a.assetType,a.assetId) from wt_ChannelAsset a where a.isValidate=1 and a.flowFlag=2";
             } else {//按分类
-                sqlCount="select count(distinct resTableName,resId) from wt_ResDict_Ref where dictMid="+catalogType;
+                sqlCount="select count(distinct a.resTableName,a.resId) from wt_ResDict_Ref a where a.dictMid='"+catalogType+"'";
             }
             if (orSql.length()>0) sqlCount+=" and ("+orSql+")";
             if (mediaFilterSql.length()>0) sqlCount+=" and ("+mediaFilterSql+")";
 
+            //得到获得具体数据的Sql
+            String sql=null;
+            if (StringUtils.isNullOrEmptyOrSpace(filterSql_inwhere)) {
+                if (catalogType.equals("-1")) {//按发布栏目
+                    sql="select a.assetType,a.assetId, max(a.pubTime) pubTime, max(a.sort) sort, a.flowFlag from wt_ChannelAsset a where a.isValidate=1 and a.flowFlag=2";
+                } else {//按分类
+                    sql="select distinct a.resTableName,a.resId from wt_ResDict_Ref a where a.dictMid='"+catalogType+"'";
+                }
+                if (orSql.length()>0) sql+=" and ("+orSql+")";
+                if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                if (catalogType.equals("-1")) sql+=" group by a.assetType,a.assetId,a.flowFlag order by a.sort desc, a.pubTime desc";//栏目
+                else sql+=" order by a.cTime desc";//分类
+            } else {
+                if (catalogType.equals("-1")&&f_catalogType.equals("-1")) {//按发布栏目,用发布栏目过滤
+                    sql="select * from ((select a.assetType,a.assetId, max(a.pubTime) pubTime, max(a.sort) sort, a.flowFlag from wt_ChannelAsset a, wt_ChannelAsset b "
+                       +"where a.isValidate=1 and a.flowFlag=2 and b.isValidate=1 and b.flowFlag=2 and a.assetType=b.assetType and a.assetId=b.assetId";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    if (orSql.length()>0) sql+=" and ("+orSql+")";
+                    sql+=" and "+filterSql_inwhere;
+                    sql+=" group by a.assetType,a.assetId,a.flowFlag order by a.sort desc, a.pubTime desc) union (";
+                    sql+="select a.assetType,a.assetId, max(a.pubTime) pubTime, max(a.sort) sort, a.flowFlag from wt_ChannelAsset a ";
+                    sql+="left join wt_ChannelAsset b on a.assetType=b.assetType and a.assetId=b.assetId and b.isValidate=1 and b.flowFlag=2";
+                    sql+=" and ("+filterSql_inwhere+")";
+                    sql+=" where a.isValidate=1 and a.flowFlag=2";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    if (orSql.length()>0) sql+=" and ("+orSql+")";
+                    sql+=" and b.id is null group by a.assetType,a.assetId,a.flowFlag order by a.sort desc, a.pubTime desc)) as ul";
+                } else if (catalogType.equals("-1")&&!f_catalogType.equals("-1")) {//按发布栏目,用字典分类过滤
+                    sql="select * from ((select a.assetType,a.assetId, max(a.pubTime) pubTime, max(a.sort) sort, a.flowFlag from wt_ChannelAsset a, wt_ResDict_Ref b "
+                       +"where a.isValidate=1 and a.flowFlag=2 and (a.assetType=b.resTableName and a.assetId=b.resId)";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    if (orSql.length()>0) sql+=" and ("+orSql+")";
+                    sql+=" and "+filterSql_inwhere;
+                    sql+=" group by a.assetType,a.assetId,a.flowFlag order by a.sort desc, a.pubTime desc) union (";
+                    sql+="select a.assetType,a.assetId, max(a.pubTime) pubTime, max(a.sort) sort, a.flowFlag from wt_ChannelAsset a ";
+                    sql+="left join wt_ResDict_Ref b on (a.assetType=b.resTableName and a.assetId=b.resId)";
+                    sql+=" and "+filterSql_inwhere;
+                    sql+=" where a.isValidate=1 and a.flowFlag=2";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    if (orSql.length()>0) sql+=" and ("+orSql+")";
+                    sql+=" and b.id is null group by a.assetType,a.assetId,a.flowFlag order by a.sort desc, a.pubTime desc)) as ul";
+                } else if (!catalogType.equals("-1")&&f_catalogType.equals("-1")) {//按字典分类,用发布栏目过滤
+                    sql="select * from ((select distinct a.resTableName,a.resId from wt_ResDict_Ref a, wt_ChannelAsset b "
+                      +"where a.dictMid='"+catalogType+"' and b.isValidate=1 and b.flowFlag=2 and (b.assetType=a.resTableName and b.assetId=a.resId)";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    if (orSql.length()>0) sql+=" and ("+orSql+")";
+                    sql+=" and "+filterSql_inwhere;
+                    sql+=" order by a.cTime desc) union (";
+                    sql+="select distinct a.resTableName,a.resId from wt_ResDict_Ref a ";
+                    sql+="left join wt_ChannelAsset b on (b.assetType=a.resTableName and b.assetId=a.resId and b.isValidate=1 and b.flowFlag=2)";
+                    sql+=" and "+filterSql_inwhere;
+                    sql+=" where a.dictMid='"+catalogType+"'";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    if (orSql.length()>0) sql+=" and ("+orSql+")";
+                    sql+=" and b.id is null order by a.cTime desc)) as ul";
+                } else {//按字典分类,用字典分类过滤
+                    sql="select * from ((select distinct a.resTableName,a.resId from wt_ResDict_Ref a, wt_ResDict_Ref b where a.dictMid='"+catalogType+"'";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    if (orSql.length()>0) sql+=" and ("+orSql+")";
+                    sql+=" and "+filterSql_inwhere;
+                    sql+=" and a.resTableName=b.resTableName and a.resId=b.resId";
+                    sql+=" order by a.cTime desc) union (";
+                    sql+="select  distinct a.resTableName,a.resId from wt_ResDict_Ref a ";
+                    sql+="left join wt_ResDict_Ref b on a.resTableName=b.resTableName and a.resId=b.resId";
+                    sql+=" and "+filterSql_inwhere;
+                    sql+=" where a.dictMid='"+catalogType+"'";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    if (orSql.length()>0) sql+=" and ("+orSql+")";
+                    sql+=" and b.id is null order by a.cTime desc)) as ul";
+                }
+            }
+            sql+=" limit "+(((page<=0?1:page)-1)*pageSize)+","+pageSize; //分页
             //执行得到具体内容Id的SQL
             List<String> sortIdList=new ArrayList<String>();
 
@@ -879,11 +971,12 @@ public class ContentService {
                     for (int i=_ret.size()-1; i>=0; i--) {
                         if (_ret.get(i)==null) _ret.remove(i);
                     }
+
                     ret.put("ResultType", resultType);
                     ret.put("AllCount", count);
                     ret.put("Page", page);
-                    ret.put("PageSize", _ret.size());
-                    ret.put("List", _ret);
+                    ret.put("PageSize",_ret.size());
+                    ret.put("List",_ret);
                     return ret;
                 }
             } catch (Exception e) {
@@ -900,25 +993,81 @@ public class ContentService {
             List<Map<String, Object>> retCataList=new ArrayList<Map<String, Object>>();
 
             Connection conn=null;
-            PreparedStatement ps1=null;
-            PreparedStatement ps2=null;
+            PreparedStatement psCount=null;
+            PreparedStatement psAsset=null;
             PreparedStatement psBc=null;
             PreparedStatement psMa=null;
             PreparedStatement psSma=null;
             ResultSet rs=null;
-            String sql="", sqlCount="", sqlBc="select a.*, b.bcSource, b.flowURI from wt_Broadcast a left join wt_BCLiveFlow b on a.id=b.bcId and b.isMain=1 where SQL"
-                    , sqlMa="select * from wt_MediaAsset where SQL", sqlSma="select a.*, case when b.count is null then 0 else b.count end as count from wt_SeqMediaAsset a left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) b on a.id=b.sid where SQL";
+            String sql="", sqlCount="";
+            String sqlBc="select a.*, b.bcSource, b.flowURI from wt_Broadcast a left join wt_BCLiveFlow b on a.id=b.bcId and b.isMain=1 where SQL";
+            String sqlMa="select * from wt_MediaAsset where SQL";
+            String sqlSma="select a.*, case when b.count is null then 0 else b.count end as count from wt_SeqMediaAsset a left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) b on a.id=b.sid where SQL";
             if (catalogType.equals("-1")) {
-                sql="select * from wt_ChannelAsset where isValidate=1 and flowFlag=2 and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaFilterSql+")"))+"order by sort desc, pubTime desc limit "+perSize;
-                sqlCount="select count(*) from wt_ChannelAsset where isValidate=1 and flowFlag=2 and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaFilterSql+")"));
+                sqlCount="select count(*) from wt_ChannelAsset a where a.isValidate=1 and a.flowFlag=2 and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaFilterSql+")"));
             } else {
-                sql="select * from wt_ResDict_Ref where dictMid="+catalogType+" and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaFilterSql+")"))+"order by cTime desc limit "+perSize;
-                sqlCount="select count(*) from wt_ResDict_Ref where dictMid="+catalogType+" and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaFilterSql+")"));
+                sqlCount="select count(*) from wt_ResDict_Ref a where a.dictMid='"+catalogType+"' and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaFilterSql+")"));
             }
+            if (StringUtils.isNullOrEmptyOrSpace(filterSql_inwhere)) {
+                if (catalogType.equals("-1")) {
+                    sql="select * from wt_ChannelAsset a where a.isValidate=1 and a.flowFlag=2 and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaFilterSql+")"))+" order by sort desc, pubTime desc ";
+                } else {
+                    sql="select * from wt_ResDict_Ref a where a.dictMid='"+catalogType+"' and (SQL) "+(StringUtils.isNullOrEmptyOrSpace(mediaType)?"":(" and ("+mediaFilterSql+")"))+" order by cTime desc";
+                }
+            } else {
+                if (catalogType.equals("-1")&&f_catalogType.equals("-1")) {//按发布栏目,用发布栏目过滤
+                    sql="select * from ((select a.assetType,a.assetId, max(a.pubTime) pubTime, max(a.sort) sort, a.flowFlag from wt_ChannelAsset a, wt_ChannelAsset b "
+                       +"where a.isValidate=1 and a.flowFlag=2 and b.isValidate=1 and b.flowFlag=2 and a.assetType=b.assetType and a.assetId=b.assetId";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    sql+=" and (SQL) and "+filterSql_inwhere;
+                    sql+=" group by a.assetType,a.assetId,a.flowFlag order by a.sort desc, a.pubTime desc) union (";
+                    sql+="select a.assetType,a.assetId, max(a.pubTime) pubTime, max(a.sort) sort, a.flowFlag from wt_ChannelAsset a ";
+                    sql+="left join wt_ChannelAsset b on a.assetType=b.assetType and a.assetId=b.assetId and b.isValidate=1 and b.flowFlag=2";
+                    sql+=" and ("+filterSql_inwhere+")";
+                    sql+=" where a.isValidate=1 and a.flowFlag=2";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    sql+=" and (SQL) and b.id is null group by a.assetType,a.assetId,a.flowFlag order by a.sort desc, a.pubTime desc)) as ul";
+                } else if (catalogType.equals("-1")&&!f_catalogType.equals("-1")) {//按发布栏目,用字典分类过滤
+                    sql="select * from ((select a.assetType,a.assetId, max(a.pubTime) pubTime, max(a.sort) sort, a.flowFlag from wt_ChannelAsset a, wt_ResDict_Ref b "
+                       +"where a.isValidate=1 and a.flowFlag=2 and (a.assetType=b.resTableName and a.assetId=b.resId)";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    sql+=" and (SQL) and "+filterSql_inwhere;
+                    sql+=" group by a.assetType,a.assetId,a.flowFlag order by a.sort desc, a.pubTime desc) union (";
+                    sql+="select a.assetType,a.assetId, max(a.pubTime) pubTime, max(a.sort) sort, a.flowFlag from wt_ChannelAsset a ";
+                    sql+="left join wt_ResDict_Ref b on (a.assetType=b.resTableName and a.assetId=b.resId)";
+                    sql+=" and "+filterSql_inwhere;
+                    sql+=" where a.isValidate=1 and a.flowFlag=2";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    sql+=" and (SQL)  and b.id is null group by a.assetType,a.assetId,a.flowFlag order by a.sort desc, a.pubTime desc)) as ul";
+                } else if (!catalogType.equals("-1")&&f_catalogType.equals("-1")) {//按字典分类,用发布栏目过滤
+                    sql="select * from ((select distinct a.resTableName,a.resId from wt_ResDict_Ref a, wt_ChannelAsset b "
+                      +"where a.dictMid='"+catalogType+"' and b.isValidate=1 and b.flowFlag=2 and (b.assetType=a.resTableName and b.assetId=a.resId)";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    sql+=" and (SQL)  and "+filterSql_inwhere;
+                    sql+=" order by a.cTime desc) union (";
+                    sql+="select distinct a.resTableName,a.resId from wt_ResDict_Ref a ";
+                    sql+="left join wt_ChannelAsset b on b.assetType=a.resTableName and b.assetId=a.resId and b.isValidate=1 and b.flowFlag=2";
+                    sql+=" and "+filterSql_inwhere;
+                    sql+=" where a.dictMid='"+catalogType+"'";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    sql+=" and (SQL)  and b.id is null order by a.cTime desc)) as ul";
+                } else {//按字典分类,用字典分类过滤
+                    sql="select * from ((select distinct a.resTableName,a.resId from wt_ResDict_Ref a, wt_ResDict_Ref b where a.dictMid='"+catalogType+"'";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    sql+=" and (SQL)  and "+filterSql_inwhere;
+                    sql+=" and a.resTableName=b.resTableName and a.resId=b.resId";
+                    sql+=" order by a.cTime desc) union (";
+                    sql+="select distinct a.resTableName,a.resId from wt_ResDict_Ref a ";
+                    sql+="left join wt_ResDict_Ref b on a.resTableName=b.resTableName and a.resId=b.resId";
+                    sql+=" and "+filterSql_inwhere;
+                    sql+=" where a.dictMid='"+catalogType+"'";
+                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+                    sql+=" and (SQL) and b.id is null order by a.cTime desc)) as ul";
+                }
+            }
+            if (StringUtils.isNullOrEmptyOrSpace(filterStr)) sql+=" limit "+perSize;
             try {
                 conn=dataSource.getConnection();
-                ps1=conn.prepareStatement(sql);
-                ps2=conn.prepareStatement(sqlCount);
                 psBc=conn.prepareStatement(sqlBc);
                 psMa=conn.prepareStatement(sqlMa);
                 psSma=conn.prepareStatement(sqlSma);
@@ -935,22 +1084,23 @@ public class ContentService {
                         String bcSqlSign="", maSqlSign="", smaSqlSign="";
                         String bcSqlSign1="", maSqlSign1="", smaSqlSign1="";
                         //开始循环处理
-                        String tempStr=idCName+"='"+_stn.getId()+"'";
+                        String tempStr="a."+idCName+"='"+_stn.getId()+"'";
                         List<TreeNode<? extends TreeNodeBean>> subAllTn=TreeUtils.getDeepList(_stn);
                         if (subAllTn!=null&&!subAllTn.isEmpty()) {
                             for (TreeNode<? extends TreeNodeBean> tn: subAllTn) {
-                                tempStr+=" or "+idCName+"='"+tn.getId()+"'";
+                                tempStr+=" or a."+idCName+"='"+tn.getId()+"'";
                             }
                         }
                         long count=0l;
-                        rs=ps2.executeQuery(sqlCount.replaceAll("SQL", tempStr));
+                        psCount=conn.prepareStatement(sqlCount.replaceAll("SQL", tempStr));
+                        rs=psCount.executeQuery();
                         while (rs!=null&&rs.next()) {
                             count=rs.getLong(1);
                         }
                         rs.close();rs=null;
                         if (count==0) continue;
-
-                        rs=ps1.executeQuery(sql.replaceAll("SQL", tempStr));
+                        psAsset=conn.prepareStatement(sql.replaceAll("SQL", tempStr));
+                        rs=psAsset.executeQuery();
                         List<String> sortIdList=new ArrayList<String>();
                         while (rs!=null&&rs.next()) {
                             sortIdList.add(rs.getString(typeCName)+"::"+rs.getString(resIdCName));
@@ -1077,12 +1227,65 @@ public class ContentService {
                                 }
                             }
 
+                            List<Map<String, Object>> _ret2=null;
+                            if (!StringUtils.isNullOrEmptyOrSpace(filterStr)&&_ret.size()>0) {
+                                int listLimit=perSize;
+                                int[] retlIndex=new int[listLimit];
+                                int i=0, j=0, insertIndex=0;
+                                String identifyStr="";
+                                Map<String, Object> oneMedia, oneCatalog;
+
+                                for (; i<listLimit; i++) retlIndex[i]=-1;
+
+                                for (i=0; i<_ret.size(); i++) {//第一次循环，把符合过滤条件的先找出来插入
+                                    oneMedia=_ret.get(i);
+                                    List<Map<String,Object>> catalogs=(List<Map<String, Object>>)oneMedia.get("ContentCatalogs");
+                                    if (catalogs!=null&&catalogs.size()>0) {
+                                        for (j=0; j<catalogs.size(); j++) {
+                                            oneCatalog=catalogs.get(j);
+                                            if (oneCatalog!=null&&!oneCatalog.isEmpty()) {
+                                                identifyStr=oneCatalog.get("CataMId")+"::"+oneCatalog.get("CataDId");
+                                                if (filterStr.indexOf(identifyStr)>-1) {
+                                                    retlIndex[insertIndex++]=i;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (insertIndex>listLimit) break;
+                                }
+                                if (insertIndex<listLimit) {//第二次循环，插入剩下的元素
+                                    boolean canInsert=false;
+                                    for (i=0; i<_ret.size(); i++) {
+                                        j=0;
+                                        canInsert=true;
+                                        while (retlIndex[j]!=-1) {
+                                            if (retlIndex[j]==i) {
+                                                canInsert=false;
+                                                break;
+                                            }
+                                        }
+                                        if (canInsert) {
+                                            retlIndex[insertIndex++]=i;
+                                        }
+                                        if (insertIndex>listLimit) break;
+                                    }
+                                }
+                                //取页
+                                _ret2=new ArrayList<Map<String, Object>>();
+                                for (i=0; i<(listLimit<_ret.size()?listLimit:_ret.size()); i++) {
+                                    if (retlIndex[i]!=-1) {
+                                        _ret2.add(_ret.get(retlIndex[i]));
+                                    }
+                                }
+                            }
+
                             Map<String, Object> oneCatalog=new HashMap<String, Object>();
                             oneCatalog.put("CatalogType", catalogType);
                             oneCatalog.put("CatalogId", _stn.getId());
                             oneCatalog.put("CatalogName", _stn.getNodeName());
                             oneCatalog.put("AllCount",count);
-                            oneCatalog.put("List", _ret);
+                            oneCatalog.put("List", _ret2==null?_ret:_ret2);
                             retCataList.add(oneCatalog);
                             pageCount+=sortIdList.size();
                         }
@@ -1105,8 +1308,8 @@ public class ContentService {
                 e.printStackTrace();
             } finally {
                 if (rs!=null) try {rs.close();rs=null;} catch(Exception e) {rs=null;} finally {rs=null;};
-                if (ps1!=null) try {ps1.close();ps1=null;} catch(Exception e) {ps1=null;} finally {ps1=null;};
-                if (ps2!=null) try {ps2.close();ps2=null;} catch(Exception e) {ps2=null;} finally {ps2=null;};
+                if (psAsset!=null) try {psAsset.close();psAsset=null;} catch(Exception e) {psAsset=null;} finally {psAsset=null;};
+                if (psCount!=null) try {psCount.close();psCount=null;} catch(Exception e) {psCount=null;} finally {psCount=null;};
                 if (psBc!=null) try {psBc.close();psBc=null;} catch(Exception e) {psBc=null;} finally {psBc=null;};
                 if (psMa!=null) try {psMa.close();psMa=null;} catch(Exception e) {psMa=null;} finally {psMa=null;};
                 if (psSma!=null) try {psSma.close();psSma=null;} catch(Exception e) {psSma=null;} finally {psSma=null;};

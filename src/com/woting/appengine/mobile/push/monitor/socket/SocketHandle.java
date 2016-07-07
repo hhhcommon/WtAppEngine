@@ -2,6 +2,8 @@ package com.woting.appengine.mobile.push.monitor.socket;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -11,7 +13,10 @@ import java.net.SocketException;
 import java.util.Date;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
+
 import com.spiritdata.framework.util.DateUtils;
+import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.appengine.common.util.MobileUtils;
@@ -173,13 +178,44 @@ public class SocketHandle extends Thread {
                                         out.flush();
                                         if (m.getMsgBizType().equals("AUDIOFLOW")&&m.getCommand().equals("b1")) {//对语音广播包做特殊处理
                                             try {
+                                                //=====================临时
+                                                //读取文件
+                                                String filePath=m.getCmdType()+"_"+((Map)m.getMsgContent()).get("TalkId")+"_sending-"+MobileUtils.getMobileKey(m, 2).toString();
+                                                filePath=filePath.replaceAll("::", "_");
+                                                filePath=FileNameUtils.concatPath("/opt/logs/AppEngine/audioflow/", filePath);
+                                                File dir=new File(FileNameUtils.getFilePath(filePath));
+                                                if (!dir.isDirectory()) dir.mkdirs();
+                                                File f=new File(filePath);
+                                                if (!f.exists()) f.createNewFile();
+
+                                                int seqN=Integer.parseInt(((Map)m.getMsgContent()).get("SeqNum")+"");
+                                                if (seqN>=0) filePath="+"+((100000+seqN)+"").substring(1);
+                                                else filePath="-"+((100000+(-seqN))+"").substring(1);
+                                                filePath+="::"+t+"["+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+"]::"+m.getSendTime()+"["+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(m.getSendTime()))+"]";
+
+                                                FileWriter fw = null;
+                                                try {
+                                                    fw = new FileWriter(f, true);
+                                                    fw.write(filePath+"\n");
+                                                    fw.flush();
+                                                } catch (Exception e) {
+                                                    e.printStackTrace();
+                                                }finally{
+                                                    try {
+                                                        fw.close();
+                                                    } catch (IOException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                }
+                                                //=====================临时
+
                                                 String talkId=((Map)m.getMsgContent()).get("TalkId")+"";
                                                 String seqNum=((Map)m.getMsgContent()).get("SeqNum")+"";
                                                 TalkMemoryManage tmm=TalkMemoryManage.getInstance();
                                                 WholeTalk wt=tmm.getWholeTalk(talkId);
                                                 TalkSegment ts=wt.getTalkData().get(Math.abs(Integer.parseInt(seqNum)));
                                                 if (ts.getSendFlagMap().get(mk.toString())!=null) ts.getSendFlagMap().put(mk.toString(), 1);
-                                            } catch(Exception e) {}
+                                            } catch(Exception e) {e.printStackTrace();}
                                         }
                                         System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送]:"+(SocketHandle.this.mk==null?"":"<"+SocketHandle.this.mk.toString()+">\n\t")+m.toJson());
                                     }
@@ -295,7 +331,37 @@ public class SocketHandle extends Thread {
                                         SocketHandle.this.mk=mk;//设置全局作用域下的移动Key
                                         //处理注册
                                         if (!(recMap.get("BizType")+"").equals("REGIST")) pmm.getReceiveMemory().addPureQueue(recMap);
-                                        //处理每次的
+                                        //加日志--临时
+                                        if (recMap.get("BizType").equals("AUDIOFLOW")&&recMap.get("Command").equals("1")) {
+                                            //读取文件
+                                            String filePath=recMap.get("CmdType")+"_"+(((Map)recMap.get("Data")).get("TalkId")+"")+"_receive";
+                                            filePath=FileNameUtils.concatPath("/opt/logs/AppEngine/audioflow/", filePath);
+                                            File dir=new File(FileNameUtils.getFilePath(filePath));
+                                            if (!dir.isDirectory()) dir.mkdirs();
+                                            File f=new File(filePath);
+                                            if (!f.exists()) f.createNewFile();
+
+                                            int seqN=Integer.parseInt(((Map)recMap.get("Data")).get("SeqNum")+"");
+                                            if (seqN>=0) filePath="+"+((100000+seqN)+"").substring(1);
+                                            else filePath="-"+((100000+(-seqN))+"").substring(1);
+                                            long sendTime=Long.parseLong(recMap.get("SendTime")+"");
+                                            filePath+="::"+t+"["+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+"]::"+sendTime+"["+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(sendTime))+"]";
+
+                                            FileWriter fw = null;
+                                            try {
+                                                fw = new FileWriter(f, true);
+                                                fw.write(filePath+"\n");
+                                                fw.flush();
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                            }finally{
+                                                try {
+                                                    fw.close();
+                                                } catch (IOException e) {
+                                                    e.printStackTrace();
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
