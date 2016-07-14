@@ -87,16 +87,16 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='*LD001消息收发日志表';
 /**LD002 音频消息收发
 DROP TABLE IF EXISTS ld_Audio;
 CREATE TABLE ld_Audio (
-  id          varchar(32)   NOT NULL  COMMENT '消息Id，可以和ld_Message中互查',
-  flag        varchar(4)    NOT NULL  COMMENT '收发标识，只有两个值send/recv',
-  time        bigint        NOT NULL  COMMENT '发送或接收时间，时间戳',
-  sendTime    bigint        NOT NULL  COMMENT '包中记录的发送或接收时间，时间戳',
-  fromAdress  varchar(400)  NOT NULL  COMMENT '从哪来',
-  toAdress    varchar(400)  NOT NULL  COMMENT '到哪去',
-  seqNo       int           NOT NULL  COMMENT '流数据包编号',
-  audioType   varchar(100)  NOT NULL  COMMENT '流数据类型：目前有TALK_INTERCOM(组对讲)、ALK_TELPHONE(电话)',
-  talkId      varchar(32)   NOT NULL  COMMENT '会话的Id',
-  audioStr    text          NOT NULL  COMMENT '音频数据',
+  id           varchar(32)   NOT NULL  COMMENT '消息Id，可以和ld_Message中互查',
+  flag         varchar(4)    NOT NULL  COMMENT '收发标识，只有两个值send/recv',
+  time         bigint        NOT NULL  COMMENT '发送或接收时间，时间戳',
+  sendTime     bigint        NOT NULL  COMMENT '包中记录的发送或接收时间，时间戳',
+  fromAddress  varchar(400)  NOT NULL  COMMENT '从哪来',
+  toAddress    varchar(400)  NOT NULL  COMMENT '到哪去',
+  seqNo        int           NOT NULL  COMMENT '流数据包编号',
+  audioType    varchar(100)  NOT NULL  COMMENT '流数据类型：目前有TALK_INTERCOM(组对讲)、ALK_TELPHONE(电话)',
+  talkId       varchar(32)   NOT NULL  COMMENT '会话的Id',
+  audioStr     text          NOT NULL  COMMENT '音频数据',
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='LD002音频消息收发表';

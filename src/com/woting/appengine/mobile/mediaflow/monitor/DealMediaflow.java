@@ -85,35 +85,35 @@ public class DealMediaflow extends Thread {
             TalkMemoryManage tmm = TalkMemoryManage.getInstance();
             Map<String, Object> dataMap=new HashMap<String, Object>();
             //组织回执消息
-            Message retMsg=new Message();
-            retMsg.setFromAddr("{(audioflow)@@(www.woting.fm||S)}");
-            retMsg.setToAddr(MobileUtils.getAddr(mk));
-            retMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            retMsg.setReMsgId(sourceMsg.getMsgId());
-            retMsg.setMsgType(-1);
-            retMsg.setAffirm(1);
-            retMsg.setMsgBizType("AUDIOFLOW");
-            retMsg.setCmdType(sourceMsg.getCmdType());
-            retMsg.setCommand("-1");
-            dataMap.put("TalkId", talkId);
-            dataMap.put("ObjId", objId);
-            dataMap.put("SeqNum", seqNum+"");
-            retMsg.setMsgContent(dataMap);
+//            Message retMsg=new Message();
+//            retMsg.setFromAddr("{(audioflow)@@(www.woting.fm||S)}");
+//            retMsg.setToAddr(MobileUtils.getAddr(mk));
+//            retMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+//            retMsg.setReMsgId(sourceMsg.getMsgId());
+//            retMsg.setMsgType(-1);
+//            retMsg.setAffirm(1);
+//            retMsg.setMsgBizType("AUDIOFLOW");
+//            retMsg.setCmdType(sourceMsg.getCmdType());
+//            retMsg.setCommand("-1");
+//            dataMap.put("TalkId", talkId);
+//            dataMap.put("ObjId", objId);
+//            dataMap.put("SeqNum", seqNum+"");
+//            retMsg.setMsgContent(dataMap);
 
             GroupInterCom gic=null;
             OneCall oc=null;
             if (talkType==1) {//组对讲
                 gic=gmm.getGroupInterCom(objId);
                 if (gic==null||gic.getSpeaker()==null||!gic.getSpeaker().getUserId().equals(talkerId)) {
-                    retMsg.setReturnType("1002");
-                    pmm.getSendMemory().addUniqueMsg2Queue(mk, retMsg, new CompareAudioFlowMsg());
+//                    retMsg.setReturnType("1002");
+//                    pmm.getSendMemory().addUniqueMsg2Queue(mk, retMsg, new CompareAudioFlowMsg());
                     return;
                 }
             } else {//电话
                 oc=cmm.getCallData(objId);
                 if (oc==null) {
-                    retMsg.setReturnType("1003");
-                    pmm.getSendMemory().addUniqueMsg2Queue(mk, retMsg, new CompareAudioFlowMsg());
+//                    retMsg.setReturnType("1003");
+//                    pmm.getSendMemory().addUniqueMsg2Queue(mk, retMsg, new CompareAudioFlowMsg());
                     return;
                 }
             }
@@ -159,8 +159,8 @@ public class DealMediaflow extends Thread {
             else oc.setLastUsedTime();
 
             //发送正常回执
-            retMsg.setReturnType("1001");
-            pmm.getSendMemory().addUniqueMsg2Queue(mk, retMsg, new CompareAudioFlowMsg());
+//            retMsg.setReturnType("1001");
+//            pmm.getSendMemory().addUniqueMsg2Queue(mk, retMsg, new CompareAudioFlowMsg());
 
 //            if (new String(ts.getData()).equals("####")) System.out.println("deCode:::====="+new String(ts.getData()));
             //发送广播消息，简单处理，只把这部分消息发给目的地，是声音数据文件

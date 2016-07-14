@@ -2,8 +2,6 @@ package com.woting.appengine.mobile.push.monitor.socket;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -14,11 +12,12 @@ import java.util.Date;
 import java.util.Map;
 
 import com.spiritdata.framework.util.DateUtils;
-import com.spiritdata.framework.util.FileNameUtils;
+//import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
+import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
-import com.woting.appengine.intercom.mem.GroupMemoryManage;
+//import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.mobile.mediaflow.mem.TalkMemoryManage;
 import com.woting.appengine.mobile.mediaflow.model.TalkSegment;
 import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
@@ -263,7 +262,7 @@ public class SocketHandle extends Thread {
                         if (in==null) in=new BufferedReader(new InputStreamReader(SocketHandle.this.socket.getInputStream(), "UTF-8"));
                         revMsgStr=in.readLine();
                         long t=System.currentTimeMillis();
-                        if (revMsgStr==null) continue;
+                        if (StringUtils.isNullOrEmptyOrSpace(revMsgStr)) continue;
 
                         SocketHandle.this.lastVisitTime=t;
                         //判断是否是心跳信号
@@ -277,7 +276,7 @@ public class SocketHandle extends Thread {
                             }
                             continue;
                         }
-
+System.out.println("接收["+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(System.currentTimeMillis()))+"]-"+revMsgStr);
                         try {
                             String temp123=SocketHandle.this.mk==null?"NULL":SocketHandle.this.mk.toString();
                             pmm.logQueue.add(t+"::recv::"+temp123+"::"+revMsgStr);
