@@ -29,7 +29,7 @@ public class MobileSession implements Serializable {
         this.body=body;
     }
 
-    protected long creationTime=System.currentTimeMillis();;//创建时间
+    protected long creationTime=System.currentTimeMillis();//创建时间
     protected volatile long lastAccessedTime=this.creationTime; //最后访问时间
     protected volatile transient boolean expiring=false; //是否过期
 
