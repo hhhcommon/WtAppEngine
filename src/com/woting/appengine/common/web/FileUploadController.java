@@ -118,9 +118,4 @@ public class FileUploadController extends AbstractFileUploadController {
         retmap.put("onFaildBreak", "FALSE");
         return retmap;
     }
-
-    @Override
-    public void afterUploadAllFiles(List<Map<String, Object>> fl, Map<String, Object> a, Map<String, Object> p) {
-        //System.out.println(fl.toString());
-    }
 }

@@ -1,8 +1,10 @@
 package com.woting.appengine.mobile.push.mem;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.spiritdata.framework.core.structure.StrArrayQueue;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.model.Message;
 import com.woting.appengine.mobile.push.model.SendMessageList;
@@ -20,6 +22,9 @@ public class PushMemoryManage {
     //数据区
     protected ReceiveMemory rm; //接收数据内存结构
     protected SendMemory sm; //发送数据内存结构
+//  public LinkedBlockingQueue<String> logQueue;//日志数据
+    public StrArrayQueue logQueue;//日志数据
+    public ConcurrentHashMap<String, ConcurrentLinkedQueue<Message>> msgMap;//日志数据
     //数据区
 
     public ReceiveMemory getReceiveMemory() {
@@ -35,6 +40,7 @@ public class PushMemoryManage {
     private PushMemoryManage() {
         rm=ReceiveMemory.getInstance();
         sm=SendMemory.getInstance();
+        logQueue=new StrArrayQueue(10240);
     }
 
     /**

@@ -3,9 +3,9 @@ package com.woting.appengine.mobile.push;
 import java.util.Date;
 import java.util.Timer;
 
-import com.woting.appengine.mobile.push.mem.ReceiveMemory;
 import com.woting.appengine.mobile.push.monitor.CleanPushMemoryTask;
 import com.woting.appengine.mobile.push.monitor.DealReceivePureQueue;
+import com.woting.appengine.mobile.push.monitor.WriteLog;
 
 public class PushListener extends Thread {
     private static PushConfig pc=null;//推送服务的配置信息
@@ -28,12 +28,13 @@ public class PushListener extends Thread {
     public void run() {
         try {
             sleep(3000);//多少毫秒后启动任务处理，先让系统的其他启动任务完成，这里设置死为10秒钟
-            //初始化内存结构
-            ReceiveMemory.getInstance();
             //启动服务
             PushSocketServer pss = new PushSocketServer(pc);
             pss.setDaemon(true);
             pss.start();
+            //启动日志服务
+            WriteLog wl=new WriteLog();
+            wl.start();
             //启动读取线程
             for (int i=0;i<pc.getTHREADCOUNT_DEALRECEIVEQUEUE(); i++) {
                 DealReceivePureQueue drpq = new DealReceivePureQueue(""+i);

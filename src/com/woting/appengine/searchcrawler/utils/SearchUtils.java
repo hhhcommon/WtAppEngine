@@ -272,7 +272,6 @@ public abstract class SearchUtils {
 		Jedis jedis = jedisPool.getResource();
 		try {
 			jedis.set("Search_"+contentid+"_NewsInfo", contenturi);
-		} catch (Exception e) {
 		} finally {
 			release(jedis);
 		}

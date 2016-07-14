@@ -167,6 +167,14 @@ public class GroupInterCom {
 
         if (!exist&&type==0) {//进入组处理
             int oldSize=entryGroupUserMap.size();
+            String delKey=null;
+            for (String key: this.entryGroupUserMap.keySet()) {
+                if (key.indexOf("::"+mk.getUserId())!=-1) {
+                    delKey=key;
+                    break;
+                }
+            }
+            if (delKey!=null) this.entryGroupUserMap.remove(delKey);
             this.entryGroupUserMap.put(mk.toString(), entryUp);
             retM.put("returnType", "1");
             retM.put("entryGroupUsers", this.cloneEntryGroupUserMap());

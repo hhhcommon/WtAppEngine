@@ -7,7 +7,7 @@
   <!-- 配置编码格式，与eclpse的IDE环境编码格式匹配 -->
   <!-- D:\workIDE\projects\WtAppEngine || E:\work\gitworkspace || D:\WBWorkDir\WtAppEngine-->
   <properties>
-    <projectDir>D:\WBWorkDir\WtAppEngine</projectDir>
+    <projectDir>D:\workIDE\projects\WtAppEngine</projectDir>
   </properties>
 
   <parent>
@@ -18,11 +18,11 @@
   </parent>
 
   <dependencies>
-  	<dependency>
-  	 <groupId>org.jsoup</groupId>
+    <dependency>
+     <groupId>org.jsoup</groupId>
      <artifactId>jsoup</artifactId>
      <version>1.8.2</version>
-  	</dependency>
+    </dependency>
     <!-- dbcp连接池 -->
     <dependency>
       <groupId>commons-dbcp</groupId>
