@@ -1449,11 +1449,13 @@ public class GroupController {
                     oneGroup.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date(_g.getCTime().getTime())));
 
                     List<UserPo> ul=_g.getUserList();
-                    String userNames="";
-                    for (int j=0;j<ul.size(); j++) {
-                        userNames+=","+ul.get(j).getLoginName();
+                    if (ul!=null&&!ul.isEmpty()) {
+                        String userNames="";
+                        for (int j=0;j<ul.size(); j++) {
+                            userNames+=","+ul.get(j).getLoginName();
+                        }
+                        oneGroup.put("UserNames", userNames.substring(1));
                     }
-                    oneGroup.put("UserNames", userNames.substring(1));
                     groupList.add(oneGroup);
                 }
                 map.put("GroupList", groupList);

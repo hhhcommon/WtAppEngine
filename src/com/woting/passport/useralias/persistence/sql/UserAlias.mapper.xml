@@ -38,19 +38,19 @@
 
   <!-- 获得记录条数-->
   <select id="getCount" parameterType="java.util.Map" resultType="java.lang.Integer">
-    select count(*) from wt_PersonAlias <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+    select count(*) from wt_UserAlias <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </select>
 
   <!-- 获得列表 -->
   <select id="getList" resultMap="userAliasMap" parameterType="java.util.Map">
-    select <include refid="Base_Column_List"/> from wt_PersonAlias
+    select <include refid="Base_Column_List"/> from wt_UserAlias
     <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
     <if test="sortByClause!=null">order by ${sortByClause}</if>
   </select>
 
   <!-- 新增数据 -->
   <insert id="insert" parameterType="java.util.Map">
-    insert into wt_PersonAlias
+    insert into wt_UserAlias
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id!=null">id,</if>
       <if test="typeId!=null">typeId,</if>
@@ -73,7 +73,7 @@
 
   <!-- 修改 根据主键-->
   <update id="update" parameterType="java.util.Map">
-    update wt_PersonAlias
+    update wt_UserAlias
     <set>
       <if test="typeId!=null">typeId=#{typeId,jdbcType=VARCHAR},</if>
       <if test="mainUserId!=null">mainUserId=#{mainUserId,jdbcType=VARCHAR},</if>
@@ -85,7 +85,7 @@
     where id=#{id,jdbcType=VARCHAR}
   </update>
   <update id="updateByKey" parameterType="java.util.Map">
-    update wt_PersonAlias
+    update wt_UserAlias
     <set>
       <if test="aliasName!=null">aliasName=#{aliasName,jdbcType=VARCHAR},</if>
       <if test="aliasDescn!=null">aliasDescn=#{aliasDescn,jdbcType=VARCHAR},</if>
@@ -96,9 +96,9 @@
 
   <!-- 删除数据 -->
   <delete id="delete" parameterType="java.lang.String">
-    delete from wt_PersonAlias where id=#{id,jdbcType=VARCHAR}
+    delete from wt_UserAlias where id=#{id,jdbcType=VARCHAR}
   </delete>
   <delete id="deleteByEntity" parameterType="java.util.Map">
-    delete from wt_PersonAlias <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+    delete from wt_UserAlias <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </delete>
 </mapper>
