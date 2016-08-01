@@ -39,8 +39,7 @@ import com.woting.appengine.mobile.push.model.Message;
  */
 //注意，服务端把心跳的功能去掉了
 public class SocketHandle extends Thread {
-    //三个业务子线程
-//    private SendBeat sendBeat;
+
     private FetchMsg fetchMsg;
     private SendMsg sendMsg;
     private ReceiveMsg receiveMsg;
@@ -76,7 +75,7 @@ public class SocketHandle extends Thread {
         return socket!=null&&socket.isBound()&&socket.isConnected()&&!socket.isClosed();
     }
 
-    /*
+    /**
      * 构造函数，同时线程注册到Map中。
      * @param client 客户端Socket
      */
@@ -87,7 +86,58 @@ public class SocketHandle extends Thread {
         socketOut=new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8")), true);
         this.smc=smc;
     }
-    /*
+    public void stopHandle() {
+        running=false;
+    }
+    private void closeHandle() {
+        if (this.fetchMsg!=null) {try {this.fetchMsg._interrupt();} catch(Exception e) {}}
+        if (this.sendMsg!=null) {try {this.sendMsg._interrupt();} catch(Exception e) {}}
+        if (this.receiveMsg!=null) {try {this.receiveMsg._interrupt();} catch(Exception e) {}}
+        if (this.dealByteArray!=null) {try {this.dealByteArray._interrupt();} catch(Exception e) {}}
+        boolean canClose=false;
+        int loopCount=0;
+        while(!canClose) {
+            loopCount++;
+            if (loopCount>this.smc.get_TryDestoryAllCount()) {
+                canClose=true;
+                continue;
+            }
+            if (/* (this.sendBeat!=null&&!this.sendBeat.isRunning)
+               &&*/(this.fetchMsg!=null&&!this.fetchMsg.isRunning)
+               &&(this.sendMsg!=null&&!this.sendMsg.isRunning)
+               &&(this.receiveMsg!=null&&!this.receiveMsg.isRunning)
+               &&(this.dealByteArray!=null&&!this.dealByteArray.isRunning)) {
+                canClose=true;
+                continue;
+            }
+            try { sleep(10); } catch (InterruptedException e) {};
+        }
+        if (this.fetchMsg!=null) this.fetchMsg.interrupt();
+        if (this.sendMsg!=null) this.sendMsg.interrupt();
+        if (this.receiveMsg!=null) this.receiveMsg.interrupt();
+        if (this.dealByteArray!=null) this.dealByteArray.interrupt();
+        try {
+            this.socketIn.close();
+        } catch (IOException e) {
+        } finally {
+            this.socketIn=null;
+        }
+        this.socketOut.close();
+        this.socketOut=null;
+        try {
+            SocketHandle.this.socket.close(); //这是主线程的关键
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            pmm.removeSocket(this);
+            this.fetchMsg=null;
+            this.sendMsg=null;
+            this.receiveMsg=null;
+            this.dealByteArray=null;
+            this.socket=null;
+        }
+    }
+    /**
      * 主线程
      */
     public void run() {
@@ -109,37 +159,42 @@ public class SocketHandle extends Thread {
 
         //主线程
         try {
-            while (true) {//有任何一个字线程出问题，则关闭这个连接
+            while (running) {//有任何一个字线程出问题，则关闭这个连接
                 //判断时间戳，看连接是否还有效
                 if (!socketOk()) {
                     this.fetchMsg._interrupt();
                     this.sendMsg._interrupt();
                     this.receiveMsg._interrupt();
                     this.dealByteArray._interrupt();
+                    System.out.println("============NOSOCKETOK");
                     break;
                 } else {
                     if (this.fetchMsg.isInterrupted||!this.fetchMsg.isRunning) {
                         this.sendMsg._interrupt();
                         this.receiveMsg._interrupt();
                         this.dealByteArray._interrupt();
+                        System.out.println("============fetchMsg");
                         break;
                     }
                     if (this.sendMsg.isInterrupted||!this.sendMsg.isRunning) {
                         this.fetchMsg._interrupt();
                         this.receiveMsg._interrupt();
                         this.dealByteArray._interrupt();
+                        System.out.println("============sendMsg");
                         break;
                     }
                     if (this.receiveMsg.isInterrupted||!this.receiveMsg.isRunning) {
                         this.fetchMsg._interrupt();
                         this.sendMsg._interrupt();
                         this.dealByteArray._interrupt();
+                        System.out.println("============receiveMsg");
                         break;
                     }
                     if (this.dealByteArray.isInterrupted||!this.dealByteArray.isRunning) {
                         this.fetchMsg._interrupt();
                         this.sendMsg._interrupt();
                         this.receiveMsg._interrupt();
+                        System.out.println("============dealByteArray");
                         break;
                     }
                 }
@@ -150,47 +205,7 @@ public class SocketHandle extends Thread {
             System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"主监控线程出现异常:"+e.getMessage());
             e.printStackTrace();
         } finally {//关闭所有子任务进程
-            if (this.fetchMsg!=null) {try {this.fetchMsg._interrupt();} catch(Exception e) {}}
-            if (this.sendMsg!=null) {try {this.sendMsg._interrupt();} catch(Exception e) {}}
-            if (this.receiveMsg!=null) {try {this.receiveMsg._interrupt();} catch(Exception e) {}}
-            if (this.dealByteArray!=null) {try {this.dealByteArray._interrupt();} catch(Exception e) {}}
-            boolean canClose=false;
-            int loopCount=0;
-            while(!canClose) {
-                loopCount++;
-                if (loopCount>this.smc.get_TryDestoryAllCount()) {
-                    canClose=true;
-                    continue;
-                }
-                if (/* (this.sendBeat!=null&&!this.sendBeat.isRunning)
-                   &&*/(this.fetchMsg!=null&&!this.fetchMsg.isRunning)
-                   &&(this.sendMsg!=null&&!this.sendMsg.isRunning)
-                   &&(this.receiveMsg!=null&&!this.receiveMsg.isRunning)
-                   &&(this.dealByteArray!=null&&!this.dealByteArray.isRunning)) {
-                    canClose=true;
-                    continue;
-                }
-                try { sleep(10); } catch (InterruptedException e) {};
-            }
-            try {
-                this.socketIn.close();
-            } catch (IOException e) {
-            } finally {
-                this.socketIn=null;
-            }
-            this.socketOut.close();
-            this.socketOut=null;
-            try {
-                SocketHandle.this.socket.close(); //这是主线程的关键
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                this.fetchMsg=null;
-                this.sendMsg=null;
-                this.receiveMsg=null;
-                this.dealByteArray=null;
-                this.socket=null;
-            }
+            closeHandle();
         }
     }
 
@@ -218,7 +233,8 @@ public class SocketHandle extends Thread {
                     if (SocketHandle.this.mk!=null) {
                         canAdd=true;
                         //获得控制消息
-                        Message m=pmm.getSendMessages(mk);
+                        Message m=pmm.getSendMessages(mk, SocketHandle.this);
+                        if (m==null) continue;
                         long t=System.currentTimeMillis();
                         if (m.getMsgBizType().equals("AUDIOFLOW")) {
                             if (t-m.getSendTime()>60*1000) {
@@ -255,6 +271,7 @@ public class SocketHandle extends Thread {
                     try { sleep(5); } catch (InterruptedException e) {};
                 }
             } catch (Exception e) {
+                e.printStackTrace();
                 long t=System.currentTimeMillis();
                 System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"获取发送消息线程出现异常:" + e.getMessage());
             } finally {
@@ -283,7 +300,7 @@ public class SocketHandle extends Thread {
                 while (pmm.isServerRuning()&&SocketHandle.this.running&&!isInterrupted&&socketOk()) {
                     try {
                         synchronized(socketSendLock) {
-                            if (socketOut!=null&&!socketOut.checkError()&&!socket.isOutputShutdown()) {
+                            if (socketOut!=null&&!socketOut.checkError()&&!socket.isOutputShutdown()&&!sendMsgQueue.isEmpty()) {
                                 mStr=sendMsgQueue.poll();
                                 socketOut.println(mStr);
                                 socketOut.flush();
@@ -297,6 +314,7 @@ public class SocketHandle extends Thread {
                             }
                         }
                     } catch (Exception e) {
+                        e.printStackTrace();
                         long t=System.currentTimeMillis();
                         System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"发送消息线程出现异常:" + e.getMessage());
                     }
@@ -339,6 +357,7 @@ public class SocketHandle extends Thread {
                         }
                         continueErrCodunt=0;
                     } catch(Exception e) {
+                        e.printStackTrace();
                         long t=System.currentTimeMillis();
                         System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"接收消息线程出现异常:"+e.getMessage());
                         if (e instanceof SocketException) {
@@ -353,6 +372,7 @@ public class SocketHandle extends Thread {
                     try { sleep(10); } catch (InterruptedException e) {};
                 }//end while
             } catch(Exception e) {
+                e.printStackTrace();
                 long t=System.currentTimeMillis();
                 System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"接收消息线程出现异常:" + e.getMessage());
             } finally {
@@ -402,16 +422,11 @@ public class SocketHandle extends Thread {
                     }
                     fw.flush();
                     long t=System.currentTimeMillis();
+                    if (sb.length()==0) continue;
                     SocketHandle.this.lastVisitTime=t;
                     //判断是否是心跳信号
                     if (sb.toString().equals("b")) { //发送回执心跳
                         sendMsgQueue.add("B");
-//                        synchronized(socketSendLock) {
-//                            socketOut.println("B");
-//                            socketOut.flush();
-//                            System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"[发送回执心跳]");
-//                            try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
-//                        }
                         continue;
                     }
 
@@ -431,19 +446,16 @@ public class SocketHandle extends Thread {
                             if ((""+retM.get("ReturnType")).equals("2003")) {
                                 String outStr="[{\"MsgId\":\""+SequenceUUID.getUUIDSubSegment(4)+"\",\"ReMsgId\":\""+recMap.get("MsgId")+"\",\"BizType\":\"NOLOG\"}]";//空，无内容包括已经收到
                                 sendMsgQueue.add(outStr);
-//                                synchronized(socketSendLock) {
-//                                    socketOut.println(outStr);
-//                                    socketOut.flush();
-//                                    try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
-//                                }
                             } else {
                                 SocketHandle.this.mk=MobileUtils.getMobileKey(recMap);
                                 if (SocketHandle.this.mk!=null) {//存入接收队列
+                                    pmm.setUserSocketMap(SocketHandle.this.mk, SocketHandle.this);
                                     if (!(recMap.get("BizType")+"").equals("REGIST")) pmm.getReceiveMemory().addPureQueue(recMap);
                                 }
                             }
                         }
                     } catch(Exception e) {
+                        e.printStackTrace();
                         System.out.println("==============================================================");
                         System.out.println("EXCEPTIOIN::"+e.getClass().getName()+"/t"+e.getMessage());
                         System.out.println("JSONERROR::"+sb);
@@ -451,6 +463,7 @@ public class SocketHandle extends Thread {
                     }
                 }
             } catch(Exception e) {
+                e.printStackTrace();
                 long t=System.currentTimeMillis();
                 System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"字节流处理线程出现异常:" + e.getMessage());
             } finally {

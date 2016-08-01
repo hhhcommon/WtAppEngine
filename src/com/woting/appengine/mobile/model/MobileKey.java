@@ -59,12 +59,15 @@ public class MobileKey implements Serializable {
     public boolean equals(Object obj) {
         if (obj==null||!(obj instanceof MobileKey)) return false;
         try {
-            MobileKey _mk=(MobileKey)obj;
-            if (this.mobileId.equals(_mk.getMobileId())&&this.userId.equals(_mk.getUserId())&&this.PCDType==_mk.getPCDType()) return true;
+            return obj.hashCode()==this.hashCode();
         } catch(Exception e) {}
         return false;
     }
 
+    @Override
+    public int hashCode() {
+        return this.toString().hashCode();
+    }
     /**
      * 获得SessionId，SessionId就是UserId
      * @return

@@ -13,6 +13,7 @@ import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.appengine.mobile.model.MobileKey;
+import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.version.core.model.VersionConfig;
 import com.woting.version.core.service.VersionService;
@@ -63,7 +64,7 @@ public class SessionMemoryManage {
             );
         }
         //清除会话
-        List<MobileSession> beRemovedList= new ArrayList<MobileSession>();
+        List<MobileSession> beRemovedList=new ArrayList<MobileSession>();
         if (this.sm.mSessionMap!=null&&!this.sm.mSessionMap.isEmpty()) {
             for (String sKey: this.sm.mSessionMap.keySet()) {
                 MobileSession ms=this.sm.mSessionMap.get(sKey);
@@ -74,6 +75,7 @@ public class SessionMemoryManage {
         }
         if (!beRemovedList.isEmpty()) {
             for (MobileSession ms: beRemovedList) {
+                PushMemoryManage.getInstance().removeMk(ms.getKey());
                 List<MobileSession> ul=this.sm.mUserSessionListMap.get(ms.getKey().getUserId());
                 if (ul!=null&&!ul.isEmpty()) {
                     for (MobileSession _ms: ul) {
