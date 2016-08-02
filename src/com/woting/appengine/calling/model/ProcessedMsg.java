@@ -1,6 +1,6 @@
 package com.woting.appengine.calling.model;
 
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.Message;
 
 /**
  * 已处理的消息对象

@@ -10,7 +10,7 @@ import com.woting.appengine.calling.model.OneCall;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.Message;
 
 /**
  * 处理电话消息，包括把电话消息分发到每一个具体的处理线程

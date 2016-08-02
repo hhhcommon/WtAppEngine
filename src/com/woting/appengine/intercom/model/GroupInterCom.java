@@ -9,8 +9,8 @@ import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
-import com.woting.appengine.mobile.push.model.CompareMsg;
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.CompareMsg;
+import com.woting.push.core.message.Message;
 import com.woting.passport.UGA.model.Group;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 

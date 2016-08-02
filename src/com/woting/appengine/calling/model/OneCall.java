@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.Message;
 
 /**
  * 一次通话所需要的数据结构。

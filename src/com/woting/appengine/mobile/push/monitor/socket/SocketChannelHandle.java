@@ -24,12 +24,12 @@ import com.spiritdata.framework.util.SequenceUUID;
 //import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
 //import com.woting.appengine.intercom.mem.GroupMemoryManage;
-import com.woting.appengine.mobile.mediaflow.mem.TalkMemoryManage;
-import com.woting.appengine.mobile.mediaflow.model.TalkSegment;
-import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
+//import com.woting.appengine.mobile.mediaflow.mem.TalkMemoryManage;
+//import com.woting.appengine.mobile.mediaflow.model.TalkSegment;
+//import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.Message;
 
 /**
  * 处理Socket的线程，此线程是处理一个客户端连接的基础线程。其中包括一个主线程，两个子线程<br/>
@@ -72,7 +72,7 @@ public class SocketChannelHandle extends Thread {
      * @param client 客户端Socket
      */
     public SocketChannelHandle(SocketChannel sc, SocketMonitorConfig smc) throws Exception {
-        lineSeparator = java.security.AccessController.doPrivileged(new sun.security.action.GetPropertyAction("line.separator"));
+        lineSeparator=java.security.AccessController.doPrivileged(new sun.security.action.GetPropertyAction("line.separator"));
         this.smc=smc;
         socketChannel=sc;
         socketChannel.socket().setTcpNoDelay(true);
@@ -189,16 +189,16 @@ public class SocketChannelHandle extends Thread {
                             Message m=pmm.getSendMessages(mk);
                             String mStr="";
                             if (m!=null) {
-                                mStr=m.toJson();
+//                                mStr=m.toJson();
                                 //发送消息
                                 synchronized(socketSendLock) {
                                     boolean canSend=true;
                                     //判断是否过期的语音包，这个比较特殊
-                                    if (m.getMsgBizType().equals("AUDIOFLOW")) {
-                                        if (t-m.getSendTime()>60*1000) {
-                                            canSend=false;
-                                        }
-                                    }
+//                                    if (m.getMsgBizType().equals("AUDIOFLOW")) {
+//                                        if (t-m.getSendTime()>60*1000) {
+//                                            canSend=false;
+//                                        }
+//                                    }
                                     if (canSend) {
                                         sendByChannel(mStr);
                                         try {
@@ -206,16 +206,16 @@ public class SocketChannelHandle extends Thread {
                                         } catch (Exception e) {
                                             e.printStackTrace();
                                         }
-                                        if (m.getMsgBizType().equals("AUDIOFLOW")&&m.getCommand().equals("b1")) {//对语音广播包做特殊处理
-                                            try {
-                                                String talkId=((Map)m.getMsgContent()).get("TalkId")+"";
-                                                String seqNum=((Map)m.getMsgContent()).get("SeqNum")+"";
-                                                TalkMemoryManage tmm=TalkMemoryManage.getInstance();
-                                                WholeTalk wt=tmm.getWholeTalk(talkId);
-                                                TalkSegment ts=wt.getTalkData().get(Math.abs(Integer.parseInt(seqNum)));
-                                                if (ts.getSendFlagMap().get(mk.toString())!=null) ts.getSendFlagMap().put(mk.toString(), 1);
-                                            } catch(Exception e) {e.printStackTrace();}
-                                        }
+//                                        if (m.getMsgBizType().equals("AUDIOFLOW")&&m.getCommand().equals("b1")) {//对语音广播包做特殊处理
+//                                            try {
+//                                                String talkId=((Map)m.getMsgContent()).get("TalkId")+"";
+//                                                String seqNum=((Map)m.getMsgContent()).get("SeqNum")+"";
+//                                                TalkMemoryManage tmm=TalkMemoryManage.getInstance();
+//                                                WholeTalk wt=tmm.getWholeTalk(talkId);
+//                                                TalkSegment ts=wt.getTalkData().get(Math.abs(Integer.parseInt(seqNum)));
+//                                                if (ts.getSendFlagMap().get(mk.toString())!=null) ts.getSendFlagMap().put(mk.toString(), 1);
+//                                            } catch(Exception e) {e.printStackTrace();}
+//                                        }
                                     }
                                     try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
                                 }
@@ -224,8 +224,8 @@ public class SocketChannelHandle extends Thread {
                             if (mk.isUser()) {
                                 Message nm=pmm.getNotifyMessages(mk.getUserId());
                                 if (nm!=null) {
-                                    mStr=nm.toJson();
-                                    nm.setToAddr(MobileUtils.getAddr(mk));
+//                                    mStr=nm.toJson();
+//                                    nm.setToAddr(MobileUtils.getAddr(mk));
                                     synchronized(socketSendLock) {
                                         sendByChannel(mStr);
                                         try {
@@ -385,7 +385,7 @@ public class SocketChannelHandle extends Thread {
                             } else {
                                 SocketChannelHandle.this.mk=MobileUtils.getMobileKey(recMap);
                                 if (SocketChannelHandle.this.mk!=null) {//存入接收队列
-                                    if (!(recMap.get("BizType")+"").equals("REGIST")) pmm.getReceiveMemory().addPureQueue(recMap);
+                                    //if (!(recMap.get("BizType")+"").equals("REGIST")) pmm.getReceiveMemory().addPureQueue(recMap);
                                 }
                             }
                         }

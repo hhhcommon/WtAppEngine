@@ -2,8 +2,8 @@ package com.woting.appengine.mobile.mediaflow.model;
 
 import java.util.Map;
 
-import com.woting.appengine.mobile.push.model.CompareMsg;
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.CompareMsg;
+import com.woting.push.core.message.Message;
 
 public class CompareAudioFlowMsg implements CompareMsg {
     public boolean compare(Message msg1, Message msg2) {

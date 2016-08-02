@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.spiritdata.framework.core.structure.StrArrayQueue;
 import com.woting.appengine.mobile.model.MobileKey;
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.Message;
 import com.woting.appengine.mobile.push.model.SendMessageList;
 import com.woting.appengine.mobile.push.monitor.socket.SocketHandle;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;

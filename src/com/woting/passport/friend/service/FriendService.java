@@ -13,7 +13,7 @@ import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.Message;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.friend.persistence.pojo.FriendRelPo;
 import com.woting.passport.friend.persistence.pojo.InviteFriendPo;

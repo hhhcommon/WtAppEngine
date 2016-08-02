@@ -11,7 +11,7 @@ import com.woting.appengine.mobile.mediaflow.model.CompareGroupMsg;
 import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.Message;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 
 public class TalkMemoryManage {
