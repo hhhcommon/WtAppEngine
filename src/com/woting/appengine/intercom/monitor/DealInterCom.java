@@ -120,14 +120,14 @@ public class DealInterCom extends Thread {
 
             Map<String, Object> retM=null;
             GroupInterCom gic=gmm.getGroupInterCom(groupId);
-            if (!mk.isUser()) retMsg.setReturnType(999);
-            else if (gic==null) retMsg.setReturnType("1000");
+            if (!mk.isUser()) retMsg.setReturnType(0xFF);
+            else if (gic==null) retMsg.setReturnType(0x02);
             else {
                 retM=gic.insertEntryUser(mk);
                 String rt = (String)retM.get("returnType");
-                if (rt.equals("3")) retMsg.setReturnType("1002");//该用户不在指定组
-                else if (rt.equals("2")) retMsg.setReturnType("1003");//该用户已经在指定组
-                else retMsg.setReturnType("1001");//正确加入组
+                if (rt.equals("3")) retMsg.setReturnType(0x40);//该用户不在指定组
+                else if (rt.equals("2")) retMsg.setReturnType(0x08);//该用户已经在指定组
+                else retMsg.setReturnType(0x01);//正确加入组
             }
             pmm.getSendMemory().addMsg2Queue(mk, retMsg);
 

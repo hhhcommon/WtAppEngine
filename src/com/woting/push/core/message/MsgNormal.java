@@ -11,8 +11,6 @@ import com.woting.push.core.message.content.MapContent;
  * @author wanghui
  */
 public class MsgNormal extends Message {
-    public final static int _MAXLENGTH=2048; //最大字节数
-
     private String msgId; //32位消息id
     private String reMsgId; //32位消息id
     private int bizType; //0应答;1组通话;2电话通话;4消息通知;15注册消息
@@ -107,17 +105,17 @@ public class MsgNormal extends Message {
 
     @Override
     public void fromBytes(byte[] binaryMsg) {
-        if (!MessageUtils.parse_EndFlagOk(binaryMsg)) throw new RuntimeException("消息未正确结束！");
+        if (MessageUtils.decideMsg(binaryMsg)!=0) throw new RuntimeException("消息类型错误！");
+
+        int _offset=2;
 
         String _tempStr=null;
         String[] _sa=null;
-        int _offset=0;
-
         byte f1=binaryMsg[_offset++];
         this.setMsgType(((f1&0x80)==0x80)?1:0);
         this.setAffirm(((f1&0x08)==0x08)?1:0);
 
-        byte[] _tempBytes=Arrays.copyOfRange(binaryMsg, _offset, _offset+8);//ByteBuffer.wrap(binaryMsg, _offset, 8).array();
+        byte[] _tempBytes=Arrays.copyOfRange(binaryMsg, _offset, _offset+8);
         this.setSendTime(ByteConvert.bytes2long(_tempBytes));
         _offset+=8;
 
@@ -137,7 +135,6 @@ public class MsgNormal extends Message {
             this.setReMsgId(_sa[1]);
         } else {
             if (msgType==1) this.setReturnType(binaryMsg[_offset++]);
-
             try {
                 _tempStr=MessageUtils.parse_String(binaryMsg, _offset, 32, null);
             } catch (UnsupportedEncodingException e) {
@@ -147,7 +144,6 @@ public class MsgNormal extends Message {
             if (Integer.parseInt(_sa[0])==-1) throw new RuntimeException("消息字符串异常！");
             _offset=Integer.parseInt(_sa[0]);
             this.setMsgId(_sa[1]);
-
             if (msgType==1) {
                 try {
                     _tempStr=MessageUtils.parse_String(binaryMsg, _offset, 32, null);
@@ -159,7 +155,6 @@ public class MsgNormal extends Message {
                 _offset=Integer.parseInt(_sa[0]);
                 this.setReMsgId(_sa[1]);
             }
-            
         }
 
         f1=binaryMsg[_offset++];
@@ -201,12 +196,11 @@ public class MsgNormal extends Message {
             }
         }
 
-        if (!(binaryMsg[_offset]==END_HEAD[1]&&binaryMsg[_offset+1]==END_HEAD[0])) {
-            throw new RuntimeException("消息字节串异常！");
-        }
-        _offset+=2;
+        if (!(binaryMsg[_offset]==END_HEAD[0]&&binaryMsg[_offset+1]==END_HEAD[1])) throw new RuntimeException("消息字节串异常！");
 
-        byte[] binaryCnt=Arrays.copyOfRange(binaryMsg, _offset, binaryMsg.length-2);
+        _offset+=4;
+
+        byte[] binaryCnt=Arrays.copyOfRange(binaryMsg, _offset, binaryMsg.length);
         MapContent mc=new MapContent();
         mc.fromBytes(binaryCnt);
         this.setMsgContent(mc);
@@ -217,6 +211,9 @@ public class MsgNormal extends Message {
         int _offset=0;
         byte[] ret=new byte[_MAXLENGTH];
         byte zeroByte=0;
+
+        ret[_offset++]=BEGIN_CTL[0];
+        ret[_offset++]=BEGIN_CTL[1];
 
         if (msgType==1) zeroByte|=0x80;
         if (affirm==1) zeroByte|=0x08;
@@ -282,6 +279,9 @@ public class MsgNormal extends Message {
         ret[_offset++]=END_HEAD[1];
         ret[_offset++]=END_HEAD[0];
 
+        short len=(short)(msgContent==null?0:(msgContent.toBytes()==null?0:msgContent.toBytes().length));
+        ret[_offset++]=(byte)(len>>0);
+        ret[_offset++]=(byte)(len>>8);
         //组装消息体
         if (!isAck()) {
             if (msgContent!=null) {
@@ -292,8 +292,6 @@ public class MsgNormal extends Message {
             }
         }
         //消息结束标志
-        ret[_offset++]=END_MSG[1];
-        ret[_offset]=END_MSG[0];
         byte[] _ret=Arrays.copyOfRange(ret, 0, _offset);
         return _ret;
     }

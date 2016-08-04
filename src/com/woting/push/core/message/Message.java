@@ -5,10 +5,12 @@ package com.woting.push.core.message;
  * @author wanghui
  */
 public abstract class Message implements Comparable<Message>{
-    public final static byte[] END_FIELD={124, 124}; //字段结束标识||
-    public final static byte[] END_HEAD={94, 94}; //消息头结束标识
-    public final static byte[] END_MSG={124, 94}; //消息结束标识
-    
+    public final static byte[] END_FIELD={'|', '|'}; //字段结束标识||
+    public final static byte[] END_HEAD={'^', '^'}; //消息头结束标识^^
+    public final static byte[] BEGIN_CTL={'|', '^'}; //控制消息开始|^
+    public final static byte[] BEGIN_MDA={'^', '|'}; //媒体消息开始^|
+    public final static int _MAXLENGTH=2048; //最大字节数
+
     protected int msgType; //消息类型:0主动发出；1回复类型
     protected int affirm; //是否需要确认;0不需要1需要，默认值=0不需要确认
     protected long sendTime; //发送时间

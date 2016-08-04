@@ -7,7 +7,6 @@ package com.woting.push.core.message;
  *   把自身转化为消息数据
  * </pre>
  * @author wanghui
- *
  */
 public interface MessageContent {
     /**
