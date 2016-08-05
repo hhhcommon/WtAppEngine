@@ -151,7 +151,7 @@ public abstract class MessageUtils {
         int msgType=decideMsg(binaryMsg);
         if (msgType==0) return new MsgNormal(binaryMsg);
         else
-        if (msgType==0) return new MsgMedia(binaryMsg);
+        if (msgType==1) return new MsgMedia(binaryMsg);
         else
         return null;
     }

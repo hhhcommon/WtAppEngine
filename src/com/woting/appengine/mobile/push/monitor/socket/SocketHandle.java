@@ -525,6 +525,7 @@ public class SocketHandle extends Thread {
                                     }
                                 }
                             } else {
+                                ((MsgMedia)ms).setExtInfo(SocketHandle.this.mk);
                                 pmm.getReceiveMemory().addPureQueue(ms);
                             }
                         }

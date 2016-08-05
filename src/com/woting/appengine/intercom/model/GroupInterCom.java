@@ -10,7 +10,8 @@ import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.push.core.message.CompareMsg;
-import com.woting.push.core.message.Message;
+import com.woting.push.core.message.MsgNormal;
+import com.woting.push.core.message.content.MapContent;
 import com.woting.passport.UGA.model.Group;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 
@@ -217,17 +218,20 @@ public class GroupInterCom {
             System.out.println("===========对讲结束：释放Speaker资源：广播结束PPT的消息===============");
             PushMemoryManage pmm=PushMemoryManage.getInstance();
             //广播结束消息
-            Message exitPttMsg=new Message();
-            exitPttMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+            MsgNormal exitPttMsg=new MsgNormal();
+            exitPttMsg.setFromType(1);
+            exitPttMsg.setToType(0);
             exitPttMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            exitPttMsg.setMsgType(1);
-            exitPttMsg.setMsgBizType("INTERCOM_CTL");
-            exitPttMsg.setCmdType("PTT");
-            exitPttMsg.setCommand("b2");
+            exitPttMsg.setMsgType(0);
+            exitPttMsg.setAffirm(1);
+            exitPttMsg.setBizType(1);
+            exitPttMsg.setCmdType(2);
+            exitPttMsg.setCommand(0x20);
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("GroupId", this.getGroup().getGroupId());
             dataMap.put("TalkUserId", this.speaker.getUserId());
-            exitPttMsg.setMsgContent(dataMap);
+            MapContent mc=new MapContent(dataMap);
+            exitPttMsg.setMsgContent(mc);
             //发送广播消息
             Map<String, UserPo> entryGroupUsers=this.getEntryGroupUserMap();
             for (String k: entryGroupUsers.keySet()) {
@@ -236,21 +240,20 @@ public class GroupInterCom {
                 mk.setMobileId(_sp[0]);
                 mk.setPCDType(Integer.parseInt(_sp[1]));
                 mk.setUserId(_sp[2]);
-                exitPttMsg.setToAddr(MobileUtils.getAddr(mk));
                 pmm.getSendMemory().addUniqueMsg2Queue(mk, exitPttMsg, new CompareGroupMsg());
             }
             this.isSendEndPPTMsg.lazySet(true);
         }
     }
 }
-class CompareGroupMsg implements CompareMsg {
+class CompareGroupMsg implements CompareMsg<MsgNormal> {
     @Override
-    public boolean compare(Message msg1, Message msg2) {
-        if (msg1.getFromAddr().equals(msg2.getFromAddr())
-          &&msg1.getToAddr().equals(msg2.getToAddr())
-          &&msg1.getMsgBizType().equals(msg2.getMsgBizType())
-          &&msg1.getCmdType().equals(msg2.getCmdType())
-          &&msg1.getCommand().equals(msg2.getCommand()) ) {
+    public boolean compare(MsgNormal msg1, MsgNormal msg2) {
+        if (msg1.getFromType()==msg2.getFromType()
+          &&msg1.getToType()==msg2.getToType()
+          &&msg1.getBizType()==msg2.getBizType()
+          &&msg1.getCmdType()==msg2.getCmdType()
+          &&msg1.getCommand()==msg2.getCommand() ) {
             if (msg1.getMsgContent()==null&&msg2.getMsgContent()==null) return true;
             if (((msg1.getMsgContent()!=null&&msg2.getMsgContent()!=null))
               &&(((Map)msg1.getMsgContent()).get("GroupId").equals(((Map)msg2.getMsgContent()).get("GroupId")))) return true;

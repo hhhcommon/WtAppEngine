@@ -19,6 +19,14 @@ public class MsgMedia extends Message {
     private int returnType; //返回消息类型
     private byte[] mediaData=null; //包数据
 
+    private Object extInfo=null;//扩展信息，这个信息是不参与传输的
+    public Object getExtInfo() {
+        return extInfo;
+    }
+    public void setExtInfo(Object extInfo) {
+        this.extInfo = extInfo;
+    }
+
     //以下信息在TCP原消息格式中有意义，在新的消息传输模型中需要删掉（不管是用TCP还是UDP）
     private String objId; //在组对讲中是组Id,在电话对讲中是电话通话Id
     public String getObjId() {

@@ -4,14 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.spiritdata.framework.util.SequenceUUID;
-import com.woting.appengine.common.util.MobileUtils;
+//import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.intercom.model.GroupInterCom;
 import com.woting.appengine.mobile.mediaflow.model.CompareGroupMsg;
 import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
-import com.woting.push.core.message.Message;
+//import com.woting.push.core.message.Message;
+import com.woting.push.core.message.MsgNormal;
+import com.woting.push.core.message.content.MapContent;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 
 public class TalkMemoryManage {
@@ -58,7 +60,7 @@ public class TalkMemoryManage {
     public void clean() {
         if (this.tm.talkMap!=null&&!this.tm.talkMap.isEmpty()) {
             Map<String, Object> dataMap;
-            Message exitPttMsg;
+            MsgNormal exitPttMsg;
             MobileKey mk;
 
             PushMemoryManage pmm=PushMemoryManage.getInstance();
@@ -75,17 +77,20 @@ public class TalkMemoryManage {
                         //发广播消息，推出PTT
                         if (gic.getSpeaker()!=null) {
                             //广播结束消息
-                            exitPttMsg=new Message();
-                            exitPttMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
+                            exitPttMsg=new MsgNormal();
+                            exitPttMsg.setFromType(1);
+                            exitPttMsg.setToType(0);
                             exitPttMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                            exitPttMsg.setMsgType(1);
-                            exitPttMsg.setMsgBizType("INTERCOM_CTL");
-                            exitPttMsg.setCmdType("PTT");
-                            exitPttMsg.setCommand("b2");
+                            exitPttMsg.setMsgType(0);
+                            exitPttMsg.setBizType(1);
+                            exitPttMsg.setCmdType(2);
+                            exitPttMsg.setCommand(0x20);
                             dataMap=new HashMap<String, Object>();
                             dataMap.put("GroupId", wt.getObjId());
                             dataMap.put("TalkUserId", wt.getTalkerId());
-                            exitPttMsg.setMsgContent(dataMap);
+                            MapContent mc=new MapContent(dataMap);
+                            exitPttMsg.setMsgContent(mc);
+
                             //发送广播消息
                             Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
                             for (String _k: entryGroupUsers.keySet()) {
@@ -94,7 +99,6 @@ public class TalkMemoryManage {
                                 mk.setMobileId(_sp[0]);
                                 mk.setPCDType(Integer.parseInt(_sp[1]));
                                 mk.setUserId(_sp[2]);
-                                exitPttMsg.setToAddr(MobileUtils.getAddr(mk));
                                 pmm.getSendMemory().addUniqueMsg2Queue(mk, exitPttMsg, new CompareGroupMsg());
                             }
                         }

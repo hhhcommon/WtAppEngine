@@ -1,13 +1,13 @@
 package com.woting.appengine.calling.model;
 
-import com.woting.push.core.message.Message;
+import com.woting.push.core.message.MsgNormal;
 
 /**
  * 已处理的消息对象
  * @author wanghui
  */
 public class ProcessedMsg {
-    private Message msg;//消息
+    private MsgNormal msg;//消息
     private long beginTime; //消息开始处理时间
     private long endTime;//消息处理结束时间
     private int status=0;//消息处理状态0正在处里;1处理成功;2被抛弃;3处理失败，由于信息不匹配;-1处理异常
@@ -23,14 +23,14 @@ public class ProcessedMsg {
      * @param beginTime
      * @param className
      */
-    public ProcessedMsg(Message msg, long beginTime, String className) {
+    public ProcessedMsg(MsgNormal msg, long beginTime, String className) {
         super();
         this.msg = msg;
         this.beginTime = beginTime;
         this.className = className;
         this.status=0;
     }
-    public Message getMsg() {
+    public MsgNormal getMsg() {
         return msg;
     }
     public long getBeginTime() {

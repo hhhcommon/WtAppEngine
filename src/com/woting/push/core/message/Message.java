@@ -23,35 +23,35 @@ public abstract class Message implements Comparable<Message>{
         return msgType;
     }
     public void setMsgType(int msgType) {
-        this.msgType = msgType;
+        this.msgType=msgType;
     }
 
     public int getAffirm() {
         return affirm;
     }
     public void setAffirm(int affirm) {
-        this.affirm = affirm;
+        this.affirm=affirm;
     }
 
     public long getSendTime() {
         return sendTime;
     }
     public void setSendTime(long sendTime) {
-        this.sendTime = sendTime;
+        this.sendTime=sendTime;
     }
 
     public int getFromType() {
         return fromType;
     }
     public void setFromType(int fromType) {
-        this.fromType = fromType;
+        this.fromType=fromType;
     }
 
     public int getToType() {
         return toType;
     }
     public void setToType(int toType) {
-        this.toType = toType;
+        this.toType=toType;
     }
 
     /**

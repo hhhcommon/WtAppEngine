@@ -38,7 +38,6 @@ public class DealReceivePureQueue extends Thread {
                 ReceiveMemory rm=pmm.getReceiveMemory();
                 Message m=rm.pollPureQueue(); //执行后，原始消息接收队列中将不再有此消息
                 if (m==null) continue;
-                MobileKey mk=MobileUtils.getMobileKey(m);
 //                Map<String, Object> parseM=this.getMsgFromMap4CTL(m);
 //                Message msg=null;
 //                if (parseM.get("err")!=null) {//直接写入发送队列
@@ -54,6 +53,7 @@ public class DealReceivePureQueue extends Thread {
 //                    msg=(Message)parseM.get("msg");
 //                }
                 if (m.isAffirm()&&!(m instanceof MsgMedia)) {
+                    MobileKey mk=MobileUtils.getMobileKey(m);
                     pmm.getSendMemory().addMsg2Queue(mk, MessageUtils.buildAckMsg((MsgNormal)m));
                 }
                 String type=null;
