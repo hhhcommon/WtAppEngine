@@ -10,7 +10,7 @@ import com.spiritdata.framework.util.StringUtils;
  * @author wanghui
  */
 public class MsgMedia extends Message {
-    private final static int COMPACT_LEN=24;
+    private final static int COMPACT_LEN=36;//若删除ObjId，则这个值为24
 
     private int mediaType; //流类型:1音频2视频
     private int bizType; //流业务类型:0对讲组；1电话
@@ -106,13 +106,13 @@ public class MsgMedia extends Message {
 
         if (((f1&0x10)==0x10)&&((f1&0x30)==0x10)) this.setFromType(1);//服务器
         else
-        if (((f1&0x20)==0x20)&&((f1&0x30)==0x20)) this.setFromType(2);//设备
+        if (((f1&0x20)==0x20)&&((f1&0x30)==0x20)) this.setFromType(0);//设备
         else
         throw new RuntimeException("消息from位异常！");
 
         if (((f1&0x04)==0x04)&&((f1&0x0C)==0x04)) this.setToType(1);//服务器
         else
-        if (((f1&0x08)==0x08)&&((f1&0x0C)==0x04)) this.setToType(2);//设备
+        if (((f1&0x08)==0x08)&&((f1&0x0C)==0x08)) this.setToType(0);//设备
         else
         throw new RuntimeException("消息to位异常！");
 
@@ -146,7 +146,7 @@ public class MsgMedia extends Message {
         _offset+=4;
         //objId，可能需要删除掉
         try {
-            _tempStr=MessageUtils.parse_String(binaryMsg, _offset, 8, null);
+            _tempStr=MessageUtils.parse_String(binaryMsg, _offset, 12, null);
         } catch(Exception e) {
             throw new RuntimeException("对象Id异常！", e);
         }
@@ -157,11 +157,11 @@ public class MsgMedia extends Message {
         this.setObjId(_sa[1]);
         //删除结束
 
-        if (msgType==1) this.setReturnType(binaryMsg[_offset]);
-
-        short len=(short)(((binaryMsg[_offset+2]<<8)|binaryMsg[_offset+1]&0xff));
-
-        if (len>0) mediaData=Arrays.copyOfRange(binaryMsg, _offset+2, _offset+2+len);
+        if (isAck()) this.setReturnType(binaryMsg[_offset]);
+        else {
+            short len=(short)(((binaryMsg[_offset+1]<<8)|binaryMsg[_offset]&0xff));
+            if (len>0) mediaData=Arrays.copyOfRange(binaryMsg, _offset+2, _offset+2+len);
+        }
     }
 
     @Override
@@ -202,12 +202,14 @@ public class MsgMedia extends Message {
 
         if (msgType==1) ret[_offset++]=(byte)returnType;
 
-        short len=(short)(mediaData==null?0:mediaData.length);
-        ret[_offset++]=(byte)(len>>0);
-        ret[_offset++]=(byte)(len>>8);
+        if (!isAck()) {
+            short len=(short)(mediaData==null?0:mediaData.length);
+            ret[_offset++]=(byte)(len>>0);
+            ret[_offset++]=(byte)(len>>8);
 
-        if (mediaData!=null) {
-            for (; i<mediaData.length; i++) ret[_offset++]=mediaData[i];
+            if (mediaData!=null) {
+                for (i=0; i<mediaData.length; i++) ret[_offset++]=mediaData[i];
+            }
         }
 
         byte[] _ret=Arrays.copyOfRange(ret, 0, _offset);

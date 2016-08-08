@@ -122,6 +122,7 @@ public class MsgNormal extends Message {
         f1=binaryMsg[_offset++];
         this.setBizType(f1>>4);
         this.setCmdType(f1&0x0F);
+        if (!isAck()&&bizType!=0&&bizType!=15) this.setCommand((byte)binaryMsg[_offset++]);
 
         if (isAck()) {
             try {
@@ -196,14 +197,17 @@ public class MsgNormal extends Message {
             }
         }
 
-        if (!(binaryMsg[_offset]==END_HEAD[0]&&binaryMsg[_offset+1]==END_HEAD[1])) throw new RuntimeException("消息字节串异常！");
+        if (!isAck()) {
+            if (!(binaryMsg[_offset]==END_HEAD[0]&&binaryMsg[_offset+1]==END_HEAD[1])) throw new RuntimeException("消息字节串异常！");
 
-        _offset+=4;
+            _offset+=4;
+            short _dataLen=(short)(((binaryMsg[_offset-1]<<8)|binaryMsg[_offset-2]&0xff));
 
-        byte[] binaryCnt=Arrays.copyOfRange(binaryMsg, _offset, binaryMsg.length);
-        MapContent mc=new MapContent();
-        mc.fromBytes(binaryCnt);
-        this.setMsgContent(mc);
+            byte[] binaryCnt=Arrays.copyOfRange(binaryMsg, _offset, _offset+_dataLen);
+            MapContent mc=new MapContent();
+            mc.fromBytes(binaryCnt);
+            this.setMsgContent(mc);
+        }
     }
 
     @Override
@@ -228,9 +232,9 @@ public class MsgNormal extends Message {
         if (bizType!=0&&bizType!=15) zeroByte|=((((byte)cmdType)<<4)>>4);
         ret[_offset++]=zeroByte;
 
-        if (bizType!=0&&bizType!=15) ret[_offset++]=(byte)command;
+        if (!isAck()&&bizType!=0&&bizType!=15) ret[_offset++]=(byte)command;
 
-        if (msgType==1) ret[_offset++]=(byte)returnType;
+        if (!isAck()&&msgType==1) ret[_offset++]=(byte)returnType;
 
         if (!isAck()) {
             if (StringUtils.isNullOrEmptyOrSpace(msgId)) throw new RuntimeException("消息Id为空");
@@ -254,8 +258,8 @@ public class MsgNormal extends Message {
         }
 
         zeroByte=0;
-        zeroByte|=(fromType==1?0x00:0x10);
-        zeroByte|=(toType==1?0x00:0x01);
+        zeroByte|=(fromType==1?0x10:0x00);
+        zeroByte|=(toType==1?0x01:0x00);
         ret[_offset++]=zeroByte;
 
         if (!isAck()) {
@@ -276,22 +280,20 @@ public class MsgNormal extends Message {
             }
         }
 
-        ret[_offset++]=END_HEAD[1];
-        ret[_offset++]=END_HEAD[0];
-
-        short len=(short)(msgContent==null?0:(msgContent.toBytes()==null?0:msgContent.toBytes().length));
-        ret[_offset++]=(byte)(len>>0);
-        ret[_offset++]=(byte)(len>>8);
-        //组装消息体
         if (!isAck()) {
-            if (msgContent!=null) {
-                _tempBytes=msgContent.toBytes();
-                if (_tempBytes!=null&&_tempBytes.length>0) {
-                    for (i=0; i<_tempBytes.length; i++) ret[_offset++]=_tempBytes[i];
-                }
+            ret[_offset++]=END_HEAD[1];
+            ret[_offset++]=END_HEAD[0];
+
+            _tempBytes=msgContent.toBytes();
+            short len=(short)(_tempBytes==null?0:_tempBytes.length);
+            ret[_offset++]=(byte)(len>>0);
+            ret[_offset++]=(byte)(len>>8);
+            //组装消息体
+            if (_tempBytes!=null&&_tempBytes.length>0) {
+                for (i=0; i<_tempBytes.length; i++) ret[_offset++]=_tempBytes[i];
             }
         }
-        //消息结束标志
+
         byte[] _ret=Arrays.copyOfRange(ret, 0, _offset);
         return _ret;
     }

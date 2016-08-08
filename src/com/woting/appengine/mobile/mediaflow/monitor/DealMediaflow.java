@@ -73,7 +73,7 @@ public class DealMediaflow extends Thread {
         }
         public void run() {
             MobileKey mk=(MobileKey)sourceMsg.getExtInfo();
-            if (!mk.isUser()) return;
+            if (mk==null&&!mk.isUser()) return;
             String talkerId=mk.getUserId();
             String talkId=sourceMsg.getTalkId();
             if (StringUtils.isEmptyOrWhitespaceOnly(talkId)) return;
@@ -208,7 +208,7 @@ public class DealMediaflow extends Thread {
         }
         public void run() {
             MobileKey mk=(MobileKey)sourceMsg.getExtInfo();
-            if (!mk.isUser()) return;
+            if (mk==null&&!mk.isUser()) return;
             String talkerId=mk.getUserId();
             String talkId=sourceMsg.getTalkId();
             if (StringUtils.isEmptyOrWhitespaceOnly(talkerId)) return;
