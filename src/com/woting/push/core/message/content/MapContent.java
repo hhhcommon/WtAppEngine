@@ -1,11 +1,14 @@
 package com.woting.push.core.message.content;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import com.spiritdata.framework.util.JsonUtils;
 import com.woting.push.core.message.MessageContent;
 
-public class MapContent implements MessageContent {
+public class MapContent implements MessageContent, Serializable {
+    private static final long serialVersionUID = 1772778270294321854L;
+
     private Map<String, Object> contentMap;
 
     public MapContent() {
@@ -32,5 +35,10 @@ public class MapContent implements MessageContent {
     public byte[] toBytes() {
         String jsonStr=JsonUtils.objToJson(contentMap);
         return jsonStr.getBytes();
+    }
+
+    public Object get(String key) {
+        if (contentMap==null) return null;
+        return contentMap.get(key);
     }
 }

@@ -1,10 +1,14 @@
 package com.woting.push.core.message;
 
+import java.io.Serializable;
+
 /**
  * 消息接口，主要是消息序列化和反序列化。
  * @author wanghui
  */
-public abstract class Message implements Comparable<Message>{
+public abstract class Message implements Comparable<Message>, Serializable {
+    private static final long serialVersionUID = -5568855516574485564L;
+
     public final static byte[] END_FIELD={'|', '|'}; //字段结束标识||
     public final static byte[] END_HEAD={'^', '^'}; //消息头结束标识^^
     public final static byte[] BEGIN_CTL={'|', '^'}; //控制消息开始|^

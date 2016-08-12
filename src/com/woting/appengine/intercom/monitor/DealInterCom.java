@@ -43,45 +43,23 @@ public class DealInterCom extends Thread {
                 //读取Receive内存中的typeMsgMap中的内容
                 MsgNormal m=(MsgNormal)pmm.getReceiveMemory().pollTypeQueue("1");
                 if (m==null) continue;
-
-//                if (m.getCmdType().equals("GROUP")) {
-//                    if (m.getCommand().equals("1")) {
-//                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-用户进入组::(User="+m.getFromAddr()+";Group="+((Map)m.getMsgContent()).get("GroupId")+")";
-//                        System.out.println(tempStr);
-//                        (new EntryGroup("{"+tempStr+"}处理线程", m)).start();
-//                    } else if (m.getCommand().equals("2")) {
-//                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-用户退出组::(User="+m.getFromAddr()+";Group="+((Map)m.getMsgContent()).get("GroupId")+")";
-//                        System.out.println(tempStr);
-//                        (new ExitGroup("{"+tempStr+"}处理线程", m)).start();
-//                    }
-//                } else if (m.getCmdType().equals("PTT")) {
-//                    if (m.getCommand().equals("1")) {
-//                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-开始对讲::(User="+m.getFromAddr()+";Group="+((Map)m.getMsgContent()).get("GroupId")+")";
-//                        System.out.println(tempStr);
-//                        (new BeginPTT("{"+tempStr+"}处理线程", m)).start();
-//                    } else if (m.getCommand().equals("2")) {
-//                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-结束对讲::(User="+m.getFromAddr()+";Group="+((Map)m.getMsgContent()).get("GroupId")+")";
-//                        System.out.println(tempStr);
-//                        (new EndPTT("{"+tempStr+"}处理线程", m)).start();
-//                    }
-//                }
                 if (m.getCmdType()==1) {
                     if (m.getCommand()==1) {
-                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-用户进入组::(User="+MobileUtils.getMobileKey(m)+";Group="+((Map)m.getMsgContent()).get("GroupId")+")";
+                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-用户进入组::(User="+MobileUtils.getMobileKey(m)+";Group="+((MapContent)m.getMsgContent()).get("GroupId")+")";
                         System.out.println(tempStr);
                         (new EntryGroup("{"+tempStr+"}处理线程", m)).start();
                     } else if (m.getCommand()==2) {
-                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-用户退出组::(User="+MobileUtils.getMobileKey(m)+";Group="+((Map)m.getMsgContent()).get("GroupId")+")";
+                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-用户退出组::(User="+MobileUtils.getMobileKey(m)+";Group="+((MapContent)m.getMsgContent()).get("GroupId")+")";
                         System.out.println(tempStr);
                         (new ExitGroup("{"+tempStr+"}处理线程", m)).start();
                     }
                 } else if (m.getCmdType()==2) {
                     if (m.getCommand()==1) {
-                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-开始对讲::(User="+MobileUtils.getMobileKey(m)+";Group="+((Map)m.getMsgContent()).get("GroupId")+")";
+                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-开始对讲::(User="+MobileUtils.getMobileKey(m)+";Group="+((MapContent)m.getMsgContent()).get("GroupId")+")";
                         System.out.println(tempStr);
                         (new BeginPTT("{"+tempStr+"}处理线程", m)).start();
                     } else if (m.getCommand()==2) {
-                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-结束对讲::(User="+MobileUtils.getMobileKey(m)+";Group="+((Map)m.getMsgContent()).get("GroupId")+")";
+                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-结束对讲::(User="+MobileUtils.getMobileKey(m)+";Group="+((MapContent)m.getMsgContent()).get("GroupId")+")";
                         System.out.println(tempStr);
                         (new EndPTT("{"+tempStr+"}处理线程", m)).start();
                     }
@@ -105,14 +83,14 @@ public class DealInterCom extends Thread {
 
             String groupId="";
             try {
-                groupId+=((Map)sourceMsg.getMsgContent()).get("GroupId");
+                groupId+=((MapContent)sourceMsg.getMsgContent()).get("GroupId");
             } catch(Exception e) {}
             if (groupId.length()==0) return;
             MsgNormal retMsg=MessageUtils.buildAckMsg(sourceMsg);
             retMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
             retMsg.setBizType(sourceMsg.getBizType());
             retMsg.setCmdType(sourceMsg.getCmdType());
-            retMsg.setCommand(-1);
+            retMsg.setCommand(9);
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("GroupId", groupId);
             MapContent mc=new MapContent(dataMap);
@@ -175,14 +153,14 @@ public class DealInterCom extends Thread {
 
             String groupId="";
             try {
-                groupId+=((Map)sourceMsg.getMsgContent()).get("GroupId");
+                groupId+=((MapContent)sourceMsg.getMsgContent()).get("GroupId");
             } catch(Exception e) {}
             if (groupId.length()==0) return;
             MsgNormal retMsg=MessageUtils.buildAckMsg(sourceMsg);
             retMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
             retMsg.setBizType(sourceMsg.getBizType());
             retMsg.setCmdType(sourceMsg.getCmdType());
-            retMsg.setCommand(-2);
+            retMsg.setCommand(0x0A);
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("GroupId", groupId);
             MapContent mc=new MapContent(dataMap);
@@ -237,7 +215,7 @@ public class DealInterCom extends Thread {
                 for (Message m: tempMsgs) {
                     if (m instanceof MsgMedia) {
                         MsgMedia _mm=(MsgMedia)m;
-                        if (_mm.getBizType()==0&&groupId.equals(_mm.getObjId())) {
+                        if (_mm.getBizType()==1&&groupId.equals(_mm.getObjId())) {
                             tempMsgs.remove(m);
                         }
                     }
@@ -259,7 +237,7 @@ public class DealInterCom extends Thread {
 
             String groupId="";
             try {
-                groupId+=((Map)sourceMsg.getMsgContent()).get("GroupId");
+                groupId+=((MapContent)sourceMsg.getMsgContent()).get("GroupId");
             } catch(Exception e) {}
             if (groupId.length()==0) return;
 
@@ -267,7 +245,7 @@ public class DealInterCom extends Thread {
             retMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
             retMsg.setBizType(sourceMsg.getBizType());
             retMsg.setCmdType(sourceMsg.getCmdType());
-            retMsg.setCommand(-1);
+            retMsg.setCommand(9);
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("GroupId", groupId);
             MapContent mc=new MapContent(dataMap);
@@ -325,13 +303,14 @@ public class DealInterCom extends Thread {
 
             String groupId="";
             try {
-                groupId+=((Map)sourceMsg.getMsgContent()).get("GroupId");
+                groupId+=((MapContent)sourceMsg.getMsgContent()).get("GroupId");
             } catch(Exception e) {}
             if (groupId.length()==0) return;
             MsgNormal retMsg=MessageUtils.buildAckMsg(sourceMsg);
-            retMsg.setReMsgId(sourceMsg.getMsgId());
+            retMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+            retMsg.setBizType(sourceMsg.getBizType());
             retMsg.setCmdType(sourceMsg.getCmdType());
-            retMsg.setCommand(-2);
+            retMsg.setCommand(0x0A);
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("GroupId", groupId);
             MapContent mc=new MapContent(dataMap);
@@ -395,7 +374,7 @@ public class DealInterCom extends Thread {
               &&msg1.getCommand()==msg2.getCommand() ) {
                 if (msg1.getMsgContent()==null&&msg2.getMsgContent()==null) return true;
                 if (((msg1.getMsgContent()!=null&&msg2.getMsgContent()!=null))
-                  &&(((Map)msg1.getMsgContent()).get("GroupId").equals(((Map)msg2.getMsgContent()).get("GroupId")))) return true;
+                  &&(((MapContent)msg1.getMsgContent()).get("GroupId").equals(((MapContent)msg2.getMsgContent()).get("GroupId")))) return true;
             }
             return false;
         }

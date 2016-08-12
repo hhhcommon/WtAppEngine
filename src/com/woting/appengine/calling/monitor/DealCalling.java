@@ -61,7 +61,7 @@ public class DealCalling extends Thread {
 
             String callId=null;
             try {
-                callId=((Map)sourceMsg.getMsgContent()).get("CallId")+"";
+                callId=((MapContent)sourceMsg.getMsgContent()).get("CallId")+"";
             } catch(Exception e) {}
             //不管任何消息，若CallId为空，则都认为是非法的消息，这类消息不进行任何处理，丢弃掉
             if (callId.equals("")) return;
@@ -70,7 +70,7 @@ public class DealCalling extends Thread {
             MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
             if (sourceMsg.getCmdType()==1&&sourceMsg.getCommand()==1) {//发起呼叫过程
                 String callerId=mk.getUserId();
-                String CallederId=((Map)sourceMsg.getMsgContent()).get("CallederId")+"";
+                String CallederId=((MapContent)sourceMsg.getMsgContent()).get("CallederId")+"";
                 //创建内存对象
                 oneCall=new OneCall(1, callId, callerId, CallederId
                                   , CallingListener.getCallingConfig().getIT1_EXPIRE()

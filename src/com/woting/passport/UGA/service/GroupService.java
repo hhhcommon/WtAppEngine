@@ -1400,7 +1400,7 @@ public class GroupService {
               &&msg1.getCommand()==msg2.getCommand() ) {
                 if (msg1.getMsgContent()==null&&msg2.getMsgContent()==null) return true;
                 if (((msg1.getMsgContent()!=null&&msg2.getMsgContent()!=null))
-                  &&(((Map)msg1.getMsgContent()).get("GroupId").equals(((Map)msg2.getMsgContent()).get("GroupId")))) return true;
+                  &&(((MapContent)msg1.getMsgContent()).get("GroupId").equals(((MapContent)msg2.getMsgContent()).get("GroupId")))) return true;
             }
             return false;
         }

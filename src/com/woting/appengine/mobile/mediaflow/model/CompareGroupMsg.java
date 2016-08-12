@@ -1,10 +1,8 @@
 package com.woting.appengine.mobile.mediaflow.model;
 
-import java.util.Map;
-
 import com.woting.push.core.message.CompareMsg;
-import com.woting.push.core.message.Message;
 import com.woting.push.core.message.MsgNormal;
+import com.woting.push.core.message.content.MapContent;
 
 public class CompareGroupMsg implements CompareMsg<MsgNormal> {
     public boolean compare(MsgNormal msg1, MsgNormal msg2) {
@@ -15,7 +13,7 @@ public class CompareGroupMsg implements CompareMsg<MsgNormal> {
           &&msg1.getCommand()==msg2.getCommand()) {
             if (msg1.getMsgContent()==null&&msg2.getMsgContent()==null) return true;
             if (((msg1.getMsgContent()!=null&&msg2.getMsgContent()!=null))
-              &&(((Map)msg1.getMsgContent()).get("GroupId").equals(((Map)msg2.getMsgContent()).get("GroupId")))) return true;
+              &&(((MapContent)msg1.getMsgContent()).get("GroupId").equals(((MapContent)msg2.getMsgContent()).get("GroupId")))) return true;
         }
         return false;
     }

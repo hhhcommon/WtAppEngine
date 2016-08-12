@@ -73,7 +73,7 @@ public class DealMediaflow extends Thread {
         }
         public void run() {
             MobileKey mk=(MobileKey)sourceMsg.getExtInfo();
-            if (mk!=null&&!mk.isUser()) return;
+            if (mk==null||!mk.isUser()) return;
             String talkerId=mk.getUserId();
             String talkId=sourceMsg.getTalkId();
             if (StringUtils.isEmptyOrWhitespaceOnly(talkId)) return;
@@ -81,7 +81,7 @@ public class DealMediaflow extends Thread {
             String objId=sourceMsg.getObjId();
             if (StringUtils.isEmptyOrWhitespaceOnly(objId)) return;
 
-            int talkType=sourceMsg.getBizType()+1;
+            int talkType=sourceMsg.getBizType();
 
             TalkMemoryManage tmm = TalkMemoryManage.getInstance();
 //            Map<String, Object> dataMap=new HashMap<String, Object>();
@@ -208,7 +208,7 @@ public class DealMediaflow extends Thread {
         }
         public void run() {
             MobileKey mk=(MobileKey)sourceMsg.getExtInfo();
-            if (mk!=null&&!mk.isUser()) return;
+            if (mk==null||!mk.isUser()) return;
             String talkerId=mk.getUserId();
             String talkId=sourceMsg.getTalkId();
             if (StringUtils.isEmptyOrWhitespaceOnly(talkerId)) return;
@@ -217,7 +217,7 @@ public class DealMediaflow extends Thread {
             String groupId=sourceMsg.getObjId();
             if (StringUtils.isEmptyOrWhitespaceOnly(groupId)) return;
 
-            int talkType=sourceMsg.getBizType()+1;
+            int talkType=sourceMsg.getBizType();
 
             TalkMemoryManage tmm = TalkMemoryManage.getInstance();
             WholeTalk wt = tmm.getWholeTalk(talkId);

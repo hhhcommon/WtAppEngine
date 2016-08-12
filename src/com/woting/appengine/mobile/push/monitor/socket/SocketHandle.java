@@ -298,6 +298,18 @@ public class SocketHandle extends Thread {
             super.interrupt();
         }
         public void run() {
+            String filePath="/opt/logs/sendLogs";
+            File dir=new File(filePath);
+            if (!dir.isDirectory()) dir.mkdirs();
+            File f=new File(filePath+"/"+SocketHandle.this.socket.hashCode()+".log");
+            FileOutputStream fos=null;
+            try {
+                if (!f.exists()) f.createNewFile();
+                fos=new FileOutputStream(f, false);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+
             this.isRunning=true;
             try {
                 while (pmm.isServerRuning()&&SocketHandle.this.running&&!isInterrupted&&socketOk()) {
@@ -314,6 +326,15 @@ public class SocketHandle extends Thread {
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
+                                if (fos!=null) {
+                                    try {
+                                        fos.write(mBytes);
+                                        fos.write(13);
+                                        fos.write(10);
+                                        fos.flush();
+                                    } catch (IOException e) {
+                                    }
+                                }
                             }
                         }
                     } catch (Exception e) {
@@ -327,6 +348,8 @@ public class SocketHandle extends Thread {
                 System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"发送消息线程出现异常:" + e.getMessage());
             } finally {
                 this.isRunning=false;
+                try { fos.close(); } catch (Exception e) {};
+                fos=null;
             }
         }
     }
@@ -420,6 +443,7 @@ public class SocketHandle extends Thread {
             short _dataLen=-3;
             boolean hasBeginMsg=false; //是否开始了一个消息
             int isAck=-1;
+            int isRegist=0;
             int msgType=-1;//消息类型
             byte[] endMsgFlag={0x00,0x00,0x00};
 
@@ -452,41 +476,54 @@ public class SocketHandle extends Thread {
                                 continue;
                             }
                             if (i>2) {
-                                for (int n=1;n<=i;n++) {
-                                    ba[n-1]=ba[n];
-                                }
+                                for (int n=1;n<=i;n++) ba[n-1]=ba[n];
                                 --i;
                             }
                         } else {
                             if (msgType==-1) msgType=MessageUtils.decideMsg(ba);
                             if (msgType==0) {//0=控制消息(一般消息)
-                                if (_dataLen==-3&&endMsgFlag[1]=='^'&&endMsgFlag[2]=='^') _dataLen++;
-                                else if (_dataLen>-3&&_dataLen<-1) _dataLen++;
-                                else if (_dataLen==-1) {
-                                    _dataLen=(short)(((endMsgFlag[2]<<8)|endMsgFlag[1]&0xff));
-                                    if (_dataLen==0) break;
+                                if (isAck==-1&&i==12) {
+                                    if (((ba[2]&0x80)==0x80)&&((ba[2]&0x00)==0x00)&&((ba[i-1]&0xF0)==0x00)) isAck=1; else isAck=0;
+                                    if ((ba[i-1]&0xF0)==0xF0) isRegist=1;
+                                } else  if (isAck==1) {//是回复消息
+                                    if (isRegist==1) { //是注册消息
+                                        if (i==48&&endMsgFlag[2]==0) _dataLen=80; else _dataLen=91;
+                                        if (_dataLen>=0&&i==_dataLen) break;
+                                    } else { //非注册消息
+                                        if (_dataLen<0) _dataLen=45;
+                                        if (_dataLen>=0&&i==_dataLen) break;
+                                    }
+                                } else  if (isAck==0) {//是一般消息
+                                    if (isRegist==1) {//是注册消息
+                                        if (((ba[2]&0x80)==0x80)&&((ba[2]&0x00)==0x00)) {
+                                            if (i==48&&endMsgFlag[2]==0) _dataLen=80; else _dataLen=91;
+                                        } else {
+                                            if (i==47&&endMsgFlag[2]==0) _dataLen=79; else _dataLen=90;
+                                        }
+                                        if (_dataLen>=0&&i==_dataLen) break;
+                                    } else {//非注册消息
+                                        if (_dataLen==-3&&endMsgFlag[1]=='^'&&endMsgFlag[2]=='^') _dataLen++;
+                                        else if (_dataLen>-3&&_dataLen<-1) _dataLen++;
+                                        else if (_dataLen==-1) {
+                                            _dataLen=(short)(((endMsgFlag[2]<<8)|endMsgFlag[1]&0xff));
+                                            if (_dataLen==0) break;
+                                        } else if (_dataLen>=0) {
+                                            if (--_dataLen==0) break;
+                                        }
+                                    }
                                 }
-                                else if (_dataLen>=0) {
-                                    if (--_dataLen==0) break;
-                                }
-                            } else
-                            if (msgType==1) {//1=媒体消息
+                            } else if (msgType==1) {//1=媒体消息
                                 if (isAck==-1) {
-                                    if ((((ba[2]&0x80)==0x80)?1:0)==1&&((((ba[2]&0x40)==0x40)?1:0)==0)) isAck=1; else isAck=0;
+                                    if (((ba[2]&0x80)==0x80)&&((ba[2]&0x40)==0x00)) isAck=1; else isAck=0;
                                 } else if (isAck==1) {//是回复消息
                                     if (i==_headLen+1) break;
-                                } else if (isAck==0) {//是一般消息
-                                    if (i==_headLen+2) _dataLen=(short)(((ba[_headLen-2]<<8)|ba[_headLen-1]&0xff));
+                                } else if (isAck==0) {//是一般媒体消息
+                                    if (i==_headLen+2) _dataLen=(short)(((ba[_headLen+1]<<8)|ba[_headLen]&0xff));
                                     if (_dataLen>=0&&i==_dataLen+_headLen+2) break;
                                 }
                             }
                         }
                     }
-                    fos.write(13);
-                    fos.write(10);
-                    fos.write(63);
-                    fos.write(13);
-                    fos.write(10);
                     fos.flush();
                     mba=Arrays.copyOfRange(ba, 0, i);
 
@@ -494,6 +531,7 @@ public class SocketHandle extends Thread {
                     _dataLen=-3;
                     hasBeginMsg=false;
                     isAck=-1;
+                    isRegist=0;
                     msgType=-1;
                     endMsgFlag[0]=0x00;
                     endMsgFlag[1]=0x00;
@@ -522,12 +560,16 @@ public class SocketHandle extends Thread {
                     try {
                         Message ms=MessageUtils.buildMsgByBytes(mba);
                         System.out.println(JsonUtils.objToJson(ms));
-                        if (ms!=null) {
+                        if (ms!=null&&!ms.isAck()) {
                             if (ms instanceof MsgNormal) {
                                 //处理注册
                                 Map<String, Object> retM=MobileUtils.dealMobileLinked(ms, 1);
                                 if ((""+retM.get("ReturnType")).equals("2003")) {
                                     MsgNormal ackM=MessageUtils.buildAckMsg((MsgNormal)ms);
+                                    ackM.setBizType(15);
+                                    ackM.setPCDType(((MsgNormal)ms).getPCDType());
+                                    ackM.setUserId(((MsgNormal)ms).getUserId());
+                                    ackM.setIMEI(((MsgNormal)ms).getIMEI());
                                     ackM.setReturnType(0);
                                     sendMsgQueue.add(ackM.toBytes());
                                 } else {

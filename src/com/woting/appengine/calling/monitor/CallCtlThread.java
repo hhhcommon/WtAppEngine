@@ -132,9 +132,9 @@ public class CallCtlThread extends Thread {
     //处理呼叫(CALL:1)
     private void dial(MsgNormal m) {
         System.out.println("处理呼叫信息前==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
-        String callId =((Map)m.getMsgContent()).get("CallId")+"";
+        String callId =((MapContent)m.getMsgContent()).get("CallId")+"";
         String callerId=MobileUtils.getMobileKey(m).getUserId();
-        String callederId=((Map)m.getMsgContent()).get("CallederId")+"";
+        String callederId=((MapContent)m.getMsgContent()).get("CallederId")+"";
 
         Map<String, Object> dataMap=null;
         boolean isBusy=true; //是否占线
@@ -225,7 +225,7 @@ public class CallCtlThread extends Thread {
     private int dealAutoDialFeedback(MsgNormal m) {
         System.out.println("处理自动应答前==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
         //首先判断这个消息是否符合处理的要求：callid, callerId, callederId是否匹配
-        if (!this.callData.getCallerId().equals(((Map)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m).getUserId())) return 3;
+        if (!this.callData.getCallerId().equals(((MapContent)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m).getUserId())) return 3;
         if (this.callData.getStatus()==1) {//状态正确，如果是其他状态，这个消息抛弃
             //发送给呼叫者的消息
             MsgNormal toCallerMsg=new MsgNormal();
@@ -257,12 +257,12 @@ public class CallCtlThread extends Thread {
     //处理“被叫者”应答(CALL:2)
     private int ackDial(MsgNormal m) {
         //首先判断这个消息是否符合处理的要求：callid, callerId, callederId是否匹配
-        if (!this.callData.getCallerId().equals(((Map)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m).getUserId())) return 3;
+        if (!this.callData.getCallerId().equals(((MapContent)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m).getUserId())) return 3;
         if (this.callData.getStatus()==1||this.callData.getStatus()==2) {//状态正确，如果是其他状态，这个消息抛弃
             //应答状态
             int ackType=2; //拒绝
             try {
-                ackType=Integer.parseInt(""+((Map)m.getMsgContent()).get("ACKType"));
+                ackType=Integer.parseInt(""+((MapContent)m.getMsgContent()).get("ACKType"));
             } catch(Exception e) {}
             //构造“应答传递ACK”消息，并发送给“呼叫者”
             MsgNormal toCallerMsg=new MsgNormal();
@@ -574,13 +574,13 @@ public class CallCtlThread extends Thread {
             for (Message m: tempMsgs) {
                 if (m instanceof MsgNormal) {
                     MsgNormal mn=(MsgNormal)m;
-                    if (this.callData.getCallId().equals(((Map)mn.getMsgContent()).get("CallId")+"")) {
+                    if (this.callData.getCallId().equals(((MapContent)mn.getMsgContent()).get("CallId")+"")) {
                         tempMsgs.remove(m);
                     }
                 }
                 if (m instanceof MsgMedia) {
                     MsgMedia mm=(MsgMedia)m;
-                    if (mm.getBizType()==1&&this.callData.getCallId()==mm.getObjId()) {
+                    if (mm.getBizType()==2&&this.callData.getCallId()==mm.getObjId()) {
                         tempMsgs.remove(m);
                     }
                 }
@@ -591,7 +591,7 @@ public class CallCtlThread extends Thread {
             for (Message m: tempMsgs) {
                 if (m instanceof MsgNormal) {
                     MsgNormal mn=(MsgNormal)m;
-                    if (this.callData.getCallId().equals(((Map)mn.getMsgContent()).get("CallId")+"")) {
+                    if (this.callData.getCallId().equals(((MapContent)mn.getMsgContent()).get("CallId")+"")) {
                         tempMsgs.remove(m);
                     }
                 }

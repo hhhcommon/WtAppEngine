@@ -253,7 +253,6 @@ public abstract class MobileUtils {
             msExist=false;
             ms=new MobileSession(_mKey);
         }
-
         boolean needLogin=false;
         UserPo u=null;
         if (_mKey.isUser()) {

@@ -60,7 +60,6 @@ public class DealReceivePureQueue extends Thread {
                 if (m instanceof MsgMedia) type="media";
                 else type=""+((MsgNormal)m).getBizType();
                 rm.appendTypeMsgMap(type, m);
-                
             } catch(Exception e) {
                 e.printStackTrace();
             }
