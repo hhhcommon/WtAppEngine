@@ -1,6 +1,7 @@
 package com.woting.push.core.message.content;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 import com.spiritdata.framework.util.JsonUtils;
@@ -26,15 +27,16 @@ public class MapContent implements MessageContent, Serializable {
     }
 
     @Override
-    public void fromBytes(byte[] content) {
-        String json=new String(content);
+    @SuppressWarnings("unchecked")
+    public void fromBytes(byte[] content) throws UnsupportedEncodingException {
+        String json=new String(content, "utf-8");
         contentMap=(Map<String, Object>) JsonUtils.jsonToObj(json, Map.class);
     }
 
     @Override
-    public byte[] toBytes() {
+    public byte[] toBytes() throws UnsupportedEncodingException {
         String jsonStr=JsonUtils.objToJson(contentMap);
-        return jsonStr.getBytes();
+        return jsonStr.getBytes("utf-8");
     }
 
     public Object get(String key) {

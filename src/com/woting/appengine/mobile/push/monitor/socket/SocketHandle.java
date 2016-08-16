@@ -241,26 +241,27 @@ public class SocketHandle extends Thread {
                         canAdd=true;
                         //获得控制消息
                         Message m=pmm.getSendMessages(mk, SocketHandle.this);
-                        if (m==null) continue;
-                        long t=System.currentTimeMillis();
-                        if (m instanceof MsgMedia) {
-                            if (t-m.getSendTime()>60*1000) {
-                                canAdd=false;
+                        if (m!=null) {
+                            long t=System.currentTimeMillis();
+                            if (m instanceof MsgMedia) {
+                                if (t-m.getSendTime()>60*1000) {
+                                    canAdd=false;
+                                }
                             }
-                        }
-                        if (canAdd) {
-                            if (m!=null) {
-                                sendMsgQueue.add(m.toBytes());
+                            if (canAdd) {
+                                if (m!=null) {
+                                    sendMsgQueue.add(m.toBytes());
+                                }
                             }
-                        }
-                        if (m instanceof MsgMedia) {//对语音广播包做特殊处理
-                            MsgMedia _mm=(MsgMedia)m;
-                            try {
-                                TalkMemoryManage tmm=TalkMemoryManage.getInstance();
-                                WholeTalk wt=tmm.getWholeTalk(_mm.getTalkId());
-                                TalkSegment ts=wt.getTalkData().get(Math.abs(_mm.getSeqNo()));
-                                if (ts.getSendFlagMap().get(mk.toString())!=null) ts.getSendFlagMap().put(mk.toString(), 1);
-                            } catch(Exception e) {e.printStackTrace();}
+                            if (m instanceof MsgMedia) {//对语音广播包做特殊处理
+                                MsgMedia _mm=(MsgMedia)m;
+                                try {
+                                    TalkMemoryManage tmm=TalkMemoryManage.getInstance();
+                                    WholeTalk wt=tmm.getWholeTalk(_mm.getTalkId());
+                                    TalkSegment ts=wt.getTalkData().get(Math.abs(_mm.getSeqNo()));
+                                    if (ts.getSendFlagMap().get(mk.toString())!=null) ts.getSendFlagMap().put(mk.toString(), 1);
+                                } catch(Exception e) {e.printStackTrace();}
+                            }
                         }
                         //获得通知类消息
                         if (mk.isUser()) {
