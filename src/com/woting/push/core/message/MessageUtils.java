@@ -146,8 +146,9 @@ public abstract class MessageUtils {
      * 根据字符串数组创建消息对象
      * @param binaryMsg
      * @return
+     * @throws Exception 
      */
-    public static Message buildMsgByBytes(byte[] binaryMsg) {
+    public static Message buildMsgByBytes(byte[] binaryMsg) throws Exception {
         int msgType=decideMsg(binaryMsg);
         if (msgType==0) return new MsgNormal(binaryMsg);
         else

@@ -26,7 +26,7 @@ public class MsgNormal extends Message {
 
     private MessageContent msgContent; //消息内容    
 
-    public MsgNormal(byte[] msgBytes) {
+    public MsgNormal(byte[] msgBytes) throws Exception {
         super();
         fromBytes(msgBytes);
     }
@@ -104,8 +104,8 @@ public class MsgNormal extends Message {
     }
 
     @Override
-    public void fromBytes(byte[] binaryMsg) {
-        if (MessageUtils.decideMsg(binaryMsg)!=0) throw new RuntimeException("消息类型错误！");
+    public void fromBytes(byte[] binaryMsg) throws Exception {
+        if (MessageUtils.decideMsg(binaryMsg)!=0) throw new Exception("消息类型错误！");
 
         int _offset=2;//一、头
         String _tempStr=null;
@@ -123,9 +123,16 @@ public class MsgNormal extends Message {
         f1=binaryMsg[_offset++];
         this.setBizType((f1>>4)&0x0F);
         this.setCmdType(f1&0x0F);
-        if (bizType!=0&&bizType!=15) this.setCommand((byte)binaryMsg[_offset++]);
+        _tempBytes=new byte[4];
+        if (bizType!=0&&bizType!=15) {
+            _tempBytes[0]=binaryMsg[_offset++];
+            this.setCommand(ByteConvert.bytes2int(_tempBytes));
+        }
         //五、回复
-        if (bizType!=0&&msgType==1)  this.setReturnType((byte)binaryMsg[_offset++]);
+        if (bizType!=0&&msgType==1) {
+            _tempBytes[0]=binaryMsg[_offset++];
+            this.setReturnType(ByteConvert.bytes2int(_tempBytes));
+        }
         //六、消息Id
         if (!isAck()) {
             if (msgType==0) {
@@ -134,8 +141,8 @@ public class MsgNormal extends Message {
                 } catch (UnsupportedEncodingException e) {
                 }
                 _sa=_tempStr.split("::");
-                if (_sa.length!=2) throw new RuntimeException("消息字节数组异常！");
-                if (Integer.parseInt(_sa[0])==-1) throw new RuntimeException("消息字节数组异常！");
+                if (_sa.length!=2) throw new Exception("消息字节数组异常！");
+                if (Integer.parseInt(_sa[0])==-1) throw new Exception("消息字节数组异常！");
                 _offset=Integer.parseInt(_sa[0]);
                 this.setMsgId(_sa[1]);
             } else {
@@ -145,8 +152,8 @@ public class MsgNormal extends Message {
                     } catch (UnsupportedEncodingException e) {
                     }
                     _sa=_tempStr.split("::");
-                    if (_sa.length!=2) throw new RuntimeException("消息字节数组异常！");
-                    if (Integer.parseInt(_sa[0])==-1) throw new RuntimeException("消息字节数组异常！");
+                    if (_sa.length!=2) throw new Exception("消息字节数组异常！");
+                    if (Integer.parseInt(_sa[0])==-1) throw new Exception("消息字节数组异常！");
                     _offset=Integer.parseInt(_sa[0]);
                     this.setMsgId(_sa[1]);
                 }
@@ -155,8 +162,8 @@ public class MsgNormal extends Message {
                 } catch (UnsupportedEncodingException e) {
                 }
                 _sa=_tempStr.split("::");
-                if (_sa.length!=2) throw new RuntimeException("消息字节数组异常！");
-                if (Integer.parseInt(_sa[0])==-1) throw new RuntimeException("消息字节数组异常！");
+                if (_sa.length!=2) throw new Exception("消息字节数组异常！");
+                if (Integer.parseInt(_sa[0])==-1) throw new Exception("消息字节数组异常！");
                 _offset=Integer.parseInt(_sa[0]);
                 this.setReMsgId(_sa[1]);
             }
@@ -166,8 +173,8 @@ public class MsgNormal extends Message {
             } catch (UnsupportedEncodingException e) {
             }
             _sa=_tempStr.split("::");
-            if (_sa.length!=2) throw new RuntimeException("消息字节数组异常！");
-            if (Integer.parseInt(_sa[0])==-1) throw new RuntimeException("消息字节数组异常！");
+            if (_sa.length!=2) throw new Exception("消息字节数组异常！");
+            if (Integer.parseInt(_sa[0])==-1) throw new Exception("消息字节数组异常！");
             _offset=Integer.parseInt(_sa[0]);
             this.setReMsgId(_sa[1]);
         }
@@ -175,10 +182,10 @@ public class MsgNormal extends Message {
         f1=binaryMsg[_offset++];
         if ((f1&0xf0)==0x10) this.setFromType(1);
         else if ((f1&0xf0)==0x00) this.setFromType(0);
-        else throw new RuntimeException("消息来源异常！");
+        else throw new Exception("消息来源异常！");
         if ((f1&0x0f)==0x01) this.setToType(1);
         else if ((f1&0x0f)==0x00) this.setToType(0);
-        else throw new RuntimeException("消息目标异常！");
+        else throw new Exception("消息目标异常！");
         if (!isAck()) {
             //八、用户类型
             if (fromType==0||(fromType==1&&bizType==15)) {
@@ -194,8 +201,8 @@ public class MsgNormal extends Message {
                     } catch (UnsupportedEncodingException e) {
                     }
                     _sa=_tempStr.split("::");
-                    if (_sa.length!=2) throw new RuntimeException("消息字节串异常！");
-                    if (Integer.parseInt(_sa[0])==-1) throw new RuntimeException("消息字节串异常！");
+                    if (_sa.length!=2) throw new Exception("消息字节串异常！");
+                    if (Integer.parseInt(_sa[0])==-1) throw new Exception("消息字节串异常！");
                     _offset=Integer.parseInt(_sa[0]);
                     this.setUserId(_sa[1]);
                 }
@@ -204,14 +211,14 @@ public class MsgNormal extends Message {
                 } catch (UnsupportedEncodingException e) {
                 }
                 _sa=_tempStr.split("::");
-                if (_sa.length!=2) throw new RuntimeException("消息字节串异常！");
-                if (Integer.parseInt(_sa[0])==-1) throw new RuntimeException("消息字节串异常！");
+                if (_sa.length!=2) throw new Exception("消息字节串异常！");
+                if (Integer.parseInt(_sa[0])==-1) throw new Exception("消息字节串异常！");
                 _offset=Integer.parseInt(_sa[0]);
                 this.setIMEI(_sa[1]);
             }
             //九、实体数据
             if (bizType!=15) {
-                if (!(binaryMsg[_offset]==END_HEAD[0]&&binaryMsg[_offset+1]==END_HEAD[1])) throw new RuntimeException("消息字节串异常！");
+                if (!(binaryMsg[_offset]==END_HEAD[0]&&binaryMsg[_offset+1]==END_HEAD[1])) throw new Exception("消息字节串异常！");
                 _offset+=4;
                 short _dataLen=(short)(((binaryMsg[_offset-1]<<8)|binaryMsg[_offset-2]&0xff));
                 byte[] binaryCnt=Arrays.copyOfRange(binaryMsg, _offset, _offset+_dataLen);
@@ -223,8 +230,8 @@ public class MsgNormal extends Message {
     }
 
     @Override
-    public byte[] toBytes() {//1服务器；0设备
-        if (bizType==15&&msgType==1&&affirm==0&&fromType!=1) throw new RuntimeException("注册回复消息格式错误!");;
+    public byte[] toBytes() throws Exception {//1服务器；0设备
+        if (bizType==15&&msgType==1&&affirm==0&&fromType!=1) throw new Exception("注册回复消息格式错误!");;
         int _offset=0;
         byte[] ret=new byte[_MAXLENGTH];
         byte zeroByte=0;
@@ -246,19 +253,19 @@ public class MsgNormal extends Message {
         ret[_offset++]=zeroByte;
         if (bizType!=0&&bizType!=15) ret[_offset++]=(byte)command;
         //五、回复
-        if (bizType!=0&&msgType==1)  ret[_offset++]=(byte)returnType;
+        if (bizType!=0&&msgType==1) ret[_offset++]=(byte)returnType;
         //六、消息Id
         if (!isAck()) {
             if (msgType==0) {
-                if (StringUtils.isNullOrEmptyOrSpace(msgId)) throw new RuntimeException("消息Id为空");
+                if (StringUtils.isNullOrEmptyOrSpace(msgId)) throw new Exception("消息Id为空");
                 try {
                     _offset=MessageUtils.set_String(ret, _offset, 32, msgId, null);
                 } catch (UnsupportedEncodingException e) {
                 }
             } else {
-                if (StringUtils.isNullOrEmptyOrSpace(reMsgId)) throw new RuntimeException("回复消息Id为空");
+                if (StringUtils.isNullOrEmptyOrSpace(reMsgId)) throw new Exception("回复消息Id为空");
                 if (bizType!=15) {
-                    if (StringUtils.isNullOrEmptyOrSpace(msgId)) throw new RuntimeException("消息Id为空");
+                    if (StringUtils.isNullOrEmptyOrSpace(msgId)) throw new Exception("消息Id为空");
                     try {
                         _offset=MessageUtils.set_String(ret, _offset, 32, msgId, null);
                     } catch (UnsupportedEncodingException e) {
@@ -270,7 +277,7 @@ public class MsgNormal extends Message {
                 }
             }
         } else {
-            if (StringUtils.isNullOrEmptyOrSpace(reMsgId)) throw new RuntimeException("消息Id为空");
+            if (StringUtils.isNullOrEmptyOrSpace(reMsgId)) throw new Exception("消息Id为空");
             try {
                 _offset=MessageUtils.set_String(ret, _offset, 32, reMsgId, null);
             } catch (UnsupportedEncodingException e) {
@@ -284,7 +291,7 @@ public class MsgNormal extends Message {
 
         if (!isAck()) {
             //八、用户类型
-            if (StringUtils.isNullOrEmptyOrSpace(IMEI)&&fromType==0) throw new RuntimeException("IMEI为空");
+            if (StringUtils.isNullOrEmptyOrSpace(IMEI)&&fromType==0) throw new Exception("IMEI为空");
             if (!StringUtils.isNullOrEmptyOrSpace(IMEI)) {
                 ret[_offset++]=(byte)this.PCDType;
                 if (StringUtils.isNullOrEmptyOrSpace(userId)) ret[_offset++]=0x00;

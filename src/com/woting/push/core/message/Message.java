@@ -79,14 +79,15 @@ public abstract class Message implements Comparable<Message>, Serializable {
 
     /**
      * 从字节数组中获得消息
+     * @throws Exception 
      */
-    public abstract void fromBytes(byte[] binaryMsg);
+    public abstract void fromBytes(byte[] binaryMsg) throws Exception;
 
     /**
      * 把消息序列化为字节数组
      * @return 消息对应的字节数组
      */
-    public abstract byte[] toBytes();
+    public abstract byte[] toBytes() throws Exception;
 
     /**
      * 判断是否是应答消息

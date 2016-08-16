@@ -47,8 +47,9 @@ public class MsgMedia extends Message {
     /**
      * 通过字节数组构造消息
      * @param binaryMsg 字节数组
+     * @throws Exception 
      */
-    public MsgMedia(byte[] binaryMsg) {
+    public MsgMedia(byte[] binaryMsg) throws Exception {
         this.fromBytes(binaryMsg);
     }
 
@@ -95,34 +96,34 @@ public class MsgMedia extends Message {
     }
 
     @Override
-    public void fromBytes(byte[] binaryMsg) {
-        if (MessageUtils.decideMsg(binaryMsg)!=1) throw new RuntimeException("消息类型错误！");
+    public void fromBytes(byte[] binaryMsg) throws Exception {
+        if (MessageUtils.decideMsg(binaryMsg)!=1) throw new Exception("消息类型错误！");
 
         int _offset=2;
         byte f1=binaryMsg[_offset++];
         this.setMsgType(((f1&0x80)==0x80)?1:0);
         this.setAffirm(((f1&0x40)==0x40)?1:0);
 
-        if (affirm==1&&msgType==1) throw new RuntimeException("消息格式异常：回复消息不需要确认！");
-        if (msgType==1&&binaryMsg.length!=COMPACT_LEN+1) throw new RuntimeException("消息格式异常：回复消息长度错误！");
+        if (affirm==1&&msgType==1) throw new Exception("消息格式异常：回复消息不需要确认！");
+        if (msgType==1&&binaryMsg.length!=COMPACT_LEN+1) throw new Exception("消息格式异常：回复消息长度错误！");
 
         if ((f1&0x30)==0x10) this.setFromType(1);//服务器
         else
         if ((f1&0x30)==0x20) this.setFromType(0);//设备
         else
-        throw new RuntimeException("消息from位异常！");
+        throw new Exception("消息from位异常！");
 
         if ((f1&0x0C)==0x04) this.setToType(1);//服务器
         else
         if ((f1&0x0C)==0x08) this.setToType(0);//设备
         else
-        throw new RuntimeException("消息to位异常！");
+        throw new Exception("消息to位异常！");
 
         if ((f1&0x03)==0x01) this.setMediaType(1);//音频
         else
         if ((f1&0x02)==0x02) this.setMediaType(2);//视频
         else
-        throw new RuntimeException("消息媒体类型位异常！");
+        throw new Exception("消息媒体类型位异常！");
 
         this.setBizType(binaryMsg[_offset++]);
 
@@ -134,11 +135,11 @@ public class MsgMedia extends Message {
         try {
             _tempStr=MessageUtils.parse_String(binaryMsg, _offset, 8, null);
         } catch(Exception e) {
-            throw new RuntimeException("消息会话Id异常！", e);
+            throw new Exception("消息会话Id异常！", e);
         }
         String[] _sa=_tempStr.split("::");
-        if (_sa.length!=2) throw new RuntimeException("消息会话Id异常！");
-        if (Integer.parseInt(_sa[0])==-1) throw new RuntimeException("消息会话Id异常！");
+        if (_sa.length!=2) throw new Exception("消息会话Id异常！");
+        if (Integer.parseInt(_sa[0])==-1) throw new Exception("消息会话Id异常！");
         _offset=Integer.parseInt(_sa[0]);
         this.setTalkId(_sa[1]);
 
@@ -150,11 +151,11 @@ public class MsgMedia extends Message {
         try {
             _tempStr=MessageUtils.parse_String(binaryMsg, _offset, 12, null);
         } catch(Exception e) {
-            throw new RuntimeException("对象Id异常！", e);
+            throw new Exception("对象Id异常！", e);
         }
         _sa=_tempStr.split("::");
-        if (_sa.length!=2) throw new RuntimeException("对象Id异常！");
-        if (Integer.parseInt(_sa[0])==-1) throw new RuntimeException("对象Id异常！");
+        if (_sa.length!=2) throw new Exception("对象Id异常！");
+        if (Integer.parseInt(_sa[0])==-1) throw new Exception("对象Id异常！");
         _offset=Integer.parseInt(_sa[0]);
         this.setObjId(_sa[1]);
         //删除结束
@@ -167,7 +168,7 @@ public class MsgMedia extends Message {
     }
 
     @Override
-    public byte[] toBytes() {
+    public byte[] toBytes() throws Exception {
         int _offset=0;
         byte[] ret=new byte[_MAXLENGTH];
         byte zeroByte=0;
@@ -188,7 +189,7 @@ public class MsgMedia extends Message {
         int i=0;
         for (; i<8; i++) ret[_offset++]=_tempBytes[i];
 
-        if (StringUtils.isNullOrEmptyOrSpace(talkId)) throw new RuntimeException("媒体消息异常：未设置有效会话id！");
+        if (StringUtils.isNullOrEmptyOrSpace(talkId)) throw new Exception("媒体消息异常：未设置有效会话id！");
         try {
             _offset=MessageUtils.set_String(ret, _offset, 8, talkId, null);
         } catch (UnsupportedEncodingException e) {

@@ -233,7 +233,7 @@ public abstract class MobileUtils {
             return map;
         }
 
-        if (type==1) {
+        if (type==1&&!mKey.isUser()) {
             try {
                 ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
                 if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {

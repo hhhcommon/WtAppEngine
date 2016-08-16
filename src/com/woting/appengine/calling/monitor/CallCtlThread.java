@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.calling.mem.CallingMemoryManage;
@@ -34,9 +35,9 @@ public class CallCtlThread extends Thread {
     private OneCall callData;//所控制的通话数据
     private boolean isCallerTalked=false; //是否“被叫者”说话
 
-    private String callerAddr="";
+//    private String callerAddr="";
     private MobileKey callerKey=null;
-    private String callederAddr="";
+//    private String callederAddr="";
     private MobileKey callederKey=null;
 
     /**
@@ -144,9 +145,9 @@ public class CallCtlThread extends Thread {
         MsgNormal toCallerMsg=new MsgNormal();
         toCallerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
         toCallerMsg.setReMsgId(m.getMsgId());
-        toCallerMsg.setToType(m.getFromType());
         toCallerMsg.setFromType(m.getToType());
-        toCallerMsg.setMsgType(0);
+        toCallerMsg.setToType(m.getFromType());
+        toCallerMsg.setMsgType(1);
         toCallerMsg.setBizType(0x02);
         toCallerMsg.setCmdType(1);
         toCallerMsg.setCommand(0x09);
@@ -172,6 +173,7 @@ public class CallCtlThread extends Thread {
         MapContent mc=new MapContent(dataMap);
         toCallerMsg.setMsgContent(mc);
         pmm.getSendMemory().addMsg2Queue(MobileUtils.getMobileKey(m), toCallerMsg);
+        System.out.println("发送:"+JsonUtils.objToJson(toCallerMsg));
         //记录到已发送列表
         this.callData.addSendedMsg(toCallerMsg);
 
@@ -184,6 +186,8 @@ public class CallCtlThread extends Thread {
             toCallederMsg.setBizType(2);
             toCallederMsg.setCmdType(1);
             toCallederMsg.setCommand(0x10);
+            toCallederMsg.setFromType(1);
+            toCallederMsg.setToType(0);
             dataMap=new HashMap<String, Object>();
             dataMap.put("DialType", isBusy?"2":"1");
             dataMap.put("CallId", callId);
@@ -204,19 +208,19 @@ public class CallCtlThread extends Thread {
             pmm.getSendMemory().addMsg2Queue(smm.getActivedUserSessionByUserId(callederId).getKey(), toCallederMsg);
             //记录到已发送列表
             this.callData.addSendedMsg(toCallederMsg);
-            //开始计时，两个过程
-            this.callData.setBeginDialTime();
         }
 
+        //开始计时，两个过程
+        this.callData.setBeginDialTime();
         //若不存在用户或占线要删除数据及这个过程
         if (!callorExisted||isBusy) shutdown();
         else {
             //修改状态
             this.callData.setStatus_1();
             this.callerKey=smm.getActivedUserSessionByUserId(callerId).getKey();
-            this.callerAddr=MobileUtils.getAddr(callerKey);
+            //this.callerAddr=MobileUtils.getAddr(callerKey);
             this.callederKey=smm.getActivedUserSessionByUserId(callederId).getKey();
-            this.callederAddr=MobileUtils.getAddr(callederKey);
+            //this.callederAddr=MobileUtils.getAddr(callederKey);
         }
         System.out.println("处理呼叫信息后==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
     }
@@ -302,6 +306,7 @@ public class CallCtlThread extends Thread {
         //给另一方发送“挂断传递”消息
         MsgNormal otherMsg=new MsgNormal();
         otherMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+        otherMsg.setReMsgId(m.getMsgId());
         otherMsg.setFromType(1);
         otherMsg.setToType(0);
         otherMsg.setMsgType(1);
@@ -332,7 +337,7 @@ public class CallCtlThread extends Thread {
         toSpeakerMsg.setFromType(1);
         toSpeakerMsg.setToType(0);
         toSpeakerMsg.setReMsgId(m.getMsgId());
-        toSpeakerMsg.setMsgType(0);
+        toSpeakerMsg.setMsgType(1);
         toSpeakerMsg.setAffirm(1);
         toSpeakerMsg.setBizType(2);
         toSpeakerMsg.setCmdType(2);
@@ -372,7 +377,7 @@ public class CallCtlThread extends Thread {
         toSpeakerMsg.setFromType(1);
         toSpeakerMsg.setToType(0);
         toSpeakerMsg.setReMsgId(m.getMsgId());
-        toSpeakerMsg.setMsgType(0);
+        toSpeakerMsg.setMsgType(1);
         toSpeakerMsg.setAffirm(1);
         toSpeakerMsg.setBizType(2);
         toSpeakerMsg.setCmdType(2);
@@ -534,7 +539,7 @@ public class CallCtlThread extends Thread {
             toCallerMsg.setFromType(1);
             toCallerMsg.setToType(0);
 
-            toCallerMsg.setMsgType(1);
+            toCallerMsg.setMsgType(0);
             toCallerMsg.setAffirm(0);
             toCallerMsg.setBizType(2);
             toCallerMsg.setCmdType(1);
