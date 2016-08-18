@@ -784,12 +784,12 @@ delete from wt_channel;
 delete from wt_channelasset;
 
 
-update wt_Person_Ref set resTableName='wt_Broadcast' where resTableName='1';
-update wt_Person_Ref set resTableName='wt_MediaAsset' where resTableName='2';
-update wt_Person_Ref set resTableName='wt_SeqMediaAsset' where resTableName='3';
+update wt_User_Ref set resTableName='wt_Broadcast' where resTableName='1';
+update wt_User_Ref set resTableName='wt_MediaAsset' where resTableName='2';
+update wt_User_Ref set resTableName='wt_SeqMediaAsset' where resTableName='3';
 
-update wt_ResDict_Ref set resTableName='wt_Broadcast' where resTableName='1';
-update wt_ResDict_Ref set resTableName='wt_MediaAsset' where resTableName='2';
-update wt_ResDict_Ref set resTableName='wt_SeqMediaAsset' where resTableName='3';
+update wt_User_Ref set resTableName='wt_Broadcast' where resTableName='1';
+update wt_User_Ref set resTableName='wt_MediaAsset' where resTableName='2';
+update wt_User_Ref set resTableName='wt_SeqMediaAsset' where resTableName='3';
 
 

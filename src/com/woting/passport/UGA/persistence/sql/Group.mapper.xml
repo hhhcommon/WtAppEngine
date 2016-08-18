@@ -241,7 +241,7 @@
     where c.id in (${inIds})
   </select>
   <select id="searchPerson" resultType="java.util.HashMap" parameterType="java.util.Map">
-    select * from wt_Person_Ref a, wt_Person b
+    select * from wt_User_Ref a, wt_Person b
     where a.personId=b.id and (
     <foreach collection="array" index="index" item="tag" open="" separator="or" close="">
     pName like '%${tag}%'
@@ -292,7 +292,7 @@
 
   <!-- 重构 -->
   <select id="refPersonById" parameterType="java.util.Map" resultType="java.util.HashMap">
-    select * from wt_Person_Ref a, wt_Person b
+    select * from wt_User_Ref a, wt_Person b
     where a.personId=b.id
     <trim prefix="and (" suffix=")" prefixOverrides="or">
     <if test="bcIds!=null">or (a.resTableName='wt_Broadcast' and a.resId in (${bcIds}))</if>
