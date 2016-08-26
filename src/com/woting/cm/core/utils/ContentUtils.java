@@ -114,6 +114,7 @@ public abstract class ContentUtils {
 //        retM.put("ContentSource", one.get("maSource"));//P09-公共：来源名称
 //        retM.put("ContentURIS", null);//P10-公共：其他播放地址列表，目前为空
         retM.put("ContentDesc", one.get("descn"));//P11-公共：说明
+        retM.put("ContentStatus", one.get("maStatus"));
 
         fillExtInfo(retM, "AUDIO", personList, cataList, pubChannelList, favoriteList);//填充扩展信息
 
@@ -155,6 +156,7 @@ public abstract class ContentUtils {
         retM.put("ContentURI", "content/getContentInfo.do?MediaType=SEQU&ContentId="+retM.get("ContentId"));//P08-公共：在此是获得系列节目列表的Url
         retM.put("ContentShareURL", getShareUrl_ZJ(preAddr, one.get("id")+""));//分享地址
         retM.put("ContentDesc", one.get("descn"));//P11-公共：说明
+        retM.put("ContentStatus", one.get("smaStatus"));
 
         fillExtInfo(retM, "SEQU", personList, cataList, pubChannelList, favoriteList);//填充扩展信息
 
@@ -189,7 +191,7 @@ public abstract class ContentUtils {
                 oneCata.put("CataMName", _c.get("dictMName"));//大分类名称，树结构名称
                 oneCata.put("CataMId", _c.get("dictMid"));//大分类Id
                 oneCata.put("CataTitle", _c.get("pathNames"));//分类名称
-                oneCata.put("CataDId", _c.get("dictDid"));//分类Id
+                oneCata.put("CataDid", _c.get("dictDid"));//分类Id
                 ret.add(oneCata);
             }
         }
@@ -202,9 +204,10 @@ public abstract class ContentUtils {
         for (Map<String, Object> _c: channelList) {
             if ((_c.get("assetType")+"").equals(resTableName)&&(_c.get("assetId")+"").equals(resId)) {
                 oneChn=new HashMap<String, Object>();
-                if (_c.get("channelName")!=null) oneChn.put("ChannelName", _c.get("channelName"));
+                oneChn.put("ChannelName", _c.get("channelName"));
                 oneChn.put("PubTime", _c.get("pubTime"));
                 oneChn.put("FlowFlag", _c.get("flowFlag"));
+                oneChn.put("ChannelId", _c.get("channelId"));
                 ret.add(oneChn);
             }
         }

@@ -1,6 +1,10 @@
 package com.woting.cm.core.dict.model;
 
+import java.util.List;
+
 import com.spiritdata.framework.core.model.tree.TreeNode;
+import com.spiritdata.framework.core.model.tree.TreeNodeBean;
+import com.spiritdata.framework.util.StringUtils;
 
 /**
  * 字典数据（字典模型），此模型包括所有者信息。由字典组和字典树组合而成
@@ -61,4 +65,32 @@ public class DictModel extends DictMaster {
      * 字典的根，此根结点是以本字典模型对应的字典组信息为基础的
      */
     public TreeNode<DictDetail> dictTree;
+
+    /**
+     * 根据业务编码获得字典项，如没找到，返回null
+     */
+    public DictDetail getDdByBCode(String bCode) {
+        if (dictTree==null||StringUtils.isNullOrEmptyOrSpace(bCode)) return null;
+        
+        TreeNode<? extends TreeNodeBean> o=getDdByBCode(dictTree,bCode);
+        if (o==null) return null;
+        return (DictDetail)o.getTnEntity();
+    }
+    private TreeNode<? extends TreeNodeBean> getDdByBCode(TreeNode<? extends TreeNodeBean> cl, String bCode) {
+        if (cl.isLeaf()) return null;
+        TreeNode<? extends TreeNodeBean> retNode=null;
+        for (TreeNode<? extends TreeNodeBean> cn: cl.getChildren()) {
+            if (((DictDetail)cn.getTnEntity()).getBCode().equals(bCode)) {
+                retNode=cn;
+                break;
+            }
+        }
+        if (retNode==null) {
+            for (TreeNode<? extends TreeNodeBean> cn: cl.getChildren()) {
+                if (!cn.isLeaf()) retNode=getDdByBCode(cn, bCode);
+                if (retNode!=null) break;
+            }
+        }
+        return retNode;
+    }
 }

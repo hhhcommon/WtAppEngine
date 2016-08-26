@@ -78,17 +78,7 @@ public class DictRefRes extends BaseObject implements Serializable, ModelSwapPo 
         ret.setResTableName(resTableName);
         ret.setResId(resId);
         ret.setDictMid(dm.getId());
-        ret.setDictMName(dm.getDmName());
         ret.setDictDid(dd.getId());
-        ret.setTitle(dd.getNodeName());
-        ret.setBCode(dd.getBCode());
-        if (dm!=null) {
-            TreeNode<DictDetail> tdd=(TreeNode<DictDetail>)dm.dictTree.findNode(dd.getId());
-            if (tdd!=null) {
-                ret.setPathIds(tdd.getTreePathId("-",0));
-                ret.setPathNames(tdd.getTreePathName("-",0));
-            }
-        }
 
         return ret;
     }
@@ -107,12 +97,9 @@ public class DictRefRes extends BaseObject implements Serializable, ModelSwapPo 
         //dm和dd无法在这里获取，这里只是做一个记录
         DictModel dm=new DictModel();
         dm.setId(_po.getDictMid());
-        dm.setDmName(_po.getDictMName());
         this.dm=dm;
         DictDetail dd=new DictDetail();
         dd.setId(_po.getDictDid());
-        dd.setDdName(_po.getTitle());
-        dd.setBCode(_po.getBCode());
         this.dd=dd;
     }
 }

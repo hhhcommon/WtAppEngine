@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.woting.cm.core.dict.model.DictDetail;
 import com.woting.cm.core.dict.model.DictMaster;
 import com.woting.cm.core.dict.model.DictModel;
@@ -33,5 +34,19 @@ public class _CacheDictionary {
     public DictModel getDictModelById(String dictMid) {
         if (dictModelMap==null) return null;
         return dictModelMap.get(dictMid);
+    }
+
+    /**
+     * 根据Id得到字典模式
+     * @param dictMId 字典组Id
+     * @return 元数据信息
+     */
+    public DictDetail getDictDetail(String dictMid, String dictDid) {
+        if (dictModelMap==null) return null;
+        DictModel dm=dictModelMap.get(dictMid);
+        if (dm==null) return null;
+        TreeNode<DictDetail> ddTn=(TreeNode<DictDetail>)dm.dictTree.findNode(dictDid);
+        if (ddTn==null) return null;
+        return ddTn.getTnEntity();
     }
 }

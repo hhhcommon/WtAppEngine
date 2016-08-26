@@ -1,5 +1,6 @@
 package com.woting.cm.core.channel.service;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +16,8 @@ import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
+import com.spiritdata.framework.util.SequenceUUID;
+import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.cm.core.channel.mem._CacheChannel;
@@ -23,6 +26,10 @@ import com.woting.cm.core.channel.model.ChannelAsset;
 import com.woting.cm.core.channel.persis.po.ChannelAssetPo;
 import com.woting.cm.core.channel.persis.po.ChannelPo;
 import com.woting.cm.core.common.model.Owner;
+import com.woting.cm.core.dict.mem._CacheDictionary;
+import com.woting.cm.core.dict.model.DictDetail;
+import com.woting.cm.core.dict.model.DictModel;
+import com.woting.exceptionC.Wtcm0201CException;
 import com.woting.exceptionC.Wtcm1000CException;
 
 @Service
@@ -88,7 +95,7 @@ public class ChannelService {
             return _cc;
         } catch(Exception e) {
             e.printStackTrace();
-            throw new Wtcm1000CException("加载Session中的栏目结构信息失败", e);
+            throw new Wtcm1000CException("加载内存中的栏目结构信息失败", e);
         }
     }
 
@@ -145,5 +152,149 @@ public class ChannelService {
             ret.add(one);
         }
         return ret;
+    }
+
+    /**
+     * 加入新栏目，同时处理栏目缓存
+     * @param c 字典项信息
+     * @return 新增的栏目Id；2-未找到父亲结点；3-名称重复，同级重复;
+     */
+    public String insertChannel(Channel c) {
+        CacheEle<_CacheChannel> cache=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL));
+        _CacheChannel cc=cache.getContent();
+        if (cc==null||cc.channelTree==null) return "2";
+
+        TreeNode<Channel> parentNode=cc.channelTree;
+        if (!StringUtils.isNullOrEmptyOrSpace(c.getParentId())) {//父节点为空
+            parentNode=(TreeNode<Channel>)parentNode.findNode(c.getParentId());
+            if (parentNode==null) return "2";
+        }
+        if (!parentNode.isLeaf()) {
+            List<TreeNode<? extends TreeNodeBean>> cl=parentNode.getChildren();
+            for (TreeNode<? extends TreeNodeBean> cn: cl) {
+                if (cn.getNodeName().equals(c.getNodeName())) return "3";
+            }
+        }
+
+        //插入字典项
+        c.setId(SequenceUUID.getUUIDSubSegment(0));
+        c.setCTime(new Timestamp(System.currentTimeMillis()));
+        try {
+            //数据库
+            channelDao.insert(c.convert2Po());
+            //缓存
+            TreeNode<Channel> nd=new TreeNode<Channel>(c);
+            parentNode.addChild(nd);
+            return c.getId();
+        } catch(Exception e) {
+            return "err:"+e.getMessage();
+        }
+    }
+
+    /**
+     * 修改栏目信息，同时处理栏目缓存
+     * @param c
+     * @return 1-修改成功；2-对应的结点未找到；3-名称重复，同级重复；4-与原信息相同，不必修改
+     */
+    public int updateChannel(Channel c) {
+        CacheEle<_CacheChannel> cache=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL));
+        _CacheChannel cc=cache.getContent();
+        if (cc==null||cc.channelTree==null) return 2;
+
+        TreeNode<Channel> myInTree=(TreeNode<Channel>)cc.channelTree.findNode(c.getId());
+        if (myInTree==null) return 2;
+
+        if ((c.getNodeName()==null||(c.getNodeName()!=null&&c.getNodeName().equals(myInTree.getTnEntity().getNodeName())))
+          &&myInTree.getTnEntity().getOrder()==c.getOrder()
+          &&(c.getContentType()==null||(c.getContentType()!=null&&c.getContentType().equals(myInTree.getTnEntity().getContentType())))
+          &&myInTree.getTnEntity().getIsValidate()==c.getIsValidate()
+          &&(c.getOwner()==null||(c.getOwner()!=null&&c.getOwner().equals(myInTree.getTnEntity().getOwner())))
+          &&(c.getDescn()==null||(c.getDescn()!=null&&c.getDescn().equals(myInTree.getTnEntity().getDescn())))
+          &&(c.getParentId()==null||(c.getParentId()!=null&&c.getParentId().equals(myInTree.getTnEntity().getParentId())))
+          ) {
+          return 4;
+        }
+
+        boolean changeFather=false;
+        TreeNode<Channel> parentNode=cc.channelTree;
+        if (!StringUtils.isNullOrEmptyOrSpace(c.getParentId())) {//父节点为空
+            //看看是否要更换所属父节点
+            changeFather=!myInTree.getTnEntity().getParentId().equals(c.getParentId());
+            parentNode=(TreeNode<Channel>)parentNode.findNode(c.getParentId());
+        } else {
+            parentNode=(TreeNode<Channel>)myInTree.getParent();
+        }
+        String compareName=StringUtils.isNullOrEmptyOrSpace(c.getNodeName())?myInTree.getNodeName():c.getNodeName();
+        if (parentNode!=null&&!parentNode.isLeaf()) {
+            List<TreeNode<? extends TreeNodeBean>> cl=parentNode.getChildren();
+            for (TreeNode<? extends TreeNodeBean> cn: cl) {
+                if (cn.getNodeName().equals(compareName)&&!cn.getId().equals(c.getId())) return 3;
+            }
+        }
+
+        //修改字典项
+        try {
+            //数据库
+            channelDao.update(c.convert2Po());
+            //缓存
+            if (changeFather) {
+                if (c.getNodeName()==null) c.setNodeName(myInTree.getTnEntity().getNodeName());
+                if (c.getOwner()==null) c.setOwner(myInTree.getTnEntity().getOwner());
+                if (c.getIsValidate()==0) c.setIsValidate(myInTree.getTnEntity().getIsValidate());
+                if (c.getOrder()==0) c.setOrder(myInTree.getTnEntity().getOrder());
+                if (c.getContentType()==null) c.setContentType(myInTree.getTnEntity().getContentType());
+                if (c.getDescn()==null) c.setDescn(myInTree.getTnEntity().getDescn());
+                TreeNode<Channel> nd=new TreeNode<Channel>(c);
+
+                myInTree.getParent().removeChild(myInTree.getId());
+                parentNode.addChild(nd);
+            } else {
+                if (c.getNodeName()!=null&&!c.getNodeName().equals(myInTree.getTnEntity().getNodeName()))  myInTree.getTnEntity().setNodeName(c.getNodeName());
+                if (c.getOwner()!=null&&!c.getOwner().equals(myInTree.getTnEntity().getOwner())) myInTree.getTnEntity().setOwner(c.getOwner());
+                if (myInTree.getTnEntity().getIsValidate()!=c.getIsValidate()) myInTree.getTnEntity().setIsValidate(c.getIsValidate());
+                if (myInTree.getTnEntity().getOrder()!=c.getOrder()) myInTree.getTnEntity().setOrder(c.getOrder());
+                if (c.getContentType()!=null&&!c.getContentType().equals(myInTree.getTnEntity().getContentType())) myInTree.getTnEntity().setContentType(c.getContentType());
+                if (c.getDescn()!=null&&!c.getDescn().equals(myInTree.getTnEntity().getDescn())) myInTree.getTnEntity().setDescn(c.getDescn());
+            }
+            return 1;
+        } catch(Exception e) {
+            throw new Wtcm0201CException("修改栏目", e);
+        }
+    }
+
+    /**
+     * 删除栏目，同时处理字典缓存
+     * @param dd 字典项信息
+     * @param force 是否强制删除
+     * @return "1"成功删除,"2"未找到相应的结点,"3::因为什么什么关联信息的存在而不能删除"
+     */
+    public String delChannel(Channel c, boolean force) {
+        CacheEle<_CacheChannel> cache=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT));
+        _CacheChannel cc=cache.getContent();
+        if (cc==null||cc.channelTree==null) return "2";
+        TreeNode<Channel> myInTree=(TreeNode<Channel>)cc.channelTree.findNode(c.getId());
+        if (myInTree==null) return "2";
+
+        List<TreeNodeBean> cl=myInTree.getAllBeansList();
+        //检查是否有相关信息，注意是递归查找
+        String inStr="";
+        String inStr2="";
+        for (TreeNodeBean _c:cl) {
+            inStr+=" or id='"+_c.getId()+"'";
+            inStr2+=" or channelId='"+_c.getId()+"')";
+        }
+        inStr=inStr.substring(4);
+        inStr2=inStr2.substring(4);
+        int count=channelAssetDao.getCount("existRefChannel", inStr2);
+        if (count>0&&!force) return "3::由于有关联信息存在，不能删除";
+        else {
+            //删除关联
+            channelAssetDao.execute("delByChannels", inStr2);
+            //删除本表
+            channelDao.delete("delByIds", inStr);
+            //处理缓存
+            myInTree.getParent().removeChild(myInTree.getId());
+            return "1";
+        }
     }
 }

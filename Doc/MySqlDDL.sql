@@ -436,7 +436,7 @@ CREATE TABLE wt_ResDict_Ref (
   dictMName     varchar(200)   NOT NULL  COMMENT '字典组名称',
   dictDid       varchar(32)    NOT NULL  COMMENT '字典项Id',
   title         varchar(200)   NOT NULL  COMMENT '字典项名称',
-  bCode         varchar(200)   NOT NULL  COMMENT '字典项业务编码',
+  bCode         varchar(200)             COMMENT '字典项业务编码',
   pathNames     varchar(1000)  NOT NULL  COMMENT '字典项全名称',
   pathIds       varchar(100)   NOT NULL  COMMENT '字典项路径Id',
   cTime         timestamp      NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',

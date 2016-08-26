@@ -270,7 +270,6 @@ public class SocketHandle extends Thread {
                                 sendMsgQueue.add(nm.toBytes());
                             }
                         }
-
                     }
                     try { sleep(5); } catch (InterruptedException e) {};
                 }

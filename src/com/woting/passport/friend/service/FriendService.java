@@ -9,7 +9,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
-import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
@@ -259,7 +258,7 @@ public class FriendService {
                 MsgNormal bMsg=new MsgNormal();
                 bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
                 bMsg.setFromType(1);
-                bMsg.setMsgType(1);
+                bMsg.setMsgType(0);
                 bMsg.setAffirm(0);
                 bMsg.setBizType(0x04);
                 bMsg.setCmdType(1);
@@ -319,7 +318,7 @@ public class FriendService {
             MsgNormal bMsg=new MsgNormal();
             bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
             bMsg.setFromType(1);
-            bMsg.setMsgType(1);
+            bMsg.setMsgType(0);
             bMsg.setAffirm(0);
             bMsg.setBizType(0x04);
             bMsg.setCmdType(1);

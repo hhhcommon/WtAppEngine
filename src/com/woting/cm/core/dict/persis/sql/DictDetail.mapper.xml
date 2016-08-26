@@ -112,20 +112,19 @@
   <select id="getInfo" resultMap="baseResultMap" parameterType="java.util.Map">
     select <include refid="Base_Column_List"/>from plat_DictD <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </select>
+   <select id="getKeyWords" resultMap="baseResultMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from plat_DictD where mId=#{mId,jdbcType=VARCHAR} limit #{begin,jdbcType=VARCHAR},#{size,jdbcType=VARCHAR}
+  </select>
+  
   <select id="getInfoById" resultMap="baseResultMap" parameterType="java.lang.String">
     select <include refid="Base_Column_List"/>from plat_DictD where id=#{id,jdbcType=VARCHAR}
   </select>
-
+  
   <!-- 新增数据 -->
   <insert id="insert" parameterType="java.util.Map">
     insert into plat_DictD
     <trim prefix="(" suffix=")" suffixOverrides=",">
-      <if test="id!=null">id,</if>
-      <if test="MId!=null">mId,</if>
-      <if test="parentId!=null">pId,</if>
-      <if test="sort!=null and sort!=0">sort,</if>
-      <if test="isValidate!=null and isValidate!=0">isValidate,</if>
-      <if test="ddName!=null">ddName,</if>
+      id,mId,pId,sort,isValidate,ddName,
       <if test="NPy!=null">nPy,</if>
       <if test="aliasName!=null">aliasName,</if>
       <if test="anPy!=null">anPy,</if>
@@ -135,12 +134,10 @@
       <if test="desc!=null">descn,</if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
-      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
-      <if test="MId!=null">#{MId,jdbcType=VARCHAR},</if>
+      #{id,jdbcType=VARCHAR},#{MId,jdbcType=VARCHAR},
       <if test="parentId!=null">#{parentId,jdbcType=VARCHAR},</if>
-      <if test="sort!=null and sort!=0">#{sort,jdbcType=INTEGER},</if>
-      <if test="isValidate!=null and isValidate!=0">#{isValidate,jdbcType=INTEGER},</if>
-      <if test="ddName!=null">#{ddName,jdbcType=VARCHAR},</if>
+      <if test="parentId==null">0,</if>
+      #{sort,jdbcType=INTEGER},#{isValidate,jdbcType=INTEGER},#{ddName,jdbcType=VARCHAR},
       <if test="NPy!=null">#{NPy,jdbcType=VARCHAR},</if>
       <if test="aliasName!=null">#{aliasName,jdbcType=VARCHAR},</if>
       <if test="anPy!=null">#{anPy,jdbcType=VARCHAR},</if>
@@ -159,16 +156,16 @@
       <if test="parentId!=null">pId=#{parentId,jdbcType=VARCHAR},</if>
       <if test="sort!=null and sort!=0">sort=#{sort,jdbcType=INTEGER},</if>
       <if test="isValidate!=null and isValidate!=0">isValidate=#{isValidate,jdbcType=INTEGER},</if>
-      <if test="ddName=null">ddName=#{ddName,jdbcType=VARCHAR},</if>
-      <if test="NPy=null">nPy=#{NPy,jdbcType=VARCHAR},</if>
-      <if test="aliasName=null">aliasName=#{aliasName,jdbcType=VARCHAR},</if>
-      <if test="anPy=null">anPy=#{anPy,jdbcType=VARCHAR},</if>
-      <if test="BCode=null">bCode=#{BCode,jdbcType=VARCHAR},</if>
+      <if test="ddName!=null">ddName=#{ddName,jdbcType=VARCHAR},</if>
+      <if test="NPy!=null">nPy=#{NPy,jdbcType=VARCHAR},</if>
+      <if test="aliasName!=null">aliasName=#{aliasName,jdbcType=VARCHAR},</if>
+      <if test="anPy!=null">anPy=#{anPy,jdbcType=VARCHAR},</if>
+      <if test="BCode!=null">bCode=#{BCode,jdbcType=VARCHAR},</if>
       <if test="DType!=null and DType!=0">dType=#{DType,jdbcType=INTEGER},</if>
       <if test="DRef!=null">dRef=#{DRef,jdbcType=VARCHAR},</if>
       <if test="desc!=null">descn=#{desc,jdbcType=VARCHAR},</if>
-      <if test="CTime=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
-      <if test="lmTime=null">lmTime=#{lmTime,jdbcType=TIMESTAMP},</if>
+      <if test="CTime!=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
+      <if test="lmTime!=null">lmTime=#{lmTime,jdbcType=TIMESTAMP},</if>
     </set>
     where id=#{id,jdbcType=VARCHAR}
   </update>
@@ -176,6 +173,9 @@
   <!-- 删除数据 -->
   <delete id="delete" parameterType="java.lang.String">
     delete from plat_DictD where id=#{id,jdbcType=VARCHAR}
+  </delete>
+  <delete id="delByIds" parameterType="java.lang.String">
+    delete from plat_DictD where ${value}
   </delete>
   <delete id="deleteByEntity" parameterType="java.util.Map">
     delete from plat_DictD <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>

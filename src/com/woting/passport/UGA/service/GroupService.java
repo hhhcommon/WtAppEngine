@@ -12,7 +12,6 @@ import javax.annotation.Resource;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.intercom.model.GroupInterCom;
 import com.woting.appengine.mobile.model.MobileKey;
@@ -456,7 +455,10 @@ public class GroupService {
                 bMsg.setCommand(0x30);//退出组
                 Map<String, Object> dataMap=new HashMap<String, Object>();
                 dataMap.put("GroupId", g.getGroupId());
-                dataMap.put("UserInfo", u.toHashMap4Mobile());
+                Map<String, Object> um=u.toHashMap4Mobile();
+                um.remove("PhoneNum");
+                um.remove("Email");
+                dataMap.put("UserInfo", um);
                 MapContent mc=new MapContent(dataMap);
                 bMsg.setMsgContent(mc);
                 MobileSession ms=null;
@@ -953,12 +955,10 @@ public class GroupService {
                 Map<String, Object> um=u.toHashMap4Mobile();
                 um.remove("PhoneNum");
                 um.remove("Email");
-                um.remove("Email");
                 dataMap.put("InviteUserInfo", um);
                 u=userDao.getInfoObject("getUserById", beInvitedUserId);
                 um=u.toHashMap4Mobile();
                 um.remove("PhoneNum");
-                um.remove("Email");
                 um.remove("Email");
                 dataMap.put("BeInvitedUserInfo", um);
                 if (!StringUtils.isNullOrEmptyOrSpace(refuseMsg)) dataMap.put("RefuseMsg", refuseMsg);
@@ -1137,7 +1137,12 @@ public class GroupService {
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("GroupId", g.getGroupId());
             List<Map<String, Object>> userMapList=new ArrayList<Map<String, Object>>();
-            for (UserPo _up: beKickoutUserList) userMapList.add(_up.toHashMap4Mobile());
+            for (UserPo _up: beKickoutUserList) {
+                Map<String, Object> um=_up.toHashMap4Mobile();
+                um.remove("PhoneNum");
+                um.remove("EMail");
+                userMapList.add(um);
+            }
             dataMap.put("UserList", userMapList);
             MapContent mc=new MapContent(dataMap);
             bMsg.setMsgContent(mc);
@@ -1298,7 +1303,7 @@ public class GroupService {
                 nMsg.setAffirm(1);
                 nMsg.setBizType(0x04);
                 nMsg.setCmdType(2);
-                nMsg.setCommand(6);
+                nMsg.setCommand(7);
                 Map<String, Object> dataMap=new HashMap<String, Object>();
                 Map<String, Object> gMap=new HashMap<String, Object>();
                 gMap.put("GroupId", gp.getGroupId());
@@ -1308,7 +1313,6 @@ public class GroupService {
                 UserPo u=userDao.getInfoObject("getUserById", toUserId);
                 Map<String, Object> um=u.toHashMap4Mobile();
                 um.remove("PhoneNum");
-                um.remove("Email");
                 um.remove("Email");
                 dataMap.put("NewAdminInfo", um);
                 MapContent mc=new MapContent(dataMap);

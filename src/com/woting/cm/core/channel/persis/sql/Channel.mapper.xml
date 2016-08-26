@@ -124,13 +124,13 @@
       <if test="ownerType!=null and ownerType!=0">ownerType=#{ownerType,jdbcType=INTEGER},</if>
       <if test="ownerId!=null">ownerId=#{ownerId,jdbcType=VARCHAR},</if>
       <if test="channelName!=null">channelName=#{channelName,jdbcType=VARCHAR},</if>
-      <if test="NPy=null">nPy=#{NPy,jdbcType=VARCHAR},</if>
+      <if test="NPy!=null">nPy=#{NPy,jdbcType=VARCHAR},</if>
       <if test="sort!=null and sort!=0">sort=#{sort,jdbcType=INTEGER},</if>
       <if test="isValidate!=null and isValidate!=0">isValidate=#{isValidate,jdbcType=INTEGER},</if>
-      <if test="contentType=null">contentType=#{contentType,jdbcType=VARCHAR},</if>
-      <if test="channelImg=null">channelImg=#{channelImg,jdbcType=VARCHAR},</if>
+      <if test="contentType!=null">contentType=#{contentType,jdbcType=VARCHAR},</if>
+      <if test="channelImg!=null">channelImg=#{channelImg,jdbcType=VARCHAR},</if>
       <if test="desc!=null">descn=#{desc,jdbcType=VARCHAR},</if>
-      <if test="CTime=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
+      <if test="CTime!=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
     </set>
     where id=#{id,jdbcType=VARCHAR}
   </update>
@@ -138,6 +138,9 @@
   <!-- 删除数据 -->
   <delete id="delete" parameterType="java.lang.String">
     delete from wt_Channel where id=#{id,jdbcType=VARCHAR}
+  </delete>
+  <delete id="delByIds" parameterType="java.lang.String">
+    delete from wt_Channel where ${value}
   </delete>
   <delete id="deleteByEntity" parameterType="java.util.Map">
     delete from wt_Channel <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>

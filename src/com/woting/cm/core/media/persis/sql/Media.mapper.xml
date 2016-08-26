@@ -26,7 +26,7 @@
   
    <!-- 所有列 -->
   <sql id="Base_Media_List">
-    id, maTitle, maPubType, maPubId, maPublisher, maPublishTime, maImg, maURL, subjectWords, keyWords, langDid, language, timeLong, descn, pubCount, cTime
+    id, maTitle, maPubType, maPubId, maPublisher, maPublishTime, maImg, maURL, subjectWords, keyWords, langDid, language, timeLong, descn, pubCount, maStatus, cTime
   </sql>
   
 
@@ -69,7 +69,7 @@
   </resultMap>
   
   <sql id="Base_SequMedia_List">
-    id, smaTitle, smaPubType, smaPubId, smaPublisher, smaPublishTime, smaImg, smaAllCount, subjectWords, keyWords, langDid, language, descn, pubCount, cTime
+    id, smaTitle, smaPubType, smaPubId, smaPublisher, smaPublishTime, smaImg, smaAllCount, subjectWords, keyWords, langDid, language, descn, pubCount, smaStatus, cTime
   </sql>
 
   <!-- 专辑和单体节目关系 -->
@@ -212,6 +212,10 @@
     select <include refid="Base_Media_List"/>from wt_MediaAsset where id=#{id,jdbcType=VARCHAR} limit 1
   </select>
   
+  <select id="getMaInfoBySmaId" parameterType="java.lang.String" resultMap="mediaAssetMap">
+    select <include refid="Base_Media_List"/>from wt_MediaAsset where id in (select mId from wt_SeqMA_Ref where mId=#{mId,jdbcType=VARCHAR})
+  </select>
+  
   <!-- 根据主播id获取 -->
   <select id="getMaListByMaPubId" parameterType="java.lang.String" resultMap="mediaAssetMap">
     select <include refid="Base_Media_List"/>from wt_MediaAsset where maPubId=#{maPubId,jdbcType=VARCHAR} order by cTime desc
@@ -228,6 +232,12 @@
   <select id="getS2MRefInfoByMId" parameterType="java.lang.String" resultMap="seqMaRefMap">
     select <include refid="Base_SeqMaRef_List"/>from wt_SeqMA_Ref where mid=#{mid,jdbcType=VARCHAR} limit 1
   </select>
+  
+   <select id="getS2MRefInfoBySId" parameterType="java.lang.String" resultMap="seqMaRefMap">
+    select <include refid="Base_SeqMaRef_List"/>from wt_SeqMA_Ref where sid=#{sid,jdbcType=VARCHAR}
+  </select>
+  
+  
   
   <!-- 修改 根据主键-->
   <update id="updateMa" parameterType="java.util.Map">
@@ -247,12 +257,13 @@
       <if test="timeLong!=null">timeLong=#{timeLong,jdbcType=VARCHAR},</if>
       <if test="descn!=null">descn=#{descn,jdbcType=VARCHAR},</if>
       <if test="pubCount!=null and pubCount>0">pubCount=#{pubCount,jdbcType=VARCHAR},</if>
+      <if test="maStatus!=null and maStatus>0">maStatus=#{maStatus,jdbcType=VARCHAR},</if>
     </set>
     where id=#{id,jdbcType=VARCHAR}
   </update>
   
   <update id="updateMas" parameterType="java.util.Map">
-    update wt_wt_MaSource
+    update wt_MaSource
     <set>
       <if test="id!=null">id=#{id,jdbcType=VARCHAR},</if>
       <if test="maId!=null">maId=#{maId,jdbcType=VARCHAR},</if>
@@ -268,7 +279,7 @@
   </update>
   
   <update id="updateSeqMaRef" parameterType="java.util.Map">
-    update wt_wt_MaSource
+    update wt_SeqMA_Ref
     <set>
       <if test="id!=null">id=#{id,jdbcType=VARCHAR},</if>
       <if test="SId!=null">SId=#{SId,jdbcType=VARCHAR},</if>
@@ -277,6 +288,27 @@
       <if test="descn!=null">descn=#{descn,jdbcType=VARCHAR},</if>
     </set>
     where MId=#{MId,jdbcType=VARCHAR}
+  </update>
+  
+  <update id="updateSma" parameterType="java.util.Map">
+  	update wt_SeqMediaAsset
+  	<set>
+  	  <if test="id!=null">id=#{id,jdbcType=VARCHAR},</if>
+      <if test="smaTitle!=null">smaTitle=#{smaTitle,jdbcType=VARCHAR},</if>
+      <if test="smaPubType!=null and smaPubType!=0">smaPubType=#{smaPubType,jdbcType=INTEGER},</if>
+      <if test="smaPubId!=null">smaPubId=#{smaPubId,jdbcType=VARCHAR},</if>
+      <if test="smaPublisher!=null">smaPublisher=#{smaPublisher,jdbcType=VARCHAR},</if>
+      <if test="smaImg!=null">smaImg=#{smaImg,jdbcType=VARCHAR},</if>
+      <if test="smaAllCount!=null and smaAllCount!=0">smaAllCount=#{smaAllCount,jdbcType=VARCHAR},</if>
+      <if test="subjectWords!=null">subjectWords=#{subjectWords,jdbcType=VARCHAR},</if>
+      <if test="keyWords!=null">keyWords=#{keyWords,jdbcType=VARCHAR},</if>
+      <if test="langDid!=null">langDid=#{langDid,jdbcType=VARCHAR},</if>
+      <if test="language!=null">language=#{language,jdbcType=VARCHAR},</if>
+      <if test="descn!=null">descn=#{descn,jdbcType=VARCHAR},</if>
+      <if test="pubCount!=null and pubCount>0">pubCount=#{pubCount,jdbcType=VARCHAR},</if>
+      <if test="smaStatus!=null and smaStatus>0">smaStatus=#{smaStatus,jdbcType=VARCHAR},</if>
+  	</set>
+  	where id=#{id,jdbcType=VARCHAR}
   </update>
   
   <delete id="multiMaById" parameterType="java.lang.String">
@@ -293,6 +325,10 @@
   
   <delete id="multiM2SRefByMId" parameterType="java.lang.String">
       delete from wt_SeqMA_Ref where mid=#{mid,jdbcType=VARCHAR}
+  </delete>
+  
+  <delete id="multiM2SRefBySId" parameterType="java.lang.String">
+      delete from wt_SeqMA_Ref where sid=#{sid,jdbcType=VARCHAR}
   </delete>
   
 </mapper>

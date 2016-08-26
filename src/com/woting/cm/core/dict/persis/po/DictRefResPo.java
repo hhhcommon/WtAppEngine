@@ -12,12 +12,7 @@ public class DictRefResPo extends BaseObject {
     private String resTableName; //资源类型Id：1电台；2单体媒体资源；3专辑资源
     private String resId; //资源Id
     private String dictMid; //字典组Id
-    private String dictMName; //字典组名称
     private String dictDid; //字典项Id
-    private String title; //字典项名称
-    private String BCode; //字典项业务编码
-    private String pathNames; //字典项全名称
-    private String pathIds; //字典项路径Id
     private Timestamp CTime; //创建时间
 
     public String getId() {
@@ -50,41 +45,11 @@ public class DictRefResPo extends BaseObject {
     public void setDictMid(String dictMid) {
         this.dictMid=dictMid;
     }
-    public String getDictMName() {
-        return dictMName;
-    }
-    public void setDictMName(String dictMName) {
-        this.dictMName=dictMName;
-    }
     public String getDictDid() {
         return dictDid;
     }
     public void setDictDid(String dictDid) {
         this.dictDid=dictDid;
-    }
-    public String getTitle() {
-        return title;
-    }
-    public void setTitle(String title) {
-        this.title=title;
-    }
-    public String getBCode() {
-        return BCode;
-    }
-    public void setBCode(String BCode) {
-        this.BCode=BCode;
-    }
-    public String getPathNames() {
-        return pathNames;
-    }
-    public void setPathNames(String pathNames) {
-        this.pathNames=pathNames;
-    }
-    public String getPathIds() {
-        return pathIds;
-    }
-    public void setPathIds(String pathIds) {
-        this.pathIds=pathIds;
     }
     public Timestamp getCTime() {
         return CTime;

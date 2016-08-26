@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.SpiritRandom;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
@@ -189,7 +188,7 @@ public class GroupController {
             if (!StringUtils.isNullOrEmptyOrSpace(g.getDescn())) groupMap.put("GroupDescn", g.getDescn());
             if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupSignature())) groupMap.put("GroupSignature", g.getGroupSignature());
             if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupImg())) groupMap.put("GroupImg", g.getGroupImg());
-            groupMap.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date()));
+            groupMap.put("CreateTime", System.currentTimeMillis()+"");
             map.put("GroupInfo", groupMap);
             return map;
         } catch(Exception e) {
@@ -540,7 +539,7 @@ public class GroupController {
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupType"))) imgm.put("GroupType", one.get("groupType"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupDescn"))) imgm.put("GroupDescn", one.get("groupDescn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("inviteMessage"))) imgm.put("InviteMessage", one.get("inviteMessage"));
-                    imgm.put("InviteTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", (Date)one.get("inviteTime")));
+                    imgm.put("InviteTime", ((Date)one.get("inviteTime")).getTime()+"");
                     imgm.put("InviteCount", one.get("inviteVector"));
                     imgm.put("UserId", one.get("userId"));
                     imgm.put("UserName", one.get("loginName"));
@@ -635,7 +634,7 @@ public class GroupController {
 
             //4-获得拒绝理由
             String refuseMsg=(m.get("RefuseMsg")==null?null:m.get("RefuseMsg")+"");
-            //4-邀请处理
+            //5-邀请处理
             map.putAll(groupService.dealInvite(userId, inviteUserId, groupId, dealType.equals("2"), refuseMsg, 1));
             return map;
         } catch(Exception e) {
@@ -789,7 +788,7 @@ public class GroupController {
                     au.put("GroupId", one.get("groupId"));
                     au.put("GroupName", one.get("groupName"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupSignature"))) au.put("GgroupSignature", one.get("groupSignature"));
-                    au.put("ApplyTime",DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", (Date)one.get("inviteTime")));
+                    au.put("ApplyTime",((Date)one.get("inviteTime")).getTime()+"");
                     au.put("UserId", one.get("applyUserId"));
                     au.put("UserName", one.get("loginName"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("userDescn"))) au.put("UserDescn", one.get("userDescn"));
@@ -1066,20 +1065,18 @@ public class GroupController {
             gm.put("GroupName", gp.getGroupName());
             if (!StringUtils.isNullOrEmptyOrSpace(gp.getCreateUserId())) gm.put("GroupCreator", gp.getCreateUserId());
             if (!StringUtils.isNullOrEmptyOrSpace(gp.getAdminUserIds())) gm.put("GroupManager", gp.getAdminUserIds());
-            gm.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date(gp.getCTime().getTime())));
+            gm.put("CreateTime", gp.getCTime().getTime()+"");
             if (!StringUtils.isNullOrEmptyOrSpace(gp.getDescn())) gm.put("GroupDesc", gp.getDescn());
 
             //组成员
             List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
             List<UserPo> ul=groupService.getGroupMembers(gp.getGroupId());
             if (ul!=null&&ul.size()>0) {
-                gm.put("GroupCount", ul.size());
-                for (UserPo _u: ul) {
-                    rul.add(_u.toHashMap4Mobile());
-                }
+                for (UserPo _u: ul) rul.add(_u.toHashMap4Mobile());
                 map.put("UserList", rul);
             }
             gm.put("GroupCount", rul.size()+"");
+            map.put("GroupInfo", gm);
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -1446,7 +1443,7 @@ public class GroupController {
                     if (!StringUtils.isNullOrEmptyOrSpace(_g.getAdminUserIds())) oneGroup.put("GroupManager", _g.getAdminUserIds());
                     oneGroup.put("GroupCount", _g.getUserList().size()+"");
                     if (!StringUtils.isNullOrEmptyOrSpace(_g.getDescn())) oneGroup.put("GroupOriDesc", _g.getDescn());
-                    oneGroup.put("CreateTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", new Date(_g.getCTime().getTime())));
+                    oneGroup.put("CreateTime", _g.getCTime().getTime()+"");
 
                     List<UserPo> ul=_g.getUserList();
                     if (ul!=null&&!ul.isEmpty()) {
@@ -1716,7 +1713,7 @@ public class GroupController {
                 for (Map<String, Object> one:iuml) {
                     ium=new HashMap<String, Object>();
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("inviteMessage"))) ium.put("InviteMessage", one.get("inviteMessage"));
-                    ium.put("InviteTime", DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss", (Date)one.get("inviteTime")));
+                    ium.put("InviteTime", ((Date)one.get("inviteTime")).getTime()+"");
                     ium.put("InviteCount", one.get("inviteVector"));
                     ium.put("InviteUserId", one.get("inviteUserId"));
                     ium.put("BeInviteUserId", one.get("userId"));
