@@ -467,8 +467,8 @@ public class GroupService {
                 //通知消息
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                bMsg.setFromType(1);
-                bMsg.setToType(0);
+                nMsg.setFromType(1);
+                nMsg.setToType(0);
                 nMsg.setMsgType(0);
                 nMsg.setAffirm(1);
                 nMsg.setBizType(0x04);

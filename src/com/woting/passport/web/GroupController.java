@@ -1122,7 +1122,7 @@ public class GroupController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            //2-判断用户组进入是否符合业务逻辑
+            //2-判断用户组退出是否符合业务逻辑
             String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
             if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
                 map.put("ReturnType", "1003");
