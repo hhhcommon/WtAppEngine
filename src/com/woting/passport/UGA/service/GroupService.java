@@ -401,8 +401,8 @@ public class GroupService {
         param.put("groupId", groupId);
         groupDao.delete("deleteGroupUser", param);
         if (gic!=null) {//删除内存
-          gic.getGroup().delOneUser(u);
-          gic.getEntryGroupUserMap().remove(u.getUserId());
+            gic.getGroup().delOneUser(u);
+            gic.getEntryGroupUserMap().remove(u.getUserId());
         } else {
             for (UserPo _up: upl) {
                 if (_up.getUserId().equals(u.getUserId())) {
@@ -1167,6 +1167,10 @@ public class GroupService {
                     mk=ms.getKey();
                     pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
                 }
+                pmm.getSendMemory().addMsg2NotifyQueue(_up.getUserId(), nMsg);//发送通知消息
+            }
+            //给被剔除的人发通知消息
+            for (UserPo _up: beKickoutUserList) {
                 pmm.getSendMemory().addMsg2NotifyQueue(_up.getUserId(), nMsg);//发送通知消息
             }
         }

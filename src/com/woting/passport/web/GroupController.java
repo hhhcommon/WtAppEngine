@@ -1625,6 +1625,9 @@ public class GroupController {
             if (oldPwd.equals(newPwd)) {
                 map.put("ReturnType", "1007");
                 map.put("Message", "新旧密码不能相同");
+            } else if (!oldPwd.equals(gp.getGroupPwd())) {
+                map.put("ReturnType", "1008");
+                map.put("Message", "旧密码不正确");
             }
             if (map.get("ReturnType")!=null) return map;
 
