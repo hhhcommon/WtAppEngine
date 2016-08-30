@@ -11,6 +11,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -52,7 +53,9 @@ public class CommonController {
     private WordService wordService;
     @Resource
     private SearchCrawlerService scs;
-    
+    @Resource(name="connectionFactory")
+    private JedisConnectionFactory jedisConnectionFactory;
+
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
 
