@@ -6,5 +6,28 @@ package com.woting.redis.session;
  * @author wanghui
  */
 public interface RedisLoginData {
-    public String getLockKey();
+    /**
+     * 得到用户登录的锁的key值
+     * @return 用户登录锁的key值
+     */
+    public String getKey_Lock();
+
+    /**
+     * 得到用户设备登录状态的key值
+     * @return 用户设备登录状态的key值
+     */
+    public String getKey_UserLoginStatus();
+
+    /**
+     * 得到用户登录设备类型的key值
+     * @return 用户登录设备类型的key值
+     */
+    public String getKey_UserLoginDeviceType();
+
+    /**
+     * 得到用户登录设备Id<br>
+     * 与getKey_UserLoginDeviceType方法配合使用
+     * @return 用户登录设备Id
+     */
+    public String getKey_DeviceId();
 }
