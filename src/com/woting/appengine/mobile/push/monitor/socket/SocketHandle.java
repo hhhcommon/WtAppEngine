@@ -558,7 +558,12 @@ public class SocketHandle extends Thread {
                     }
 
                     try {
-                        Message ms=MessageUtils.buildMsgByBytes(mba);
+                        Message ms=null;
+                        try {
+                            ms=MessageUtils.buildMsgByBytes(mba);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         System.out.println(JsonUtils.objToJson(ms));
                         if (ms!=null&&!ms.isAck()) {
                             if (ms instanceof MsgNormal) {

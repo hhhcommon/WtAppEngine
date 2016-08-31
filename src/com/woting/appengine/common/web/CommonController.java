@@ -53,8 +53,6 @@ public class CommonController {
     private WordService wordService;
     @Resource
     private SearchCrawlerService scs;
-    @Resource(name="connectionFactory")
-    private JedisConnectionFactory jedisConnectionFactory;
 
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;

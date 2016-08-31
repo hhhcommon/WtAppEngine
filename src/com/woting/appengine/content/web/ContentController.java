@@ -215,6 +215,8 @@ public class ContentController {
             if (mediaType.equals("SEQU")) contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page, mk);
             else
             if (mediaType.equals("TTS"))  contentInfo=SearchUtils.getNewsInfo(contentId);
+            else 
+            if (mediaType.equals("AUDIO"))  contentInfo=contentService.getMaInfo(contentId, mk);
 
             if (contentInfo!=null&&contentInfo.size()>0) {
                 map.put("ResultInfo", contentInfo);

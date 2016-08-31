@@ -5,41 +5,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.spiritdata.framework.core.cache.CacheEle;
+import com.spiritdata.framework.core.cache.SystemCache;
+import com.spiritdata.framework.core.model.tree.TreeNode;
+import com.spiritdata.framework.util.StringUtils;
+import com.woting.WtAppEngineConstants;
+import com.woting.cm.core.dict.mem._CacheDictionary;
+import com.woting.cm.core.dict.model.DictDetail;
+import com.woting.cm.core.dict.model.DictModel;
+
 /**
  * 内容方法类：内容数据的转换，主要——存储对象转换为显示对象。
  * 注意：这里的方法，对传入的参数不做强制的校验
  * @author wanghui
  */
 public abstract class ContentUtils {
-    /*
-     * 填充扩展信息
-     * @param one 被填充的信息
-     * @param mediaType 内容类型
-     * @param personList 对应的人员信息列表
-     * @param cataList 对应的字典分类信息列表
-     * @param favoriteList 对应的喜欢信息列表
-     * @param pubChannelList 发布栏目信息，已审核通过的栏目信息
-     */
-    private static void fillExtInfo(Map<String, Object> one, String mediaType,
-                                      List<Map<String, Object>> personList,
-                                      List<Map<String, Object>> cataList,
-                                      List<Map<String, Object>> pubChannelList,
-                                      List<Map<String, Object>> favoriteList) {
-        //P12-公共：相关人员列表
-        Object temp=fetchPersons(personList, getResTableName(mediaType), one.get("ContentId")+"");
-        if (temp!=null) one.put("ContentPersons", temp);
-        //P13-公共：所有分类列表
-        temp=fetchCatas(cataList, getResTableName(mediaType), one.get("ContentId")+"");
-        if (temp!=null) one.put("ContentCatalogs", temp);
-        //P14-公共：发布情况
-        Object cnls=fetchChannels(pubChannelList, getResTableName(mediaType), one.get("ContentId")+"");
-        if (cnls!=null) one.put("ContentPubChannels", cnls);
-        //P15-公共：是否喜欢
-        temp=fetchFavorite(favoriteList, getResTableName(mediaType), one.get("ContentId")+"");
-        one.put("ContentFavorite", (temp==null?0:(((Integer)temp)==1?(cnls==null?"您喜欢的内容已经下架":1):0))+"");
-        //P16-公共：播放次数
-        one.put("PlayCount", "1234");
-    }
     /**
      * 把单条内容信息转换为电台信息。参数中的列表是对电台外围信息的补充。<br/>
      * 为充分利用数据库资源，提升处理速度，不对每一条数据进行外围数据的获取，而是对符合条件的列表中的所有外围信息进行查找，并作为参数传递给该方法，由本方法进行组合。<br/>
@@ -97,6 +77,7 @@ public abstract class ContentUtils {
                                                   List<Map<String, Object>> cataList,
                                                   List<Map<String, Object>> pubChannelList,
                                                   List<Map<String, Object>> favoriteList) {
+//                                                  ,List<Map<String, Object>> playUriList) 
         Map<String, Object> retM=new HashMap<String, Object>();
 
         retM.put("MediaType", "AUDIO");
@@ -109,7 +90,7 @@ public abstract class ContentUtils {
         retM.put("ContentPubTime", one.get("maPublishTime"));//P06-公共：发布时间
         retM.put("ContentImg", one.get("maImg"));//P07-公共：相关图片
         retM.put("ContentPlay", one.get("maURL"));//P08-公共：主播放Url，这个应该从其他地方来，现在先这样//TODO
-        retM.put("ContentURI", "content/getContentInfo.do?MediaType=AUDIO&ContentId="+retM.get("ContentId"));//P08-公共：主播放Url，这个应该从其他地方来，现在先这样//TODO
+        retM.put("ContentURI", "content/getContentInfo.do?MediaType=AUDIO&ContentId="+retM.get("ContentId"));
         retM.put("ContentShareURL", getShareUrl_JM(preAddr, one.get("id")+""));//分享地址
 //        retM.put("ContentSource", one.get("maSource"));//P09-公共：来源名称
 //        retM.put("ContentURIS", null);//P10-公共：其他播放地址列表，目前为空
@@ -117,7 +98,10 @@ public abstract class ContentUtils {
         retM.put("ContentStatus", one.get("maStatus"));
 
         fillExtInfo(retM, "AUDIO", personList, cataList, pubChannelList, favoriteList);//填充扩展信息
-
+//        fillPlayUrl(retM, playUriList);
+//        if (StringUtils.isNullOrEmptyOrSpace(retM.get("ContentPlay")+"")) {
+//            retM.put("ContentPlay", one.get("maURL"));
+//        }
 
         retM.put("ContentTimes", one.get("timeLong"));//S01-特有：播放时长
 
@@ -167,6 +151,53 @@ public abstract class ContentUtils {
         return retM;
     }
 
+    /*
+     * 填充扩展信息
+     * @param one 被填充的信息
+     * @param mediaType 内容类型
+     * @param personList 对应的人员信息列表
+     * @param cataList 对应的字典分类信息列表
+     * @param favoriteList 对应的喜欢信息列表
+     * @param pubChannelList 发布栏目信息，已审核通过的栏目信息
+     */
+    private static void fillExtInfo(Map<String, Object> one, String mediaType,
+                                      List<Map<String, Object>> personList,
+                                      List<Map<String, Object>> cataList,
+                                      List<Map<String, Object>> pubChannelList,
+                                      List<Map<String, Object>> favoriteList) {
+        //P12-公共：相关人员列表
+        Object temp=fetchPersons(personList, getResTableName(mediaType), one.get("ContentId")+"");
+        if (temp!=null) one.put("ContentPersons", temp);
+        //P13-公共：所有分类列表
+        temp=fetchCatas(cataList, getResTableName(mediaType), one.get("ContentId")+"");
+        if (temp!=null) one.put("ContentCatalogs", temp);
+        //P14-公共：发布情况
+        Object cnls=fetchChannels(pubChannelList, getResTableName(mediaType), one.get("ContentId")+"");
+        if (cnls!=null) one.put("ContentPubChannels", cnls);
+        //P15-公共：是否喜欢
+        temp=fetchFavorite(favoriteList, getResTableName(mediaType), one.get("ContentId")+"");
+        one.put("ContentFavorite", (temp==null?0:(((Integer)temp)==1?(cnls==null?"您喜欢的内容已经下架":1):0))+"");
+        //P16-公共：播放次数
+        one.put("PlayCount", "1234");
+    }
+    //P08-公共：主播放Url，这个应该从其他地方来，现在先这样//TODO
+    private static void fillPlayUrl(Map<String, Object> one, List<Map<String, Object>> playList) {
+        if (playList==null||playList.size()==0) return;
+        String id=one.get("ContentId")+"";
+        String playUrl="";
+        for (Map<String, Object> _p: playList) {
+            if ((_p.get("maId")+"").equals(id)) {
+                playUrl=_p.get("playURI")+"";
+                if ((_p.get("isMain")+"").equals("1")&&_p.get("playURI")!=null) {
+                    one.put("ContentPlay", _p.get("playURI")+"");
+                }
+            }
+        }
+        if (one.get("ContentPlay")==null&&StringUtils.isNullOrEmptyOrSpace(playUrl)) {
+            one.put("ContentPlay", playUrl);
+        }
+    }
+
     private static List<Map<String, Object>> fetchPersons(List<Map<String, Object>> personList, String resTableName, String resId) {//人员处理
         if (personList==null||personList.size()==0) return null;
         Map<String, Object> onePerson=null;
@@ -183,14 +214,21 @@ public abstract class ContentUtils {
     }
     private static List<Map<String, Object>> fetchCatas(List<Map<String, Object>> cataList, String resTableName, String resId) {//字典信息处理
         if (cataList==null||cataList.size()==0) return null;
+
+        CacheEle<_CacheDictionary> cache=((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT));
+        _CacheDictionary cd=cache.getContent();
         Map<String, Object> oneCata=null;
         List<Map<String, Object>> ret=new ArrayList<Map<String, Object>>();
         for (Map<String, Object> _c: cataList) {
             if ((_c.get("resTableName")+"").equals(resTableName)&&(_c.get("resId")+"").equals(resId)) {
                 oneCata=new HashMap<String, Object>();
-                oneCata.put("CataMName", _c.get("dictMName"));//大分类名称，树结构名称
+                DictModel dm=cd.getDictModelById(_c.get("dictMid")+"");
+                TreeNode<DictDetail> tdd=null;
+                if (dm!=null) tdd=(TreeNode<DictDetail>)dm.dictTree.findNode(_c.get("dictDid")+"");
+                
+                oneCata.put("CataMName", dm==null?"":dm.getDmName());//大分类名称，树结构名称
                 oneCata.put("CataMId", _c.get("dictMid"));//大分类Id
-                oneCata.put("CataTitle", _c.get("pathNames"));//分类名称
+                oneCata.put("CataTitle", tdd==null?"":tdd.getTreePathName());//分类名称
                 oneCata.put("CataDid", _c.get("dictDid"));//分类Id
                 ret.add(oneCata);
             }

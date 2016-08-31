@@ -95,16 +95,16 @@ public class ContentService {
         PreparedStatement ps=null;
         PreparedStatement ps2=null;
         ResultSet rs=null;
-        String sql="select * from wt_ResDict_Ref where ";
+        String sql="select wt_ResDict_Ref.*, plat_DictD.ddName title from wt_ResDict_Ref, plat_DictD where wt_ResDict_Ref.dictMid=plat_DictD.mId and wt_ResDict_Ref.dictDid=plat_DictD.id";
         String likeSql="";
         for (int k=0; k<_s.length; k++) {
-            if (k==0) sql+=" title like '%"+_s[k]+"%'";
-            else sql+=" or title like '%"+_s[k]+"%'";
+            if (k==0) sql+=" and (plat_DictD.ddName like '%"+_s[k]+"%'";
+            else sql+=" or plat_DictD.ddName like '%"+_s[k]+"%'";
         }
         List<Map<String, Object>> cataList=null;
         try {
             conn=dataSource.getConnection();
-            ps=conn.prepareStatement(sql+" limit 0, 10");
+            ps=conn.prepareStatement(sql+") limit 0, 10");
             rs=ps.executeQuery();
             cataList=new ArrayList<Map<String, Object>>();
             while (rs!=null&&rs.next()) {
@@ -365,6 +365,8 @@ public class ContentService {
         cataList=groupDao.queryForListAutoTranform("refCataById", paraM);
         //得到发布列表
         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
+        //获得播放地址列表
+        //List<Map<String, Object>> playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
 
         Map<String, Object> ret=new HashMap<String, Object>();
         ret.put("ResultType", resultType);
@@ -521,10 +523,12 @@ public class ContentService {
         personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
         //2、得到明细内容
         List<Map<String, Object>> tempList=groupDao.queryForListAutoTranform("getSmSubMedias", contentId);
+        String subMedisIds="";
         //3、得到发布情况
         List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
         if (tempList!=null&&tempList.size()>0) {
             for (Map<String, Object> one: tempList) {
+                subMedisIds+=",'"+one.get("id")+"'";
                 Map<String, Object> oneAsset=new HashMap<String, Object>();
                 oneAsset.put("resId", one.get("id"));
                 oneAsset.put("resTableName", "wt_MediaAsset");
@@ -536,8 +540,14 @@ public class ContentService {
         oneAsset.put("resTableName", "wt_SeqMediaAsset");
         assetList.add(oneAsset);
         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
+//        List<Map<String, Object>> playUriList=null;
+//        if (!StringUtils.isNullOrEmptyOrSpace(subMedisIds)) {
+//            paraM.put("maIds", subMedisIds.substring(1));
+//            playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
+//        }
+        
         //4、组装内容
-        Map<String, Object>  retInfo=ContentUtils.convert2Sma(tempMap, personList, cataList, pubChannelList, fList);
+        Map<String, Object> retInfo=ContentUtils.convert2Sma(tempMap, personList, cataList, pubChannelList, fList);
 
         if (tempList!=null&&tempList.size()>0) {
             String ids="";
@@ -566,7 +576,49 @@ public class ContentService {
             retInfo.put("PageSize", subList.size());
             retInfo.put("Page", page);
             retInfo.put("ContentSubCount", tempList.size());
-        } 
+        }
+        return retInfo;
+    }
+    /**
+     * 获得专辑信息
+     * @param contentId 专辑内容Id
+     * @param mk 用户标识，可以是登录用户，也可以是手机设备
+     * @return
+     */
+    public Map<String, Object> getMaInfo(String contentId, MobileKey mk) {
+        List<Map<String, Object>> cataList=null;//分类
+        List<Map<String, Object>> personList=null;//人员
+        Map<String, Object> paraM=new HashMap<String, Object>();
+
+        //0、得到喜欢列表
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mk);
+        List<Map<String, Object>> fList=null;
+        if (_fList!=null&&!_fList.isEmpty()) {
+            fList=new ArrayList<Map<String, Object>>();
+            for (UserFavoritePo ufPo: _fList) {
+                fList.add(ufPo.toHashMapAsBean());
+            }
+        }
+        //1、得主内容
+        Map<String, Object> tempMap=groupDao.queryForObjectAutoTranform("getMediaById", contentId);
+        if (tempMap==null||tempMap.size()==0) return null;
+        paraM.put("resTableName", "wt_MediaAsset");
+        paraM.put("ids", "'"+contentId+"'");
+        cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
+        personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+//        List<Map<String, Object>> playUriList=null;
+//        paraM.put("maIds", "'"+contentId+"'");
+//        playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
+        //2、得到发布情况
+        List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
+        Map<String, Object> oneAsset=new HashMap<String, Object>();
+        oneAsset.put("resId", contentId);
+        oneAsset.put("resTableName", "wt_SeqMediaAsset");
+        assetList.add(oneAsset);
+        List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
+        //3、组装内容
+        Map<String, Object> retInfo=ContentUtils.convert2Ma(tempMap, personList, cataList, pubChannelList, fList);
+
         return retInfo;
     }
 
@@ -847,6 +899,7 @@ public class ContentService {
                         samExtractHas=!ret4.isEmpty();
                     }
 
+                    //List<Map<String, Object>> playUriList=null; //播放地址
                     //以下为控制指标参数
                     Map<String, Object> paraM=new HashMap<String, Object>();
                     if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {
@@ -856,6 +909,7 @@ public class ContentService {
                     if (!StringUtils.isNullOrEmptyOrSpace(maSqlSign)) {
                         maSqlSign=maSqlSign.substring(4);
                         paraM.put("maIds", maSqlSign1.substring(1));
+                        //playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
                     }
                     if (!StringUtils.isNullOrEmptyOrSpace(smaSqlSign)) {//专辑处理
                         smaSqlSign=smaSqlSign.substring(4);
@@ -1123,6 +1177,8 @@ public class ContentService {
 
                         //得到发布列表
                         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
+                        //播放地址
+                        //List<Map<String, Object>> playUriList=null;
 
                         if (sortIdList!=null&&!sortIdList.isEmpty()) {
                             Map<String, Object> paraM=new HashMap<String, Object>();
@@ -1133,6 +1189,7 @@ public class ContentService {
                             if (!StringUtils.isNullOrEmptyOrSpace(maSqlSign)) {
                                 maSqlSign=maSqlSign.substring(4);
                                 paraM.put("maIds", maSqlSign1.substring(1));
+                                //playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
                             }
                             if (!StringUtils.isNullOrEmptyOrSpace(smaSqlSign)) {
                                 smaSqlSign=smaSqlSign.substring(4);

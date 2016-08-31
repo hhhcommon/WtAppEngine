@@ -413,7 +413,7 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='022组织机构';
 DROP TABLE IF EXISTS wt_User_Ref;
 CREATE TABLE wt_User_Ref (
   id            varchar(32)    NOT NULL                COMMENT 'uuid(id)',
-  userId      varchar(32)    NOT NULL                COMMENT '用户Id',
+  userId        varchar(32)    NOT NULL                COMMENT '用户Id',
   resTableName  varchar(200)   NOT NULL                COMMENT '资源类型Id：1电台；2单体媒体资源；3专辑资源，4栏目',
   resId         varchar(32)    NOT NULL                COMMENT '资源Id',
   refTypeId     varchar(32)    NOT NULL                COMMENT '关联类型，是字典项，是专门的一个字典组',
@@ -434,11 +434,11 @@ CREATE TABLE wt_ResDict_Ref (
   resId         varchar(32)    NOT NULL  COMMENT '资源Id',
   dictMid       varchar(32)    NOT NULL  COMMENT '字典组Id',
   dictDid       varchar(32)    NOT NULL  COMMENT '字典项Id',
-  dictMName     varchar(200)   NOT NULL  COMMENT '字典组名称',
-  title         varchar(200)   NOT NULL  COMMENT '字典项名称',
-  bCode         varchar(200)             COMMENT '字典项业务编码',
-  pathNames     varchar(1000)  NOT NULL  COMMENT '字典项全名称',
-  pathIds       varchar(100)   NOT NULL  COMMENT '字典项路径Id',
+--  dictMName     varchar(200)   NOT NULL  COMMENT '字典组名称',
+--  title         varchar(200)   NOT NULL  COMMENT '字典项名称',
+--  bCode         varchar(200)             COMMENT '字典项业务编码',
+--  pathNames     varchar(1000)  NOT NULL  COMMENT '字典项全名称',
+--  pathIds       varchar(100)   NOT NULL  COMMENT '字典项路径Id',
   cTime         timestamp      NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   UNIQUE INDEX dataIdx (refName, resTableName, resId, dictMid, dictDid) USING HASH,
   PRIMARY KEY(id)

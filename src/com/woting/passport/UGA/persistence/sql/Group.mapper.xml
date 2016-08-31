@@ -308,8 +308,14 @@
     <if test="smaIds!=null">or (resTableName='wt_SeqMediaAsset' and resId in (${smaIds}))</if>
     </trim></where>
   </select>
+  <select id="getPlayListByIds" parameterType="java.util.Map" resultType="java.util.HashMap">
+    select * from wt_MaSource where maId in (${maIds})
+  </select>
 
   <!-- 下面是系列内容的获得 -->
+  <select id="getMediaById" parameterType="java.lang.String" resultType="java.util.HashMap">
+    select * from wt_MediaAsset where id=#{value,jdbcType=VARCHAR}
+  </select>
   <select id="getSmById" parameterType="java.lang.String" resultType="java.util.HashMap">
     select * from wt_SeqMediaAsset where id=#{value,jdbcType=VARCHAR}
   </select>
