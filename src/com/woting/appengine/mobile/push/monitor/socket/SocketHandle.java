@@ -559,7 +559,7 @@ public class SocketHandle extends Thread {
 
                     try {
                         Message ms=MessageUtils.buildMsgByBytes(mba);
-                        System.out.println(JsonUtils.objToJson(ms));
+                        System.out.println("SocketHashCode["+socket.hashCode()+"]001::"+JsonUtils.objToJson(ms));
                         if (ms!=null&&!ms.isAck()) {
                             if (ms instanceof MsgNormal) {
                                 //处理注册
@@ -574,6 +574,7 @@ public class SocketHandle extends Thread {
                                     sendMsgQueue.add(ackM.toBytes());
                                 } else {
                                     SocketHandle.this.mk=MobileUtils.getMobileKey(ms);
+                                    System.out.println("SocketHashCode["+socket.hashCode()+"]002::"+mk.toString()+"::"+(pmm.userSocketM.get(mk)).socketDesc);
                                     if (SocketHandle.this.mk!=null) {//存入接收队列
                                         pmm.setUserSocketMap(SocketHandle.this.mk, SocketHandle.this);
                                         if (((MsgNormal)ms).getBizType()!=15) pmm.getReceiveMemory().addPureQueue(ms);
