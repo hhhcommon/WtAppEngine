@@ -20,6 +20,7 @@ import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.cm.core.utils.ContentUtils;
+import com.woting.appengine.mobile.MobileUDKey;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.favorite.persis.po.UserFavoritePo;
@@ -409,12 +410,12 @@ public class FavoriteService {
      * @param mk 用户标识，可以是登录用户，也可以是手机设备
      * @return 某人的喜欢内容
      */
-    public List<UserFavoritePo> getPureFavoriteList(MobileKey mk) {
-        if (mk==null) return null;
+    public List<UserFavoritePo> getPureFavoriteList(MobileUDKey mUdk) {
+        if (mUdk==null) return null;
 
         Map<String, Object> param=new HashMap<String, Object>();
-        param.put("mobileId", mk.getMobileId());
-        if (mk.isUser()) param.put("userId", mk.getUserId());
+        param.put("mobileId", mUdk.getDeviceId());
+        if (mk.isUser()) param.put("userId", mUdk.getUserId());
         return userFavoriteDao.queryForList("getFavoriteAssets", param);
     }
 

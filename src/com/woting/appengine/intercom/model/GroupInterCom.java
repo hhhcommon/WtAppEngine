@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.spiritdata.framework.util.SequenceUUID;
-import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.push.core.message.CompareMsg;

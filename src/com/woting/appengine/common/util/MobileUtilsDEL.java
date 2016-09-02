@@ -9,8 +9,8 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.util.StringUtils;
+import com.woting.appengine.mobile.MobileParam;
 import com.woting.appengine.mobile.model.MobileKey;
-import com.woting.appengine.mobile.model.MobileParam;
 import com.woting.push.core.message.Message;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
@@ -24,7 +24,7 @@ import com.woting.passport.login.service.MobileUsedService;
  * 移动的公共处理
  * @author wh
  */
-public abstract class MobileUtils {
+public abstract class MobileUtilsDEL {
     public static MobileParam getMobileParam(Map<String, Object> m) {
         if (m==null||m.size()==0) return null;
 

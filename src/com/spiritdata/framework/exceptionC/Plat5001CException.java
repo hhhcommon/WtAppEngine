@@ -9,18 +9,18 @@ package com.spiritdata.framework.exceptionC;
 public class Plat5001CException extends PlatCException {
     private static final long serialVersionUID = -3106815771021862676L;
 
-    private static String myBaseMsg = "平台UGA缓存加载";
+    private static String myBaseMsg = "阻塞锁异常";
     private static int myCode = 5001;
 
     /**
-     * 构造没有详细消息内容的——'平台UGA缓存加载'异常
+     * 构造没有详细消息内容的——'阻塞锁'异常
      */
     public Plat5001CException() {
         super(myCode, myBaseMsg);
     }
 
     /**
-     * 构造有详细消息内容的——'平台UGA缓存加载'异常
+     * 构造有详细消息内容的——'阻塞锁'异常
      * @param message 详细消息
      */
     public Plat5001CException(String msg) {
@@ -28,7 +28,7 @@ public class Plat5001CException extends PlatCException {
     }
 
     /**
-     * 根据指定的原因和(cause==null?null:cause.toString())的详细消息构造新——'平台UGA缓存加载'异常
+     * 根据指定的原因和(cause==null?null:cause.toString())的详细消息构造新——'阻塞锁'异常
      * @param cause 异常原因，以后通过Throwable.getCause()方法获取它。允许使用null值，指出原因不存在或者是未知的异常
      */
     public Plat5001CException(Throwable cause) {
@@ -36,7 +36,7 @@ public class Plat5001CException extends PlatCException {
     }
 
     /**
-     * 根据指定的原因和(cause==null?null:cause.toString())的详细消息，以及详细消息构造新——'平台UGA缓存加载'异常
+     * 根据指定的原因和(cause==null?null:cause.toString())的详细消息，以及详细消息构造新——'阻塞锁'异常
      * @param message 详细消息
      * @param cause 异常原因，以后通过Throwable.getCause()方法获取它。允许使用null值，指出原因不存在或者是未知的异常
      */

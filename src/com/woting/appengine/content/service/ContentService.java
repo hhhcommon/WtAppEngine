@@ -27,7 +27,7 @@ import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.cm.core.utils.ContentUtils;
-import com.woting.appengine.mobile.model.MobileKey;
+import com.woting.appengine.mobile.MobileUDKey;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.cm.core.dict.mem._CacheDictionary;
@@ -66,7 +66,7 @@ public class ContentService {
      * @param mk 用户标识，可以是登录用户，也可以是手机设备
      * @return 创建用户成功返回1，否则返回0
      */
-    public Map<String, Object> searchAll(String searchStr, int resultType, int pageType, MobileKey mk) {
+    public Map<String, Object> searchAll(String searchStr, int resultType, int pageType, MobileUDKey mUdk) {
         //得到喜欢列表
         List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mk);
         List<Map<String, Object>> fList=null;
@@ -490,7 +490,7 @@ public class ContentService {
      * @param userId 用户Id
      * @return
      */
-    public Map<String, Object> getMainPage(String userId, int pageType, int pageSize, int page, MobileKey mk) {
+    public Map<String, Object> getMainPage(String userId, int pageType, int pageSize, int page, MobileUDKey mUdk) {
         return getContents("-1", null, 3, null, 3, pageSize, page, null, pageType, mk, null);
     }
 
@@ -500,13 +500,13 @@ public class ContentService {
      * @param mk 用户标识，可以是登录用户，也可以是手机设备
      * @return
      */
-    public Map<String, Object> getSeqMaInfo(String contentId, int pageSize, int page, MobileKey mk) {
+    public Map<String, Object> getSeqMaInfo(String contentId, int pageSize, int page, MobileUDKey mUdk) {
         List<Map<String, Object>> cataList=null;//分类
         List<Map<String, Object>> personList=null;//人员
         Map<String, Object> paraM=new HashMap<String, Object>();
 
         //0、得到喜欢列表
-        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mk);
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
         List<Map<String, Object>> fList=null;
         if (_fList!=null&&!_fList.isEmpty()) {
             fList=new ArrayList<Map<String, Object>>();
@@ -585,7 +585,7 @@ public class ContentService {
      * @param mk 用户标识，可以是登录用户，也可以是手机设备
      * @return
      */
-    public Map<String, Object> getMaInfo(String contentId, MobileKey mk) {
+    public Map<String, Object> getMaInfo(String contentId, MobileUDKey mUdk) {
         List<Map<String, Object>> cataList=null;//分类
         List<Map<String, Object>> personList=null;//人员
         Map<String, Object> paraM=new HashMap<String, Object>();
@@ -623,9 +623,9 @@ public class ContentService {
     }
 
     public Map<String, Object> getContents(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId, int pageType,
-                                            MobileKey mk, Map<String, Object> filterData) {
+                                            MobileUDKey mUdk, Map<String, Object> filterData) {
         //1-得到喜欢列表
-        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mk);
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
         List<Map<String, Object>> fList=null;
         if (_fList!=null&&!_fList.isEmpty()) {
             fList=new ArrayList<Map<String, Object>>();
