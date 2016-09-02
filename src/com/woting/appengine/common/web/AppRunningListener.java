@@ -7,14 +7,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.woting.appengine.calling.CallingConfig;
 import com.woting.appengine.calling.CallingListener;
+import com.woting.appengine.common.cache.CacheRefreshListener;
 import com.woting.appengine.intercom.InterComConfig;
 import com.woting.appengine.intercom.InterComListener;
 import com.woting.appengine.mobile.mediaflow.MfConfig;
 import com.woting.appengine.mobile.mediaflow.MfListener;
 import com.woting.appengine.mobile.push.PushConfig;
 import com.woting.appengine.mobile.push.PushListener;
-import com.woting.appengine.mobile.session.MobileSessionConfig;
-import com.woting.appengine.mobile.session.SessionListener;
 import com.woting.searchword.SearchWordListener;
 
 public class AppRunningListener implements ServletContextListener {
@@ -26,8 +25,6 @@ public class AppRunningListener implements ServletContextListener {
         try {
             //启动搜索词服务
             SearchWordListener.begin();
-            //移动会话Session启动
-            SessionListener.begin(new MobileSessionConfig());
             //启动对讲处理服务
             InterComListener.begin(new InterComConfig());
             //启动电话处理服务
@@ -36,6 +33,8 @@ public class AppRunningListener implements ServletContextListener {
             MfListener.begin(new MfConfig());
             //启动推送服务
             PushListener.begin(new PushConfig());
+            //启动缓存刷新服务
+            CacheRefreshListener.begin();
         } catch(Exception e) {
             logger.error("Web运行时监听启动异常：",e);
         }

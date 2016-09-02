@@ -17,7 +17,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.mobile.model.MobileKey;
+import com.woting.appengine.mobile.MobileUDKey;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.service.BaiDuNewsSearch;
@@ -352,14 +352,14 @@ public abstract class SearchUtils {
 	 * @param searchStr
 	 * @return
 	 */
-	public static boolean searchContent(String searchStr, MobileKey mk) {
+	public static boolean searchContent(String searchStr, MobileUDKey mUdk) {
 		createSearchTime(searchStr);
 		createBeginSearch(searchStr);
 		new KaoLaSearch(searchStr).start();
 		new XiMaLaYaSearch(searchStr).start();
 		new QingTingSearch(searchStr).start();
 		new BaiDuNewsSearch(searchStr).start();
-		new LocalSearch(searchStr, mk).start();
+		new LocalSearch(searchStr, mUdk).start();
 		return true;
 	}
 

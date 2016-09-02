@@ -25,6 +25,6 @@ public class MobileUDKey extends UserDeviceKey implements Serializable {
      * @return
      */
     public String getSessionId() {
-        return null;
+        return StringUtils.isNullOrEmptyOrSpace(this.userId)?this.deviceId:this.userId;
     }
 }

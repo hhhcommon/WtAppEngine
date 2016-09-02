@@ -14,7 +14,7 @@ import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.intercom.model.GroupInterCom;
-import com.woting.appengine.mobile.model.MobileKey;
+import com.woting.appengine.mobile.MobileUDKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.push.core.message.CompareMsg;
 import com.woting.push.core.message.MsgNormal;

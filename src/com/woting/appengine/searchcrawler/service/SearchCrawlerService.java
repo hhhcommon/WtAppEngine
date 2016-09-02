@@ -3,7 +3,8 @@ package com.woting.appengine.searchcrawler.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.woting.appengine.mobile.model.MobileKey;
+
+import com.woting.appengine.mobile.MobileUDKey;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
 public class SearchCrawlerService {
@@ -16,13 +17,13 @@ public class SearchCrawlerService {
 	 * @param pageSize 默认为10
 	 * @return
 	 */
-	public Map<String, Object> searchCrawler(String searchStr, int resultType, int pageType, int page, int pageSize, MobileKey mk) {
+	public Map<String, Object> searchCrawler(String searchStr, int resultType, int pageType, int page, int pageSize, MobileUDKey mUdk) {
 		Map<String, Object> map = new HashMap<String, Object>();
 		List<Map<String, Object>> list = SearchUtils.getListPage(searchStr, page, pageSize);
 		if (list==null) {
 			long a = System.currentTimeMillis(), num;
 			if ( SearchUtils.getListNum(searchStr)== 0) {
-				SearchUtils.searchContent(searchStr, mk);
+				SearchUtils.searchContent(searchStr, mUdk);
 				System.out.println("开启搜索");
 				while (true) {
 					try {
