@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.spiritdata.framework.core.structure.StrArrayQueue;
 import com.woting.appengine.mobile.model.MobileKey;
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.Message;
 import com.woting.appengine.mobile.push.model.SendMessageList;
 import com.woting.appengine.mobile.push.monitor.socket.SocketHandle;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
@@ -28,7 +28,7 @@ public class PushMemoryManage {
     public StrArrayQueue logQueue;//日志数据
 
     private Object userSocketLock=new Object();//用户和Sockek对应的临界区的锁，这个锁是读写一致的，虽然慢，但能保证数据一致性
-    private ConcurrentHashMap<MobileKey, SocketHandle> userSocketM;//用户和Socket的关联关系
+    public ConcurrentHashMap<MobileKey, SocketHandle> userSocketM;//用户和Socket的关联关系
     //数据区
 
     public ReceiveMemory getReceiveMemory() {

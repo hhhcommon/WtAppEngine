@@ -9,11 +9,11 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
-import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.MsgNormal;
+import com.woting.push.core.message.content.MapContent;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.friend.persistence.pojo.FriendRelPo;
 import com.woting.passport.friend.persistence.pojo.InviteFriendPo;
@@ -162,15 +162,15 @@ public class FriendService {
             else inviteFriendDao.update(ifPo);
 
             //通知消息
-            Message nMsg=new Message();
+            MsgNormal nMsg=new MsgNormal();
             nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            nMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
-            nMsg.setMsgType(1);
-            nMsg.setAffirm(0);
-            nMsg.setMsgBizType("NOTIFY");
-            nMsg.setCmdType("USER");
-            nMsg.setCommand("b1");
-            nMsg.setToAddr("("+beInvitedUserId+"||wt)");
+            nMsg.setFromType(1);
+            nMsg.setToType(0);
+            nMsg.setMsgType(0);
+            nMsg.setAffirm(1);
+            nMsg.setBizType(0x04);
+            nMsg.setCmdType(1);
+            nMsg.setCommand(1);
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("InviteMsg", inviteMsg);
             dataMap.put("InviteTime", System.currentTimeMillis());
@@ -180,7 +180,8 @@ public class FriendService {
             um.remove("Email");
             um.remove("Email");
             dataMap.put("InviteUserInfo", um);
-            nMsg.setMsgContent(dataMap);
+            MapContent mc=new MapContent(dataMap);
+            nMsg.setMsgContent(mc);
             pmm.getSendMemory().addMsg2NotifyQueue(beInvitedUserId, nMsg);//发送通知消息
 
             m.put("ReturnType", "1001");
@@ -254,16 +255,16 @@ public class FriendService {
                 inviteFriendDao.update(ifPo);
 
                 //发送消息——给邀请人
-                Message bMsg=new Message();
+                MsgNormal bMsg=new MsgNormal();
                 bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                bMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
-                bMsg.setMsgType(1);
+                bMsg.setFromType(1);
+                bMsg.setMsgType(0);
                 bMsg.setAffirm(0);
-                bMsg.setMsgBizType("NOTIFY");
-                bMsg.setCmdType("USER");
-                bMsg.setCommand("b3");//处理组邀请信息
+                bMsg.setBizType(0x04);
+                bMsg.setCmdType(1);
+                bMsg.setCommand(3);//处理组邀请信息
                 //发送给inviteUserId
-                bMsg.setToAddr("("+inviteUserId+"||wt)");
+                bMsg.setToType(0);
                 Map<String, Object> dataMap=new HashMap<String, Object>();
                 dataMap.put("DealType", isRefuse?"2":"1");
                 if (isRefuse&&!StringUtils.isNullOrEmptyOrSpace(refuseMsg)) dataMap.put("RefuseMsg", refuseMsg);
@@ -275,7 +276,8 @@ public class FriendService {
                 um.remove("Email");
                 um.remove("Email");
                 dataMap.put("BeInvitedUserInfo", um);
-                bMsg.setMsgContent(dataMap);
+                MapContent mc=new MapContent(dataMap);
+                bMsg.setMsgContent(mc);
                 pmm.getSendMemory().addMsg2NotifyQueue(inviteUserId, bMsg);
 
                 m.put("ReturnType", "1001");
@@ -313,20 +315,21 @@ public class FriendService {
             userAliasService.del(uak);
             ret.put("ReturnType", "1001");
             //发送消息
-            Message bMsg=new Message();
+            MsgNormal bMsg=new MsgNormal();
             bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            bMsg.setFromAddr("{(intercom)@@(www.woting.fm||S)}");
-            bMsg.setMsgType(1);
+            bMsg.setFromType(1);
+            bMsg.setMsgType(0);
             bMsg.setAffirm(0);
-            bMsg.setMsgBizType("NOTIFY");
-            bMsg.setCmdType("USER");
-            bMsg.setCommand("b5");//处理组邀请信息
+            bMsg.setBizType(0x04);
+            bMsg.setCmdType(1);
+            bMsg.setCommand(5);//处理组邀请信息
             //发送给inviteUserId
-            bMsg.setToAddr("("+friendUserId+"||wt)");
+            bMsg.setToType(0);
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("UserId", userId);
             dataMap.put("DealTime", System.currentTimeMillis());
-            bMsg.setMsgContent(dataMap);
+            MapContent mc=new MapContent(dataMap);
+            bMsg.setMsgContent(mc);
             pmm.getSendMemory().addMsg2NotifyQueue(friendUserId, bMsg);
         }
         return ret;

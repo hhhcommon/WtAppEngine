@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.calling.mem.CallingMemoryManage;
@@ -14,7 +15,10 @@ import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.mobile.mediaflow.mem.TalkMemoryManage;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.Message;
+import com.woting.push.core.message.MsgMedia;
+import com.woting.push.core.message.MsgNormal;
+import com.woting.push.core.message.content.MapContent;
 import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 
@@ -31,9 +35,9 @@ public class CallCtlThread extends Thread {
     private OneCall callData;//所控制的通话数据
     private boolean isCallerTalked=false; //是否“被叫者”说话
 
-    private String callerAddr="";
+//    private String callerAddr="";
     private MobileKey callerKey=null;
-    private String callederAddr="";
+//    private String callederAddr="";
     private MobileKey callederKey=null;
 
     /**
@@ -90,22 +94,26 @@ public class CallCtlThread extends Thread {
                     isCallerTalked=true;
                 }
                 //读取预处理的消息
-                Message m=this.callData.pollPreMsg();//第一条必然是呼叫信息
+                MsgNormal m=this.callData.pollPreMsg();//第一条必然是呼叫信息
                 if (m==null) continue;
 
                 this.callData.setLastUsedTime();
                 int flag=1;
                 ProcessedMsg pMsg=new ProcessedMsg(m, System.currentTimeMillis(), this.getClass().getName());
                 try {
-                    if (m.getCmdType().equals("CALL")) {
-                        if (m.getCommand().equals("1")) dial(m);//呼叫处理
-                        else if (m.getCommand().equals("-b1")) flag=dealAutoDialFeedback(m); //“被叫者”的自动反馈
-                        else if (m.getCommand().equals("2")) flag=ackDial(m); //“被叫者”的手工应答
-                        else if (m.getCommand().equals("3")) hangup(m); //挂断通话
+                    if (m.getCmdType()==1) {
+                        if (m.getCommand()==1) dial(m);//呼叫处理
+                        else
+                        if (m.getCommand()==0x90) flag=dealAutoDialFeedback(m); //“被叫者”的自动反馈
+                        else
+                        if (m.getCommand()==2) flag=ackDial(m); //“被叫者”的手工应答
+                        else
+                        if (m.getCommand()==3) hangup(m); //挂断通话
                     }
-                    if (m.getCmdType().equals("PTT")) {
-                        if (m.getCommand().equals("1")) beginPTT(m);//开始对讲
-                        else if (m.getCommand().equals("2")) endPTT(m); //结束对讲
+                    if (m.getCmdType()==2) {
+                        if (m.getCommand()==1) beginPTT(m);//开始对讲
+                        else
+                        if (m.getCommand()==2) endPTT(m); //结束对讲
                     }
                     pMsg.setStatus(flag);
                 } catch(Exception e) {
@@ -123,66 +131,70 @@ public class CallCtlThread extends Thread {
 
     //===========以下是分步处理过程，全部是私有函数
     //处理呼叫(CALL:1)
-    private void dial(Message m) {
+    private void dial(MsgNormal m) {
         System.out.println("处理呼叫信息前==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
-        String callId =((Map)m.getMsgContent()).get("CallId")+"";
-        String callerId=MobileUtils.getMobileKey(m,1).getUserId();
-        String callederId=((Map)m.getMsgContent()).get("CallederId")+"";
+        String callId =((MapContent)m.getMsgContent()).get("CallId")+"";
+        String callerId=MobileUtils.getMobileKey(m).getUserId();
+        String callederId=((MapContent)m.getMsgContent()).get("CallederId")+"";
 
         Map<String, Object> dataMap=null;
         boolean isBusy=true; //是否占线
         boolean callorExisted=false; //是否被叫者存在
 
         //返回给呼叫者的消息
-        Message toCallerMsg=new Message();
+        MsgNormal toCallerMsg=new MsgNormal();
         toCallerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
         toCallerMsg.setReMsgId(m.getMsgId());
-        toCallerMsg.setToAddr(m.getFromAddr());
-        toCallerMsg.setFromAddr(m.getToAddr());
-        toCallerMsg.setMsgType(-1);
-        toCallerMsg.setMsgBizType("CALL_CTL");
-        toCallerMsg.setCmdType("CALL");
-        toCallerMsg.setCommand("-1");
+        toCallerMsg.setFromType(m.getToType());
+        toCallerMsg.setToType(m.getFromType());
+        toCallerMsg.setMsgType(1);
+        toCallerMsg.setBizType(0x02);
+        toCallerMsg.setCmdType(1);
+        toCallerMsg.setCommand(0x09);
         //判断被叫者是否存在
-        if (smm.getActivedUserSessionByUserId(callerId)==null) toCallerMsg.setReturnType("10021");
+        if (smm.getActivedUserSessionByUserId(callerId)==null) toCallerMsg.setReturnType(2);
         else
-        if (smm.getActivedUserSessionByUserId(callederId)==null) toCallerMsg.setReturnType("10022");
+        if (smm.getActivedUserSessionByUserId(callederId)==null) toCallerMsg.setReturnType(3);
         else callorExisted=true;
         //判断是否占线
         if (callorExisted) {
-            //TODO ***占线的判断要用锁机制，现在先不进行处理。这个比较复杂，涉及到多线程的问题。
-            if (callerId.equals(callederId))  toCallerMsg.setReturnType("10033");
+            if (callerId.equals(callederId))  toCallerMsg.setReturnType(6);
             else
-            if (gmm.isTalk(callederId)) toCallerMsg.setReturnType("10032");
+            if (gmm.isTalk(callederId)) toCallerMsg.setReturnType(5);
             else
-            if (cmm.isTalk(callederId, callId)) toCallerMsg.setReturnType("10031");
+            if (cmm.isTalk(callederId, callId)) toCallerMsg.setReturnType(4);
             else isBusy=false;
         }
-        if (callorExisted&&!isBusy) toCallerMsg.setReturnType("1001");
+        if (callorExisted&&!isBusy) toCallerMsg.setReturnType(1);
         dataMap=new HashMap<String, Object>();
         dataMap.put("CallId", callId);
         dataMap.put("CallerId", callerId);
         dataMap.put("CallederId", callederId);
-        toCallerMsg.setMsgContent(dataMap);
-        pmm.getSendMemory().addMsg2Queue(MobileUtils.getMobileKey(m,1), toCallerMsg);
+        MapContent mc=new MapContent(dataMap);
+        toCallerMsg.setMsgContent(mc);
+        pmm.getSendMemory().addMsg2Queue(MobileUtils.getMobileKey(m), toCallerMsg);
+        System.out.println("发送:"+JsonUtils.objToJson(toCallerMsg));
         //记录到已发送列表
         this.callData.addSendedMsg(toCallerMsg);
 
         //给被叫者发送信息
         if (callorExisted&&!callerId.equals(callederId)) {
-            Message toCallederMsg=new Message();
+            MsgNormal toCallederMsg=new MsgNormal();
             toCallederMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            toCallederMsg.setMsgType(1);
-            toCallederMsg.setAffirm(isBusy?0:1);
-            toCallederMsg.setMsgBizType("CALL_CTL");
-            toCallederMsg.setCmdType("CALL");
-            toCallederMsg.setCommand("b1");
+            toCallederMsg.setMsgType(0);
+            toCallederMsg.setAffirm(1);
+            toCallederMsg.setBizType(2);
+            toCallederMsg.setCmdType(1);
+            toCallederMsg.setCommand(0x10);
+            toCallederMsg.setFromType(1);
+            toCallederMsg.setToType(0);
             dataMap=new HashMap<String, Object>();
             dataMap.put("DialType", isBusy?"2":"1");
             dataMap.put("CallId", callId);
             dataMap.put("CallerId", callerId);
             dataMap.put("CallederId", callederId);
-            toCallederMsg.setMsgContent(dataMap);
+            MapContent _mc=new MapContent(dataMap);
+            toCallederMsg.setMsgContent(_mc);
             //加入“呼叫者”的用户信息给被叫者
             Map<String, Object> callerInfo=new HashMap<String, Object>();
             UserPo u=(UserPo)smm.getActivedUserSessionByUserId(callerId).getAttribute("user");
@@ -196,45 +208,46 @@ public class CallCtlThread extends Thread {
             pmm.getSendMemory().addMsg2Queue(smm.getActivedUserSessionByUserId(callederId).getKey(), toCallederMsg);
             //记录到已发送列表
             this.callData.addSendedMsg(toCallederMsg);
-            //开始计时，两个过程
-            this.callData.setBeginDialTime();
         }
 
+        //开始计时，两个过程
+        this.callData.setBeginDialTime();
         //若不存在用户或占线要删除数据及这个过程
         if (!callorExisted||isBusy) shutdown();
         else {
             //修改状态
             this.callData.setStatus_1();
             this.callerKey=smm.getActivedUserSessionByUserId(callerId).getKey();
-            this.callerAddr=MobileUtils.getAddr(callerKey);
+            //this.callerAddr=MobileUtils.getAddr(callerKey);
             this.callederKey=smm.getActivedUserSessionByUserId(callederId).getKey();
-            this.callederAddr=MobileUtils.getAddr(callederKey);
+            //this.callederAddr=MobileUtils.getAddr(callederKey);
         }
         System.out.println("处理呼叫信息后==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
     }
 
     //处理“被叫者”的自动呼叫反馈(CALL:-b1)
-    private int dealAutoDialFeedback(Message m) {
+    private int dealAutoDialFeedback(MsgNormal m) {
         System.out.println("处理自动应答前==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
         //首先判断这个消息是否符合处理的要求：callid, callerId, callederId是否匹配
-        if (!this.callData.getCallerId().equals(((Map)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m,1).getUserId())) return 3;
+        if (!this.callData.getCallerId().equals(((MapContent)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m).getUserId())) return 3;
         if (this.callData.getStatus()==1) {//状态正确，如果是其他状态，这个消息抛弃
             //发送给呼叫者的消息
-            Message toCallerMsg=new Message();
+            MsgNormal toCallerMsg=new MsgNormal();
             toCallerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            toCallerMsg.setToAddr(this.callerAddr);
-            toCallerMsg.setFromAddr("{(phone)@@(www.woting.fm||S)}");
-            toCallerMsg.setMsgType(1);
-            toCallerMsg.setAffirm(0);
-            toCallerMsg.setMsgBizType("CALL_CTL");
-            toCallerMsg.setCmdType("CALL");
-            toCallerMsg.setCommand("b4");
+            toCallerMsg.setFromType(1);
+            toCallerMsg.setToType(0);
+            toCallerMsg.setMsgType(0);
+            toCallerMsg.setAffirm(1);
+            toCallerMsg.setBizType(2);
+            toCallerMsg.setCmdType(1);
+            toCallerMsg.setCommand(0x40);
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("CallId", this.callData.getCallId());
             dataMap.put("CallerId", this.callData.getCallerId());
             dataMap.put("CallederId", this.callData.getCallederId());
             dataMap.put("OnLineType", "1");
-            toCallerMsg.setMsgContent(dataMap);
+            MapContent mc=new MapContent(dataMap);
+            toCallerMsg.setMsgContent(mc);
 
             pmm.getSendMemory().addMsg2Queue(this.callerKey, toCallerMsg);
             this.callData.addSendedMsg(toCallerMsg);//记录到已发送列表
@@ -246,31 +259,32 @@ public class CallCtlThread extends Thread {
     }
 
     //处理“被叫者”应答(CALL:2)
-    private int ackDial(Message m) {
+    private int ackDial(MsgNormal m) {
         //首先判断这个消息是否符合处理的要求：callid, callerId, callederId是否匹配
-        if (!this.callData.getCallerId().equals(((Map)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m,1).getUserId())) return 3;
+        if (!this.callData.getCallerId().equals(((MapContent)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m).getUserId())) return 3;
         if (this.callData.getStatus()==1||this.callData.getStatus()==2) {//状态正确，如果是其他状态，这个消息抛弃
             //应答状态
             int ackType=2; //拒绝
             try {
-                ackType=Integer.parseInt(""+((Map)m.getMsgContent()).get("ACKType"));
+                ackType=Integer.parseInt(""+((MapContent)m.getMsgContent()).get("ACKType"));
             } catch(Exception e) {}
             //构造“应答传递ACK”消息，并发送给“呼叫者”
-            Message toCallerMsg=new Message();
+            MsgNormal toCallerMsg=new MsgNormal();
             toCallerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            toCallerMsg.setToAddr(this.callerAddr);
-            toCallerMsg.setFromAddr("{(phone)@@(www.woting.fm||S)}");
-            toCallerMsg.setMsgType(1);
-            toCallerMsg.setAffirm(0);
-            toCallerMsg.setMsgBizType("CALL_CTL");
-            toCallerMsg.setCmdType("CALL");
-            toCallerMsg.setCommand("b2");
+            toCallerMsg.setFromType(1);
+            toCallerMsg.setToType(0);
+            toCallerMsg.setMsgType(0);
+            toCallerMsg.setAffirm(1);
+            toCallerMsg.setBizType(2);
+            toCallerMsg.setCmdType(1);
+            toCallerMsg.setCommand(0x20);
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("CallId", this.callData.getCallId());
             dataMap.put("CallerId", this.callData.getCallerId());
             dataMap.put("CallederId", this.callData.getCallederId());
             dataMap.put("ACKType", ackType);
-            toCallerMsg.setMsgContent(dataMap);
+            MapContent mc=new MapContent(dataMap);
+            toCallerMsg.setMsgContent(mc);
 
             pmm.getSendMemory().addMsg2Queue(this.callerKey, toCallerMsg);
             this.callData.addSendedMsg(toCallerMsg);//记录到已发送列表
@@ -284,27 +298,29 @@ public class CallCtlThread extends Thread {
     }
 
     //处理“挂断”(CALL:3)
-    private int hangup(Message m) {
+    private int hangup(MsgNormal m) {
         //首先判断是那方在进行挂断
-        String hangupperId=MobileUtils.getMobileKey(m,1).getUserId();
+        String hangupperId=MobileUtils.getMobileKey(m).getUserId();
         String otherId=this.callData.getOtherId(hangupperId);
         if (otherId==null) return 3;
         //给另一方发送“挂断传递”消息
-        Message otherMsg=new Message();
+        MsgNormal otherMsg=new MsgNormal();
         otherMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-        otherMsg.setToAddr(MobileUtils.getAddr(smm.getActivedUserSessionByUserId(otherId).getKey()));
-        otherMsg.setFromAddr("{(phone)@@(www.woting.fm||S)}");
+        otherMsg.setReMsgId(m.getMsgId());
+        otherMsg.setFromType(1);
+        otherMsg.setToType(0);
         otherMsg.setMsgType(1);
         otherMsg.setAffirm(0);
-        otherMsg.setMsgBizType("CALL_CTL");
-        otherMsg.setCmdType("CALL");
-        otherMsg.setCommand("b3");
+        otherMsg.setBizType(2);
+        otherMsg.setCmdType(1);
+        otherMsg.setCommand(0x30);
         Map<String, Object> dataMap=new HashMap<String, Object>();
         dataMap.put("CallId", this.callData.getCallId());
         dataMap.put("CallerId", this.callData.getCallerId());
         dataMap.put("CallederId", this.callData.getCallederId());
         dataMap.put("HangupType", "1");
-        otherMsg.setMsgContent(dataMap);
+        MapContent mc=new MapContent(dataMap);
+        otherMsg.setMsgContent(mc);
 
         pmm.getSendMemory().addMsg2Queue(smm.getActivedUserSessionByUserId(otherId).getKey(), otherMsg);
         this.callData.addSendedMsg(otherMsg);//记录到已发送列表
@@ -315,30 +331,31 @@ public class CallCtlThread extends Thread {
     }
 
     //处理开始对讲(PTT:1)
-    private void beginPTT(Message m) {
-        Message toSpeakerMsg=new Message();
+    private void beginPTT(MsgNormal m) {
+        MsgNormal toSpeakerMsg=new MsgNormal();
         toSpeakerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+        toSpeakerMsg.setFromType(1);
+        toSpeakerMsg.setToType(0);
         toSpeakerMsg.setReMsgId(m.getMsgId());
-        toSpeakerMsg.setToAddr(m.getFromAddr());
-        toSpeakerMsg.setFromAddr(m.getToAddr());
-        toSpeakerMsg.setMsgType(-1);
-        toSpeakerMsg.setMsgBizType("CALL_CTL");
-        toSpeakerMsg.setCmdType("PTT");
-        toSpeakerMsg.setCommand("-1");
+        toSpeakerMsg.setMsgType(1);
+        toSpeakerMsg.setAffirm(1);
+        toSpeakerMsg.setBizType(2);
+        toSpeakerMsg.setCmdType(2);
+        toSpeakerMsg.setCommand(9);
 
         Map<String, Object> dataMap=new HashMap<String, Object>();
-        String speaker=MobileUtils.getMobileKey(m,1).getUserId();
+        String speaker=MobileUtils.getMobileKey(m).getUserId();
         if (StringUtils.isNullOrEmptyOrSpace(speaker)||smm.getActivedUserSessionByUserId(speaker)==null) {
-            toSpeakerMsg.setReturnType("1000");
+            toSpeakerMsg.setReturnType(0);
         } else {
             String ret=this.callData.setSpeaker(speaker);
             if (ret.equals("1")) {
-                toSpeakerMsg.setReturnType("1001");
+                toSpeakerMsg.setReturnType(1);
             } else if (ret.equals("0")) {
-                toSpeakerMsg.setReturnType("1003");
+                toSpeakerMsg.setReturnType(3);
                 dataMap.put("ErrMsg", "当前会话为非对讲模式，不用申请独占的通话资源");
             } else if (ret.startsWith("2::")) {
-                toSpeakerMsg.setReturnType("1002");
+                toSpeakerMsg.setReturnType(2);
                 dataMap.put("Speaker", ret.substring(3));
             } else {
                 dataMap.put("ErrMsg", ret.startsWith("-")?ret.substring(ret.indexOf("::")+2):"未知问题");
@@ -346,37 +363,39 @@ public class CallCtlThread extends Thread {
 
         }
         dataMap.put("CallId", this.callData.getCallId());
-        toSpeakerMsg.setMsgContent(dataMap);
-        pmm.getSendMemory().addMsg2Queue(MobileUtils.getMobileKey(m,1), toSpeakerMsg);
+        MapContent mc=new MapContent(dataMap);
+        toSpeakerMsg.setMsgContent(mc);
+        pmm.getSendMemory().addMsg2Queue(MobileUtils.getMobileKey(m), toSpeakerMsg);
         //记录到已发送列表
         this.callData.addSendedMsg(toSpeakerMsg);
     }
 
     //处理结束对讲(PTT:2)
-    private void endPTT(Message m) {
-        Message toSpeakerMsg=new Message();
+    private void endPTT(MsgNormal m) {
+        MsgNormal toSpeakerMsg=new MsgNormal();
         toSpeakerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+        toSpeakerMsg.setFromType(1);
+        toSpeakerMsg.setToType(0);
         toSpeakerMsg.setReMsgId(m.getMsgId());
-        toSpeakerMsg.setToAddr(m.getFromAddr());
-        toSpeakerMsg.setFromAddr(m.getToAddr());
-        toSpeakerMsg.setMsgType(-1);
-        toSpeakerMsg.setMsgBizType("CALL_CTL");
-        toSpeakerMsg.setCmdType("PTT");
-        toSpeakerMsg.setCommand("-2");
+        toSpeakerMsg.setMsgType(1);
+        toSpeakerMsg.setAffirm(1);
+        toSpeakerMsg.setBizType(2);
+        toSpeakerMsg.setCmdType(2);
+        toSpeakerMsg.setCommand(0x0A);
 
         Map<String, Object> dataMap=new HashMap<String, Object>();
-        String speaker=MobileUtils.getMobileKey(m,1).getUserId();
+        String speaker=MobileUtils.getMobileKey(m).getUserId();
         if (StringUtils.isNullOrEmptyOrSpace(speaker)||smm.getActivedUserSessionByUserId(speaker)==null) {
-            toSpeakerMsg.setReturnType("1000");
+            toSpeakerMsg.setReturnType(0);
         } else {
             String ret=this.callData.cleanSpeaker(speaker);
             if (ret.equals("1")) {
-                toSpeakerMsg.setReturnType("1001");
+                toSpeakerMsg.setReturnType(1);
             } else if (ret.equals("0")) {
-                toSpeakerMsg.setReturnType("1003");
+                toSpeakerMsg.setReturnType(3);
                 dataMap.put("ErrMsg", "当前会话为非对讲模式，不用申请独占的通话资源");
             } else if (ret.startsWith("2::")) {
-                toSpeakerMsg.setReturnType("1002");
+                toSpeakerMsg.setReturnType(2);
                 dataMap.put("Speaker", ret.substring(3));
             } else {
                 dataMap.put("ErrMsg", ret.startsWith("-")?ret.substring(ret.indexOf("::")+2):"未知问题");
@@ -384,8 +403,9 @@ public class CallCtlThread extends Thread {
 
         }
         dataMap.put("CallId", this.callData.getCallId());
-        toSpeakerMsg.setMsgContent(dataMap);
-        pmm.getSendMemory().addMsg2Queue(MobileUtils.getMobileKey(m,1), toSpeakerMsg);
+        MapContent mc=new MapContent(dataMap);
+        toSpeakerMsg.setMsgContent(mc);
+        pmm.getSendMemory().addMsg2Queue(MobileUtils.getMobileKey(m), toSpeakerMsg);
         //记录到已发送列表
         this.callData.addSendedMsg(toSpeakerMsg);
     }
@@ -394,21 +414,22 @@ public class CallCtlThread extends Thread {
     //处理“被叫者”不在线
     private void dealOutLine() {
         //发送给“呼叫者”的消息
-        Message toCallerMsg=new Message();
+        MsgNormal toCallerMsg=new MsgNormal();
         toCallerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-        toCallerMsg.setToAddr(this.callerAddr);
-        toCallerMsg.setFromAddr("{(phone)@@(www.woting.fm||S)}");
-        toCallerMsg.setMsgType(1);
-        toCallerMsg.setAffirm(0);
-        toCallerMsg.setMsgBizType("CALL_CTL");
-        toCallerMsg.setCmdType("CALL");
-        toCallerMsg.setCommand("b4");
+        toCallerMsg.setFromType(1);
+        toCallerMsg.setToType(0);
+        toCallerMsg.setMsgType(0);
+        toCallerMsg.setAffirm(1);
+        toCallerMsg.setBizType(2);
+        toCallerMsg.setCmdType(1);
+        toCallerMsg.setCommand(0x40);
         Map<String, Object> dataMap=new HashMap<String, Object>();
         dataMap.put("CallId", this.callData.getCallId());
         dataMap.put("CallerId", this.callData.getCallerId());
         dataMap.put("CallederId", this.callData.getCallederId());
         dataMap.put("OnLineType", "2");
-        toCallerMsg.setMsgContent(dataMap);
+        MapContent mc=new MapContent(dataMap);
+        toCallerMsg.setMsgContent(mc);
 
         pmm.getSendMemory().addMsg2Queue(this.callerKey, toCallerMsg);
         this.callData.addSendedMsg(toCallerMsg);//记录到已发送列表
@@ -420,40 +441,42 @@ public class CallCtlThread extends Thread {
     //处理“被叫者”未手工应答
     private void dealNoAck() {
         //1、构造“应答传递ACK”消息，并发送给“呼叫者”
-        Message toCallerMsg=new Message();
+        MsgNormal toCallerMsg=new MsgNormal();
         toCallerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-        toCallerMsg.setToAddr(this.callerAddr);
-        toCallerMsg.setFromAddr("{(phone)@@(www.woting.fm||S)}");        
-        toCallerMsg.setMsgType(1);
-        toCallerMsg.setAffirm(0);
-        toCallerMsg.setMsgBizType("CALL_CTL");
-        toCallerMsg.setCmdType("CALL");
-        toCallerMsg.setCommand("b2");
+        toCallerMsg.setFromType(1);
+        toCallerMsg.setToType(0);
+        toCallerMsg.setMsgType(0);
+        toCallerMsg.setAffirm(1);
+        toCallerMsg.setBizType(2);
+        toCallerMsg.setCmdType(1);
+        toCallerMsg.setCommand(0x20);
         Map<String, Object> dataMap=new HashMap<String, Object>();
         dataMap.put("CallId", this.callData.getCallId());
         dataMap.put("CallerId", this.callData.getCallerId());
         dataMap.put("CallederId", this.callData.getCallederId());
         dataMap.put("ACKType", "32");
-        toCallerMsg.setMsgContent(dataMap);
+        MapContent mc=new MapContent(dataMap);
+        toCallerMsg.setMsgContent(mc);
         pmm.getSendMemory().addMsg2Queue(this.callerKey, toCallerMsg);
         this.callData.addSendedMsg(toCallerMsg);//记录到已发送列表
 
         //2、构造“挂断传递”消息，并发送给“被叫者”
-        Message toCallederMsg=new Message();
+        MsgNormal toCallederMsg=new MsgNormal();
         toCallederMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-        toCallederMsg.setToAddr(this.callederAddr);
-        toCallederMsg.setFromAddr("{(phone)@@(www.woting.fm||S)}");
-        toCallederMsg.setMsgType(1);
-        toCallederMsg.setAffirm(0);
-        toCallederMsg.setMsgBizType("CALL_CTL");
-        toCallederMsg.setCmdType("CALL");
-        toCallederMsg.setCommand("b3");
+        toCallerMsg.setFromType(1);
+        toCallerMsg.setToType(0);
+        toCallederMsg.setMsgType(0);
+        toCallederMsg.setAffirm(1);
+        toCallederMsg.setBizType(2);
+        toCallederMsg.setCmdType(1);
+        toCallederMsg.setCommand(0x30);
         dataMap=new HashMap<String, Object>();
         dataMap.put("CallId", this.callData.getCallId());
         dataMap.put("CallerId", this.callData.getCallerId());
         dataMap.put("CallederId", this.callData.getCallederId());
         dataMap.put("HangupType", "2");
-        toCallederMsg.setMsgContent(dataMap);
+        MapContent _mc=new MapContent(dataMap);
+        toCallederMsg.setMsgContent(_mc);
         pmm.getSendMemory().addMsg2Queue(this.callederKey, toCallederMsg);
         this.callData.addSendedMsg(toCallederMsg);//记录到已发送列表
 
@@ -464,40 +487,42 @@ public class CallCtlThread extends Thread {
     //服务器发现电话过程过期
     private void dealCallExpire() {
         //发送给“呼叫者”的消息
-        Message toCallerMsg=new Message();
+        MsgNormal toCallerMsg=new MsgNormal();
         toCallerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-        toCallerMsg.setToAddr(this.callerAddr);
-        toCallerMsg.setFromAddr("{(phone)@@(www.woting.fm||S)}");
-        toCallerMsg.setMsgType(1);
-        toCallerMsg.setAffirm(0);
-        toCallerMsg.setMsgBizType("CALL_CTL");
-        toCallerMsg.setCmdType("CALL");
-        toCallerMsg.setCommand("b3");
+        toCallerMsg.setFromType(1);
+        toCallerMsg.setToType(0);
+        toCallerMsg.setMsgType(0);
+        toCallerMsg.setAffirm(1);
+        toCallerMsg.setBizType(2);
+        toCallerMsg.setCmdType(1);
+        toCallerMsg.setCommand(0x30);
         Map<String, Object> callerMap=new HashMap<String, Object>();
         callerMap.put("CallId", this.callData.getCallId());
         callerMap.put("CallerId", this.callData.getCallerId());
         callerMap.put("CallederId", this.callData.getCallederId());
         callerMap.put("HangupType", "3");
-        toCallerMsg.setMsgContent(callerMap);
+        MapContent mc=new MapContent(callerMap);
+        toCallerMsg.setMsgContent(mc);
         pmm.getSendMemory().addMsg2Queue(this.callerKey, toCallerMsg);
         this.callData.addSendedMsg(toCallerMsg);//记录到已发送列表
 
         //发送给“被叫者”的消息
-        Message toCallederMsg=new Message();
+        MsgNormal toCallederMsg=new MsgNormal();
         toCallederMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-        toCallederMsg.setToAddr(this.callederAddr);
-        toCallederMsg.setFromAddr("{(phone)@@(www.woting.fm||S)}");
-        toCallederMsg.setMsgType(1);
-        toCallederMsg.setAffirm(0);
-        toCallederMsg.setMsgBizType("CALL_CTL");
-        toCallederMsg.setCmdType("CALL");
-        toCallederMsg.setCommand("b3");
+        toCallerMsg.setFromType(1);
+        toCallerMsg.setToType(0);
+        toCallederMsg.setMsgType(0);
+        toCallederMsg.setAffirm(1);
+        toCallerMsg.setBizType(2);
+        toCallederMsg.setCmdType(1);
+        toCallederMsg.setCommand(0x30);
         Map<String, Object> callederMap=new HashMap<String, Object>();
         callederMap.put("CallId", this.callData.getCallId());
         callederMap.put("CallerId", this.callData.getCallerId());
         callederMap.put("CallederId", this.callData.getCallederId());
         callederMap.put("HangupType", "3");
-        toCallederMsg.setMsgContent(callederMap);
+        MapContent _mc=new MapContent(callederMap);
+        toCallederMsg.setMsgContent(_mc);
         pmm.getSendMemory().addMsg2Queue(this.callederKey, toCallederMsg);
         this.callData.addSendedMsg(toCallederMsg);//记录到已发送列表
 
@@ -509,23 +534,24 @@ public class CallCtlThread extends Thread {
     private void  dealCallerFirstTalk() {
         if (this.callData.getStatus()==1||this.callData.getStatus()==2) {//等同于“被叫者”手工应答
             //构造“应答传递ACK”消息，并发送给“呼叫者”
-            Message toCallerMsg=new Message();
+            MsgNormal toCallerMsg=new MsgNormal();
             toCallerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            toCallerMsg.setToAddr(MobileUtils.getAddr(smm.getActivedUserSessionByUserId(this.callData.getCallerId()).getKey()));
-            toCallerMsg.setFromAddr("{(phone)@@(www.woting.fm||S)}");
+            toCallerMsg.setFromType(1);
+            toCallerMsg.setToType(0);
 
-            toCallerMsg.setMsgType(1);
+            toCallerMsg.setMsgType(0);
             toCallerMsg.setAffirm(0);
-            toCallerMsg.setMsgBizType("CALL_CTL");
-            toCallerMsg.setCmdType("CALL");
-            toCallerMsg.setCommand("b2");
+            toCallerMsg.setBizType(2);
+            toCallerMsg.setCmdType(1);
+            toCallerMsg.setCommand(0x20);
 
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("CallId", this.callData.getCallId());
             dataMap.put("CallerId", this.callData.getCallerId());
             dataMap.put("CallederId", this.callData.getCallederId());
             dataMap.put("ACKType", "1");//可以通话
-            toCallerMsg.setMsgContent(dataMap);
+            MapContent mc=new MapContent(dataMap);
+            toCallerMsg.setMsgContent(mc);
 
             pmm.getSendMemory().addMsg2Queue(smm.getActivedUserSessionByUserId(this.callData.getCallerId()).getKey(), toCallerMsg);
             //记录到已发送列表
@@ -551,22 +577,34 @@ public class CallCtlThread extends Thread {
         ConcurrentLinkedQueue<Message> tempMsgs = pmm.getSendMemory().getSendQueue(this.callerKey);
         if (tempMsgs!=null&&!tempMsgs.isEmpty()) {
             for (Message m: tempMsgs) {
-                if (this.callData.getCallId().equals(((Map)m.getMsgContent()).get("CallId")+"")) {
-                    tempMsgs.remove(m);
+                if (m instanceof MsgNormal) {
+                    MsgNormal mn=(MsgNormal)m;
+                    if (this.callData.getCallId().equals(((MapContent)mn.getMsgContent()).get("CallId")+"")) {
+                        tempMsgs.remove(m);
+                    }
                 }
-                if (m.getMsgBizType().equals("AUDIOFLOW")&&m.getCmdType().equals("TALK_TELPHONE")&&this.callData.getCallId().equals(((Map)m.getMsgContent()).get("ObjId")+"")) {
-                    tempMsgs.remove(m);
+                if (m instanceof MsgMedia) {
+                    MsgMedia mm=(MsgMedia)m;
+                    if (mm.getBizType()==2&&this.callData.getCallId()==mm.getObjId()) {
+                        tempMsgs.remove(m);
+                    }
                 }
             }
         }
         tempMsgs = pmm.getSendMemory().getSendQueue(this.callederKey);
         if (tempMsgs!=null&&!tempMsgs.isEmpty()) {
             for (Message m: tempMsgs) {
-                if (this.callData.getCallId().equals(((Map)m.getMsgContent()).get("CallId")+"")) {
-                    tempMsgs.remove(m);
+                if (m instanceof MsgNormal) {
+                    MsgNormal mn=(MsgNormal)m;
+                    if (this.callData.getCallId().equals(((MapContent)mn.getMsgContent()).get("CallId")+"")) {
+                        tempMsgs.remove(m);
+                    }
                 }
-                if (m.getMsgBizType().equals("AUDIOFLOW")&&m.getCmdType().equals("TALK_TELPHONE")&&this.callData.getCallId().equals(((Map)m.getMsgContent()).get("ObjId")+"")) {
-                    tempMsgs.remove(m);
+                if (m instanceof MsgMedia) {
+                    MsgMedia mm=(MsgMedia)m;
+                    if (mm.getBizType()==1&&this.callData.getCallId()==mm.getObjId()) {
+                        tempMsgs.remove(m);
+                    }
                 }
             }
         }

@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.MsgNormal;
 
 /**
  * 一次通话所需要的数据结构。
@@ -103,10 +103,10 @@ public class OneCall implements Serializable {
     }
 
     //以下两个对象用来记录App->Server的消息
-    private LinkedList<Message> preMsgQueue;//预处理(还未处理)的本呼叫的消息
+    private LinkedList<MsgNormal> preMsgQueue;//预处理(还未处理)的本呼叫的消息
     private List<ProcessedMsg> processedMsgList;//已经处理过的消息
     //以下对象用来记录Server->app的消息
-    private List<Message> sendedMsgList;//已经发出的消息，这里记录仅仅是作为日志的材料
+    private List<MsgNormal> sendedMsgList;//已经发出的消息，这里记录仅仅是作为日志的材料
 
     /**
      * 一次通话的结构，这个构造函数限定：
@@ -139,9 +139,9 @@ public class OneCall implements Serializable {
 
         this.status=0;//仅创建，还未处理
 
-        this.preMsgQueue=new LinkedList<Message>();
+        this.preMsgQueue=new LinkedList<MsgNormal>();
         this.processedMsgList=new ArrayList<ProcessedMsg>();
-        this.sendedMsgList=new ArrayList<Message>();
+        this.sendedMsgList=new ArrayList<MsgNormal>();
 
         this.callerWts=new ArrayList<WholeTalk>();
         this.callederWts=new ArrayList<WholeTalk>();
@@ -151,24 +151,24 @@ public class OneCall implements Serializable {
      * 按照FIFO的队列方式，获取一条待处理的消息，并删除他
      * @return 待处理的消息
      */
-    public Message pollPreMsg() {
+    public MsgNormal pollPreMsg() {
         return preMsgQueue.poll();
     }
     public List<ProcessedMsg> getProcessedMsgList() {
         return processedMsgList;
     }
-    public List<Message> getSendedMsgList() {
+    public List<MsgNormal> getSendedMsgList() {
         return sendedMsgList;
     }
 
     //以下为添加对象的方法
-    public void addPreMsg(Message msg) {
+    public void addPreMsg(MsgNormal msg) {
         synchronized(preMsglock) {
             this.preMsgQueue.add(msg);
         }
     }
 
-    public void addSendedMsg(Message msg) {
+    public void addSendedMsg(MsgNormal msg) {
         this.sendedMsgList.add(msg);
     }
 

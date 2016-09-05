@@ -108,6 +108,7 @@ public class SeqMediaAsset extends BaseObject implements Serializable, ModelSwap
     public void setPubCount(int pubCount) {
         this.pubCount=pubCount;
     }
+    
     public int getSmaStatus() {
 		return smaStatus;
 	}

@@ -1,33 +1,36 @@
 package com.woting.appengine.mobile.push.monitor.socket;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 //import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 //import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import com.spiritdata.framework.util.DateUtils;
-//import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.JsonUtils;
-import com.spiritdata.framework.util.SequenceUUID;
+//import com.spiritdata.framework.util.FileNameUtils;
+//import com.spiritdata.framework.util.JsonUtils;
+//import com.spiritdata.framework.util.SequenceUUID;
 //import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
 //import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.mobile.mediaflow.mem.TalkMemoryManage;
 import com.woting.appengine.mobile.mediaflow.model.TalkSegment;
 import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
+import com.woting.push.core.message.Message;
+import com.woting.push.core.message.MessageUtils;
+import com.woting.push.core.message.MsgMedia;
+import com.woting.push.core.message.MsgNormal;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
-import com.woting.appengine.mobile.push.model.Message;
 
 /**
  * 处理Socket的线程，此线程是处理一个客户端连接的基础线程。其中包括一个主线程，两个子线程<br/>
@@ -46,7 +49,7 @@ public class SocketHandle extends Thread {
     private DealByteArray dealByteArray;
 
     private BufferedInputStream socketIn=null;
-    private PrintWriter socketOut=null;//若是确认消息才用得到
+    private BufferedOutputStream socketOut=null;//若是确认消息才用得到
 
     //控制信息
     protected SocketMonitorConfig smc=null;//套接字监控配置
@@ -55,7 +58,7 @@ public class SocketHandle extends Thread {
     protected long lastVisitTime=System.currentTimeMillis();
 
     protected ArrayBlockingQueue<Byte> receiveByteQueue=new ArrayBlockingQueue<Byte>(10240);
-    protected ArrayBlockingQueue<String> sendMsgQueue=new ArrayBlockingQueue<String>(512);
+    protected ArrayBlockingQueue<byte[]> sendMsgQueue=new ArrayBlockingQueue<byte[]>(512);
 
     //数据
     protected Socket socket=null;
@@ -83,7 +86,7 @@ public class SocketHandle extends Thread {
         this.socket=client;
         this.socket.setTcpNoDelay(true);
         socketIn=new BufferedInputStream(socket.getInputStream());
-        socketOut=new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8")), true);
+        socketOut=new BufferedOutputStream(socket.getOutputStream());
         this.smc=smc;
     }
     public void stopHandle() {
@@ -122,8 +125,12 @@ public class SocketHandle extends Thread {
         } finally {
             this.socketIn=null;
         }
-        this.socketOut.close();
-        this.socketOut=null;
+        try {
+            this.socketOut.close();
+        } catch (IOException e1) {
+        } finally {
+            this.socketOut=null;
+        }
         try {
             SocketHandle.this.socket.close(); //这是主线程的关键
         } catch (IOException e) {
@@ -217,7 +224,7 @@ public class SocketHandle extends Thread {
         private boolean isInterrupted=false;
         private boolean isRunning=true;
         private boolean canAdd=false;
-        private String mStr="";
+//        private String mStr="";
         protected FetchMsg(String name) {
             super.setName(name);
         }
@@ -234,39 +241,35 @@ public class SocketHandle extends Thread {
                         canAdd=true;
                         //获得控制消息
                         Message m=pmm.getSendMessages(mk, SocketHandle.this);
-                        if (m==null) continue;
-                        long t=System.currentTimeMillis();
-                        if (m.getMsgBizType().equals("AUDIOFLOW")) {
-                            if (t-m.getSendTime()>60*1000) {
-                                canAdd=false;
+                        if (m!=null) {
+                            long t=System.currentTimeMillis();
+                            if (m instanceof MsgMedia) {
+                                if (t-m.getSendTime()>60*1000) {
+                                    canAdd=false;
+                                }
                             }
-                        }
-                        if (canAdd) {
-                            if (m!=null) {
-                                mStr=m.toJson();
-                                sendMsgQueue.add(mStr);
+                            if (canAdd) {
+                                if (m!=null) {
+                                    sendMsgQueue.add(m.toBytes());
+                                }
                             }
-                        }
-                        if (m.getMsgBizType().equals("AUDIOFLOW")&&m.getCommand().equals("b1")) {//对语音广播包做特殊处理
-                            try {
-                                String talkId=((Map)m.getMsgContent()).get("TalkId")+"";
-                                String seqNum=((Map)m.getMsgContent()).get("SeqNum")+"";
-                                TalkMemoryManage tmm=TalkMemoryManage.getInstance();
-                                WholeTalk wt=tmm.getWholeTalk(talkId);
-                                TalkSegment ts=wt.getTalkData().get(Math.abs(Integer.parseInt(seqNum)));
-                                if (ts.getSendFlagMap().get(mk.toString())!=null) ts.getSendFlagMap().put(mk.toString(), 1);
-                            } catch(Exception e) {e.printStackTrace();}
+                            if (m instanceof MsgMedia) {//对语音广播包做特殊处理
+                                MsgMedia _mm=(MsgMedia)m;
+                                try {
+                                    TalkMemoryManage tmm=TalkMemoryManage.getInstance();
+                                    WholeTalk wt=tmm.getWholeTalk(_mm.getTalkId());
+                                    TalkSegment ts=wt.getTalkData().get(Math.abs(_mm.getSeqNo()));
+                                    if (ts.getSendFlagMap().get(mk.toString())!=null) ts.getSendFlagMap().put(mk.toString(), 1);
+                                } catch(Exception e) {e.printStackTrace();}
+                            }
                         }
                         //获得通知类消息
                         if (mk.isUser()) {
                             Message nm=pmm.getNotifyMessages(mk.getUserId());
                             if (nm!=null) {
-                                nm.setToAddr(MobileUtils.getAddr(mk));
-                                mStr=nm.toJson();
-                                sendMsgQueue.add(mStr);
+                                sendMsgQueue.add(nm.toBytes());
                             }
                         }
-
                     }
                     try { sleep(5); } catch (InterruptedException e) {};
                 }
@@ -285,7 +288,7 @@ public class SocketHandle extends Thread {
     class SendMsg extends Thread {
         private boolean isInterrupted=false;
         private boolean isRunning=true;
-        private String mStr="";
+        private byte[] mBytes=null;
         protected SendMsg(String name) {
             super.setName(name);
         }
@@ -295,20 +298,41 @@ public class SocketHandle extends Thread {
             super.interrupt();
         }
         public void run() {
+            String filePath="/opt/logs/sendLogs";
+            File dir=new File(filePath);
+            if (!dir.isDirectory()) dir.mkdirs();
+            File f=new File(filePath+"/"+SocketHandle.this.socket.hashCode()+".log");
+            FileOutputStream fos=null;
+            try {
+                if (!f.exists()) f.createNewFile();
+                fos=new FileOutputStream(f, false);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+
             this.isRunning=true;
             try {
                 while (pmm.isServerRuning()&&SocketHandle.this.running&&!isInterrupted&&socketOk()) {
                     try {
                         synchronized(socketSendLock) {
-                            if (socketOut!=null&&!socketOut.checkError()&&!socket.isOutputShutdown()&&!sendMsgQueue.isEmpty()) {
-                                mStr=sendMsgQueue.poll();
-                                socketOut.println(mStr);
+                            if (socketOut!=null&&!socket.isOutputShutdown()&&!sendMsgQueue.isEmpty()) {
+                                mBytes=sendMsgQueue.poll();
+                                if (mBytes==null||mBytes.length<=2) continue;
+                                socketOut.write(mBytes);
                                 socketOut.flush();
-                                if (!mStr.equals("B")) {
+                                if (mBytes.length==3&&mBytes[0]=='b'&&mBytes[1]=='|'&&mBytes[2]=='^') continue;
+                                try {
+                                    //pmm.logQueue.add(System.currentTimeMillis()+"::send::"+(mk==null?"null":mk.toString())+"::"+(new String(mBytes)));
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                if (fos!=null) {
                                     try {
-                                        pmm.logQueue.add(System.currentTimeMillis()+"::send::"+mk.toString()+"::"+mStr);
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
+                                        fos.write(mBytes);
+                                        fos.write(13);
+                                        fos.write(10);
+                                        fos.flush();
+                                    } catch (IOException e) {
                                     }
                                 }
                             }
@@ -324,6 +348,8 @@ public class SocketHandle extends Thread {
                 System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"发送消息线程出现异常:" + e.getMessage());
             } finally {
                 this.isRunning=false;
+                try { fos.close(); } catch (Exception e) {};
+                fos=null;
             }
         }
     }
@@ -353,7 +379,7 @@ public class SocketHandle extends Thread {
                     try {
                         int r;
                         while ((r=socketIn.read())!=-1) {
-                            receiveByteQueue.add((byte) r);
+                            receiveByteQueue.add((byte)r);
                         }
                         continueErrCodunt=0;
                     } catch(Exception e) {
@@ -387,6 +413,7 @@ public class SocketHandle extends Thread {
     class DealByteArray extends Thread {
         private boolean isInterrupted=false;
         private boolean isRunning=true;
+        private int _headLen=36;
         protected DealByteArray(String name) {
             super.setName(name);
         }
@@ -400,65 +427,167 @@ public class SocketHandle extends Thread {
             File dir=new File(filePath);
             if (!dir.isDirectory()) dir.mkdirs();
             File f=new File(filePath+"/"+SocketHandle.this.socket.hashCode()+".log");
-            FileWriter fw=null;
-            if (!f.exists()) {
-                try {
-                    f.createNewFile();
-                    fw=new FileWriter(f, false);
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
+            FileOutputStream fos=null;
+            try {
+                if (!f.exists()) f.createNewFile();
+                fos=new FileOutputStream(f, false);
+            } catch (IOException e1) {
+                e1.printStackTrace();
             }
 
             this.isRunning=true;
+            byte[] ba=new byte[2048];
+            byte[] mba=null;
+
+            int i=0;
+            short _dataLen=-3;
+            boolean hasBeginMsg=false; //是否开始了一个消息
+            int isAck=-1;
+            int isRegist=0;
+            int msgType=-1;//消息类型
+            byte[] endMsgFlag={0x00,0x00,0x00};
+
             try {
                 while(true) {
-                    StringBuffer sb=new StringBuffer();
                     int r=-1;
                     while (true) {
                         r=receiveByteQueue.take();
-                        if (fw!=null) fw.write((char)r);
-                        if (r!=10&&r!=13) sb.append((char)r); else break;
+                        if (fos!=null) fos.write(r);
+                        ba[i++]=(byte)r;
+                        endMsgFlag[0]=endMsgFlag[1];
+                        endMsgFlag[1]=endMsgFlag[2];
+                        endMsgFlag[2]=(byte)r;
+
+                        if (!hasBeginMsg) {
+                            if (endMsgFlag[0]=='b'&&endMsgFlag[1]=='^'&&endMsgFlag[2]=='^') {
+                                break;
+                            } else if ((endMsgFlag[0]=='|'&&endMsgFlag[1]=='^')||(endMsgFlag[0]=='^'&&endMsgFlag[1]=='|')) {
+                                hasBeginMsg=true;
+                                ba[0]=endMsgFlag[0];
+                                ba[1]=endMsgFlag[1];
+                                ba[2]=endMsgFlag[2];
+                                i=3;
+                                continue;
+                            } else if ((endMsgFlag[1]=='|'&&endMsgFlag[2]=='^')||(endMsgFlag[1]=='^'&&endMsgFlag[2]=='|')) {
+                                hasBeginMsg=true;
+                                ba[0]=endMsgFlag[1];
+                                ba[1]=endMsgFlag[2];
+                                i=2;
+                                continue;
+                            }
+                            if (i>2) {
+                                for (int n=1;n<=i;n++) ba[n-1]=ba[n];
+                                --i;
+                            }
+                        } else {
+                            if (msgType==-1) msgType=MessageUtils.decideMsg(ba);
+                            if (msgType==0) {//0=控制消息(一般消息)
+                                if (isAck==-1&&i==12) {
+                                    if (((ba[2]&0x80)==0x80)&&((ba[2]&0x00)==0x00)&&((ba[i-1]&0xF0)==0x00)) isAck=1; else isAck=0;
+                                    if ((ba[i-1]&0xF0)==0xF0) isRegist=1;
+                                } else  if (isAck==1) {//是回复消息
+                                    if (isRegist==1) { //是注册消息
+                                        if (i==48&&endMsgFlag[2]==0) _dataLen=80; else _dataLen=91;
+                                        if (_dataLen>=0&&i==_dataLen) break;
+                                    } else { //非注册消息
+                                        if (_dataLen<0) _dataLen=45;
+                                        if (_dataLen>=0&&i==_dataLen) break;
+                                    }
+                                } else  if (isAck==0) {//是一般消息
+                                    if (isRegist==1) {//是注册消息
+                                        if (((ba[2]&0x80)==0x80)&&((ba[2]&0x00)==0x00)) {
+                                            if (i==48&&endMsgFlag[2]==0) _dataLen=80; else _dataLen=91;
+                                        } else {
+                                            if (i==47&&endMsgFlag[2]==0) _dataLen=79; else _dataLen=90;
+                                        }
+                                        if (_dataLen>=0&&i==_dataLen) break;
+                                    } else {//非注册消息
+                                        if (_dataLen==-3&&endMsgFlag[1]=='^'&&endMsgFlag[2]=='^') _dataLen++;
+                                        else if (_dataLen>-3&&_dataLen<-1) _dataLen++;
+                                        else if (_dataLen==-1) {
+                                            _dataLen=(short)(((endMsgFlag[2]<<8)|endMsgFlag[1]&0xff));
+                                            if (_dataLen==0) break;
+                                        } else if (_dataLen>=0) {
+                                            if (--_dataLen==0) break;
+                                        }
+                                    }
+                                }
+                            } else if (msgType==1) {//1=媒体消息
+                                if (isAck==-1) {
+                                    if (((ba[2]&0x80)==0x80)&&((ba[2]&0x40)==0x00)) isAck=1; else isAck=0;
+                                } else if (isAck==1) {//是回复消息
+                                    if (i==_headLen+1) break;
+                                } else if (isAck==0) {//是一般媒体消息
+                                    if (i==_headLen+2) _dataLen=(short)(((ba[_headLen+1]<<8)|ba[_headLen]&0xff));
+                                    if (_dataLen>=0&&i==_dataLen+_headLen+2) break;
+                                }
+                            }
+                        }
                     }
-                    fw.flush();
+                    fos.flush();
+                    mba=Arrays.copyOfRange(ba, 0, i);
+
+                    i=0;
+                    _dataLen=-3;
+                    hasBeginMsg=false;
+                    isAck=-1;
+                    isRegist=0;
+                    msgType=-1;
+                    endMsgFlag[0]=0x00;
+                    endMsgFlag[1]=0x00;
+                    endMsgFlag[2]=0x00;
+
                     long t=System.currentTimeMillis();
-                    if (sb.length()==0) continue;
+                    if (mba==null||mba.length<3) continue;
                     SocketHandle.this.lastVisitTime=t;
                     //判断是否是心跳信号
-                    if (sb.toString().equals("b")) { //发送回执心跳
-                        sendMsgQueue.add("B");
+                    if (mba.length==3&&mba[0]=='b'&&mba[1]=='^'&&mba[2]=='^') { //发送回执心跳
+                        byte[] rB=new byte[3];
+                        rB[0]='B';
+                        rB[1]='^';
+                        rB[2]='^';
+                        sendMsgQueue.add(rB);
                         continue;
                     }
 
                     try {
                         String temp=SocketHandle.this.mk==null?"NULL":SocketHandle.this.mk.toString();
-                        pmm.logQueue.add(t+"::recv::"+temp+"::"+sb);
+                        //pmm.logQueue.add(t+"::recv::"+temp+"::"+(new String(mba)));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
 
                     try {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> recMap=(Map<String, Object>)JsonUtils.jsonToObj(sb.toString(), Map.class);
-                        if (recMap!=null&&recMap.size()>0) {
-                            //处理注册
-                            Map<String, Object> retM=MobileUtils.dealMobileLinked(recMap, 1);
-                            if ((""+retM.get("ReturnType")).equals("2003")) {
-                                String outStr="[{\"MsgId\":\""+SequenceUUID.getUUIDSubSegment(4)+"\",\"ReMsgId\":\""+recMap.get("MsgId")+"\",\"BizType\":\"NOLOG\"}]";//空，无内容包括已经收到
-                                sendMsgQueue.add(outStr);
-                            } else {
-                                SocketHandle.this.mk=MobileUtils.getMobileKey(recMap);
-                                if (SocketHandle.this.mk!=null) {//存入接收队列
-                                    pmm.setUserSocketMap(SocketHandle.this.mk, SocketHandle.this);
-                                    if (!(recMap.get("BizType")+"").equals("REGIST")) pmm.getReceiveMemory().addPureQueue(recMap);
+                        Message ms=MessageUtils.buildMsgByBytes(mba);
+                        System.out.println("SocketHashCode["+socket.hashCode()+"]001::"+JsonUtils.objToJson(ms));
+                        if (ms!=null&&!ms.isAck()) {
+                            if (ms instanceof MsgNormal) {
+                                //处理注册
+                                Map<String, Object> retM=MobileUtils.dealMobileLinked(ms, 1);
+                                if ((""+retM.get("ReturnType")).equals("2003")) {
+                                    MsgNormal ackM=MessageUtils.buildAckMsg((MsgNormal)ms);
+                                    ackM.setBizType(15);
+                                    ackM.setPCDType(((MsgNormal)ms).getPCDType());
+                                    ackM.setUserId(((MsgNormal)ms).getUserId());
+                                    ackM.setIMEI(((MsgNormal)ms).getIMEI());
+                                    ackM.setReturnType(0);
+                                    sendMsgQueue.add(ackM.toBytes());
+                                } else {
+                                    SocketHandle.this.mk=MobileUtils.getMobileKey(ms);
+                                    System.out.println("SocketHashCode["+socket.hashCode()+"]002::"+mk.toString()+"::"+(pmm.userSocketM.get(mk)).socketDesc);
+                                    if (SocketHandle.this.mk!=null) {//存入接收队列
+                                        pmm.setUserSocketMap(SocketHandle.this.mk, SocketHandle.this);
+                                        if (((MsgNormal)ms).getBizType()!=15) pmm.getReceiveMemory().addPureQueue(ms);
+                                    }
                                 }
+                            } else {
+                                ((MsgMedia)ms).setExtInfo(SocketHandle.this.mk);
+                                pmm.getReceiveMemory().addPureQueue(ms);
                             }
                         }
                     } catch(Exception e) {
-                        e.printStackTrace();
                         System.out.println("==============================================================");
-                        System.out.println("EXCEPTIOIN::"+e.getClass().getName()+"/t"+e.getMessage());
-                        System.out.println("JSONERROR::"+sb);
+                        e.printStackTrace();
                         System.out.println("==============================================================");
                     }
                 }
@@ -467,6 +596,8 @@ public class SocketHandle extends Thread {
                 long t=System.currentTimeMillis();
                 System.out.println("<{"+t+"}"+DateUtils.convert2LocalStr("yyyy-MM-dd HH:mm:ss:SSS", new Date(t))+">"+socketDesc+"字节流处理线程出现异常:" + e.getMessage());
             } finally {
+                try { fos.close(); } catch (Exception e) {};
+                fos=null;
                 this.isRunning=false;
             }
         }

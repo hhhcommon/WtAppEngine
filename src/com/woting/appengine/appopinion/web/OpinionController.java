@@ -18,7 +18,7 @@ import com.woting.appengine.appopinion.persistence.pojo.AppOpinionPo;
 import com.woting.appengine.appopinion.persistence.pojo.AppReOpinionPo;
 import com.woting.appengine.appopinion.service.AppOpinionService;
 import com.woting.appengine.common.util.MobileUtils;
-import com.woting.appengine.common.util.RequestUtils;
+import com.spiritdata.framework.util.RequestUtils;
 import com.woting.appengine.mobile.session.model.MobileSession;
 
 @Controller

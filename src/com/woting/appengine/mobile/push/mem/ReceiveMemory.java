@@ -1,11 +1,11 @@
 package com.woting.appengine.mobile.push.mem;
 
-import java.util.Map;
+//import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.Message;
 
 /**
  * 消息接收的数据结构。<br/>
@@ -26,14 +26,14 @@ public class ReceiveMemory {
     }
     //java的占位单例模式===end0
 
-    private ConcurrentLinkedQueue<Map<String, Object>> pureMsgQueue; //总接收队列所有收到的信息都会暂时先放入这个队列中
+    private ConcurrentLinkedQueue<Message> pureMsgQueue; //总接收队列所有收到的信息都会暂时先放入这个队列中
     private ConcurrentHashMap<String, ConcurrentLinkedDeque<Message>> typeMsgMap; //分类接收队列，不同类型的消息会由不同类去处理
 
     /*
      * 初始化，创建两个主要的对象
      */
     private ReceiveMemory() {
-       this.pureMsgQueue=new ConcurrentLinkedQueue<Map<String, Object>>();
+       this.pureMsgQueue=new ConcurrentLinkedQueue<Message>();
        this.typeMsgMap=new ConcurrentHashMap<String, ConcurrentLinkedDeque<Message>>();
     }
 
@@ -43,7 +43,7 @@ public class ReceiveMemory {
      * @param msg 消息，此消息是从底层读取的最原始的消息，采用字节数组
      * @return 若成功插入，返回true，否则返回false，由于总接收队列是无边界的并发链表队列，理论上不会返回false
      */
-    public boolean addPureQueue(Map<String, Object> msg) {
+    public boolean addPureQueue(Message msg) {
         return this.pureMsgQueue.offer(msg);
     }
 
@@ -51,7 +51,7 @@ public class ReceiveMemory {
      * 从原始接收队列获取消息，并从队列移除该消息
      * @return  消息元素
      */
-    public synchronized Map<String, Object> pollPureQueue() {
+    public synchronized Message pollPureQueue() {
         if (this.pureMsgQueue==null) return null;
         return this.pureMsgQueue.poll();
     }

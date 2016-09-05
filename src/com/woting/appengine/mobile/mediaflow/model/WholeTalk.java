@@ -9,7 +9,7 @@ import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.intercom.model.GroupInterCom;
 import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
-import com.woting.appengine.mobile.push.model.Message;
+import com.woting.push.core.message.Message;
 
 /**
  * 一次完整的通话：
@@ -260,31 +260,31 @@ public class WholeTalk {
                                         }
                                     }
                                     if (ts.getSendFlagMap().get(k)==1) {//重新发送
-                                        Message bMsg=new Message();
-                                        bMsg.setFromAddr("{(audioflow)@@(www.woting.fm||S)}");
-                                        bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                                        bMsg.setMsgType(1);
-                                        bMsg.setAffirm(1);
-                                        bMsg.setMsgBizType("AUDIOFLOW");
-                                        bMsg.setCmdType(_wt.getTalkType()==1?"TALK_INTERCOM":"TALK_TELPHONE");
-                                        bMsg.setCommand("b1");
-                                        Map<String, Object> dataMap=new HashMap<String, Object>();
-                                        dataMap.put("TalkId", talkId);
-                                        dataMap.put("ObjId", _wt.getObjId());
-                                        dataMap.put("SeqNum", ts.getSeqNum()+"");
-                                        dataMap.put("AudioData", new String(ts.getData()));
-                                        System.out.println("======重发[seqNum="+ts.getSeqNum()+"]="+ts.getSendTimeMap().get(k).size()+"次===============================================");
-                                        bMsg.setMsgContent(dataMap);
-
-                                        String _sp[] = k.split("::");
-                                        MobileKey mk=new MobileKey();
-                                        mk.setMobileId(_sp[0]);
-                                        mk.setPCDType(Integer.parseInt(_sp[1]));
-                                        mk.setUserId(_sp[2]);
-                                        bMsg.setToAddr(MobileUtils.getAddr(mk));
-                                        pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareAudioFlowMsg());
-                                        ts.getSendFlagMap().put(k, 0);
-                                        ts.getSendTimeMap().get(k).add(System.currentTimeMillis());
+//                                        Message bMsg=new Message();
+//                                        bMsg.setFromAddr("{(audioflow)@@(www.woting.fm||S)}");
+//                                        bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+//                                        bMsg.setMsgType(1);
+//                                        bMsg.setAffirm(1);
+//                                        bMsg.setMsgBizType("AUDIOFLOW");
+//                                        bMsg.setCmdType(_wt.getTalkType()==1?"TALK_INTERCOM":"TALK_TELPHONE");
+//                                        bMsg.setCommand("b1");
+//                                        Map<String, Object> dataMap=new HashMap<String, Object>();
+//                                        dataMap.put("TalkId", talkId);
+//                                        dataMap.put("ObjId", _wt.getObjId());
+//                                        dataMap.put("SeqNum", ts.getSeqNum()+"");
+//                                        dataMap.put("AudioData", new String(ts.getData()));
+//                                        System.out.println("======重发[seqNum="+ts.getSeqNum()+"]="+ts.getSendTimeMap().get(k).size()+"次===============================================");
+//                                        bMsg.setMsgContent(dataMap);
+//
+//                                        String _sp[] = k.split("::");
+//                                        MobileKey mk=new MobileKey();
+//                                        mk.setMobileId(_sp[0]);
+//                                        mk.setPCDType(Integer.parseInt(_sp[1]));
+//                                        mk.setUserId(_sp[2]);
+//                                        bMsg.setToAddr(MobileUtils.getAddr(mk));
+//                                        pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareAudioFlowMsg());
+//                                        ts.getSendFlagMap().put(k, 0);
+//                                        ts.getSendTimeMap().get(k).add(System.currentTimeMillis());
                                     }
                                 }
                             }

@@ -1,6 +1,7 @@
 package com.woting.passport.web;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.common.util.MobileUtils;
-import com.woting.appengine.common.util.RequestUtils;
+import com.spiritdata.framework.util.DateUtils;
+import com.spiritdata.framework.util.RequestUtils;
 import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
@@ -217,6 +219,7 @@ public class FriendController {
                     um.put("UserName", u.get("loginName"));
                     um.put("InviteMesage", u.get("inviteMessage"));
                     um.put("Portrait", u.get("portraitMini"));
+                    um.put("InviteTime", ((Date)u.get("inviteTime")).getTime()+"");
                     rul.add(um);
                 }
                 map.put("ReturnType", "1001");

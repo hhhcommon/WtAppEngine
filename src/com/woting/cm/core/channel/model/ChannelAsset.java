@@ -120,7 +120,7 @@ public class ChannelAsset implements Serializable, ModelSwapPo {
         if (StringUtils.isNullOrEmptyOrSpace(this.getId())) ret.setId(SequenceUUID.getPureUUID());
         else ret.setId(this.getId());
 
-        ret.setChannelId(ch.getId());
+        if (ch!=null&&!StringUtils.isNullOrEmptyOrSpace(ch.getId())) ret.setChannelId(ch.getId());
         ret.setPublisherId(publisherId);
         ret.setCheckerId(checkerId);
         ret.setInRuleIds(inRuleIds);
@@ -166,6 +166,7 @@ public class ChannelAsset implements Serializable, ModelSwapPo {
         flowFlag=_po.getFlowFlag();
         CTime=_po.getCTime();
         pubTime=_po.getPubTime();
+
         //所对应的栏目和发布对象不能在这里获得，这里只是进行记录
         Channel c=new Channel();
         c.setId(_po.getChannelId());

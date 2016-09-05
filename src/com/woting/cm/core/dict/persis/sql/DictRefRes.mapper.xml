@@ -10,18 +10,13 @@
     <result  column="resTableName"  property="resTableName"  jdbcType="VARCHAR"/>
     <result  column="resId"         property="resId"         jdbcType="VARCHAR"/>
     <result  column="dictMid"       property="dictMid"       jdbcType="VARCHAR"/>
-    <result  column="dictMName"     property="dictMName"     jdbcType="VARCHAR"/>
     <result  column="dictDid"       property="dictDid"       jdbcType="VARCHAR"/>
-    <result  column="title"         property="title"         jdbcType="VARCHAR"/>
-    <result  column="bCode"         property="BCode"         jdbcType="VARCHAR"/>
-    <result  column="pathNames"     property="pathNames"     jdbcType="VARCHAR"/>
-    <result  column="pathIds"       property="pathIds"       jdbcType="VARCHAR"/>
     <result  column="cTime"         property="CTime"         jdbcType="TIMESTAMP"/>
   </resultMap>
 
   <!-- 所有列 -->
   <sql id="Base_Column_List">
-    id, refName, resTableName, resId, dictMid, dictMName, dictDid, title, bCode, pathNames, pathIds, cTime
+    id, refName, resTableName, resId, dictMid, dictDid, cTime
   </sql>
 
   <!-- 条件子句 -->
@@ -33,12 +28,7 @@
         <if test="resTableName!=null"> and resTableName=#{resTableName,jdbcType=VARCHAR}</if>
         <if test="resId!=null"> and resId=#{resId,jdbcType=VARCHAR}</if>
         <if test="dictMid!=null"> and dictMid=#{dictMid,jdbcType=VARCHAR}</if>
-        <if test="dictMName!=null"> and dictMName=#{dictMName,jdbcType=VARCHAR}</if>
         <if test="dictDid!=null"> and dictDid=#{dictDid,jdbcType=VARCHAR}</if>
-        <if test="title!=null"> and title=#{title,jdbcType=VARCHAR}</if>
-        <if test="BCode!=null"> and bCode=#{BCode,jdbcType=VARCHAR}</if>
-        <if test="pathNames!=null"> and pathNames=#{pathNames,jdbcType=VARCHAR}</if>
-        <if test="pathIds!=null"> and pathIds=#{pathIds,jdbcType=VARCHAR}</if>
         <if test="CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
       </trim>
     </where>
@@ -53,12 +43,7 @@
       <if test="resTableName!=null">resTableName,</if>
       <if test="resId!=null">resId,</if>
       <if test="dictMid!=null">dictMid,</if>
-      <if test="dictMName!=null">dictMName,</if>
       <if test="dictDid!=null">dictDid,</if>
-      <if test="title!=null">title,</if>
-      <if test="BCode!=null">bCode,</if>
-      <if test="pathNames!=null">pathNames,</if>
-      <if test="pathIds!=null">pathIds,</if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
@@ -66,12 +51,7 @@
       <if test="resTableName!=null">#{resTableName,jdbcType=VARCHAR},</if>
       <if test="resId!=null">#{resId,jdbcType=VARCHAR},</if>
       <if test="dictMid!=null">#{dictMid,jdbcType=VARCHAR},</if>
-      <if test="dictMName!=null">#{dictMName,jdbcType=VARCHAR},</if>
       <if test="dictDid!=null">#{dictDid,jdbcType=VARCHAR},</if>
-      <if test="title!=null">#{title,jdbcType=VARCHAR},</if>
-      <if test="BCode!=null">#{BCode,jdbcType=VARCHAR},</if>
-      <if test="pathNames!=null">#{pathNames,jdbcType=VARCHAR},</if>
-      <if test="pathIds!=null">#{pathIds,jdbcType=VARCHAR},</if>
     </trim>
   </insert>
 
@@ -83,19 +63,19 @@
       <if test="resTableName!=null">resTableName=#{resTableName,jdbcType=VARCHAR},</if>
       <if test="resId!=null">resId=#{resId,jdbcType=VARCHAR},</if>
       <if test="dictMid!=null">pId=#{dictMid,jdbcType=VARCHAR},</if>
-      <if test="dictMName!=null">dictMName=#{dictMName,jdbcType=VARCHAR},</if>
       <if test="dictDid!=null">dictDid=#{dictDid,jdbcType=VARCHAR},</if>
-      <if test="title!=null">title=#{title,jdbcType=VARCHAR},</if>
-      <if test="BCode!=null">bCode=#{BCode,jdbcType=VARCHAR},</if>
-      <if test="pathNames!=null">pathNames=#{pathNames,jdbcType=VARCHAR},</if>
-      <if test="pathIds!=null">pathIds=#{pathIds,jdbcType=VARCHAR},</if>
       <if test="CTime=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
     </set>
     where id=#{id,jdbcType=VARCHAR}
   </update>
 
+  <!-- 看是否有关联 -->
+  <select id="existRefDict" parameterType="java.lang.String" resultType="java.lang.Integer">
+    select count(*) from wt_ResDict_Ref where ${value}
+  </select>
+
   <!-- 获得列表 -->
-  <select id="getList" resultMap="dictRefResMap" parameterType="java.util.Map">
+  <select id="getList" parameterType="java.util.Map" resultMap="dictRefResMap">
     select <include refid="Base_Column_List"/> from wt_ResDict_Ref
     <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/>
     <if test="orderByClause!=null">order by ${orderByClause}</if>
@@ -105,6 +85,10 @@
     select <include refid="Base_Column_List"/> from wt_ResDict_Ref
     where resTableName=#{resTableName,jdbcType=VARCHAR} and resId in (${resIds})
     <if test="orderByClause!=null">order by ${orderByClause}</if>
+  </select>
+  
+  <select id="getListByResId" resultMap="dictRefResMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_ResDict_Ref where resId=#{resId,jdbcType=VARCHAR}
   </select>
 
   <!-- 获得一条数据 -->
@@ -118,5 +102,11 @@
   <!-- 删除数据 -->
   <delete id="multiDelBc" parameterType="java.lang.String">
     delete from wt_ResDict_Ref where resId in (${value}) and resTableName='wt_Broadcast'
+  </delete>
+  <delete id="multiDelByResId" parameterType="java.lang.String">
+    delete from wt_ResDict_Ref where resId=#{resId,jdbcType=VARCHAR}
+  </delete>
+  <delete id="delByDicts" parameterType="java.lang.String">
+    delete from wt_ResDict_Ref where ${value}
   </delete>
 </mapper>

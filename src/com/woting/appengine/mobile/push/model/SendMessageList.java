@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.mobile.model.MobileKey;
+import com.woting.push.core.message.Message;
+import com.woting.push.core.message.MsgNormal;
 
 /**
  * 已发送消息列表。要保证其列中消息指向同一个设备，并且消息定应该是需要确认的消息,m.isAffirm()为真。
@@ -29,10 +31,12 @@ public class SendMessageList {
      */
     public boolean add(Message m) throws IllegalAccessException {
         if (!m.isAffirm()) throw new IllegalAccessException("消息为不需要确认的消息，无需加入");
-        if (this.mk!=null&&!this.mk.equals(MobileUtils.getMobileKey(m,1))) throw new IllegalAccessException("不是同一设备的消息，不能加入");
+        if (m instanceof MsgNormal) {
+            if (this.mk!=null&&!this.mk.equals(MobileUtils.getMobileKey(m))) throw new IllegalAccessException("不是同一设备的消息，不能加入");
+        }
 
         if (this.msgList.size()==0) {
-            if (this.mk==null) this.mk=MobileUtils.getMobileKey(m,1);
+            if (this.mk==null) this.mk=MobileUtils.getMobileKey(m);
             return this.msgList.add(m);
         } else {
             //排序查找，从后向前

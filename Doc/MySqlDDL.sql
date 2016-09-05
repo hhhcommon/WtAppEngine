@@ -265,7 +265,7 @@ CREATE TABLE wt_BCLiveFlow (
   bcSrcId           varchar(32)                           COMMENT '来源Id，当bcScrType=1',
   bcSource          varchar(100)     NOT NULL             COMMENT '来源，名称',
   flowURI           varchar(300)     NOT NULL             COMMENT '直播流URL',
-  bcSrcChannelId	varchar(32)			                  COMMENT '外抓平台电台对外Id',
+  bcSrcChannelId	  varchar(32)			                      COMMENT '外抓平台电台对外Id',
   isMain            int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '是否是主直播流；1是主直播流',
   descn             varchar(4000)                         COMMENT '直播流描述',
   cTime             timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
@@ -433,10 +433,10 @@ CREATE TABLE wt_ResDict_Ref (
   resTableName  varchar(200)   NOT NULL  COMMENT '资源类型Id：1电台；2单体媒体资源；3专辑资源',
   resId         varchar(32)    NOT NULL  COMMENT '资源Id',
   dictMid       varchar(32)    NOT NULL  COMMENT '字典组Id',
-  dictMName     varchar(200)   NOT NULL  COMMENT '字典组名称',
   dictDid       varchar(32)    NOT NULL  COMMENT '字典项Id',
+  dictMName     varchar(200)   NOT NULL  COMMENT '字典组名称',
   title         varchar(200)   NOT NULL  COMMENT '字典项名称',
-  bCode         varchar(200)   NOT NULL  COMMENT '字典项业务编码',
+  bCode         varchar(200)             COMMENT '字典项业务编码',
   pathNames     varchar(1000)  NOT NULL  COMMENT '字典项全名称',
   pathIds       varchar(100)   NOT NULL  COMMENT '字典项路径Id',
   cTime         timestamp      NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
@@ -784,12 +784,12 @@ delete from wt_channel;
 delete from wt_channelasset;
 
 
-update wt_Person_Ref set resTableName='wt_Broadcast' where resTableName='1';
-update wt_Person_Ref set resTableName='wt_MediaAsset' where resTableName='2';
-update wt_Person_Ref set resTableName='wt_SeqMediaAsset' where resTableName='3';
+update wt_User_Ref set resTableName='wt_Broadcast' where resTableName='1';
+update wt_User_Ref set resTableName='wt_MediaAsset' where resTableName='2';
+update wt_User_Ref set resTableName='wt_SeqMediaAsset' where resTableName='3';
 
-update wt_ResDict_Ref set resTableName='wt_Broadcast' where resTableName='1';
-update wt_ResDict_Ref set resTableName='wt_MediaAsset' where resTableName='2';
-update wt_ResDict_Ref set resTableName='wt_SeqMediaAsset' where resTableName='3';
+update wt_User_Ref set resTableName='wt_Broadcast' where resTableName='1';
+update wt_User_Ref set resTableName='wt_MediaAsset' where resTableName='2';
+update wt_User_Ref set resTableName='wt_SeqMediaAsset' where resTableName='3';
 
 
