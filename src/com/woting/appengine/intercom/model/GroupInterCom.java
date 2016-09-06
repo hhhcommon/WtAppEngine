@@ -6,13 +6,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.spiritdata.framework.util.SequenceUUID;
-import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.push.core.message.CompareMsg;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.push.core.message.content.MapContent;
 import com.woting.passport.UGA.model.Group;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.mobile.MobileUDKey;
 
 /**
  * 对讲用户组结构
@@ -71,7 +71,7 @@ public class GroupInterCom {
      *          若原对讲者不为空，不允许设置，返回对讲者对象
      *          若原对讲者不为空，不允许设置，返回<"O",null>，只有<"F",this.speaker>，原一个人在对讲组
      */
-    synchronized public Map<String, UserPo> setSpeaker(MobileKey speakerKey) {
+    synchronized public Map<String, UserPo> setSpeaker(MobileUDKey speakerKey) {
         Map<String, UserPo> ret = new HashMap<String, UserPo>();
         if (this.entryGroupUserMap.size()==0) ret.put("E", null);
         else {
@@ -101,7 +101,7 @@ public class GroupInterCom {
      * @param speakerMk 需要退出对讲的对讲人
      * @return 若当前不存在对讲人，返回-1；若当前对讲人与需要退出者为同一人，则清空当前对讲人，返回1；若当前对讲人与需要退出者不同，则返回0；
      */
-    synchronized public int endPTT(MobileKey speakerMk) {
+    synchronized public int endPTT(MobileUDKey speakerMk) {
         if (this.speaker==null) return -1;
         if (speakerMk.getUserId().equals(this.speaker.getUserId())) {
             //this.speaker=null;
@@ -111,14 +111,14 @@ public class GroupInterCom {
 
     /**
      * 把用户加入组进入Map
-     * @param mk 用户标识
+     * @param mUdk 用户标识
      * @return
      *   returnType=1成功；2用户已在加入组Map，无需再次加入；3用户不在用户组
      *   entryGroupUsers=返回处理后的进入组用户Map；(当且仅当returnType=1)
      *   needBroadCast=是否需要广播消息；(当且仅当returnType=1)
      */
-    synchronized public Map<String, Object> insertEntryUser(MobileKey mk) {
-        return toggleEntryUser(mk, 0);
+    synchronized public Map<String, Object> insertEntryUser(MobileUDKey mUdk) {
+        return toggleEntryUser(mUdk, 0);
     }
     /**
      * 把用户剔出组进入Map
@@ -128,8 +128,8 @@ public class GroupInterCom {
      *   entryGroupUsers=返回处理后的进入组用户Map；(当且仅当returnType=1)
      *   needBroadCast=是否需要广播消息；(当且仅当returnType=1)
      */
-    synchronized public Map<String, Object> delEntryUser(MobileKey mk) {
-        return toggleEntryUser(mk, 1);
+    synchronized public Map<String, Object> delEntryUser(MobileUDKey mUdk) {
+        return toggleEntryUser(mUdk, 1);
     }
 
     /*
@@ -141,7 +141,7 @@ public class GroupInterCom {
      *   entryGroupUsers=返回处理后的进入组用户Map；(当且仅当returnType=1)
      *   needBroadCast=是否需要广播消息；(当且仅当returnType=1)
      */
-    synchronized private Map<String, Object> toggleEntryUser(MobileKey mk, int type) {
+    synchronized private Map<String, Object> toggleEntryUser(MobileUDKey mUdk, int type) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
         UserPo entryUp=null;
@@ -150,7 +150,7 @@ public class GroupInterCom {
         //判断加入的用户是否属于这个组
         boolean exist=false;
         for (UserPo up: _tl) {
-            if (mk.getUserId().equals(up.getUserId())) {
+            if (mUdk.getUserId().equals(up.getUserId())) {
                 exist=true;
                 entryUp=up;
                 break;
@@ -163,24 +163,24 @@ public class GroupInterCom {
 
         //用户在加入组Map的状态
         retM.put("returnType", "2");
-        exist=entryGroupUserMap.containsKey(mk.toString());
+        exist=entryGroupUserMap.containsKey(mUdk.toString());
 
         if (!exist&&type==0) {//进入组处理
             int oldSize=entryGroupUserMap.size();
             String delKey=null;
             for (String key: this.entryGroupUserMap.keySet()) {
-                if (key.indexOf("::"+mk.getUserId())!=-1) {
+                if (key.indexOf("::"+mUdk.getUserId())!=-1) {
                     delKey=key;
                     break;
                 }
             }
             if (delKey!=null) this.entryGroupUserMap.remove(delKey);
-            this.entryGroupUserMap.put(mk.toString(), entryUp);
+            this.entryGroupUserMap.put(mUdk.toString(), entryUp);
             retM.put("returnType", "1");
             retM.put("entryGroupUsers", this.cloneEntryGroupUserMap());
             if (oldSize>0) retM.put("needBroadCast", "1");
         } else if (exist&&type==1) {//退出组处理
-            this.entryGroupUserMap.remove(mk.toString());
+            this.entryGroupUserMap.remove(mUdk.toString());
             retM.put("returnType", "1");
             retM.put("entryGroupUsers", this.cloneEntryGroupUserMap());
             if (this.entryGroupUserMap.size()>0) retM.put("needBroadCast", "1");
@@ -235,11 +235,11 @@ public class GroupInterCom {
             Map<String, UserPo> entryGroupUsers=this.getEntryGroupUserMap();
             for (String k: entryGroupUsers.keySet()) {
                 String _sp[] = k.split("::");
-                MobileKey mk=new MobileKey();
-                mk.setMobileId(_sp[0]);
-                mk.setPCDType(Integer.parseInt(_sp[1]));
-                mk.setUserId(_sp[2]);
-                pmm.getSendMemory().addUniqueMsg2Queue(mk, exitPttMsg, new CompareGroupMsg());
+                MobileUDKey mUdk=new MobileUDKey();
+                mUdk.setDeviceId(_sp[0]);
+                mUdk.setPCDType(Integer.parseInt(_sp[1]));
+                mUdk.setUserId(_sp[2]);
+                pmm.getSendMemory().addUniqueMsg2Queue(mUdk, exitPttMsg, new CompareGroupMsg());
             }
             this.isSendEndPPTMsg.lazySet(true);
         }

@@ -3,13 +3,10 @@ package com.woting.appengine.mobile.mediaflow.model;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.spiritdata.framework.util.SequenceUUID;
-import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.intercom.model.GroupInterCom;
-import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
-import com.woting.push.core.message.Message;
+import com.woting.passport.mobile.MobileUDKey;
 
 /**
  * 一次完整的通话：
@@ -34,7 +31,7 @@ public class WholeTalk {
     private String talkId; //通话的Id
     private int talkType; //通话类型，目前仅有两类：1=对讲；2=电话
     private String objId; //通话所对应的对讲的Id，当为对讲时是groupId，当为电话时是callId
-    private MobileKey talkerMk; //讲话人Id
+    private MobileUDKey talkerMk; //讲话人Id
     private int MaxNum=0; //当前通话的最大包数
     private int lastNum=0; //最后一个包号
     private Map<Integer, TalkSegment> talkData; //通话的完整数据
@@ -67,10 +64,10 @@ public class WholeTalk {
     public void setTalkData(Map<Integer, TalkSegment> talkData) {
         this.talkData=talkData;
     }
-    public MobileKey getTalkerMk() {
+    public MobileUDKey getTalkerMk() {
         return talkerMk;
     }
-    public void setTalkerMk(MobileKey talkerMk) {
+    public void setTalkerMk(MobileUDKey talkerMk) {
         this.talkerMk=talkerMk;
     }
     public String getTalkerId() {

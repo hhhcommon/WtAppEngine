@@ -12,9 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.common.util.MobileUtils;
+import com.woting.passport.mobile.MobileParam;
+import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.SessionService;
 import com.spiritdata.framework.util.RequestUtils;
-import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.version.core.model.Version;
 import com.woting.version.core.service.VersionService;
 
@@ -31,11 +32,8 @@ public class VersionController {
         try {
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m!=null&&m.size()>0) {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                MobileSession ms=(MobileSession)retM.get("MobileSession");
-                try {
-                    map.put("SessionId", ms.getKey().getSessionId());
-                } catch(Exception e) {}
+                MobileUDKey mUdk=MobileParam.build(m).getUserDeviceKey();
+                if (mUdk!=null) map.putAll(mUdk.toHashMapAsBean());
 
                 //1-获取版本号
                 String version=m.get("Version")==null?null:m.get("Version")+"";
@@ -73,11 +71,8 @@ public class VersionController {
         try {
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m!=null&&m.size()>0) {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                MobileSession ms=(MobileSession)retM.get("MobileSession");
-                try {
-                    map.put("SessionId", ms.getKey().getSessionId());
-                } catch(Exception e) {}
+                MobileUDKey mUdk=MobileParam.build(m).getUserDeviceKey();
+                if (mUdk!=null) map.putAll(mUdk.toHashMapAsBean());
 
                 //1-获取App版本号
                 String version=m.get("Version")==null?null:(m.get("Version")+"");

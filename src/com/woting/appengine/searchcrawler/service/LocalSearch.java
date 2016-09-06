@@ -7,8 +7,8 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.woting.appengine.content.service.ContentService;
-import com.woting.appengine.mobile.MobileUDKey;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
+import com.woting.passport.mobile.MobileUDKey;
 
 public class LocalSearch extends Thread {
 

@@ -13,13 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.common.util.MobileUtils;
 import com.spiritdata.framework.util.RequestUtils;
 import com.woting.appengine.content.service.ContentService;
-import com.woting.appengine.mobile.model.MobileKey;
-import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 import com.woting.favorite.service.FavoriteService;
+import com.woting.passport.mobile.MobileParam;
+import com.woting.passport.mobile.MobileUDKey;
 
 @Controller
 @RequestMapping(value="/content/")
@@ -45,9 +44,8 @@ public class ContentController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                MobileSession ms=(MobileSession)retM.get("MobileSession");
-                map.put("SessionId", ms.getKey().getSessionId());
+                MobileUDKey mUdk=MobileParam.build(m).getUserDeviceKey();
+                map.putAll(mUdk.toHashMapAsBean());
             }
             if (map.get("ReturnType")!=null) return map;
 
@@ -114,9 +112,8 @@ public class ContentController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                MobileSession ms=(MobileSession)retM.get("MobileSession");
-                map.put("SessionId", ms.getKey().getSessionId());
+                MobileUDKey mUdk=MobileParam.build(m).getUserDeviceKey();
+                map.putAll(mUdk.toHashMapAsBean());
             }
             if (map.get("ReturnType")!=null) return map;
 
@@ -153,8 +150,8 @@ public class ContentController {
                 filter=(Map)m.get("FilterData");
             } catch(Exception e) {}
 
-            MobileKey mk=MobileUtils.getMobileKey(m);
-            Map<String, Object> contents=contentService.getContents(catalogType, catalogId, resultType, mediaType, perSize, pageSize, page, beginCatalogId, pageType, mk, filter);
+            MobileUDKey mUdk=MobileParam.build(m).getUserDeviceKey();
+            Map<String, Object> contents=contentService.getContents(catalogType, catalogId, resultType, mediaType, perSize, pageSize, page, beginCatalogId, pageType, mUdk, filter);
             if (contents!=null&&contents.size()>0) {
                 map.put("ResultList", contents);
                 map.put("ReturnType", "1001");
@@ -179,13 +176,13 @@ public class ContentController {
         try {
             //0-获取参数
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            MobileUDKey mUdk=null;
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                MobileSession ms=(MobileSession)retM.get("MobileSession");
-                map.put("SessionId", ms.getKey().getSessionId());
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                map.putAll(mUdk.toHashMapAsBean());
             }
             if (map.get("ReturnType")!=null) return map;
 
@@ -211,12 +208,11 @@ public class ContentController {
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
 
             Map<String, Object> contentInfo=null;
-            MobileKey mk=MobileUtils.getMobileKey(m);
-            if (mediaType.equals("SEQU")) contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page, mk);
+            if (mediaType.equals("SEQU")) contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page, mUdk);
             else
             if (mediaType.equals("TTS"))  contentInfo=SearchUtils.getNewsInfo(contentId);
             else 
-            if (mediaType.equals("AUDIO"))  contentInfo=contentService.getMaInfo(contentId, mk);
+            if (mediaType.equals("AUDIO"))  contentInfo=contentService.getMaInfo(contentId, mUdk);
 
             if (contentInfo!=null&&contentInfo.size()>0) {
                 map.put("ResultInfo", contentInfo);
@@ -242,17 +238,16 @@ public class ContentController {
         try {
             //0-获取参数
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            MobileUDKey mUdk=null;
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                MobileSession ms=(MobileSession)retM.get("MobileSession");
-                map.put("SessionId", ms.getKey().getSessionId());
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                map.putAll(mUdk.toHashMapAsBean());
             }
             if (map.get("ReturnType")!=null) return map;
 
-            MobileKey mk=MobileUtils.getMobileKey(m);
             //1-得到内容类别
             String mediaType=(m.get("MediaType")==null?null:m.get("MediaType")+"");
             if (StringUtils.isNullOrEmptyOrSpace(mediaType)) {
@@ -272,7 +267,7 @@ public class ContentController {
             try {flag=Integer.parseInt(m.get("Flag")+"");} catch(Exception e) {};
             map.put("Flag", flag+"");
 
-            flag=favoriteService.favorite(mediaType, contentId, flag, mk);
+            flag=favoriteService.favorite(mediaType, contentId, flag, mUdk);
             
             if (flag==1) {
                 map.put("ReturnType", "1001");
@@ -307,17 +302,16 @@ public class ContentController {
         try {
             //0-获取参数
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            MobileUDKey mUdk=null;
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                MobileSession ms=(MobileSession)retM.get("MobileSession");
-                map.put("SessionId", ms.getKey().getSessionId());
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                map.putAll(mUdk.toHashMapAsBean());
             }
             if (map.get("ReturnType")!=null) return map;
 
-            MobileKey mk=MobileUtils.getMobileKey(m);
             //1-得到返回类型
             int resultType=3;
             try {resultType=Integer.parseInt(m.get("ResultType")+"");} catch(Exception e) {}
@@ -340,7 +334,7 @@ public class ContentController {
             if (StringUtils.isNullOrEmptyOrSpace(beginCatalogId)) beginCatalogId=null;
 
 
-            Map<String, Object> result=favoriteService.getFavoriteList(resultType, pageType, mediaType, pageSize, page, perSize, beginCatalogId, mk);
+            Map<String, Object> result=favoriteService.getFavoriteList(resultType, pageType, mediaType, pageSize, page, perSize, beginCatalogId, mUdk);
             
             if (result==null||result.isEmpty()) {
                 map.put("ReturnType", "1011");
@@ -366,18 +360,17 @@ public class ContentController {
         try {
             //0-获取参数
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            MobileUDKey mUdk=null;
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                MobileSession ms=(MobileSession)retM.get("MobileSession");
-                map.put("SessionId", ms.getKey().getSessionId());
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                map.putAll(mUdk.toHashMapAsBean());
             }
             if (map.get("ReturnType")!=null) return map;
 
-            MobileKey mk=MobileUtils.getMobileKey(m);
-            Map<String, Object> result=favoriteService.getFavoriteMTypeDistri(mk);
+            Map<String, Object> result=favoriteService.getFavoriteMTypeDistri(mUdk);
 
             if (result==null||result.isEmpty()) {
                 map.put("ReturnType", "1011");
@@ -403,17 +396,16 @@ public class ContentController {
         try {
             //0-获取参数
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            MobileUDKey mUdk=null;
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                MobileSession ms=(MobileSession)retM.get("MobileSession");
-                map.put("SessionId", ms.getKey().getSessionId());
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                map.putAll(mUdk.toHashMapAsBean());
             }
             if (map.get("ReturnType")!=null) return map;
 
-            MobileKey mk=MobileUtils.getMobileKey(m);
             //1-得到多个要删除的喜欢内容
             String delInfos=(m.get("DelInfos")==null?null:m.get("DelInfos")+"");
             if (StringUtils.isNullOrEmptyOrSpace(delInfos)) {
@@ -421,7 +413,7 @@ public class ContentController {
                 map.put("Message", "无法获得需要删除的内容信息");
                 return map;
             }
-            List<Map<String, Object>> result=favoriteService.delFavorites(delInfos, mk);
+            List<Map<String, Object>> result=favoriteService.delFavorites(delInfos, mUdk);
 
             if (result==null||result.isEmpty()) {
                 map.put("ReturnType", "1011");

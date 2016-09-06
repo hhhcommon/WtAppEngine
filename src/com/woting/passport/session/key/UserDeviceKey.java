@@ -2,11 +2,13 @@ package com.woting.passport.session.key;
 
 import java.io.Serializable;
 
+import com.spiritdata.framework.core.model.BaseObject;
+
 /**
  * 用户设备Key对象
  * @author wanghui
  */
-public class UserDeviceKey implements Serializable {
+public class UserDeviceKey extends BaseObject implements Serializable {
     private static final long serialVersionUID=8584805045595806786L;
 
     protected String deviceId; //设备Id，移动设备就是IMEI
@@ -62,4 +64,6 @@ public class UserDeviceKey implements Serializable {
     public String toString() {
         return this.deviceId+"::"+this.PCDType+"::"+this.userId;
     }
+
+    
 }

@@ -14,12 +14,13 @@ import com.spiritdata.framework.core.web.AbstractFileUploadController;
 import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.common.util.MobileUtils;
-import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.passport.UGA.persistence.pojo.GroupPo;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.GroupService;
 import com.woting.passport.UGA.service.UserService;
+import com.woting.passport.mobile.MobileParam;
+import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.SessionService;
 
 @Controller
 public class FileUploadController extends AbstractFileUploadController {
@@ -27,6 +28,8 @@ public class FileUploadController extends AbstractFileUploadController {
     private UserService userService;
     @Resource
     private GroupService groupService;
+    @Resource(name="redisSessionService")
+    private SessionService sessionService;
 
     @Override
     public Map<String, Object> afterUploadOneFileOnSuccess(Map<String, Object> m, Map<String, Object> a, Map<String, Object> p) {
@@ -35,12 +38,12 @@ public class FileUploadController extends AbstractFileUploadController {
         Map<String,Object> datamap=new HashMap<String, Object>();
         //0-获取参数
         String userId="";
-        MobileSession ms=null;
         if (p==null||p.size()==0) {
             datamap.put("ReturnType", "0000");
             datamap.put("Message", "无法获取需要的参数");
         } else {
-            Map<String, Object> retM = MobileUtils.dealMobileLinked(p, 0);
+            MobileUDKey mUdk=MobileParam.build(m).getUserDeviceKey();
+            Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
             if ((retM.get("ReturnType")+"").equals("2001")) {
                 datamap.put("ReturnType", "0000");
                 datamap.put("Message", "无法获取设备Id(IMEI)");
@@ -48,15 +51,12 @@ public class FileUploadController extends AbstractFileUploadController {
                 datamap.put("ReturnType", "200");
                 datamap.put("Message", "需要登录");
             } else {
-                ms=(MobileSession)retM.get("MobileSession");
-                datamap.put("SessionId", ms.getKey().getSessionId());
-                if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                datamap.putAll(mUdk.toHashMapAsBean());
             }
             if (datamap.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                 datamap.put("ReturnType", "1002");
                 datamap.put("Message", "无法获取用户Id，不能保存图片");
             }
-            datamap.put("SessionId", ms.getKey().getSessionId());
         }
         if (datamap.get("ReturnType")==null){
             String fType=p.get("FType")+"";
@@ -68,7 +68,7 @@ public class FileUploadController extends AbstractFileUploadController {
                     FileUtils.copyFile(new File(tempFileName), new File(FileNameUtils.concatPath(appPath,bigImgFileName)));
                     //图片文件缩略存储
                     //文件保存到数据库中
-                    UserPo u=(UserPo)ms.getAttribute("user");
+                    UserPo u=(UserPo)userService.getUserById(userId);
                     u.setPortraitBig(bigImgFileName);
                     u.setPortraitMini(bigImgFileName);
                     userService.updateUser(u);

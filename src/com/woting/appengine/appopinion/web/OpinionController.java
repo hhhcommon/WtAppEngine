@@ -17,15 +17,18 @@ import com.woting.appengine.appopinion.model.AppOpinion;
 import com.woting.appengine.appopinion.persistence.pojo.AppOpinionPo;
 import com.woting.appengine.appopinion.persistence.pojo.AppReOpinionPo;
 import com.woting.appengine.appopinion.service.AppOpinionService;
-import com.woting.appengine.common.util.MobileUtils;
 import com.spiritdata.framework.util.RequestUtils;
-import com.woting.appengine.mobile.session.model.MobileSession;
+import com.woting.passport.mobile.MobileParam;
+import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.SessionService;
 
 @Controller
 @RequestMapping(value="/opinion/app/")
 public class OpinionController {
     @Resource
     private AppOpinionService opinionsService;
+    @Resource(name="redisSessionService")
+    private SessionService sessionService;
 
     /**
      * 提交所提意见
@@ -39,13 +42,14 @@ public class OpinionController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -53,9 +57,9 @@ public class OpinionController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -74,11 +78,11 @@ public class OpinionController {
             //3-存储意见
             try {
                 AppOpinionPo po=new AppOpinionPo();
-                po.setImei(ms.getKey().getMobileId());
+                po.setImei(mUdk.getDeviceId());
                 po.setUserId(userId);
                 po.setOpinion(opinion);
                 //是否重复提交意见
-                List<AppOpinionPo> duplicates = opinionsService.getDuplicates(po);
+                List<AppOpinionPo> duplicates=opinionsService.getDuplicates(po);
                 if (duplicates!=null&&duplicates.size()>0) {
                     map.put("ReturnType", "1005");
                     map.put("Message", "该意见已经提交");
@@ -108,13 +112,14 @@ public class OpinionController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -122,9 +127,9 @@ public class OpinionController {
                     map.put("ReturnType", "200");
                     map.put("Message", "还未登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -133,7 +138,7 @@ public class OpinionController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            List<AppOpinion> ol = opinionsService.getOpinionsByOnwerId(userId, ms.getKey().getMobileId());
+            List<AppOpinion> ol=opinionsService.getOpinionsByOnwerId(userId, mUdk.getDeviceId());
             if (ol!=null&&ol.size()>0) {
                 map.put("ReturnType", "1001");
                 map.put("OpinionList", convertAppOpinon4View(ol));
@@ -152,7 +157,7 @@ public class OpinionController {
     }
 
     private List<Map<String, Object>> convertAppOpinon4View(List<AppOpinion> ol) {
-        List<Map<String, Object>> ret = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> ret=new ArrayList<Map<String, Object>>();
         List<Map<String, Object>> rel=null;
         List<AppReOpinionPo> reApl=null;
         Map<String, Object> selfOpinion=null, reOpinion=null;
@@ -163,7 +168,7 @@ public class OpinionController {
             selfOpinion.put("OpinionTime", ap.getCTime().getTime());
             reApl=ap.getReList();
             if (reApl!=null&&reApl.size()>0) {
-                rel = new ArrayList<Map<String, Object>>();
+                rel=new ArrayList<Map<String, Object>>();
                 for (AppReOpinionPo aro: reApl) {
                     reOpinion=new HashMap<String, Object>();
                     reOpinion.put("OpinionReId", aro.getId());

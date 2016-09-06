@@ -8,7 +8,7 @@ import com.woting.appengine.calling.model.OneCall;
 public class CallingMemoryManage {
     //java的占位单例模式===begin
     private static class InstanceHolder {
-        public static CallingMemoryManage instance = new CallingMemoryManage();
+        public static CallingMemoryManage instance=new CallingMemoryManage();
     }
     public static CallingMemoryManage getInstance() {
         return InstanceHolder.instance;
@@ -17,7 +17,7 @@ public class CallingMemoryManage {
 
     //数据区
     protected CallingMemory cm; //电话内存结构
-    private static final ReadWriteLock lock = new ReentrantReadWriteLock(); //读写锁 
+    private static final ReadWriteLock lock=new ReentrantReadWriteLock(); //读写锁 
 
     /*
      * 构造方法，初始化用户组的内存结构

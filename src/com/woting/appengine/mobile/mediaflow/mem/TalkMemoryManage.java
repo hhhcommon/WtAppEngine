@@ -9,12 +9,12 @@ import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.intercom.model.GroupInterCom;
 import com.woting.appengine.mobile.mediaflow.model.CompareGroupMsg;
 import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
-import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 //import com.woting.push.core.message.Message;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.push.core.message.content.MapContent;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.mobile.MobileUDKey;
 
 public class TalkMemoryManage {
     //java的占位单例模式===begin
@@ -61,7 +61,7 @@ public class TalkMemoryManage {
         if (this.tm.talkMap!=null&&!this.tm.talkMap.isEmpty()) {
             Map<String, Object> dataMap;
             MsgNormal exitPttMsg;
-            MobileKey mk;
+            MobileUDKey mUdk;
 
             PushMemoryManage pmm=PushMemoryManage.getInstance();
             for (String k: this.tm.talkMap.keySet()) {
@@ -95,11 +95,11 @@ public class TalkMemoryManage {
                             Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
                             for (String _k: entryGroupUsers.keySet()) {
                                 String _sp[] = _k.split("::");
-                                mk=new MobileKey();
-                                mk.setMobileId(_sp[0]);
-                                mk.setPCDType(Integer.parseInt(_sp[1]));
-                                mk.setUserId(_sp[2]);
-                                pmm.getSendMemory().addUniqueMsg2Queue(mk, exitPttMsg, new CompareGroupMsg());
+                                mUdk=new MobileUDKey();
+                                mUdk.setDeviceId(_sp[0]);
+                                mUdk.setPCDType(Integer.parseInt(_sp[1]));
+                                mUdk.setUserId(_sp[2]);
+                                pmm.getSendMemory().addUniqueMsg2Queue(mUdk, exitPttMsg, new CompareGroupMsg());
                             }
                         }
                         gic.delSpeaker(gic.getSpeaker()==null?null:gic.getSpeaker().getUserId());

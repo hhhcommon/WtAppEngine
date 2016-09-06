@@ -21,13 +21,13 @@ import com.spiritdata.framework.util.DateUtils;
 //import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
+import com.woting.passport.mobile.MobileParam;
 //import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.common.util.MobileUtils;
 //import com.woting.appengine.intercom.mem.GroupMemoryManage;
 //import com.woting.appengine.mobile.mediaflow.mem.TalkMemoryManage;
 //import com.woting.appengine.mobile.mediaflow.model.TalkSegment;
 //import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
-import com.woting.appengine.mobile.model.MobileKey;
+import com.woting.passport.mobile.MobileUDKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.push.core.message.Message;
 
@@ -59,7 +59,7 @@ public class SocketChannelHandle extends Thread {
     //数据
     protected SocketChannel socketChannel=null;
     protected String socketDesc;
-    protected MobileKey mk=null;
+    protected MobileUDKey mUdk=null;
     private ByteBuffer recvBuffer;
     private ByteBuffer sendBuffer;
     protected volatile Object socketSendLock=new Object();
@@ -172,7 +172,7 @@ public class SocketChannelHandle extends Thread {
             super.setName(name);
         }
         protected void _interrupt(){
-            isInterrupted = true;
+            isInterrupted=true;
             this.interrupt();
             super.interrupt();
         }
@@ -184,9 +184,9 @@ public class SocketChannelHandle extends Thread {
                         try { sleep(10); } catch (InterruptedException e) {};
                         long t=System.currentTimeMillis();
                         //发消息
-                        if (SocketChannelHandle.this.mk!=null) {
+                        if (SocketChannelHandle.this.mUdk!=null) {
                             //获得消息
-                            Message m=pmm.getSendMessages(mk);
+                            Message m=pmm.getSendMessages(mUdk);
                             String mStr="";
                             if (m!=null) {
 //                                mStr=m.toJson();
@@ -202,7 +202,7 @@ public class SocketChannelHandle extends Thread {
                                     if (canSend) {
                                         sendByChannel(mStr);
                                         try {
-                                            pmm.logQueue.add(t+"::send::"+mk.toString()+"::"+mStr);
+                                            pmm.logQueue.add(t+"::send::"+mUdk.toString()+"::"+mStr);
                                         } catch (Exception e) {
                                             e.printStackTrace();
                                         }
@@ -221,15 +221,15 @@ public class SocketChannelHandle extends Thread {
                                 }
                             }
                             //发送通知类消息
-                            if (mk.isUser()) {
-                                Message nm=pmm.getNotifyMessages(mk.getUserId());
+                            if (mUdk.isUser()) {
+                                Message nm=pmm.getNotifyMessages(mUdk.getUserId());
                                 if (nm!=null) {
 //                                    mStr=nm.toJson();
 //                                    nm.setToAddr(MobileUtils.getAddr(mk));
                                     synchronized(socketSendLock) {
                                         sendByChannel(mStr);
                                         try {
-                                            pmm.logQueue.add(t+"::send::"+mk.toString()+"::"+mStr);
+                                            pmm.logQueue.add(t+"::send::"+mUdk.toString()+"::"+mStr);
                                         } catch (Exception e) {
                                             e.printStackTrace();
                                         }
@@ -265,7 +265,7 @@ public class SocketChannelHandle extends Thread {
             super.setName(name);
         }
         protected void _interrupt(){
-            isInterrupted = true;
+            isInterrupted=true;
             super.interrupt();
             this.interrupt();
         }
@@ -318,7 +318,7 @@ public class SocketChannelHandle extends Thread {
             super.setName(name);
         }
         protected void _interrupt(){
-            isInterrupted = true;
+            isInterrupted=true;
             super.interrupt();
             this.interrupt();
         }
@@ -328,11 +328,11 @@ public class SocketChannelHandle extends Thread {
             File dir=new File(filePath);
             if (!dir.isDirectory()) dir.mkdirs();
             File f=new File(filePath+"/"+socketChannel.socket().hashCode()+".log");
-            FileWriter fw = null;
+            FileWriter fw=null;
             if (!f.exists()) {
                 try {
                     f.createNewFile();
-                    fw = new FileWriter(f, false);
+                    fw=new FileWriter(f, false);
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
@@ -364,7 +364,7 @@ public class SocketChannelHandle extends Thread {
                     }
 
                     try {
-                        String temp=SocketChannelHandle.this.mk==null?"NULL":SocketChannelHandle.this.mk.toString();
+                        String temp=SocketChannelHandle.this.mUdk==null?"NULL":SocketChannelHandle.this.mUdk.toString();
                         pmm.logQueue.add(t+"::recv::"+temp+"::"+sb);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -375,7 +375,7 @@ public class SocketChannelHandle extends Thread {
                         Map<String, Object> recMap=(Map<String, Object>)JsonUtils.jsonToObj(sb.toString(), Map.class);
                         if (recMap!=null&&recMap.size()>0) {
                             //处理注册
-                            Map<String, Object> retM = MobileUtils.dealMobileLinked(recMap, 1);
+                            Map<String, Object> retM=null;//MobileUtils.dealMobileLinked(recMap, 1);
                             if ((""+retM.get("ReturnType")).equals("2003")) {
                                 String outStr="[{\"MsgId\":\""+SequenceUUID.getUUIDSubSegment(4)+"\",\"ReMsgId\":\""+recMap.get("MsgId")+"\",\"BizType\":\"NOLOG\"}]";//空，无内容包括已经收到
                                 synchronized(socketSendLock) {
@@ -383,8 +383,8 @@ public class SocketChannelHandle extends Thread {
                                     try { sleep(10); } catch (InterruptedException e) {};//给10毫秒的延迟
                                 }
                             } else {
-                                SocketChannelHandle.this.mk=MobileUtils.getMobileKey(recMap);
-                                if (SocketChannelHandle.this.mk!=null) {//存入接收队列
+                                SocketChannelHandle.this.mUdk=MobileParam.build(recMap).getUserDeviceKey();
+                                if (SocketChannelHandle.this.mUdk!=null) {//存入接收队列
                                     //if (!(recMap.get("BizType")+"").equals("REGIST")) pmm.getReceiveMemory().addPureQueue(recMap);
                                 }
                             }

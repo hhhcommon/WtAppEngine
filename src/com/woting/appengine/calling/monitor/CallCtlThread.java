@@ -10,17 +10,15 @@ import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.calling.mem.CallingMemoryManage;
 import com.woting.appengine.calling.model.OneCall;
 import com.woting.appengine.calling.model.ProcessedMsg;
-import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.mobile.mediaflow.mem.TalkMemoryManage;
-import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.push.core.message.Message;
 import com.woting.push.core.message.MsgMedia;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.push.core.message.content.MapContent;
-import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.mobile.MobileUDKey;
 
 /**
  * 电话控制线程
@@ -29,16 +27,15 @@ import com.woting.passport.UGA.persistence.pojo.UserPo;
 public class CallCtlThread extends Thread {
     private CallingMemoryManage cmm=CallingMemoryManage.getInstance();
     private PushMemoryManage pmm=PushMemoryManage.getInstance();
-    private SessionMemoryManage smm=SessionMemoryManage.getInstance();
     private GroupMemoryManage gmm=GroupMemoryManage.getInstance();
 
     private OneCall callData;//所控制的通话数据
     private boolean isCallerTalked=false; //是否“被叫者”说话
 
 //    private String callerAddr="";
-    private MobileKey callerKey=null;
+    private MobileUDKey callerKey=null;
 //    private String callederAddr="";
-    private MobileKey callederKey=null;
+    private MobileUDKey callederKey=null;
 
     /**
      * 构造函数，必须给定一个通话控制数据
@@ -134,7 +131,7 @@ public class CallCtlThread extends Thread {
     private void dial(MsgNormal m) {
         System.out.println("处理呼叫信息前==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
         String callId =((MapContent)m.getMsgContent()).get("CallId")+"";
-        String callerId=MobileUtils.getMobileKey(m).getUserId();
+        String callerId=MobileUDKey.buildFromMsg(m).getUserId();
         String callederId=((MapContent)m.getMsgContent()).get("CallederId")+"";
 
         Map<String, Object> dataMap=null;

@@ -1,11 +1,7 @@
 package com.woting.appengine.mobile.push.monitor;
 
 //import java.util.HashMap;
-//import java.util.Map;
-//
-//import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.common.util.MobileUtils;
-import com.woting.appengine.mobile.model.MobileKey;
+import com.woting.passport.mobile.MobileUDKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.appengine.mobile.push.mem.ReceiveMemory;
 //import com.woting.appengine.mobile.push.mem.SendMemory;
@@ -53,8 +49,8 @@ public class DealReceivePureQueue extends Thread {
 //                    msg=(Message)parseM.get("msg");
 //                }
                 if (m.isAffirm()&&!(m instanceof MsgMedia)) {
-                    MobileKey mk=MobileUtils.getMobileKey(m);
-                    pmm.getSendMemory().addMsg2Queue(mk, MessageUtils.buildAckMsg((MsgNormal)m));
+                    MobileUDKey mUdk=MobileUDKey.buildFromMsg(m);
+                    pmm.getSendMemory().addMsg2Queue(mUdk, MessageUtils.buildAckMsg((MsgNormal)m));
                 }
                 String type=null;
                 if (m instanceof MsgMedia) type="media";

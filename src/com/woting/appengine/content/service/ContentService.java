@@ -27,7 +27,6 @@ import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.cm.core.utils.ContentUtils;
-import com.woting.appengine.mobile.MobileUDKey;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.cm.core.dict.mem._CacheDictionary;
@@ -35,6 +34,7 @@ import com.woting.cm.core.dict.model.DictModel;
 import com.woting.favorite.persis.po.UserFavoritePo;
 import com.woting.favorite.service.FavoriteService;
 import com.woting.passport.UGA.persistence.pojo.GroupPo;
+import com.woting.passport.mobile.MobileUDKey;
 
 @Lazy(true)
 @Service
@@ -68,7 +68,7 @@ public class ContentService {
      */
     public Map<String, Object> searchAll(String searchStr, int resultType, int pageType, MobileUDKey mUdk) {
         //得到喜欢列表
-        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mk);
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
         List<Map<String, Object>> fList=null;
         if (_fList!=null&&!_fList.isEmpty()) {
             fList=new ArrayList<Map<String, Object>>();
@@ -491,7 +491,7 @@ public class ContentService {
      * @return
      */
     public Map<String, Object> getMainPage(String userId, int pageType, int pageSize, int page, MobileUDKey mUdk) {
-        return getContents("-1", null, 3, null, 3, pageSize, page, null, pageType, mk, null);
+        return getContents("-1", null, 3, null, 3, pageSize, page, null, pageType, mUdk, null);
     }
 
     /**
@@ -591,7 +591,7 @@ public class ContentService {
         Map<String, Object> paraM=new HashMap<String, Object>();
 
         //0、得到喜欢列表
-        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mk);
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
         List<Map<String, Object>> fList=null;
         if (_fList!=null&&!_fList.isEmpty()) {
             fList=new ArrayList<Map<String, Object>>();

@@ -1,4 +1,4 @@
-package com.woting.appengine.mobile;
+package com.woting.passport.mobile;
 
 import java.util.Map;
 
@@ -15,6 +15,7 @@ import com.woting.passport.session.key.GetUserDeviceKey;
  * screenSize:屏幕尺寸;
  * sessionId:会话ID;Web应用用到
  * </pre>
+ * 注意这只是获得公共参数的方法，其他参数还需要其他方法获得。
  * @author wh
  */
 public class MobileParam extends BaseObject implements GetUserDeviceKey {
@@ -104,5 +105,51 @@ public class MobileParam extends BaseObject implements GetUserDeviceKey {
         udk.setUserId(this.userId);
 
         return udk;
+    }
+
+    /**
+     * 从Map获得移动端公共参数。
+     * @param m map，是前端请求参数的Map
+     * @return 移动端公共参数
+     */
+    public static MobileParam build(Map<String, Object> m) {
+        if (m==null||m.size()==0) return null;
+        MobileParam mp=new MobileParam();
+
+        Object o=m.get("IMEI");
+        String __tmp=o==null?"":o+"";
+        if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setImei(__tmp);
+        o=m.get("PCDType");
+        __tmp=o==null?"":o+"";
+        if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setPCDType(__tmp);
+        o=m.get("MobileClass");
+        o=m.get("GPS-longitude");
+        __tmp=o==null?"":o+"";
+        if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setGpsLongitude(__tmp);
+        o=m.get("GPS-Latitude");
+        __tmp=o==null?"":o+"";
+        if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setGpsLatitude(__tmp);
+        o=m.get("ScreenSize");
+        __tmp=o==null?"":o+"";
+        if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setScreenSize(__tmp);
+        o=m.get("SessionId");
+        __tmp=o==null?"":o+"";
+        if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setSessionId(__tmp);
+        o=m.get("UserId");
+        __tmp=o==null?"":o+"";
+        if (!StringUtils.isNullOrEmptyOrSpace(__tmp)) mp.setUserId(__tmp);
+
+        if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&
+            StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())&&
+            StringUtils.isNullOrEmptyOrSpace(mp.getGpsLongitude())&&
+            StringUtils.isNullOrEmptyOrSpace(mp.getGpsLatitude())&&
+            StringUtils.isNullOrEmptyOrSpace(mp.getScreenSize())&&
+            StringUtils.isNullOrEmptyOrSpace(mp.getSessionId())&&
+            StringUtils.isNullOrEmptyOrSpace(mp.getUserId())) {
+            return null;
+        } else {
+           
+        }
+        return mp;
     }
 }

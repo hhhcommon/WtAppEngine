@@ -20,11 +20,10 @@ import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.cm.core.utils.ContentUtils;
-import com.woting.appengine.mobile.MobileUDKey;
-import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.favorite.persis.po.UserFavoritePo;
 import com.woting.passport.UGA.persistence.pojo.GroupPo;
+import com.woting.passport.mobile.MobileUDKey;
 
 @Lazy(true)
 @Service
@@ -53,7 +52,7 @@ public class FavoriteService {
      * @return 若成功返回1；若是喜欢：0=所指定的节目不存在，2=已经喜欢了此内容；若是取消喜欢：-1=还未喜欢此内容；
      *          -100——内容类型不符合要求
      */
-    public int favorite(String mediaType, String contentId, int flag, MobileKey mk) {
+    public int favorite(String mediaType, String contentId, int flag, MobileUDKey mUdk) {
         String CType=mediaType.toUpperCase();
         if (!CType.equals("RADIO")&&!CType.equals("AUDIO")&&!CType.equals("SEQU")&&!CType.equals("TEXT")) return -100;
 
@@ -64,28 +63,28 @@ public class FavoriteService {
 
         if (flag==1) {
             if (!channelService.isPub(assetType, contentId)) return 0;
-            if (mk.isUser()) {
+            if (mUdk.isUser()) {
                 param.put("ownerType", "201");
-                param.put("ownerId", mk.getUserId());
+                param.put("ownerId", mUdk.getUserId());
             } else {
                 param.put("ownerType", "202");
-                param.put("ownerId", mk.getMobileId());
+                param.put("ownerId", mUdk.getDeviceId());
             }
             if (userFavoriteDao.getCount(param)>0) return 2;
             param.put("id", SequenceUUID.getUUIDSubSegment(4));
             userFavoriteDao.insert(param);//加入喜欢队列
         } else {
-            param.put("mobileId", mk.getMobileId());
-            if (mk.isUser()) param.put("userId", mk.getUserId());
+            param.put("mobileId", mUdk.getDeviceId());
+            if (mUdk.isUser()) param.put("userId", mUdk.getUserId());
             if (userFavoriteDao.getCount("getCount4Favorite", param)==0) return -1;
             //设备删除
             param.put("ownerType", "202");
-            param.put("ownerId", mk.getMobileId());
+            param.put("ownerId", mUdk.getDeviceId());
             userFavoriteDao.delete("deleteByEntity",param);
             //用户删除
-            if (mk.isUser()) {
+            if (mUdk.isUser()) {
                 param.put("ownerType", "201");
-                param.put("ownerId", mk.getUserId());
+                param.put("ownerId", mUdk.getUserId());
                 userFavoriteDao.delete("deleteByEntity",param);
             }
         }
@@ -105,11 +104,11 @@ public class FavoriteService {
      * @return 该页内容
      */
     //注意这里的内容分类目前只有Radio,Audio,Sequ,Text四种，而且就是按这个顺序排列的
-    public Map<String, Object> getFavoriteList(int resultType, int pageType, String mediaType, int pageSize, int page, int perSize, String beginCatalogId, MobileKey mk) {
+    public Map<String, Object> getFavoriteList(int resultType, int pageType, String mediaType, int pageSize, int page, int perSize, String beginCatalogId, MobileUDKey mUdk) {
         Map<String, Object> param=new HashMap<String, Object>();//返回数据，以及查询参数
 
-        param.put("mobileId", mk.getMobileId());
-        if (mk.isUser()) param.put("userId", mk.getUserId());
+        param.put("mobileId", mUdk.getDeviceId());
+        if (mUdk.isUser()) param.put("userId", mUdk.getUserId());
 
         Page<UserFavoritePo> resultPage=null;
         List<Map<String, Object>> fList=new ArrayList<Map<String, Object>>();
@@ -295,7 +294,7 @@ public class FavoriteService {
                         //重构发布
                         pubChannelList=channelService.getPubChannelList(assetList);
                         //重构喜欢
-                        List<UserFavoritePo> __fList=getPureFavoriteList(mk);
+                        List<UserFavoritePo> __fList=getPureFavoriteList(mUdk);
                         if (__fList!=null&&__fList.size()>0) {
                             for (UserFavoritePo ufPo: __fList) _fList.add(ufPo.toHashMapAsBean());
                         }
@@ -415,7 +414,7 @@ public class FavoriteService {
 
         Map<String, Object> param=new HashMap<String, Object>();
         param.put("mobileId", mUdk.getDeviceId());
-        if (mk.isUser()) param.put("userId", mUdk.getUserId());
+        if (mUdk.isUser()) param.put("userId", mUdk.getUserId());
         return userFavoriteDao.queryForList("getFavoriteAssets", param);
     }
 
@@ -424,10 +423,10 @@ public class FavoriteService {
      * @param mk 用户标识，可以是登录用户，也可以是手机设备
      * @return 若无数据，返回空Map，否则返回各内容类型的个数，若某内荣分类无数据，则不返回该项的数据
      */
-    public Map<String, Object> getFavoriteMTypeDistri(MobileKey mk) {
+    public Map<String, Object> getFavoriteMTypeDistri(MobileUDKey mUdk) {
         Map<String, Object> param=new HashMap<String, Object>();
-        param.put("mobileId", mk.getMobileId());
-        if (mk.isUser()) param.put("userId", mk.getUserId());
+        param.put("mobileId", mUdk.getDeviceId());
+        if (mUdk.isUser()) param.put("userId", mUdk.getUserId());
         List<Map<String, Object>> distriuteData=userFavoriteDao.queryForListAutoTranform("getDistriuteData", param);
         param.clear();
         if (distriuteData!=null&&distriuteData.size()>0) {
@@ -446,7 +445,7 @@ public class FavoriteService {
      * @param mk 用户标识，可以是登录用户，也可以是手机设备
      * @return 对每一个删除的回复，是一个Map的List，每个Map内容为：类型-CType，Id-CId，处理结果-Result，其中Result=1删除成功;0没有对应记录无法删除;-1媒体类型不合法
      */
-    public List<Map<String, Object>> delFavorites(String delInfos, MobileKey mk) {
+    public List<Map<String, Object>> delFavorites(String delInfos, MobileUDKey mUdk) {
         String[] oneC=delInfos.split(",");
         List<Map<String, Object>> ret=new ArrayList<Map<String, Object>>();
         for (int i=0; i<oneC.length; i++) {
@@ -464,11 +463,11 @@ public class FavoriteService {
                     paraDel.put("resTableName", ContentUtils.getResTableName(CType));
                     paraDel.put("resId", cInfo[1]);
                     paraDel.put("ownerType", "202");
-                    paraDel.put("ownerId", mk.getMobileId());
+                    paraDel.put("ownerId", mUdk.getDeviceId());
                     userFavoriteDao.delete("deleteByEntity",paraDel);
-                    if (mk.isUser()) {
+                    if (mUdk.isUser()) {
                         paraDel.put("ownerType", "201");
-                        paraDel.put("ownerId", mk.getUserId());
+                        paraDel.put("ownerId", mUdk.getUserId());
                         userFavoriteDao.delete("deleteByEntity",paraDel);
                     }
                     oneResult.put("Result", "1");

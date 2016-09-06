@@ -18,18 +18,16 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.SpiritRandom;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.common.util.MobileUtils;
 import com.spiritdata.framework.util.RequestUtils;
-import com.woting.appengine.mobile.MobileParam;
-import com.woting.appengine.mobile.model.MobileKey;
-import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
-import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.GroupService;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.friend.service.FriendService;
 import com.woting.passport.login.persistence.pojo.MobileUsedPo;
 import com.woting.passport.login.service.MobileUsedService;
+import com.woting.passport.mobile.MobileParam;
+import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.SessionService;
 import com.woting.passport.useralias.mem.UserAliasMemoryManage;
 import com.woting.passport.useralias.model.UserAliasKey;
 import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
@@ -46,8 +44,9 @@ public class PassportController {
     private MobileUsedService muService;
     @Resource
     private FriendService friendService;
+    @Resource(name="redisSessionService")
+    private SessionService sessionService;
 
-    private SessionMemoryManage smm=SessionMemoryManage.getInstance();
     private UserAliasMemoryManage uamm=UserAliasMemoryManage.getInstance();
 
     /**
@@ -61,14 +60,12 @@ public class PassportController {
         try {
             //0-获取参数
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
-            if (m==null||m.size()==0) {
+            MobileUDKey mUdk=MobileParam.build(m).getUserDeviceKey();
+            if (m==null||m.size()==0||mUdk==null||!mUdk.isValidate()) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
                 return map;
             }
-            MobileParam mp=MobileUtils.getMobileParam(m);
-            MobileKey sk=(mp==null?null:mp.getMobileKey());
-            if (sk!=null) map.put("SessionId", sk.getSessionId());
 
             String ln=(m.get("UserName")==null?null:m.get("UserName")+"");
             String pwd=(m.get("Password")==null?null:m.get("Password")+"");
@@ -97,22 +94,15 @@ public class PassportController {
                 return map;
             }
             //3-用户登录成功
-            if (sk!=null) {
-                sk.setUserId(u.getUserId());
-                map.put("SessionId", sk.getSessionId());
-                //3.1-处理Session
-                smm.expireAllSessionByIMEI(sk.getMobileId()); //作废所有imei对应的Session
-                MobileSession ms=new MobileSession(sk);
-                ms.addAttribute("user", u);
-                smm.addOneSession(ms);
-                //3.2-保存使用情况
-                MobileUsedPo mu=new MobileUsedPo();
-                mu.setImei(sk.getMobileId());
-                mu.setStatus(1);
-                mu.setPCDType(sk.getPCDType());
-                mu.setUserId(u.getUserId());
-                muService.saveMobileUsed(mu);
-            }
+            mUdk.setUserId(u.getUserId());
+            sessionService.registUser(mUdk);
+            //3.2-保存使用情况
+            MobileUsedPo mu=new MobileUsedPo();
+            mu.setImei(mUdk.getDeviceId());
+            mu.setStatus(1);
+            mu.setPCDType(mUdk.getPCDType());
+            mu.setUserId(u.getUserId());
+            muService.saveMobileUsed(mu);
             //4-返回成功，若没有IMEI也返回成功
             map.put("ReturnType", "1001");
             map.put("UserInfo", u.toHashMap4Mobile());
@@ -136,19 +126,19 @@ public class PassportController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
+                    map.putAll(mUdk.toHashMapAsBean());
                 }
             }
             if (map.get("ReturnType")!=null) return map;

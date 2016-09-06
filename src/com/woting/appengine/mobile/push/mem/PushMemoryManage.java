@@ -4,18 +4,23 @@ package com.woting.appengine.mobile.push.mem;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.servlet.ServletContext;
+
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import com.spiritdata.framework.FConstants;
+import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.structure.StrArrayQueue;
-import com.woting.appengine.mobile.model.MobileKey;
+import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.SessionService;
 import com.woting.push.core.message.Message;
 import com.woting.appengine.mobile.push.model.SendMessageList;
 import com.woting.appengine.mobile.push.monitor.socket.SocketHandle;
-import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
-import com.woting.appengine.mobile.session.model.MobileSession;
 
 public class PushMemoryManage {
     //java的占位单例模式===begin
     private static class InstanceHolder {
-        public static PushMemoryManage instance = new PushMemoryManage();
+        public static PushMemoryManage instance=new PushMemoryManage();
     }
     public static PushMemoryManage getInstance() {
         return InstanceHolder.instance;
@@ -28,8 +33,10 @@ public class PushMemoryManage {
     public StrArrayQueue logQueue;//日志数据
 
     private Object userSocketLock=new Object();//用户和Sockek对应的临界区的锁，这个锁是读写一致的，虽然慢，但能保证数据一致性
-    private ConcurrentHashMap<MobileKey, SocketHandle> userSocketM;//用户和Socket的关联关系
+    private ConcurrentHashMap<MobileUDKey, SocketHandle> userSocketM;//用户和Socket的关联关系
     //数据区
+
+    private SessionService sessionService=null;
 
     public ReceiveMemory getReceiveMemory() {
         return this.rm;
@@ -42,10 +49,15 @@ public class PushMemoryManage {
      * 构造方法，初始化消息推送的内存结构
      */
     private PushMemoryManage() {
-        userSocketM=new ConcurrentHashMap<MobileKey, SocketHandle>();
+        userSocketM=new ConcurrentHashMap<MobileUDKey, SocketHandle>();
         rm=ReceiveMemory.getInstance();
         sm=SendMemory.getInstance();
         logQueue=new StrArrayQueue(10240);
+        //创建SessionService对象
+        ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+        if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+            sessionService=(SessionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("redisSessionService");
+        }
     }
 
     /**
@@ -56,13 +68,13 @@ public class PushMemoryManage {
     public void clean() {
         if (this.sm.msgMap!=null&&!this.sm.msgMap.isEmpty()) {
             for (String sKey: this.sm.msgMap.keySet()) {
-                ConcurrentLinkedQueue<Message> mq = this.sm.msgMap.get(sKey);
+                ConcurrentLinkedQueue<Message> mq=this.sm.msgMap.get(sKey);
                 if (mq==null||mq.isEmpty()) this.sm.msgMap.remove(sKey);
             }
         }
         if (this.sm.msgSendedMap!=null&&!this.sm.msgSendedMap.isEmpty()) {
             for (String sKey: this.sm.msgSendedMap.keySet()) {
-                SendMessageList sml = this.sm.msgSendedMap.get(sKey);
+                SendMessageList sml=this.sm.msgSendedMap.get(sKey);
                 if (sml==null||sml.size()==0) this.sm.msgSendedMap.remove(sKey);
             }
         }
@@ -74,7 +86,7 @@ public class PushMemoryManage {
      * @param mk 设备标识
      * @return 消息体
      */
-    public Message getSendMessages(MobileKey mk, SocketHandle s) {
+    public Message getSendMessages(MobileUDKey mk, SocketHandle s) {
         Message m=null;
         //从发送队列取一条消息
         boolean canRead=false;
@@ -91,7 +103,7 @@ public class PushMemoryManage {
 //                }
             }
         } else {/*
-            SendMessageList hasSl = sm.getSendedMessagList(mk);
+            SendMessageList hasSl=sm.getSendedMessagList(mk);
             if (hasSl.size()>0) {
                 m=hasSl.get(0);
             }*/
@@ -104,7 +116,7 @@ public class PushMemoryManage {
      * @param mk 设备标识
      * @return 消息体
      */
-    public Message getSendMessages(MobileKey mk) {
+    public Message getSendMessages(MobileUDKey mk) {
         Message m=sm.pollQueue(mk);
         if (m!=null) {
             if (m.isAffirm()) {
@@ -115,7 +127,7 @@ public class PushMemoryManage {
 //                }
             }
         } else {/*
-            SendMessageList hasSl = sm.getSendedMessagList(mk);
+            SendMessageList hasSl=sm.getSendedMessagList(mk);
             if (hasSl.size()>0) {
                 m=hasSl.get(0);
             }*/
@@ -123,38 +135,40 @@ public class PushMemoryManage {
         return m;
     }
 
-    public void setUserSocketMap(MobileKey mk, SocketHandle s) {
+    public void setUserSocketMap(MobileUDKey mUdk, SocketHandle s) {
         synchronized(userSocketLock) {
-            MobileKey s_mk=null;
-            for (MobileKey _mk: userSocketM.keySet()) {
-                if (userSocketM.get(_mk).equals(s)) {
-                    s_mk=_mk;
+            MobileUDKey s_mUdk=null;
+            for (MobileUDKey _mUdk: userSocketM.keySet()) {
+                if (userSocketM.get(_mUdk).equals(s)) {
+                    s_mUdk=_mUdk;
                     break;
                 }
             }
-            if (s_mk!=null&&!s_mk.equals(mk)) {
-                MobileSession ms=SessionMemoryManage.getInstance().getSession(s_mk);
-                ms.expire();
+            if (s_mUdk!=null&&!s_mUdk.equals(mUdk)) {
+                //修改RedisSession
+//                MobileSession ms=SessionMemoryManage.getInstance().getSession(s_mk);
+//                ms.expire();
+                sessionService.expireSession(mUdk);
             }
 
-            SocketHandle _s=userSocketM.get(mk);
+            SocketHandle _s=userSocketM.get(mUdk);
             if (!s.equals(_s)&&_s!=null) _s.stopHandle();
-            userSocketM.put(mk, s);
+            userSocketM.put(mUdk, s);
         }
     }
     public void removeSocket(SocketHandle sh) {
         synchronized(userSocketLock) {
-            for (MobileKey mk: userSocketM.keySet()) {
-                if (userSocketM.get(mk).equals(sh)) {
-                    userSocketM.remove(mk);
+            for (MobileUDKey mUdk: userSocketM.keySet()) {
+                if (userSocketM.get(mUdk).equals(sh)) {
+                    userSocketM.remove(mUdk);
                     break;
                 }
             }
         }
     }
-    public void removeMk(MobileKey mk) {
+    public void removeMk(MobileUDKey mUdk) {
         synchronized(userSocketLock) {
-            userSocketM.remove(mk);
+            userSocketM.remove(mUdk);
         }
     }
     /**

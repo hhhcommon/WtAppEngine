@@ -14,13 +14,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.common.util.MobileUtils;
-import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.RequestUtils;
-import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.friend.service.FriendService;
+import com.woting.passport.mobile.MobileParam;
+import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.SessionService;
 import com.woting.passport.useralias.mem.UserAliasMemoryManage;
 import com.woting.passport.useralias.model.UserAliasKey;
 import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
@@ -34,7 +34,8 @@ public class FriendController {
     private FriendService friendService;
     @Resource
     private UserService userService;
-
+    @Resource(name="redisSessionService")
+    private SessionService sessionService;
     /**
      * 得到陌生人列表
      */
@@ -45,13 +46,14 @@ public class FriendController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -59,9 +61,9 @@ public class FriendController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -69,7 +71,6 @@ public class FriendController {
                 }
             }
             if (map.get("ReturnType")!=null) return map;
-
 
             //2-获取搜索条件
             String searchStr=(m.get("SearchStr")==null?null:m.get("SearchStr")+"");
@@ -115,13 +116,14 @@ public class FriendController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -129,9 +131,9 @@ public class FriendController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -184,13 +186,14 @@ public class FriendController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -198,9 +201,9 @@ public class FriendController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -248,13 +251,14 @@ public class FriendController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -262,9 +266,9 @@ public class FriendController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -318,13 +322,14 @@ public class FriendController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -332,9 +337,9 @@ public class FriendController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -380,13 +385,14 @@ public class FriendController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -394,9 +400,9 @@ public class FriendController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -445,13 +451,14 @@ public class FriendController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -459,9 +466,9 @@ public class FriendController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");

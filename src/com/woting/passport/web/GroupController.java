@@ -13,14 +13,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import com.spiritdata.framework.util.SpiritRandom;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.common.util.MobileUtils;
 import com.spiritdata.framework.util.RequestUtils;
-import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.passport.UGA.model.Group;
 import com.woting.passport.UGA.persistence.pojo.GroupPo;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.GroupService;
 import com.woting.passport.UGA.service.UserService;
+import com.woting.passport.mobile.MobileParam;
+import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.SessionService;
 import com.woting.passport.useralias.mem.UserAliasMemoryManage;
 import com.woting.passport.useralias.model.UserAliasKey;
 import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
@@ -34,6 +35,8 @@ public class GroupController {
     private GroupService groupService;
     @Resource
     private UserService userService;
+    @Resource(name="redisSessionService")
+    private SessionService sessionService;
 
     /**
      * 创建用户组，根据用户组类型创建用户
@@ -45,13 +48,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -59,9 +63,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -125,7 +129,7 @@ public class GroupController {
             }
 
             //判断是否突破限制
-            int c = groupService.getCreateGroupCount(userId);
+            int c=groupService.getCreateGroupCount(userId);
             if (c>50) {
                 map.put("ReturnType", "1008");
                 map.put("Message", "您所创建的组已达50个，不能再创建了");
@@ -160,7 +164,7 @@ public class GroupController {
             //创建组
             if (ml==null) {
                 ml=new ArrayList<UserPo>();
-                UserPo u=(UserPo)ms.getAttribute("user");
+                UserPo u=(UserPo)userService.getUserById(userId);
                 ml.add(u);
             }
             Group g=new Group();
@@ -210,13 +214,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -224,9 +229,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -282,13 +287,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -296,9 +302,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -355,13 +361,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -369,9 +376,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -426,13 +433,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -440,9 +448,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -457,7 +465,7 @@ public class GroupController {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
             } else {
-                GroupPo gp = groupService.getGroupById(groupId);
+                GroupPo gp=groupService.getGroupById(groupId);
                 if (gp==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
@@ -500,13 +508,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -514,9 +523,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -525,7 +534,7 @@ public class GroupController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            List<Map<String, Object>> imgl = groupService.getInviteGroupList(userId);
+            List<Map<String, Object>> imgl=groupService.getInviteGroupList(userId);
             List<Map<String, Object>> rImgl=new ArrayList<Map<String, Object>>();
             if (imgl!=null&&imgl.size()>0) {
                 Map<String, Object> imgm;
@@ -577,13 +586,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -591,9 +601,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -608,7 +618,7 @@ public class GroupController {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
             } else {
-                GroupPo gp = groupService.getGroupById(groupId);
+                GroupPo gp=groupService.getGroupById(groupId);
                 if (gp==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
@@ -656,13 +666,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -670,9 +681,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -687,7 +698,7 @@ public class GroupController {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
             } else {
-                GroupPo gp = groupService.getGroupById(groupId);
+                GroupPo gp=groupService.getGroupById(groupId);
                 if (gp==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
@@ -728,13 +739,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -742,9 +754,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -759,7 +771,7 @@ public class GroupController {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
             } else {
-                GroupPo gp = groupService.getGroupById(groupId);
+                GroupPo gp=groupService.getGroupById(groupId);
                 if (gp==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
@@ -779,7 +791,7 @@ public class GroupController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            List<Map<String, Object>> aul = groupService.getApplyUserList(groupId);
+            List<Map<String, Object>> aul=groupService.getApplyUserList(groupId);
             List<Map<String, Object>> rAul=new ArrayList<Map<String, Object>>();
             if (aul!=null&&aul.size()>0) {
                 Map<String, Object> au;
@@ -824,13 +836,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -838,9 +851,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -849,7 +862,7 @@ public class GroupController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            List<Map<String, Object>> eauGl = groupService.getExistApplyUserGroupList(userId);
+            List<Map<String, Object>> eauGl=groupService.getExistApplyUserGroupList(userId);
             List<Map<String, Object>> rEauGl=new ArrayList<Map<String, Object>>();
             if (eauGl!=null&&eauGl.size()>0) {
                 Map<String, Object> gInfo;
@@ -894,13 +907,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";//组管理员
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -908,9 +922,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -925,7 +939,7 @@ public class GroupController {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
             } else {
-                GroupPo gp = groupService.getGroupById(groupId);
+                GroupPo gp=groupService.getGroupById(groupId);
                 if (gp==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
@@ -985,13 +999,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -999,9 +1014,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -1051,12 +1066,12 @@ public class GroupController {
                 return map;
             }
             //3-加入用户组
-            UserPo u=(UserPo)ms.getAttribute("user");
+            UserPo u=(UserPo)userService.getUserById(userId);
             if (c==0) groupService.insertGroupUser(gp, u, 1);
             //组织返回值
             map.put("ReturnType", (c==0?"1001":"1101"));
             //组信息
-            Map<String, Object> gm = new HashMap<String, Object>();
+            Map<String, Object> gm=new HashMap<String, Object>();
             gm.put("GroupId", gp.getGroupId());
             gm.put("GroupNum", gp.getGroupNum());
             if (!StringUtils.isNullOrEmptyOrSpace(gp.getGroupSignature())) gm.put("GroupSignature", gp.getGroupSignature());
@@ -1097,13 +1112,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1111,9 +1127,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -1128,12 +1144,12 @@ public class GroupController {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取用户组号码");
             } else {
-                GroupPo gp = groupService.getGroupById(groupId);
+                GroupPo gp=groupService.getGroupById(groupId);
                 if (gp==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
                 } else {
-                    UserPo u=(UserPo)ms.getAttribute("user");
+                    UserPo u=(UserPo)userService.getUserById(userId);
                     int c=groupService.exitUserFromGroup(gp, u);
                     if (c==0) {//不存在此用户
                         map.put("ReturnType", "1004");
@@ -1167,13 +1183,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1181,9 +1198,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -1199,7 +1216,7 @@ public class GroupController {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
             } else {
-                gp = groupService.getGroupById(groupId);
+                gp=groupService.getGroupById(groupId);
                 if (gp==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
@@ -1246,13 +1263,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1260,9 +1278,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -1278,7 +1296,7 @@ public class GroupController {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
             } else {
-                gp = groupService.getGroupById(groupId);
+                gp=groupService.getGroupById(groupId);
                 if (gp==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
@@ -1316,13 +1334,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1330,9 +1349,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -1348,7 +1367,7 @@ public class GroupController {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
             } else {
-                gp = groupService.getGroupById(groupId);
+                gp=groupService.getGroupById(groupId);
                 if (gp==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
@@ -1394,13 +1413,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1408,9 +1428,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -1481,13 +1501,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1495,9 +1516,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -1559,13 +1580,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1573,9 +1595,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -1656,13 +1678,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1670,9 +1693,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -1688,7 +1711,7 @@ public class GroupController {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
             } else {
-                gp = groupService.getGroupById(groupId);
+                gp=groupService.getGroupById(groupId);
                 if (gp==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
@@ -1754,13 +1777,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";//组管理员
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1768,9 +1792,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -1785,7 +1809,7 @@ public class GroupController {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法获取组Id");
             } else {
-                GroupPo gp = groupService.getGroupById(groupId);
+                GroupPo gp=groupService.getGroupById(groupId);
                 if (gp==null) {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
@@ -1854,13 +1878,14 @@ public class GroupController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM = MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1868,9 +1893,9 @@ public class GroupController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");

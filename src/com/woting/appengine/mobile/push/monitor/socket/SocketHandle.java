@@ -14,13 +14,18 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 
+import javax.servlet.ServletContext;
+
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import com.spiritdata.framework.FConstants;
+import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.JsonUtils;
 //import com.spiritdata.framework.util.FileNameUtils;
 //import com.spiritdata.framework.util.JsonUtils;
 //import com.spiritdata.framework.util.SequenceUUID;
 //import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.common.util.MobileUtils;
 //import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.mobile.mediaflow.mem.TalkMemoryManage;
 import com.woting.appengine.mobile.mediaflow.model.TalkSegment;
@@ -29,7 +34,8 @@ import com.woting.push.core.message.Message;
 import com.woting.push.core.message.MessageUtils;
 import com.woting.push.core.message.MsgMedia;
 import com.woting.push.core.message.MsgNormal;
-import com.woting.appengine.mobile.model.MobileKey;
+import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.SessionService;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 
 /**
@@ -42,7 +48,6 @@ import com.woting.appengine.mobile.push.mem.PushMemoryManage;
  */
 //注意，服务端把心跳的功能去掉了
 public class SocketHandle extends Thread {
-
     private FetchMsg fetchMsg;
     private SendMsg sendMsg;
     private ReceiveMsg receiveMsg;
@@ -63,10 +68,12 @@ public class SocketHandle extends Thread {
     //数据
     protected Socket socket=null;
     protected String socketDesc;
-    protected MobileKey mk=null;
+    protected MobileUDKey mUdk=null;
 
     //内存数据
     private PushMemoryManage pmm=PushMemoryManage.getInstance();
+
+    private SessionService sessionService=null;
 
     //判断Socket是否起作用
     private boolean socketOk() {
@@ -88,6 +95,11 @@ public class SocketHandle extends Thread {
         socketIn=new BufferedInputStream(socket.getInputStream());
         socketOut=new BufferedOutputStream(socket.getOutputStream());
         this.smc=smc;
+        //创建SessionService对象
+        ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+        if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+            sessionService=(SessionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("redisSessionService");
+        }
     }
     public void stopHandle() {
         running=false;
@@ -237,10 +249,10 @@ public class SocketHandle extends Thread {
             this.isRunning=true;
             try {
                 while (pmm.isServerRuning()&&SocketHandle.this.running&&!isInterrupted) {
-                    if (SocketHandle.this.mk!=null) {
+                    if (SocketHandle.this.mUdk!=null) {
                         canAdd=true;
                         //获得控制消息
-                        Message m=pmm.getSendMessages(mk, SocketHandle.this);
+                        Message m=pmm.getSendMessages(mUdk, SocketHandle.this);
                         if (m!=null) {
                             long t=System.currentTimeMillis();
                             if (m instanceof MsgMedia) {
@@ -259,13 +271,13 @@ public class SocketHandle extends Thread {
                                     TalkMemoryManage tmm=TalkMemoryManage.getInstance();
                                     WholeTalk wt=tmm.getWholeTalk(_mm.getTalkId());
                                     TalkSegment ts=wt.getTalkData().get(Math.abs(_mm.getSeqNo()));
-                                    if (ts.getSendFlagMap().get(mk.toString())!=null) ts.getSendFlagMap().put(mk.toString(), 1);
+                                    if (ts.getSendFlagMap().get(mUdk.toString())!=null) ts.getSendFlagMap().put(mUdk.toString(), 1);
                                 } catch(Exception e) {e.printStackTrace();}
                             }
                         }
                         //获得通知类消息
-                        if (mk.isUser()) {
-                            Message nm=pmm.getNotifyMessages(mk.getUserId());
+                        if (mUdk.isUser()) {
+                            Message nm=pmm.getNotifyMessages(mUdk.getUserId());
                             if (nm!=null) {
                                 sendMsgQueue.add(nm.toBytes());
                             }
@@ -322,7 +334,7 @@ public class SocketHandle extends Thread {
                                 socketOut.flush();
                                 if (mBytes.length==3&&mBytes[0]=='b'&&mBytes[1]=='|'&&mBytes[2]=='^') continue;
                                 try {
-                                    //pmm.logQueue.add(System.currentTimeMillis()+"::send::"+(mk==null?"null":mk.toString())+"::"+(new String(mBytes)));
+                                    //pmm.logQueue.add(System.currentTimeMillis()+"::send::"+(mUdk==null?"null":mUdk.toString())+"::"+(new String(mBytes)));
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
@@ -551,7 +563,7 @@ public class SocketHandle extends Thread {
                     }
 
                     try {
-                        String temp=SocketHandle.this.mk==null?"NULL":SocketHandle.this.mk.toString();
+                        String temp=SocketHandle.this.mUdk==null?"NULL":SocketHandle.this.mUdk.toString();
                         //pmm.logQueue.add(t+"::recv::"+temp+"::"+(new String(mba)));
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -567,8 +579,9 @@ public class SocketHandle extends Thread {
                         System.out.println(JsonUtils.objToJson(ms));
                         if (ms!=null&&!ms.isAck()) {
                             if (ms instanceof MsgNormal) {
+                                MobileUDKey _mUdk=MobileUDKey.buildFromMsg(ms);
                                 //处理注册
-                                Map<String, Object> retM=MobileUtils.dealMobileLinked(ms, 1);
+                                Map<String, Object> retM=sessionService.getLoginStatus(_mUdk);
                                 if ((""+retM.get("ReturnType")).equals("2003")) {
                                     MsgNormal ackM=MessageUtils.buildAckMsg((MsgNormal)ms);
                                     ackM.setBizType(15);
@@ -578,14 +591,14 @@ public class SocketHandle extends Thread {
                                     ackM.setReturnType(0);
                                     sendMsgQueue.add(ackM.toBytes());
                                 } else {
-                                    SocketHandle.this.mk=MobileUtils.getMobileKey(ms);
-                                    if (SocketHandle.this.mk!=null) {//存入接收队列
-                                        pmm.setUserSocketMap(SocketHandle.this.mk, SocketHandle.this);
+                                    SocketHandle.this.mUdk=_mUdk;
+                                    if (SocketHandle.this.mUdk!=null) {//存入接收队列
+                                        pmm.setUserSocketMap(SocketHandle.this.mUdk, SocketHandle.this);
                                         if (((MsgNormal)ms).getBizType()!=15) pmm.getReceiveMemory().addPureQueue(ms);
                                     }
                                 }
                             } else {
-                                ((MsgMedia)ms).setExtInfo(SocketHandle.this.mk);
+                                ((MsgMedia)ms).setExtInfo(SocketHandle.this.mUdk);
                                 pmm.getReceiveMemory().addPureQueue(ms);
                             }
                         }

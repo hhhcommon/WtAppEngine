@@ -8,10 +8,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.appengine.calling.mem.CallingMemoryManage;
-import com.woting.appengine.common.util.MobileUtils;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.intercom.model.GroupInterCom;
-import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.push.core.message.CompareMsg;
 import com.woting.push.core.message.MessageUtils;
@@ -20,6 +18,7 @@ import com.woting.push.core.message.MsgMedia;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.push.core.message.content.MapContent;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.mobile.MobileUDKey;
 
 public class DealInterCom extends Thread {
     private PushMemoryManage pmm=PushMemoryManage.getInstance();
@@ -45,21 +44,21 @@ public class DealInterCom extends Thread {
                 if (m==null) continue;
                 if (m.getCmdType()==1) {
                     if (m.getCommand()==1) {
-                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-用户进入组::(User="+MobileUtils.getMobileKey(m)+";Group="+((MapContent)m.getMsgContent()).get("GroupId")+")";
+                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-用户进入组::(User="+MobileUDKey.buildFromMsg(m)+";Group="+((MapContent)m.getMsgContent()).get("GroupId")+")";
                         System.out.println(tempStr);
                         (new EntryGroup("{"+tempStr+"}处理线程", m)).start();
                     } else if (m.getCommand()==2) {
-                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-用户退出组::(User="+MobileUtils.getMobileKey(m)+";Group="+((MapContent)m.getMsgContent()).get("GroupId")+")";
+                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-用户退出组::(User="+MobileUDKey.buildFromMsg(m)+";Group="+((MapContent)m.getMsgContent()).get("GroupId")+")";
                         System.out.println(tempStr);
                         (new ExitGroup("{"+tempStr+"}处理线程", m)).start();
                     }
                 } else if (m.getCmdType()==2) {
                     if (m.getCommand()==1) {
-                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-开始对讲::(User="+MobileUtils.getMobileKey(m)+";Group="+((MapContent)m.getMsgContent()).get("GroupId")+")";
+                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-开始对讲::(User="+MobileUDKey.buildFromMsg(m)+";Group="+((MapContent)m.getMsgContent()).get("GroupId")+")";
                         System.out.println(tempStr);
                         (new BeginPTT("{"+tempStr+"}处理线程", m)).start();
                     } else if (m.getCommand()==2) {
-                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-结束对讲::(User="+MobileUtils.getMobileKey(m)+";Group="+((MapContent)m.getMsgContent()).get("GroupId")+")";
+                        tempStr="处理消息[MsgId="+m.getMsgId()+"]-结束对讲::(User="+MobileUDKey.buildFromMsg(m)+";Group="+((MapContent)m.getMsgContent()).get("GroupId")+")";
                         System.out.println(tempStr);
                         (new EndPTT("{"+tempStr+"}处理线程", m)).start();
                     }
@@ -78,8 +77,8 @@ public class DealInterCom extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
-            if (mk==null) return;
+            MobileUDKey mUdk=MobileUDKey.buildFromMsg(sourceMsg);
+            if (mUdk==null) return;
 
             String groupId="";
             try {
@@ -98,16 +97,16 @@ public class DealInterCom extends Thread {
 
             Map<String, Object> retM=null;
             GroupInterCom gic=gmm.getGroupInterCom(groupId);
-            if (!mk.isUser()) retMsg.setReturnType(0x00);
+            if (!mUdk.isUser()) retMsg.setReturnType(0x00);
             else if (gic==null) retMsg.setReturnType(0x02);
             else {
-                retM=gic.insertEntryUser(mk);
+                retM=gic.insertEntryUser(mUdk);
                 String rt = (String)retM.get("returnType");
                 if (rt.equals("3")) retMsg.setReturnType(0x40);//该用户不在指定组
                 else if (rt.equals("2")) retMsg.setReturnType(0x08);//该用户已经在指定组
                 else retMsg.setReturnType(0x01);//正确加入组
             }
-            pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+            pmm.getSendMemory().addMsg2Queue(mUdk, retMsg);
 
             //广播消息信息组织
             if (retM!=null&&retM.containsKey("needBroadCast")) {
@@ -131,11 +130,11 @@ public class DealInterCom extends Thread {
                 //发送广播消息
                 for (String k: entryGroupUsers.keySet()) {
                     String _sp[] = k.split("::");
-                    mk=new MobileKey();
-                    mk.setMobileId(_sp[0]);
-                    mk.setPCDType(Integer.parseInt(_sp[1]));
-                    mk.setUserId(_sp[2]);
-                    pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
+                    mUdk=new MobileUDKey();
+                    mUdk.setDeviceId(_sp[0]);
+                    mUdk.setPCDType(Integer.parseInt(_sp[1]));
+                    mUdk.setUserId(_sp[2]);
+                    pmm.getSendMemory().addUniqueMsg2Queue(mUdk, bMsg, new CompareGroupMsg());
                 }
             }
         }
@@ -148,8 +147,8 @@ public class DealInterCom extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
-            if (mk==null) return;
+            MobileUDKey mUdk=MobileUDKey.buildFromMsg(sourceMsg);
+            if (mUdk==null) return;
 
             String groupId="";
             try {
@@ -168,17 +167,30 @@ public class DealInterCom extends Thread {
 
             Map<String, Object> retM=null;
             GroupInterCom gic=gmm.getGroupInterCom(groupId);
-            if (!mk.isUser()) retMsg.setReturnType(0x00);
+            if (!mUdk.isUser()) retMsg.setReturnType(0x00);
             else if (gic==null) retMsg.setReturnType(0x02);
             else {
-                retM=gic.delEntryUser(mk);
+                retM=gic.delEntryUser(mUdk);
                 String rt = (String)retM.get("returnType");
                 if (rt.equals("3")) retMsg.setReturnType(0x04);//该用户不在指定组
                 else if (rt.equals("2")) retMsg.setReturnType(0x08);//用户未在对讲
                 else retMsg.setReturnType(1);//正确加入组
             }
-            pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+            pmm.getSendMemory().addMsg2Queue(mUdk, retMsg);
             
+            //删除所有通过这个组发给他的消息
+            ConcurrentLinkedQueue<Message> tempMsgs=pmm.getSendMemory().getSendQueue(mUdk);
+            if (tempMsgs!=null&&!tempMsgs.isEmpty()) {
+                for (Message m: tempMsgs) {
+                    if (m instanceof MsgMedia) {
+                        MsgMedia _mm=(MsgMedia)m;
+                        if (_mm.getBizType()==1&&groupId.equals(_mm.getObjId())) {
+                            tempMsgs.remove(m);
+                        }
+                    }
+                }
+            }
+
             //广播消息信息组织
             if (retM!=null&&retM.containsKey("needBroadCast")) {
                 MsgNormal bMsg=getBroadCastMessage(retMsg);
@@ -202,23 +214,11 @@ public class DealInterCom extends Thread {
                 //发送广播消息
                 for (String k: entryGroupUsers.keySet()) {
                     String _sp[] = k.split("::");
-                    mk=new MobileKey();
-                    mk.setMobileId(_sp[0]);
-                    mk.setPCDType(Integer.parseInt(_sp[1]));
-                    mk.setUserId(_sp[2]);
-                    pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
-                }
-            }
-            //删除所有通过这个组发给他的消息
-            ConcurrentLinkedQueue<Message> tempMsgs=pmm.getSendMemory().getSendQueue(mk);
-            if (tempMsgs!=null&&!tempMsgs.isEmpty()) {
-                for (Message m: tempMsgs) {
-                    if (m instanceof MsgMedia) {
-                        MsgMedia _mm=(MsgMedia)m;
-                        if (_mm.getBizType()==1&&groupId.equals(_mm.getObjId())) {
-                            tempMsgs.remove(m);
-                        }
-                    }
+                    mUdk=new MobileUDKey();
+                    mUdk.setDeviceId(_sp[0]);
+                    mUdk.setPCDType(Integer.parseInt(_sp[1]));
+                    mUdk.setUserId(_sp[2]);
+                    pmm.getSendMemory().addUniqueMsg2Queue(mUdk, bMsg, new CompareGroupMsg());
                 }
             }
         }
@@ -232,8 +232,8 @@ public class DealInterCom extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
-            if (mk==null) return;
+            MobileUDKey mUdk=MobileUDKey.buildFromMsg(sourceMsg);
+            if (mUdk==null) return;
 
             String groupId="";
             try {
@@ -252,18 +252,18 @@ public class DealInterCom extends Thread {
             retMsg.setMsgContent(mc);
 
             GroupInterCom gic=gmm.getGroupInterCom(groupId);
-            if (!mk.isUser()) retMsg.setReturnType(0x00);
+            if (!mUdk.isUser()) retMsg.setReturnType(0x00);
             else if (gic==null) retMsg.setReturnType(0x02);
             else {
                 gic.setLastTalkTime(gic.getSpeaker()==null?null:gic.getSpeaker().getUserId());
-                Map<String, UserPo> _m=gic.setSpeaker(mk);
+                Map<String, UserPo> _m=gic.setSpeaker(mUdk);
                 if (_m.containsKey("E")) retMsg.setReturnType(0x04);
                 else if (_m.containsKey("O")) retMsg.setReturnType(0x05);
                 else if (_m.containsKey("F")) retMsg.setReturnType(0x08);
-                else if (CallingMemoryManage.getInstance().isTalk(mk.getUserId(),"")) retMsg.setReturnType(0x90);//电话通话判断 //TODO 这里应该用全局锁
+                else if (CallingMemoryManage.getInstance().isTalk(mUdk.getUserId(),"")) retMsg.setReturnType(0x90);//电话通话判断 //TODO 这里应该用全局锁
                 else retMsg.setReturnType(0x01);//成功可以开始对讲了
             }
-            pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+            pmm.getSendMemory().addMsg2Queue(mUdk, retMsg);
 
             //广播开始对讲消息
             if (retMsg.getReturnType()==1) {
@@ -272,20 +272,20 @@ public class DealInterCom extends Thread {
                 bMsg.setCommand(0x10);
                 dataMap=new HashMap<String, Object>();
                 dataMap.put("GroupId", groupId);
-                dataMap.put("TalkUserId", mk.getUserId());
+                dataMap.put("TalkUserId", mUdk.getUserId());
                 MapContent _mc=new MapContent(dataMap);
                 bMsg.setMsgContent(_mc);
                 //发送广播消息
-                String ptterId=mk.getUserId();
+                String ptterId=mUdk.getUserId();
                 Map<String, UserPo> entryGroupUsers=gic.getEntryGroupUserMap();
                 for (String k: entryGroupUsers.keySet()) {
                     String _sp[] = k.split("::");
                     if (ptterId.equals(_sp[1])) continue;
-                    mk=new MobileKey();
-                    mk.setMobileId(_sp[0]);
-                    mk.setPCDType(Integer.parseInt(_sp[1]));
-                    mk.setUserId(_sp[2]);
-                    pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
+                    mUdk=new MobileUDKey();
+                    mUdk.setDeviceId(_sp[0]);
+                    mUdk.setPCDType(Integer.parseInt(_sp[1]));
+                    mUdk.setUserId(_sp[2]);
+                    pmm.getSendMemory().addUniqueMsg2Queue(mUdk, bMsg, new CompareGroupMsg());
                 }
             }
         }
@@ -298,8 +298,8 @@ public class DealInterCom extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
-            if (mk==null) return;
+            MobileUDKey mUdk=MobileUDKey.buildFromMsg(sourceMsg);
+            if (mUdk==null) return;
 
             String groupId="";
             try {
@@ -317,16 +317,16 @@ public class DealInterCom extends Thread {
             retMsg.setMsgContent(mc);
 
             GroupInterCom gic=gmm.getGroupInterCom(groupId);
-            if (!mk.isUser()) retMsg.setReturnType(0x00);
+            if (!mUdk.isUser()) retMsg.setReturnType(0x00);
             else if (gic==null) retMsg.setReturnType(0x02);
             else {
                 gic.setLastTalkTime(gic.getSpeaker()==null?null:gic.getSpeaker().getUserId());
-                int _r=gic.endPTT(mk);
+                int _r=gic.endPTT(mUdk);
                 if (_r==-1) retMsg.setReturnType(0x04);
                 else if (_r==0) retMsg.setReturnType(0x08);
                 else retMsg.setReturnType(0x01);//结束对讲
             }
-            pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+            pmm.getSendMemory().addMsg2Queue(mUdk, retMsg);
 
             /**不在这里处理了，在收到所有的包后处理这个逻辑
             if (retMsg.getReturnType().equals("1001")) {

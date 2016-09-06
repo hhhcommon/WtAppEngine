@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.woting.appengine.mobile.MobileUDKey;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
+import com.woting.passport.mobile.MobileUDKey;
 
 public class SearchCrawlerService {
 

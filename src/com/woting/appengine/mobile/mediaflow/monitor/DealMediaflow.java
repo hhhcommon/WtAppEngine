@@ -3,7 +3,13 @@ package com.woting.appengine.mobile.mediaflow.monitor;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.ServletContext;
+
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
 import com.mysql.jdbc.StringUtils;
+import com.spiritdata.framework.FConstants;
+import com.spiritdata.framework.core.cache.SystemCache;
 //import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.appengine.calling.mem.CallingMemoryManage;
 import com.woting.appengine.calling.model.OneCall;
@@ -14,19 +20,21 @@ import com.woting.appengine.mobile.mediaflow.mem.TalkMemoryManage;
 import com.woting.appengine.mobile.mediaflow.model.CompareAudioFlowMsg;
 import com.woting.appengine.mobile.mediaflow.model.TalkSegment;
 import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
-import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.push.core.message.Message;
 import com.woting.push.core.message.MsgMedia;
-import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
-import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.service.UserService;
+import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.SessionService;
 
 public class DealMediaflow extends Thread {
     private PushMemoryManage pmm=PushMemoryManage.getInstance();
     private GroupMemoryManage gmm=GroupMemoryManage.getInstance();
     private CallingMemoryManage cmm=CallingMemoryManage.getInstance();
-    private SessionMemoryManage smm=SessionMemoryManage.getInstance();
+
+    private SessionService sessionService=null;
+    private UserService userService=null;
 
     /**
      * 给线程起一个名字的构造函数
@@ -34,6 +42,12 @@ public class DealMediaflow extends Thread {
      */
     public DealMediaflow(String name) {
         super("流数据处理线程"+((name==null||name.trim().length()==0)?"":"::"+name));
+        //创建SessionService对象
+        ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+        if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+            sessionService=(SessionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("redisSessionService");
+            userService=(UserService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("userService");
+        }
     }
 
     @Override
@@ -72,9 +86,9 @@ public class DealMediaflow extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
-            MobileKey mk=(MobileKey)sourceMsg.getExtInfo();
-            if (mk==null||!mk.isUser()) return;
-            String talkerId=mk.getUserId();
+            MobileUDKey mUdk=(MobileUDKey)sourceMsg.getExtInfo();
+            if (mUdk==null||!mUdk.isUser()) return;
+            String talkerId=mUdk.getUserId();
             String talkId=sourceMsg.getTalkId();
             if (StringUtils.isEmptyOrWhitespaceOnly(talkId)) return;
             int seqNum=sourceMsg.getSeqNo();
@@ -125,7 +139,7 @@ public class DealMediaflow extends Thread {
                 if (wt==null) {
                     wt = new WholeTalk();
                     wt.setTalkId(talkId);
-                    wt.setTalkerMk(mk);
+                    wt.setTalkerMk(mUdk);
                     wt.setObjId(objId);
                     wt.setTalkType(talkType);
                     tmm.addWt(wt);
@@ -144,14 +158,12 @@ public class DealMediaflow extends Thread {
             if (talkType==1) ts.setSendUserMap(gic.getEntryGroupUserMap());//组对讲
             else {//电话
                 String userId=oc.getOtherId(talkerId);
-                MobileSession ms=smm.getActivedUserSessionByUserId(userId);
                 UserPo u=null;
-                if (ms!=null) {
-                    u=(UserPo)smm.getActivedUserSessionByUserId(userId).getAttribute("user");
-                }
+                mUdk=(MobileUDKey)sessionService.getActivedUserUDK(userId);
+                if (mUdk!=null) u=userService.getUserById(userId);
                 if (u!=null) {
                     Map<String, UserPo> um=new HashMap<String, UserPo>();
-                    um.put(ms.getKey().toString(), u);
+                    um.put(mUdk.toString(), u);
                     ts.setSendUserMap(um);
                 }
             }
@@ -179,11 +191,11 @@ public class DealMediaflow extends Thread {
 
             for (String k: ts.getSendUserMap().keySet()) {
                 String _sp[] = k.split("::");
-                mk=new MobileKey();
-                mk.setMobileId(_sp[0]);
-                mk.setPCDType(Integer.parseInt(_sp[1]));
-                mk.setUserId(_sp[2]);
-                pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareAudioFlowMsg());
+                mUdk=new MobileUDKey();
+                mUdk.setDeviceId(_sp[0]);
+                mUdk.setPCDType(Integer.parseInt(_sp[1]));
+                mUdk.setUserId(_sp[2]);
+                pmm.getSendMemory().addUniqueMsg2Queue(mUdk, bMsg, new CompareAudioFlowMsg());
                 //处理流数据
                 ts.getSendFlagMap().put(k, 0);
                 ts.getSendTimeMap().get(k).add(System.currentTimeMillis());
@@ -207,9 +219,9 @@ public class DealMediaflow extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
-            MobileKey mk=(MobileKey)sourceMsg.getExtInfo();
-            if (mk==null||!mk.isUser()) return;
-            String talkerId=mk.getUserId();
+            MobileUDKey mUdk=(MobileUDKey)sourceMsg.getExtInfo();
+            if (mUdk==null||!mUdk.isUser()) return;
+            String talkerId=mUdk.getUserId();
             String talkId=sourceMsg.getTalkId();
             if (StringUtils.isEmptyOrWhitespaceOnly(talkerId)) return;
             int seqNum=sourceMsg.getSeqNo();
@@ -224,7 +236,7 @@ public class DealMediaflow extends Thread {
             if (wt!=null) {
                 if (sourceMsg.getReturnType()==1) {
                     TalkSegment ts = wt.getTalkData().get(Math.abs(seqNum));
-                    if (ts!=null&&ts.getSendFlagMap().get(mk.toString())!=null) ts.getSendFlagMap().put(mk.toString(), 2);
+                    if (ts!=null&&ts.getSendFlagMap().get(mUdk.toString())!=null) ts.getSendFlagMap().put(mUdk.toString(), 2);
                 }
                 if (wt.isSendCompleted()) {
                     tmm.removeWt(wt);

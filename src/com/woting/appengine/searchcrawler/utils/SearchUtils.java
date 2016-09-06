@@ -17,7 +17,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.mobile.MobileUDKey;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.service.BaiDuNewsSearch;
@@ -25,6 +24,7 @@ import com.woting.appengine.searchcrawler.service.KaoLaSearch;
 import com.woting.appengine.searchcrawler.service.LocalSearch;
 import com.woting.appengine.searchcrawler.service.QingTingSearch;
 import com.woting.appengine.searchcrawler.service.XiMaLaYaSearch;
+import com.woting.passport.mobile.MobileUDKey;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;

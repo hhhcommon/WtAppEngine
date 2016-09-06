@@ -3,8 +3,7 @@ package com.woting.appengine.mobile.push.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.woting.appengine.common.util.MobileUtils;
-import com.woting.appengine.mobile.model.MobileKey;
+import com.woting.passport.mobile.MobileUDKey;
 import com.woting.push.core.message.Message;
 import com.woting.push.core.message.MsgNormal;
 
@@ -14,12 +13,12 @@ import com.woting.push.core.message.MsgNormal;
  * @author wanghui
  */
 public class SendMessageList {
-    private MobileKey mk=null; //本列表的移动端标识，一个列表只能有一个标识，即此列表只能对应一个设备
+    private MobileUDKey mUdk=null; //本列表的移动端标识，一个列表只能有一个标识，即此列表只能对应一个设备
     private List<Message> msgList;
 
-    public SendMessageList(MobileKey mk) {
+    public SendMessageList(MobileUDKey mUdk) {
         super();
-        this.mk=mk;
+        this.mUdk=mUdk;
         this.msgList = new ArrayList<Message>();
     }
 
@@ -32,12 +31,13 @@ public class SendMessageList {
     public boolean add(Message m) throws IllegalAccessException {
         if (!m.isAffirm()) throw new IllegalAccessException("消息为不需要确认的消息，无需加入");
         if (m instanceof MsgNormal) {
-            if (this.mk!=null&&!this.mk.equals(MobileUtils.getMobileKey(m))) throw new IllegalAccessException("不是同一设备的消息，不能加入");
+            if (this.mUdk!=null&&!this.mUdk.equals(MobileUDKey.buildFromMsg(m))) throw new IllegalAccessException("不是同一设备的消息，不能加入");
         }
 
         if (this.msgList.size()==0) {
-            if (this.mk==null) this.mk=MobileUtils.getMobileKey(m);
-            return this.msgList.add(m);
+            if (this.mUdk==null) this.mUdk=MobileUDKey.buildFromMsg(m);
+            if (this.mUdk!=null) return this.msgList.add(m);
+            return false;
         } else {
             //排序查找，从后向前
             for (int i=this.msgList.size()-1;i>=0; i--) {

@@ -14,18 +14,17 @@ import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
 import com.woting.appengine.intercom.model.GroupInterCom;
-import com.woting.appengine.mobile.MobileUDKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.push.core.message.CompareMsg;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.push.core.message.content.MapContent;
-import com.woting.appengine.mobile.session.mem.SessionMemoryManage;
-import com.woting.appengine.mobile.session.model.MobileSession;
 import com.woting.passport.UGA.model.Group;
 import com.woting.passport.UGA.persistence.pojo.GroupPo;
 import com.woting.passport.UGA.persistence.pojo.GroupUserPo;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.groupinvite.persistence.pojo.InviteGroupPo;
+import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.SessionService;
 import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
 import com.woting.passport.useralias.service.UserAliasService;
 
@@ -36,7 +35,6 @@ import com.woting.passport.useralias.service.UserAliasService;
 public class GroupService {
     private GroupMemoryManage gmm=GroupMemoryManage.getInstance();
     private PushMemoryManage pmm=PushMemoryManage.getInstance();
-    private SessionMemoryManage smm=SessionMemoryManage.getInstance();
 
     @Resource(name="defaultDAO")
     private MybatisDAO<UserPo> userDao;
@@ -46,6 +44,8 @@ public class GroupService {
     private MybatisDAO<InviteGroupPo> inviteGroupDao;
     @Resource
     private UserAliasService userAliasService;
+    @Resource(name="redisSessionService")
+    private SessionService sessionService;
 
     @PostConstruct
     public void initParam() {
@@ -117,8 +117,6 @@ public class GroupService {
                     dataMap.put("UserInfo", u.toHashMap4Mobile());
                     MapContent mc=new MapContent(dataMap);
                     bMsg.setMsgContent(mc);
-                    MobileSession ms=null;
-                    MobileKey mk=null;
 
                     //通知消息
                     MsgNormal nMsg=new MsgNormal();
@@ -133,10 +131,9 @@ public class GroupService {
                     nMsg.setMsgContent(mc);
 
                     for (UserPo up: upl) {
-                        ms=smm.getActivedUserSessionByUserId(up.getUserId());
-                        if (ms!=null) {
-                            mk=ms.getKey();
-                            pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
+                        MobileUDKey aMudk=(MobileUDKey)sessionService.getActivedUserUDK(up.getUserId());
+                        if (aMudk!=null) {
+                            pmm.getSendMemory().addUniqueMsg2Queue(aMudk, bMsg, new CompareGroupMsg());
                         }
                         pmm.getSendMemory().addMsg2NotifyQueue(up.getUserId(), nMsg);//发送通知消息
                     }
@@ -461,8 +458,6 @@ public class GroupService {
                 dataMap.put("UserInfo", um);
                 MapContent mc=new MapContent(dataMap);
                 bMsg.setMsgContent(mc);
-                MobileSession ms=null;
-                MobileKey mk=null;
 
                 //通知消息
                 MsgNormal nMsg=new MsgNormal();
@@ -476,11 +471,10 @@ public class GroupService {
                 nMsg.setCommand(5);
                 nMsg.setMsgContent(mc);
 
-                for (UserPo up: oldUpl) {
-                    ms=smm.getActivedUserSessionByUserId(up.getUserId());
-                    if (ms!=null) {
-                        mk=ms.getKey();
-                        pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
+                for (UserPo up: upl) {
+                    MobileUDKey aMudk=(MobileUDKey)sessionService.getActivedUserUDK(up.getUserId());
+                    if (aMudk!=null) {
+                        pmm.getSendMemory().addUniqueMsg2Queue(aMudk, bMsg, new CompareGroupMsg());
                     }
                     pmm.getSendMemory().addMsg2NotifyQueue(up.getUserId(), nMsg);//发送通知消息
                 }
@@ -1159,13 +1153,10 @@ public class GroupService {
             nMsg.setCommand(5);
             nMsg.setMsgContent(mc);
 
-            MobileSession ms=null;
-            MobileKey mk=null;
             for (UserPo _up: upl) {
-                ms=smm.getActivedUserSessionByUserId(_up.getUserId());
-                if (ms!=null) {
-                    mk=ms.getKey();
-                    pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
+                MobileUDKey aMudk=(MobileUDKey)sessionService.getActivedUserUDK(_up.getUserId());
+                if (aMudk!=null) {
+                    pmm.getSendMemory().addUniqueMsg2Queue(aMudk, bMsg, new CompareGroupMsg());
                 }
                 pmm.getSendMemory().addMsg2NotifyQueue(_up.getUserId(), nMsg);//发送通知消息
             }
@@ -1227,8 +1218,6 @@ public class GroupService {
                 dataMap.put("Del", "1");
                 MapContent mc=new MapContent(dataMap);
                 bMsg.setMsgContent(mc);
-                MobileSession ms=null;
-                MobileKey mk=null;
 
                 //通知消息
                 MsgNormal nMsg=new MsgNormal();
@@ -1242,13 +1231,12 @@ public class GroupService {
                 nMsg.setCommand(6);
                 nMsg.setMsgContent(mc);
 
-                for (UserPo _up: upl) {
-                    ms=smm.getActivedUserSessionByUserId(_up.getUserId());
-                    if (ms!=null) {
-                        mk=ms.getKey();
-                        pmm.getSendMemory().addUniqueMsg2Queue(mk, bMsg, new CompareGroupMsg());
+                for (UserPo up: upl) {
+                    MobileUDKey aMudk=(MobileUDKey)sessionService.getActivedUserUDK(up.getUserId());
+                    if (aMudk!=null) {
+                        pmm.getSendMemory().addUniqueMsg2Queue(aMudk, bMsg, new CompareGroupMsg());
                     }
-                    pmm.getSendMemory().addMsg2NotifyQueue(_up.getUserId(), nMsg);//发送通知消息
+                    pmm.getSendMemory().addMsg2NotifyQueue(up.getUserId(), nMsg);//发送通知消息
                 }
             }
             ret.put("ReturnType", "1001");

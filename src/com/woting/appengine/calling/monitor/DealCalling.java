@@ -7,9 +7,8 @@ import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.appengine.calling.CallingListener;
 import com.woting.appengine.calling.mem.CallingMemoryManage;
 import com.woting.appengine.calling.model.OneCall;
-import com.woting.appengine.common.util.MobileUtils;
-import com.woting.appengine.mobile.model.MobileKey;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
+import com.woting.passport.mobile.MobileUDKey;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.push.core.message.content.MapContent;
 
@@ -67,9 +66,9 @@ public class DealCalling extends Thread {
             if (callId.equals("")) return;
 
             OneCall oneCall=null;//通话对象
-            MobileKey mk=MobileUtils.getMobileKey(sourceMsg);
+            MobileUDKey mUdk=MobileUDKey.buildFromMsg(sourceMsg);
             if (sourceMsg.getCmdType()==1&&sourceMsg.getCommand()==1) {//发起呼叫过程
-                String callerId=mk.getUserId();
+                String callerId=mUdk.getUserId();
                 String CallederId=((MapContent)sourceMsg.getMsgContent()).get("CallederId")+"";
                 //创建内存对象
                 oneCall=new OneCall(1, callId, callerId, CallederId
@@ -81,7 +80,7 @@ public class DealCalling extends Thread {
                 int addFlag=CallingMemoryManage.getInstance().addOneCall(oneCall);
                 if (addFlag!=1) {//返回错误信息
                     retMsg.setReturnType(addFlag==0?0x81:0x82);
-                    pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+                    pmm.getSendMemory().addMsg2Queue(mUdk, retMsg);
                     return;
                 }
                 //启动处理进程
@@ -97,7 +96,7 @@ public class DealCalling extends Thread {
                     dataMap.put("ServerMsg", "服务器处理进程不存在");
                     MapContent mc=new MapContent(dataMap);
                     retMsg.setMsgContent(mc);
-                    pmm.getSendMemory().addMsg2Queue(mk, retMsg);
+                    pmm.getSendMemory().addMsg2Queue(mUdk, retMsg);
                     return;
                 }
                 oneCall.addPreMsg(sourceMsg);//把消息压入队列
