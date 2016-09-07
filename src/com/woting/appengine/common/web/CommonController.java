@@ -37,6 +37,7 @@ import com.woting.searchword.service.WordService;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
+import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.CacheEle;
 
 @Lazy(true)
@@ -618,7 +619,7 @@ public class CommonController {
     public Map<String,Object> getlkTTSInfo(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            String[] str = SearchUtils.readFile("/opt/apache-tomcat-8.0.26/webapps/wt/mweb/lkinfo.txt");
+            String[] str = SearchUtils.readFile(SystemCache.getCache(FConstants.APPOSPATH).getContent()+"mweb/lkinfo.txt");
             String uri = "";
             int[] random = new int[10];
             for (int i=0;i<10;i++) {

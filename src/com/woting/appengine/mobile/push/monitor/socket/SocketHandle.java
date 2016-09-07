@@ -574,7 +574,7 @@ public class SocketHandle extends Thread {
                                     sendMsgQueue.add(ackM.toBytes());
                                 } else {
                                     SocketHandle.this.mk=MobileUtils.getMobileKey(ms);
-                                    System.out.println("SocketHashCode["+socket.hashCode()+"]002::"+mk.toString()+"::"+(pmm.userSocketM.get(mk)).socketDesc);
+                                    System.out.println("SocketHashCode["+socket.hashCode()+"]002::"+mk.toString()+"::"+(pmm.userSocketM.get(mk)==null?"NULL":pmm.userSocketM.get(mk).socketDesc));
                                     if (SocketHandle.this.mk!=null) {//存入接收队列
                                         pmm.setUserSocketMap(SocketHandle.this.mk, SocketHandle.this);
                                         if (((MsgNormal)ms).getBizType()!=15) pmm.getReceiveMemory().addPureQueue(ms);
