@@ -221,12 +221,16 @@ public abstract class MobileUtils {
     }
     
     private static Map<String, Object> _dealMobileLinked(MobileKey mKey, int type) {
-        if (mKey==null) return null;
+        Map<String,Object> map=new HashMap<String, Object>();
+        if (mKey==null) {
+            map.put("ReturnType", "2001");
+            map.put("Msg", "未获得IMEI无法处理");
+            return map;
+        }
         MobileKey _mKey=new MobileKey();
         _mKey.setMobileId(mKey.getMobileId());
         _mKey.setPCDType(mKey.getPCDType());
         _mKey.setUserId(mKey.getUserId());
-        Map<String,Object> map=new HashMap<String, Object>();
         if (_mKey==null||StringUtils.isNullOrEmptyOrSpace(_mKey.getMobileId())) {//若无IMEI
             map.put("ReturnType", "2001");
             map.put("Msg", "未获得IMEI无法处理");
