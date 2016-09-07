@@ -78,7 +78,7 @@ public class KaoLaSearch extends Thread {
 						festival.setAudioDes(list_href2.get(j).get("audioDes").toString());
 						festival.setAlbumName(list_href2.get(j).get("albumName")==null?null:list_href2.get(j).get("albumName").toString());
 						festival.setAlbumPic(list_href2.get(j).get("albumPic")==null?null:list_href2.get(j).get("albumPic").toString());
-						festival.setPlayUrl((list_href2.get(j).get("m3u8PlayUrl").toString()));
+						festival.setPlayUrl((list_href2.get(j).get("mp3PlayUrl").toString()));
 						festival.setFileSize((list_href2.get(j).get("fileSize").toString()));
 						festival.setDuration(((list_href2.get(j).get("duration").toString())));
 						festival.setUpdateTime(((list_href2.get(j).get("updateTime").toString())));
@@ -127,7 +127,7 @@ public class KaoLaSearch extends Thread {
 				festival.setAudioDes(map.get("audioDes").toString());
 				festival.setAlbumName(map.get("albumName").toString());
 				festival.setAlbumPic(map.get("albumPic")==null?"":map.get("albumPic").toString());
-				festival.setPlayUrl(map.get("m3u8PlayUrl").toString());
+				festival.setPlayUrl(map.get("mp3PlayUrl").toString());
 				festival.setFileSize(map.get("fileSize").toString());
 				festival.setDuration(map.get("duration").toString());
 				festival.setUpdateTime(map.get("updateTime").toString());
