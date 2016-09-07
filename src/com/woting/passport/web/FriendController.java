@@ -53,7 +53,7 @@ public class FriendController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "friend/searchStranger");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -123,7 +123,7 @@ public class FriendController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "friend/invite");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -193,7 +193,7 @@ public class FriendController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "friend/getInvitedMeList");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -258,7 +258,7 @@ public class FriendController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "friend/inviteDeal");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -329,7 +329,7 @@ public class FriendController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "friend/delFriend");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -392,7 +392,7 @@ public class FriendController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "friend/getList");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -458,7 +458,7 @@ public class FriendController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "friend/updateFriendInfo");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");

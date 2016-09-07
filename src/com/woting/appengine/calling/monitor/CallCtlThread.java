@@ -1,9 +1,16 @@
 package com.woting.appengine.calling.monitor;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import javax.servlet.ServletContext;
+
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import com.spiritdata.framework.FConstants;
+import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
@@ -18,7 +25,9 @@ import com.woting.push.core.message.MsgMedia;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.push.core.message.content.MapContent;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.SessionService;
 
 /**
  * 电话控制线程
@@ -32,10 +41,11 @@ public class CallCtlThread extends Thread {
     private OneCall callData;//所控制的通话数据
     private boolean isCallerTalked=false; //是否“被叫者”说话
 
-//    private String callerAddr="";
     private MobileUDKey callerKey=null;
-//    private String callederAddr="";
     private MobileUDKey callederKey=null;
+
+    private SessionService sessionService=null;
+    private UserService userService=null;
 
     /**
      * 构造函数，必须给定一个通话控制数据
@@ -46,6 +56,12 @@ public class CallCtlThread extends Thread {
         super.setName("电话控制线程[callId="+callData.getCallId()+"]");
         this.callData=callData;
         this.isCallerTalked=false;
+        //创建SessionService对象
+        ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+        if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+            sessionService=(SessionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("redisSessionService");
+            userService=(UserService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("userService");
+        }
     }
 
     /**
@@ -130,6 +146,7 @@ public class CallCtlThread extends Thread {
     //处理呼叫(CALL:1)
     private void dial(MsgNormal m) {
         System.out.println("处理呼叫信息前==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
+        MobileUDKey callerUdk=MobileUDKey.buildFromMsg(m);
         String callId =((MapContent)m.getMsgContent()).get("CallId")+"";
         String callerId=MobileUDKey.buildFromMsg(m).getUserId();
         String callederId=((MapContent)m.getMsgContent()).get("CallederId")+"";
@@ -149,9 +166,10 @@ public class CallCtlThread extends Thread {
         toCallerMsg.setCmdType(1);
         toCallerMsg.setCommand(0x09);
         //判断被叫者是否存在
-        if (smm.getActivedUserSessionByUserId(callerId)==null) toCallerMsg.setReturnType(2);
+        List<MobileUDKey> calleredDevices=(List<MobileUDKey>)sessionService.getActivedUserUDKs(callederId);
+        if ((MobileUDKey)sessionService.getActivedUserUDK(callerUdk.getUserId(),callerUdk.getPCDType())==null) toCallerMsg.setReturnType(2);
         else
-        if (smm.getActivedUserSessionByUserId(callederId)==null) toCallerMsg.setReturnType(3);
+        if (calleredDevices==null||calleredDevices.isEmpty()) toCallerMsg.setReturnType(3);
         else callorExisted=true;
         //判断是否占线
         if (callorExisted) {
@@ -169,7 +187,7 @@ public class CallCtlThread extends Thread {
         dataMap.put("CallederId", callederId);
         MapContent mc=new MapContent(dataMap);
         toCallerMsg.setMsgContent(mc);
-        pmm.getSendMemory().addMsg2Queue(MobileUtils.getMobileKey(m), toCallerMsg);
+        pmm.getSendMemory().addMsg2Queue(MobileUDKey.buildFromMsg(m), toCallerMsg);
         System.out.println("发送:"+JsonUtils.objToJson(toCallerMsg));
         //记录到已发送列表
         this.callData.addSendedMsg(toCallerMsg);
@@ -194,7 +212,7 @@ public class CallCtlThread extends Thread {
             toCallederMsg.setMsgContent(_mc);
             //加入“呼叫者”的用户信息给被叫者
             Map<String, Object> callerInfo=new HashMap<String, Object>();
-            UserPo u=(UserPo)smm.getActivedUserSessionByUserId(callerId).getAttribute("user");
+            UserPo u=userService.getUserById(callerId);
             callerInfo.put("UserName", u.getLoginName());
             callerInfo.put("UserNum", u.getUserNum());
             callerInfo.put("Portrait", u.getPortraitMini());
@@ -202,7 +220,11 @@ public class CallCtlThread extends Thread {
             callerInfo.put("Descn", u.getDescn());
             dataMap.put("CallerInfo", callerInfo);
 
-            pmm.getSendMemory().addMsg2Queue(smm.getActivedUserSessionByUserId(callederId).getKey(), toCallederMsg);
+            for (MobileUDKey mUdk: calleredDevices) {
+                if (mUdk!=null) {
+                    pmm.getSendMemory().addMsg2Queue(mUdk, toCallederMsg);
+                }
+            }
             //记录到已发送列表
             this.callData.addSendedMsg(toCallederMsg);
         }
@@ -214,10 +236,9 @@ public class CallCtlThread extends Thread {
         else {
             //修改状态
             this.callData.setStatus_1();
-            this.callerKey=smm.getActivedUserSessionByUserId(callerId).getKey();
-            //this.callerAddr=MobileUtils.getAddr(callerKey);
-            this.callederKey=smm.getActivedUserSessionByUserId(callederId).getKey();
-            //this.callederAddr=MobileUtils.getAddr(callederKey);
+            this.callerKey=callerUdk;
+            this.callData.setCallerPcdType(callerUdk.getPCDType());
+            this.callederKey=null;
         }
         System.out.println("处理呼叫信息后==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
     }
@@ -226,7 +247,7 @@ public class CallCtlThread extends Thread {
     private int dealAutoDialFeedback(MsgNormal m) {
         System.out.println("处理自动应答前==[callid="+this.callData.getCallId()+"]:status="+this.callData.getStatus());
         //首先判断这个消息是否符合处理的要求：callid, callerId, callederId是否匹配
-        if (!this.callData.getCallerId().equals(((MapContent)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m).getUserId())) return 3;
+        if (!this.callData.getCallerId().equals(((MapContent)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUDKey.buildFromMsg(m).getUserId())) return 3;
         if (this.callData.getStatus()==1) {//状态正确，如果是其他状态，这个消息抛弃
             //发送给呼叫者的消息
             MsgNormal toCallerMsg=new MsgNormal();
@@ -246,6 +267,8 @@ public class CallCtlThread extends Thread {
             MapContent mc=new MapContent(dataMap);
             toCallerMsg.setMsgContent(mc);
 
+            MobileUDKey callederUdk=MobileUDKey.buildFromMsg(m); //被叫者Key
+            
             pmm.getSendMemory().addMsg2Queue(this.callerKey, toCallerMsg);
             this.callData.addSendedMsg(toCallerMsg);//记录到已发送列表
 
@@ -258,13 +281,20 @@ public class CallCtlThread extends Thread {
     //处理“被叫者”应答(CALL:2)
     private int ackDial(MsgNormal m) {
         //首先判断这个消息是否符合处理的要求：callid, callerId, callederId是否匹配
-        if (!this.callData.getCallerId().equals(((MapContent)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUtils.getMobileKey(m).getUserId())) return 3;
+        if (!this.callData.getCallerId().equals(((MapContent)m.getMsgContent()).get("CallerId")+"")||!this.callData.getCallederId().equals(MobileUDKey.buildFromMsg(m).getUserId())) return 3;
         if (this.callData.getStatus()==1||this.callData.getStatus()==2) {//状态正确，如果是其他状态，这个消息抛弃
             //应答状态
             int ackType=2; //拒绝
             try {
                 ackType=Integer.parseInt(""+((MapContent)m.getMsgContent()).get("ACKType"));
             } catch(Exception e) {}
+
+            MobileUDKey _tempK=MobileUDKey.buildFromMsg(m);
+            if (this.callederKey==null) {
+                this.callederKey=_tempK;
+                this.callData.setCallederPcdType(_tempK.getPCDType());
+            } else return 2;//已处理了，不再处理了。
+
             //构造“应答传递ACK”消息，并发送给“呼叫者”
             MsgNormal toCallerMsg=new MsgNormal();
             toCallerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -297,9 +327,12 @@ public class CallCtlThread extends Thread {
     //处理“挂断”(CALL:3)
     private int hangup(MsgNormal m) {
         //首先判断是那方在进行挂断
-        String hangupperId=MobileUtils.getMobileKey(m).getUserId();
+        String hangupperId=MobileUDKey.buildFromMsg(m).getUserId();
         String otherId=this.callData.getOtherId(hangupperId);
         if (otherId==null) return 3;
+        MobileUDKey otherK=this.callData.getOtherUdk(hangupperId);
+        if (otherK.getPCDType()!=1&&otherK.getPCDType()!=2) return 3;
+
         //给另一方发送“挂断传递”消息
         MsgNormal otherMsg=new MsgNormal();
         otherMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -319,7 +352,7 @@ public class CallCtlThread extends Thread {
         MapContent mc=new MapContent(dataMap);
         otherMsg.setMsgContent(mc);
 
-        pmm.getSendMemory().addMsg2Queue(smm.getActivedUserSessionByUserId(otherId).getKey(), otherMsg);
+        pmm.getSendMemory().addMsg2Queue(otherK, otherMsg);
         this.callData.addSendedMsg(otherMsg);//记录到已发送列表
         
         this.callData.setStatus_4();//修改状态
@@ -341,8 +374,11 @@ public class CallCtlThread extends Thread {
         toSpeakerMsg.setCommand(9);
 
         Map<String, Object> dataMap=new HashMap<String, Object>();
-        String speaker=MobileUtils.getMobileKey(m).getUserId();
-        if (StringUtils.isNullOrEmptyOrSpace(speaker)||smm.getActivedUserSessionByUserId(speaker)==null) {
+        String speaker=MobileUDKey.buildFromMsg(m).getUserId();
+        MobileUDKey speakerK=this.callData.getUdkByUserId(speaker);
+        speakerK=(MobileUDKey)sessionService.getActivedUserUDK(speakerK.getUserId(), speakerK.getPCDType());
+
+        if (StringUtils.isNullOrEmptyOrSpace(speaker)||speakerK==null) {
             toSpeakerMsg.setReturnType(0);
         } else {
             String ret=this.callData.setSpeaker(speaker);
@@ -362,7 +398,7 @@ public class CallCtlThread extends Thread {
         dataMap.put("CallId", this.callData.getCallId());
         MapContent mc=new MapContent(dataMap);
         toSpeakerMsg.setMsgContent(mc);
-        pmm.getSendMemory().addMsg2Queue(MobileUtils.getMobileKey(m), toSpeakerMsg);
+        pmm.getSendMemory().addMsg2Queue(MobileUDKey.buildFromMsg(m), toSpeakerMsg);
         //记录到已发送列表
         this.callData.addSendedMsg(toSpeakerMsg);
     }
@@ -381,8 +417,11 @@ public class CallCtlThread extends Thread {
         toSpeakerMsg.setCommand(0x0A);
 
         Map<String, Object> dataMap=new HashMap<String, Object>();
-        String speaker=MobileUtils.getMobileKey(m).getUserId();
-        if (StringUtils.isNullOrEmptyOrSpace(speaker)||smm.getActivedUserSessionByUserId(speaker)==null) {
+        String speaker=MobileUDKey.buildFromMsg(m).getUserId();
+        MobileUDKey speakerK=this.callData.getUdkByUserId(speaker);
+        speakerK=(MobileUDKey)sessionService.getActivedUserUDK(speakerK.getUserId(), speakerK.getPCDType());
+
+        if (speakerK==null) {
             toSpeakerMsg.setReturnType(0);
         } else {
             String ret=this.callData.cleanSpeaker(speaker);
@@ -402,7 +441,7 @@ public class CallCtlThread extends Thread {
         dataMap.put("CallId", this.callData.getCallId());
         MapContent mc=new MapContent(dataMap);
         toSpeakerMsg.setMsgContent(mc);
-        pmm.getSendMemory().addMsg2Queue(MobileUtils.getMobileKey(m), toSpeakerMsg);
+        pmm.getSendMemory().addMsg2Queue(MobileUDKey.buildFromMsg(m), toSpeakerMsg);
         //记录到已发送列表
         this.callData.addSendedMsg(toSpeakerMsg);
     }
@@ -550,7 +589,10 @@ public class CallCtlThread extends Thread {
             MapContent mc=new MapContent(dataMap);
             toCallerMsg.setMsgContent(mc);
 
-            pmm.getSendMemory().addMsg2Queue(smm.getActivedUserSessionByUserId(this.callData.getCallerId()).getKey(), toCallerMsg);
+            MobileUDKey callerK=this.callData.getUdkByUserId(this.callData.getCallerId());
+            callerK=(MobileUDKey)sessionService.getActivedUserUDK(callerK.getUserId(), callerK.getPCDType());
+
+            pmm.getSendMemory().addMsg2Queue(callerK, toCallerMsg);
             //记录到已发送列表
             this.callData.addSendedMsg(toCallerMsg);
             //修改状态

@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
+import com.woting.passport.mobile.MobileUDKey;
 import com.woting.push.core.message.MsgNormal;
 
 /**
@@ -37,6 +38,23 @@ public class OneCall implements Serializable {
     public String getCallederId() {
         return callederId;
     }
+
+    private int callerPcdType;//呼叫者PcdType
+    public int getCallerPcdType() {
+        return callerPcdType;
+    }
+    public void setCallerPcdType(int callerPcdType) {
+        this.callerPcdType=callerPcdType;
+    }
+    private int callederPcdType;//被叫者PcdType
+    public int getCallederPcdType() {
+        return callederPcdType;
+    }
+    public void setCallederPcdType(int callederPcdType) {
+        this.callederPcdType=callederPcdType;
+    }
+    
+    
     private long createTime;//本对象创建时间
     public long getCreateTime() {
         return createTime;
@@ -182,6 +200,18 @@ public class OneCall implements Serializable {
         if (this.getCallederId().equals(oneId)) otherId=this.callerId;
         return otherId;
     }
+    public MobileUDKey getOtherUdk(String oneId) {
+        MobileUDKey otherUdk=new MobileUDKey();
+        if (this.getCallerId().equals(oneId)) {
+            otherUdk.setUserId(this.callederId);
+            otherUdk.setPCDType(this.callederPcdType);
+        }
+        if (this.getCallederId().equals(oneId)) {
+            otherUdk.setUserId(this.callerId);
+            otherUdk.setPCDType(this.callerPcdType);
+        }
+        return otherUdk;
+    }
 
     /**
      * 设置说话者id
@@ -273,5 +303,20 @@ public class OneCall implements Serializable {
         if (status==9) return "通话已结束";
         
         return "未知状态";
+    }
+
+    public MobileUDKey getUdkByUserId(String speaker) {
+        if (speaker==null) return null;
+        MobileUDKey ret=new MobileUDKey();
+        ret.setUserId(speaker);
+        if (this.callederId.equals(speaker)) {
+            if (this.getCallederPcdType()==0) return null;
+            ret.setPCDType(this.getCallederPcdType());
+        }
+        if (this.callerId.equals(speaker)) {
+            if (this.getCallerPcdType()==0) return null;
+            ret.setPCDType(this.getCallerPcdType());
+        }
+        return ret;
     }
 }

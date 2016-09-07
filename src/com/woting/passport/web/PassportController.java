@@ -11,6 +11,8 @@ import java.util.Random;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.SpiritRandom;
 import com.spiritdata.framework.util.StringUtils;
+import com.spiritdata.framework.ext.redis.ExpirableBlockKey;
+import com.spiritdata.framework.ext.redis.RedisBlockLock;
 import com.spiritdata.framework.util.RequestUtils;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.GroupService;
@@ -28,6 +32,7 @@ import com.woting.passport.login.service.MobileUsedService;
 import com.woting.passport.mobile.MobileParam;
 import com.woting.passport.mobile.MobileUDKey;
 import com.woting.passport.session.SessionService;
+import com.woting.passport.session.redis.RedisUserDeviceKey;
 import com.woting.passport.useralias.mem.UserAliasMemoryManage;
 import com.woting.passport.useralias.model.UserAliasKey;
 import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
@@ -46,6 +51,8 @@ public class PassportController {
     private FriendService friendService;
     @Resource(name="redisSessionService")
     private SessionService sessionService;
+    @Resource
+    JedisConnectionFactory redisConn;
 
     private UserAliasMemoryManage uamm=UserAliasMemoryManage.getInstance();
 
@@ -95,14 +102,22 @@ public class PassportController {
             }
             //3-用户登录成功
             mUdk.setUserId(u.getUserId());
-            sessionService.registUser(mUdk);
-            //3.2-保存使用情况
-            MobileUsedPo mu=new MobileUsedPo();
-            mu.setImei(mUdk.getDeviceId());
-            mu.setStatus(1);
-            mu.setPCDType(mUdk.getPCDType());
-            mu.setUserId(u.getUserId());
-            muService.saveMobileUsed(mu);
+            RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
+            RedisConnection rConn=redisConn.getConnection();
+            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), rConn);
+            try {
+                sessionService.registUser(mUdk);
+                MobileUsedPo mu=new MobileUsedPo();
+                mu.setImei(mUdk.getDeviceId());
+                mu.setStatus(1);
+                mu.setPCDType(mUdk.getPCDType());
+                mu.setUserId(u.getUserId());
+                muService.saveMobileUsed(mu);
+            } finally {
+                rLock.unlock();
+                rConn.close();
+                rConn=null;
+            }
             //4-返回成功，若没有IMEI也返回成功
             map.put("ReturnType", "1001");
             map.put("UserInfo", u.toHashMap4Mobile());
@@ -133,8 +148,7 @@ public class PassportController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
-                if ((retM.get("ReturnType")+"").equals("2001")) {
+                if (StringUtils.isNullOrEmptyOrSpace(mUdk.getDeviceId())) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
                 } else {
@@ -167,7 +181,9 @@ public class PassportController {
                 return map;
             }
             //1.5-手机号码注册
-            String info=ms.getAttribute("phoneCheckInfo")+"";
+            RedisConnection rConn=redisConn.getConnection();
+            RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
+            String info=new String(rConn.get(redisUdk.getKey_UserPhoneCheck().getBytes()));
             if (info.startsWith("OK")) {
                 nu.setMainPhoneNum(info.substring(4));
             }
@@ -182,21 +198,21 @@ public class PassportController {
                 return map;
             }
             //3-注册成功后，自动登陆，及后处理
-            map.put("SessionId", nu.getUserId());
-            //3.1-处理Session
-            smm.expireAllSessionByIMEI(ms.getKey().getMobileId()); //作废所有imei对应的Session
-            MobileKey newMk=ms.getKey();
-            newMk.setUserId(nu.getUserId());
-            ms=new MobileSession(newMk);
-            ms.addAttribute("user", nu);
-            smm.addOneSession(ms);
-            //3.2-保存使用情况
-            MobileUsedPo mu=new MobileUsedPo();
-            mu.setImei(newMk.getMobileId());
-            mu.setStatus(1);
-            mu.setUserId(nu.getUserId());
-            mu.setPCDType(newMk.getPCDType());
-            muService.saveMobileUsed(mu);
+            mUdk.setUserId(nu.getUserId());
+            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), rConn);
+            try {
+                sessionService.registUser(mUdk);
+                MobileUsedPo mu=new MobileUsedPo();
+                mu.setImei(mUdk.getDeviceId());
+                mu.setStatus(1);
+                mu.setPCDType(mUdk.getPCDType());
+                mu.setUserId(nu.getUserId());
+                muService.saveMobileUsed(mu);
+            } finally {
+                rLock.unlock();
+                rConn.close();
+                rConn=null;
+            }
             //4-返回成功，若没有IMEI也返回成功
             map.put("ReturnType", "1001");
             map.put("UserId", nu.getUserId());
@@ -220,19 +236,16 @@ public class PassportController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                if ((retM.get("ReturnType")+"").equals("2001")) {
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                if (StringUtils.isNullOrEmptyOrSpace(mUdk.getDeviceId())) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
-                } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -266,23 +279,26 @@ public class PassportController {
             //2第三方登录
             Map<String, Object> rm=userService.thirdLogin(thirdType, tuserId, tuserName, tuserImg, tuserData);
 
-            //3-成功后，自动登陆，及后处理
+            //3-成功后，自动登陆，处理Redis
             String _userId=((UserPo)rm.get("userInfo")).getUserId();
-            map.put("SessionId", _userId);
-            //3.1-处理Session
-            smm.expireAllSessionByIMEI(ms.getKey().getMobileId()); //作废所有imei对应的Session
-            MobileKey newMk=ms.getKey();
-            newMk.setUserId(_userId);
-            ms=new MobileSession(newMk);
-            ms.addAttribute("user", rm.get("userInfo"));
-            smm.addOneSession(ms);
-            //3.2-保存使用情况
-            MobileUsedPo mu=new MobileUsedPo();
-            mu.setImei(newMk.getMobileId());
-            mu.setStatus(1);
-            mu.setUserId(_userId);
-            mu.setPCDType(newMk.getPCDType());
-            muService.saveMobileUsed(mu);
+            mUdk.setUserId(_userId);
+            RedisConnection rConn=redisConn.getConnection();
+            RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
+            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), rConn);
+            try {
+                sessionService.registUser(mUdk);
+                //3.2-保存使用情况
+                MobileUsedPo mu=new MobileUsedPo();
+                mu.setImei(mUdk.getDeviceId());
+                mu.setStatus(1);
+                mu.setUserId(_userId);
+                mu.setPCDType(mUdk.getPCDType());
+                muService.saveMobileUsed(mu);
+            } finally {
+                rLock.unlock();
+                rConn.close();
+                rConn=null;
+            }
 
             //4设置返回值
             map.put("IsNew", "True");
@@ -310,13 +326,14 @@ public class PassportController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "user/mlogout");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -324,9 +341,7 @@ public class PassportController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    if (mUdk.isUser()) userId=mUdk.getUserId();
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -335,16 +350,25 @@ public class PassportController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            if (ms!=null) ms.remove("user");
-            MobileKey mk=ms.getKey();
-            //3.2-保存使用情况
-            MobileUsedPo mu=new MobileUsedPo();
-            mu.setImei(mk.getMobileId());
-            mu.setStatus(2);
-            mu.setUserId(mk.getUserId());
-            mu.setPCDType(mk.getPCDType());
-            muService.saveMobileUsed(mu);
-            //4-返回成功，不管后台处理情况，总返回成功
+            //2-注销
+            RedisConnection rConn=redisConn.getConnection();
+            RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
+            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), rConn);
+            try {
+                sessionService.logoutSession(mUdk);
+                //保存使用情况
+                MobileUsedPo mu=new MobileUsedPo();
+                mu.setImei(mUdk.getDeviceId());
+                mu.setStatus(2);
+                mu.setUserId(mUdk.getUserId());
+                mu.setPCDType(mUdk.getPCDType());
+                muService.saveMobileUsed(mu);
+            } finally {
+                rLock.unlock();
+                rConn.close();
+                rConn=null;
+            }
+            //3-返回成功，不管后台处理情况，总返回成功
             map.put("ReturnType", "1001");
             return map;
         } catch(Exception e) {
@@ -366,13 +390,14 @@ public class PassportController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "user/updatePwd");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -380,9 +405,9 @@ public class PassportController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
+                    //注意这里可以写日志了
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -408,7 +433,7 @@ public class PassportController {
                 map.put("Message", "新旧密码不能相同");
                 return map;
             }
-            UserPo u=(UserPo)ms.getAttribute("user");
+            UserPo u=(UserPo)userService.getUserById(userId);
             if (u.getPassword().equals(oldPwd)) {
                 u.setPassword(newPwd);
                 int retFlag=userService.updateUser(u);
@@ -440,19 +465,18 @@ public class PassportController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                ms=(MobileSession)retM.get("MobileSession");
-                map.put("SessionId", ms.getKey().getSessionId());
-            }
-            if (ms==null) {
-                map.put("ReturnType", "1000");
-                map.put("Message", "无法获取会话信息");
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "user/updatePwd_AfterCheckPhoneOK");
+                if (retM==null) {
+                    map.put("ReturnType", "1000");
+                    map.put("Message", "无法获取会话信息");
+                }
             }
             if (map.get("ReturnType")!=null) return map;
 
@@ -467,14 +491,19 @@ public class PassportController {
                 return map;
             }
             UserPo up=userService.getUserById(m.get("RetrieveUserId")==null?null:(m.get("RetrieveUserId")+""));
-            String info=ms.getAttribute("phoneCheckInfo")+"";
+            String info=null;
+            RedisConnection rConn=redisConn.getConnection();
+            RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
+            try {
+                info=new String(rConn.get(redisUdk.getKey_UserPhoneCheck().getBytes()));
+            } finally {
+                rConn.close();
+                rConn=null;
+            }
             if (info.startsWith("OK")) {
                 up.setPassword(newPwd);
                 int retFlag=userService.updateUser(up);
-                if (retFlag==1) {
-                    map.put("ReturnType", "1001");
-                    ms.remove("phoneCheckInfo");
-                }
+                if (retFlag==1) map.put("ReturnType", "1001");
                 else {
                     map.put("ReturnType", "1004");
                     map.put("Message", "存储新密码失败");
@@ -504,13 +533,14 @@ public class PassportController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "user/bindExtUserInfo");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -518,9 +548,8 @@ public class PassportController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -536,7 +565,7 @@ public class PassportController {
                 map.put("ReturnType", "1003");
                 map.put("Message", "邮箱、手机号码或用户号不能同时为空");
             } else {
-                UserPo u=(UserPo)ms.getAttribute("user");
+                UserPo u=(UserPo)userService.getUserById(userId);
                 if (!StringUtils.isNullOrEmptyOrSpace(userNum)) u.setUserNum(userNum);
                 if (!StringUtils.isNullOrEmptyOrSpace(phoneNum)) u.setMainPhoneNum(phoneNum);
                 if (!StringUtils.isNullOrEmptyOrSpace(mail)) u.setMailAddress(mail);
@@ -570,13 +599,14 @@ public class PassportController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "user/getRandomUserNum");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -584,9 +614,8 @@ public class PassportController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");
@@ -620,19 +649,18 @@ public class PassportController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                ms=(MobileSession)retM.get("MobileSession");
-                map.put("SessionId", ms.getKey().getSessionId());
-            }
-            if (ms==null) {
-                map.put("ReturnType", "1003");
-                map.put("Message", "无法获取会话信息");
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "user/registerByPhoneNum");
+                if (retM==null) {
+                    map.put("ReturnType", "1003");
+                    map.put("Message", "无法获取会话信息");
+                }
             }
             if (map.get("ReturnType")!=null) return map;
 
@@ -652,7 +680,14 @@ public class PassportController {
                 String checkNum=(random+"").substring(1);
                 String smsRetNum=SendSMS.sendSms(phoneNum, checkNum, "通过手机号注册用户");
                 //向Session中加入验证信息
-                ms.addAttribute("phoneCheckInfo", System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum);
+                RedisConnection rConn=redisConn.getConnection();
+                RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
+                try {
+                    rConn.pSetEx(redisUdk.getKey_UserPhoneCheck().getBytes(), 100*1000, (System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum).getBytes());
+                } finally {
+                    rConn.close();
+                    rConn=null;
+                }
                 map.put("SmsRetNum", smsRetNum);
             } else {
                 map.put("ReturnType", "1002");
@@ -676,19 +711,18 @@ public class PassportController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                ms=(MobileSession)retM.get("MobileSession");
-                map.put("SessionId", ms.getKey().getSessionId());
-            }
-            if (ms==null) {
-                map.put("ReturnType", "1003");
-                map.put("Message", "无法获取会话信息");
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "user/retrieveByPhoneNum");
+                if (retM==null) {
+                    map.put("ReturnType", "1003");
+                    map.put("Message", "无法获取会话信息");
+                }
             }
             if (map.get("ReturnType")!=null) return map;
 
@@ -708,7 +742,14 @@ public class PassportController {
                 String checkNum=(random+"").substring(1);
                 String smsRetNum=SendSMS.sendSms(phoneNum, checkNum, "通过绑定手机号找回密码");
                 //向Session中加入验证信息
-                ms.addAttribute("phoneCheckInfo", System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum);
+                RedisConnection rConn=redisConn.getConnection();
+                RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
+                try {
+                    rConn.pSetEx(redisUdk.getKey_UserPhoneCheck().getBytes(), 100*1000, (System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum).getBytes());
+                } finally {
+                    rConn.close();
+                    rConn=null;
+                }
                 map.put("SmsRetNum", smsRetNum);
             } else {
                 map.put("ReturnType", "1002");//该手机未绑定任何账户
@@ -732,19 +773,18 @@ public class PassportController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                ms=(MobileSession)retM.get("MobileSession");
-                map.put("SessionId", ms.getKey().getSessionId());
-            }
-            if (ms==null) {
-                map.put("ReturnType", "1003");
-                map.put("Message", "无法获取会话信息");
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "user/reSendPhoneCheckCode");
+                if (retM==null) {
+                    map.put("ReturnType", "1003");
+                    map.put("Message", "无法获取会话信息");
+                }
             }
             if (map.get("ReturnType")!=null) return map;
 
@@ -763,9 +803,11 @@ public class PassportController {
                 map.put("Message", "无法获取过程码");
             }
             if (map.get("ReturnType")!=null) return map;
-            
 
-            String info=ms.getAttribute("phoneCheckInfo")+"";
+            RedisConnection rConn=redisConn.getConnection();
+            RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
+            String info=new String(rConn.get(redisUdk.getKey_UserPhoneCheck().getBytes()));
+
             if (info==null||info.equals("null")||info.startsWith("OK")) {//错误
                 map.put("ReturnType", "1002");
                 map.put("Message", "状态错误，未有之前的发送数据，无法重发");
@@ -784,7 +826,12 @@ public class PassportController {
                         String checkNum=(random+"").substring(1);
                         String smsRetNum=SendSMS.sendSms(phoneNum, checkNum, operType==1?"通过手机号注册用户":"通过绑定手机号找回密码");
                         //向Session中加入验证信息
-                        ms.addAttribute("phoneCheckInfo", System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum);
+                        try {
+                            rConn.pSetEx(redisUdk.getKey_UserPhoneCheck().getBytes(), 100*1000, (System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum).getBytes());
+                        } finally {
+                            rConn.close();
+                            rConn=null;
+                        }
                         map.put("ReturnType", "1001");
                         map.put("SmsRetNum", smsRetNum);
                     }
@@ -809,19 +856,18 @@ public class PassportController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
-                ms=(MobileSession)retM.get("MobileSession");
-                map.put("SessionId", ms.getKey().getSessionId());
-            }
-            if (ms==null) {
-                map.put("ReturnType", "1000");
-                map.put("Message", "无法获取会话信息");
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "user/checkPhoneCheckCode");
+                if (retM==null) {
+                    map.put("ReturnType", "1000");
+                    map.put("Message", "无法获取会话信息");
+                }
             }
             if (map.get("ReturnType")!=null) return map;
 
@@ -844,7 +890,9 @@ public class PassportController {
             try {needUserId=Boolean.parseBoolean((m.get("NeedUserId")==null?"false":m.get("NeedUserId")+""));} catch(Exception e) {}
 
             //验证验证码
-            String info=ms.getAttribute("phoneCheckInfo")+"";
+            RedisConnection rConn=redisConn.getConnection();
+            RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
+            String info=new String(rConn.get(redisUdk.getKey_UserPhoneCheck().getBytes()));
             if (info==null||info.equals("null")) {
                 map.put("ReturnType", "1005");
                 map.put("Message", "状态错误");
@@ -867,7 +915,12 @@ public class PassportController {
                         map.put("ReturnType", "1002");
                         map.put("Message", "验证码不匹配");
                     } else {
-                        ms.addAttribute("phoneCheckInfo", "OK::"+_phoneNum);
+                        try {
+                            rConn.pSetEx(redisUdk.getKey_UserPhoneCheck().getBytes(), 100*1000, ("OK::"+_phoneNum).getBytes());
+                        } finally {
+                            rConn.close();
+                            rConn=null;
+                        }
                         if (needUserId) {
                             UserPo u=userService.getUserByPhoneNum(phoneNum);
                             if (u!=null) map.put("UserId", u.getUserId());
@@ -919,13 +972,14 @@ public class PassportController {
         try {
             //0-获取参数
             String userId="";
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "getGroupsAndFriends");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -933,9 +987,8 @@ public class PassportController {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
                 } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
-                    if (ms.getKey().isUser()) userId=ms.getKey().getUserId();
+                    map.putAll(mUdk.toHashMapAsBean());
+                    userId=mUdk.getUserId();
                 }
                 if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                     map.put("ReturnType", "1002");

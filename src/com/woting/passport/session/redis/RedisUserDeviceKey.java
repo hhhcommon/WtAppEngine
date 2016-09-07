@@ -46,11 +46,18 @@ public class RedisUserDeviceKey extends UserDeviceKey implements RedisLoginData 
     }
 
     @Override
-    public String getKey_DeviceId() {
+    public String getValue_DeviceId() {
         if (StringUtils.isNullOrEmptyOrSpace(this.getDeviceId()))  new Plat5101CException("未设置设备Id");
         if (this.getPCDType()<=0)  new Plat5101CException("未设置PCDType");
 
         return this.getDeviceId();
     }
 
+    public String getKey_UserPhoneCheck() {
+        if (StringUtils.isNullOrEmptyOrSpace(this.getDeviceId()))  new Plat5101CException("未设置设备Id");
+        if (this.getPCDType()<=0)  new Plat5101CException("未设置PCDType");
+
+        String _userId=StringUtils.isNullOrEmptyOrSpace(this.getUserId())?this.getDeviceId():this.getUserId();
+        return "User_PhoneCheck::UserId_DType_DId::"+_userId+"_"+this.getPCDType()+"_"+this.getDeviceId();
+    }
 }

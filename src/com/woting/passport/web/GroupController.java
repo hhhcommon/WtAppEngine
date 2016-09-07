@@ -55,7 +55,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "buildGroup");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -221,7 +221,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "getGroupList");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -294,7 +294,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "getCreateGroupList");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -368,7 +368,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "getGroupMembers");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -440,7 +440,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "groupInvite");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -515,7 +515,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "getInviteMeList");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -593,7 +593,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "inviteDeal");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -673,7 +673,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "groupApply");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -746,7 +746,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "getApplyUserList");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -843,7 +843,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "getExistApplyUserGroupList");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -914,7 +914,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "applyDeal");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1006,7 +1006,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "joinInGroup");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1119,7 +1119,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "exitGroup");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1190,7 +1190,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "kickoutGroup");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1270,7 +1270,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "dissolveGroup");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1341,7 +1341,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "changGroupAdminner");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1420,7 +1420,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "searchGroup");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1508,7 +1508,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "updateGroup");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1587,7 +1587,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "group/updatePwd");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1685,7 +1685,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "getNeedCheckInviteUserGroupList");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1784,7 +1784,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "checkDeal");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -1885,7 +1885,7 @@ public class GroupController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "updateGroupUser");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");

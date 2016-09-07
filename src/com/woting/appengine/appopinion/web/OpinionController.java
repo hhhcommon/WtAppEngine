@@ -49,7 +49,7 @@ public class OpinionController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "opinion/commit");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -119,7 +119,7 @@ public class OpinionController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.getLoginStatus(mUdk);
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "opinion/getList");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");

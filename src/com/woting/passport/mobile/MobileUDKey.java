@@ -16,6 +16,16 @@ import com.woting.push.core.message.MsgNormal;
 public class MobileUDKey extends UserDeviceKey implements Serializable {
     private static final long serialVersionUID = -1794652738025588641L;
 
+    public MobileUDKey() {
+        super();
+    }
+    public MobileUDKey(UserDeviceKey udk) {
+        super();
+        this.setDeviceId(udk.getDeviceId());
+        this.setPCDType(udk.getPCDType());
+        this.setUserId(udk.getUserId());
+    }
+
     /**
      * 判断此Key是否有效
      * @return

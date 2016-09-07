@@ -29,5 +29,5 @@ public interface RedisLoginData {
      * 与getKey_UserLoginDeviceType方法配合使用
      * @return 用户登录设备Id
      */
-    public String getKey_DeviceId();
+    public String getValue_DeviceId();
 }

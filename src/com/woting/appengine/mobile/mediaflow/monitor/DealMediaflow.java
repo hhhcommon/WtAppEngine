@@ -97,7 +97,7 @@ public class DealMediaflow extends Thread {
 
             int talkType=sourceMsg.getBizType();
 
-            TalkMemoryManage tmm = TalkMemoryManage.getInstance();
+            TalkMemoryManage tmm=TalkMemoryManage.getInstance();
 //            Map<String, Object> dataMap=new HashMap<String, Object>();
             //组织回执消息
 //            Message retMsg=new Message();
@@ -137,7 +137,7 @@ public class DealMediaflow extends Thread {
             synchronized (tmm) {
                 wt=tmm.getWholeTalk(talkId);
                 if (wt==null) {
-                    wt = new WholeTalk();
+                    wt=new WholeTalk();
                     wt.setTalkId(talkId);
                     wt.setTalkerMk(mUdk);
                     wt.setObjId(objId);
@@ -152,15 +152,15 @@ public class DealMediaflow extends Thread {
                     }
                 }
             }
-            TalkSegment ts = new TalkSegment();
+            TalkSegment ts=new TalkSegment();
             ts.setWt(wt);
             ts.setData(sourceMsg.getMediaData());
             if (talkType==1) ts.setSendUserMap(gic.getEntryGroupUserMap());//组对讲
             else {//电话
-                String userId=oc.getOtherId(talkerId);
-                UserPo u=null;
-                mUdk=(MobileUDKey)sessionService.getActivedUserUDK(userId);
-                if (mUdk!=null) u=userService.getUserById(userId);
+                UserPo u=null; 
+                MobileUDKey otherUdk=oc.getOtherUdk(talkerId);
+                otherUdk=(MobileUDKey)sessionService.getActivedUserUDK(otherUdk.getUserId(), otherUdk.getPCDType());
+                if (mUdk!=null) u=userService.getUserById(otherUdk.getUserId());
                 if (u!=null) {
                     Map<String, UserPo> um=new HashMap<String, UserPo>();
                     um.put(mUdk.toString(), u);
@@ -190,7 +190,7 @@ public class DealMediaflow extends Thread {
             bMsg.setMediaData(sourceMsg.getMediaData());
 
             for (String k: ts.getSendUserMap().keySet()) {
-                String _sp[] = k.split("::");
+                String _sp[]=k.split("::");
                 mUdk=new MobileUDKey();
                 mUdk.setDeviceId(_sp[0]);
                 mUdk.setPCDType(Integer.parseInt(_sp[1]));
@@ -231,11 +231,11 @@ public class DealMediaflow extends Thread {
 
             int talkType=sourceMsg.getBizType();
 
-            TalkMemoryManage tmm = TalkMemoryManage.getInstance();
-            WholeTalk wt = tmm.getWholeTalk(talkId);
+            TalkMemoryManage tmm=TalkMemoryManage.getInstance();
+            WholeTalk wt=tmm.getWholeTalk(talkId);
             if (wt!=null) {
                 if (sourceMsg.getReturnType()==1) {
-                    TalkSegment ts = wt.getTalkData().get(Math.abs(seqNum));
+                    TalkSegment ts=wt.getTalkData().get(Math.abs(seqNum));
                     if (ts!=null&&ts.getSendFlagMap().get(mUdk.toString())!=null) ts.getSendFlagMap().put(mUdk.toString(), 2);
                 }
                 if (wt.isSendCompleted()) {

@@ -90,7 +90,7 @@ public class MobileParam extends BaseObject implements GetUserDeviceKey {
     public MobileUDKey getUserDeviceKey() {
         if (StringUtils.isNullOrEmptyOrSpace(this.imei)) return null;
         int _pcdType=0;
-        if (StringUtils.isNullOrEmptyOrSpace(this.PCDType)) _pcdType=1;
+        if (StringUtils.isNullOrEmptyOrSpace(this.PCDType)) return null;
         else {
             try {
                 _pcdType=Integer.parseInt(this.PCDType); 

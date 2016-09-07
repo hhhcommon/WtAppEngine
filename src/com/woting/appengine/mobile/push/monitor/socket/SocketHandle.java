@@ -581,7 +581,7 @@ public class SocketHandle extends Thread {
                             if (ms instanceof MsgNormal) {
                                 MobileUDKey _mUdk=MobileUDKey.buildFromMsg(ms);
                                 //处理注册
-                                Map<String, Object> retM=sessionService.getLoginStatus(_mUdk);
+                                Map<String, Object> retM=sessionService.dealUDkeyEntry(_mUdk, "socket/entry");
                                 if ((""+retM.get("ReturnType")).equals("2003")) {
                                     MsgNormal ackM=MessageUtils.buildAckMsg((MsgNormal)ms);
                                     ackM.setBizType(15);

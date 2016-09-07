@@ -131,9 +131,13 @@ public class GroupService {
                     nMsg.setMsgContent(mc);
 
                     for (UserPo up: upl) {
-                        MobileUDKey aMudk=(MobileUDKey)sessionService.getActivedUserUDK(up.getUserId());
-                        if (aMudk!=null) {
-                            pmm.getSendMemory().addUniqueMsg2Queue(aMudk, bMsg, new CompareGroupMsg());
+                        List<MobileUDKey> l=(List<MobileUDKey>)sessionService.getActivedUserUDKs(up.getUserId());
+                        if (l!=null&&!l.isEmpty()) {
+                            for (MobileUDKey mUdk: l) {
+                                if (mUdk!=null) {
+                                    pmm.getSendMemory().addUniqueMsg2Queue(mUdk, bMsg, new CompareGroupMsg());
+                                }
+                            }
                         }
                         pmm.getSendMemory().addMsg2NotifyQueue(up.getUserId(), nMsg);//发送通知消息
                     }
@@ -472,9 +476,13 @@ public class GroupService {
                 nMsg.setMsgContent(mc);
 
                 for (UserPo up: upl) {
-                    MobileUDKey aMudk=(MobileUDKey)sessionService.getActivedUserUDK(up.getUserId());
-                    if (aMudk!=null) {
-                        pmm.getSendMemory().addUniqueMsg2Queue(aMudk, bMsg, new CompareGroupMsg());
+                    List<MobileUDKey> l=(List<MobileUDKey>)sessionService.getActivedUserUDKs(up.getUserId());
+                    if (l!=null&&!l.isEmpty()) {
+                        for (MobileUDKey mUdk: l) {
+                            if (mUdk!=null) {
+                                pmm.getSendMemory().addUniqueMsg2Queue(mUdk, bMsg, new CompareGroupMsg());
+                            }
+                        }
                     }
                     pmm.getSendMemory().addMsg2NotifyQueue(up.getUserId(), nMsg);//发送通知消息
                 }
@@ -1154,9 +1162,13 @@ public class GroupService {
             nMsg.setMsgContent(mc);
 
             for (UserPo _up: upl) {
-                MobileUDKey aMudk=(MobileUDKey)sessionService.getActivedUserUDK(_up.getUserId());
-                if (aMudk!=null) {
-                    pmm.getSendMemory().addUniqueMsg2Queue(aMudk, bMsg, new CompareGroupMsg());
+                List<MobileUDKey> l=(List<MobileUDKey>)sessionService.getActivedUserUDKs(up.getUserId());
+                if (l!=null&&!l.isEmpty()) {
+                    for (MobileUDKey mUdk: l) {
+                        if (mUdk!=null) {
+                            pmm.getSendMemory().addUniqueMsg2Queue(mUdk, bMsg, new CompareGroupMsg());
+                        }
+                    }
                 }
                 pmm.getSendMemory().addMsg2NotifyQueue(_up.getUserId(), nMsg);//发送通知消息
             }
@@ -1232,9 +1244,13 @@ public class GroupService {
                 nMsg.setMsgContent(mc);
 
                 for (UserPo up: upl) {
-                    MobileUDKey aMudk=(MobileUDKey)sessionService.getActivedUserUDK(up.getUserId());
-                    if (aMudk!=null) {
-                        pmm.getSendMemory().addUniqueMsg2Queue(aMudk, bMsg, new CompareGroupMsg());
+                    List<MobileUDKey> l=(List<MobileUDKey>)sessionService.getActivedUserUDKs(up.getUserId());
+                    if (l!=null&&!l.isEmpty()) {
+                        for (MobileUDKey mUdk: l) {
+                            if (mUdk!=null) {
+                                pmm.getSendMemory().addUniqueMsg2Queue(mUdk, bMsg, new CompareGroupMsg());
+                            }
+                        }
                     }
                     pmm.getSendMemory().addMsg2NotifyQueue(up.getUserId(), nMsg);//发送通知消息
                 }

@@ -31,6 +31,9 @@ import com.woting.cm.core.dict.model.DictModel;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.login.service.MobileUsedService;
+import com.woting.passport.mobile.MobileParam;
+import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.SessionService;
 import com.woting.searchword.service.WordService;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.model.tree.TreeNode;
@@ -50,6 +53,8 @@ public class CommonController {
     private WordService wordService;
     @Resource
     private SearchCrawlerService scs;
+    @Resource(name="redisSessionService")
+    private SessionService sessionService;
 
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
@@ -75,19 +80,19 @@ public class CommonController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
                 return map;
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 1);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "common/entryApp");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
                 } else {
-                    MobileSession ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
                     if ((retM.get("ReturnType")+"").equals("1002")) {
                         map.put("ReturnType", "1002");
                     } if ((retM.get("ReturnType")+"").equals("2002")) {
@@ -95,7 +100,6 @@ public class CommonController {
                         map.put("Message", "无法找到相应的用户");
                     }else {
                         map.put("ReturnType", "1001");
-                        if ((UserPo)ms.getAttribute("user")!=null) map.put("UserInfo", ((UserPo)ms.getAttribute("user")).toHashMap4Mobile());
                     }
                 }
                 map.put("ServerStatus", "1"); //服务器状态
@@ -116,19 +120,17 @@ public class CommonController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            MobileSession ms=null;
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "mainPage");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
-                } else {
-                    ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -143,8 +145,7 @@ public class CommonController {
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
 
-            MobileKey mk=MobileUtils.getMobileKey(m);
-            Map<String, Object> cl=contentService.getMainPage(ms.getKey().getUserId(), pageType, pageSize, page, mk);
+            Map<String, Object> cl=contentService.getMainPage(mUdk.getUserId(), pageType, pageSize, page, mUdk);
 
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultList", cl);
@@ -174,18 +175,17 @@ public class CommonController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "getHotKeys");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
-                } else {
-                    MobileSession ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -254,18 +254,17 @@ public class CommonController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "searchHotKeys");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
-                } else {
-                    MobileSession ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -388,18 +387,17 @@ public class CommonController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "getCatalogInfo");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
-                } else {
-                    MobileSession ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -466,18 +464,17 @@ public class CommonController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "searchByText");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
-                } else {
-                    MobileSession ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -508,11 +505,10 @@ public class CommonController {
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
 
-            MobileKey mk=MobileUtils.getMobileKey(m);
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
-            if(page>0 && pageSize>0 && resultType==0 && pageType==0)cl=scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mk);
-            else cl=contentService.searchAll(searchStr, resultType, pageType, mk);
+            if(page>0 && pageSize>0 && resultType==0 && pageType==0)cl=scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mUdk);
+            else cl=contentService.searchAll(searchStr, resultType, pageType, mUdk);
             a=System.currentTimeMillis()-a;
 
             if (cl!=null&&cl.size()>0) {
@@ -540,21 +536,19 @@ public class CommonController {
     public Map<String,Object> searchByVoice(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            //    @RequestMapping(value="/lqTTS.do")
-
+            //@RequestMapping(value="/lqTTS.do")
             //0-获取参数
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                Map<String, Object> retM=MobileUtils.dealMobileLinked(m, 0);
+                mUdk=MobileParam.build(m).getUserDeviceKey();
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "searchByVoice");
                 if ((retM.get("ReturnType")+"").equals("2001")) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
-                } else {
-                    MobileSession ms=(MobileSession)retM.get("MobileSession");
-                    map.put("SessionId", ms.getKey().getSessionId());
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -584,11 +578,10 @@ public class CommonController {
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
 
-            MobileKey mk=MobileUtils.getMobileKey(m);
             Map<String, Object> cl = new HashMap<String,Object>();
             long a=System.currentTimeMillis();
-            if(resultType==0 && pageType==0) cl = scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mk);
-            else cl=contentService.searchAll(searchStr, resultType, pageType, mk);
+            if(resultType==0 && pageType==0) cl = scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mUdk);
+            else cl=contentService.searchAll(searchStr, resultType, pageType, mUdk);
             a=System.currentTimeMillis()-a;
 
             if (cl!=null&&cl.size()>0) {

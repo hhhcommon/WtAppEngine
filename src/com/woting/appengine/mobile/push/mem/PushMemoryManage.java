@@ -55,7 +55,7 @@ public class PushMemoryManage {
         logQueue=new StrArrayQueue(10240);
         //创建SessionService对象
         ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
-        if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+        if (sc!=null&&WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
             sessionService=(SessionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("redisSessionService");
         }
     }
@@ -136,6 +136,12 @@ public class PushMemoryManage {
     }
 
     public void setUserSocketMap(MobileUDKey mUdk, SocketHandle s) {
+        if (sessionService==null) {
+            ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+            if (sc!=null&&WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                sessionService=(SessionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("redisSessionService");
+            }
+        }
         synchronized(userSocketLock) {
             MobileUDKey s_mUdk=null;
             for (MobileUDKey _mUdk: userSocketM.keySet()) {
@@ -148,7 +154,7 @@ public class PushMemoryManage {
                 //修改RedisSession
 //                MobileSession ms=SessionMemoryManage.getInstance().getSession(s_mk);
 //                ms.expire();
-                sessionService.expireSession(mUdk);
+                sessionService.logoutSession(mUdk);
             }
 
             SocketHandle _s=userSocketM.get(mUdk);
