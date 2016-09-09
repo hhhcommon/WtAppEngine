@@ -15,7 +15,7 @@ public class RedisBlockLock implements ExpirableBlockKey {
 
     private byte[] lockKey; //锁标识
     private byte[] lockValue; //锁值，尽量是一个随机数
-    private long expireTime=100; //过期时间，默认锁的时间是100毫秒
+    private long expireTime=1000; //过期时间，默认锁的时间是100毫秒
 
     public BlockLockConfig getBlConf() {
         return blConf;

@@ -282,10 +282,11 @@ public class PassportController {
             //3-成功后，自动登陆，处理Redis
             String _userId=((UserPo)rm.get("userInfo")).getUserId();
             mUdk.setUserId(_userId);
-            RedisConnection rConn=redisConn.getConnection();
+            RedisConnection rConn=null;
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
             ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), rConn);
             try {
+                rConn=redisConn.getConnection();
                 sessionService.registUser(mUdk);
                 //3.2-保存使用情况
                 MobileUsedPo mu=new MobileUsedPo();
@@ -296,7 +297,7 @@ public class PassportController {
                 muService.saveMobileUsed(mu);
             } finally {
                 rLock.unlock();
-                rConn.close();
+                if (rConn!=null) rConn.close();
                 rConn=null;
             }
 

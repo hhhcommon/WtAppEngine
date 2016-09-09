@@ -97,6 +97,7 @@
     <property name="maxIdle" value="${redis.maxIdle}"/>
     <property name="maxWaitMillis" value="${redis.maxWaitMillis}"/>
     <property name="testOnBorrow" value="${redis.testOnBorrow}"/>
+    <property name="testOnReturn" value="${redis.testOnReturn}"/>
   </bean>
   <bean id="connectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
     <property name="hostName" value="${redis.host}"/>
@@ -105,6 +106,5 @@
     <property name="database" value="${redis.databaseIndex}"/>
     <property name="poolConfig" ref="poolConfig"/>
   </bean>
-
   <context:annotation-config/>
 </beans>

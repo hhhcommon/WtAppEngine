@@ -55,8 +55,9 @@ public class RedisSessionService implements SessionService {
         }
 
         RedisUserDeviceKey rUdk=new RedisUserDeviceKey(udk);
-        RedisConnection conn=redisConn.getConnection();
+        RedisConnection conn=null;
         try {
+            conn=redisConn.getConnection();
             //检查是否有这个登录
             byte[] _value=conn.get(rUdk.getKey_UserLoginStatus().getBytes());
             if (_value!=null) {//已经登录
@@ -107,7 +108,8 @@ public class RedisSessionService implements SessionService {
                 }
             }
         } finally {
-            conn.close();
+            redisConn.getShardInfo().createResource();
+            if (conn!=null) conn.close();
             conn=null;
         }
         return map;
@@ -118,14 +120,15 @@ public class RedisSessionService implements SessionService {
     public void registUser(UserDeviceKey udk) {
         RedisUserDeviceKey rUdk=new RedisUserDeviceKey(udk);
 
-        RedisConnection conn=redisConn.getConnection();
+        RedisConnection conn=null;
         try {
+            conn=redisConn.getConnection();
             conn.set(rUdk.getKey_UserLoginStatus().getBytes(), (System.currentTimeMillis()+"::register").getBytes());
             conn.expire(rUdk.getKey_UserLoginStatus().getBytes(), 30*60);//30分钟后过期
             conn.set(rUdk.getKey_UserLoginDeviceType().getBytes(), rUdk.getValue_DeviceId().getBytes());
             conn.expire(rUdk.getKey_UserLoginDeviceType().getBytes(), 30*60);//30分钟后过期
         } finally {
-            conn.close();
+            if (conn!=null) conn.close();
             conn=null;
         }
     }
@@ -134,8 +137,9 @@ public class RedisSessionService implements SessionService {
     public List<? extends UserDeviceKey> getActivedUserUDKs(String userId) {
         List<UserDeviceKey> retl=new ArrayList<UserDeviceKey>();
 
-        RedisConnection conn=redisConn.getConnection();
+        RedisConnection conn=null;
         try {
+            conn=redisConn.getConnection();
             MobileUDKey mUdk=new MobileUDKey();
             mUdk.setUserId(userId);
             mUdk.setPCDType(1);
@@ -155,7 +159,7 @@ public class RedisSessionService implements SessionService {
                 retl.add(mUdk);
             }
         } finally {
-            conn.close();
+            if (conn!=null) conn.close();
             conn=null;
         }
         return retl.isEmpty()?null:retl;
@@ -168,14 +172,15 @@ public class RedisSessionService implements SessionService {
         mUdk.setPCDType(pcdType);
         RedisUserDeviceKey rUdk=new RedisUserDeviceKey(mUdk);
 
-        RedisConnection conn=redisConn.getConnection();
+        RedisConnection conn=null;
         try {
+            conn=redisConn.getConnection();
             byte[] _deviceId=conn.get(rUdk.getKey_UserLoginDeviceType().getBytes());
             if (_deviceId==null) return null;
             mUdk.setDeviceId(new String(_deviceId));
             return mUdk;
         } finally {
-            conn.close();
+            if (conn!=null) conn.close();
             conn=null;
         }
     }
@@ -184,12 +189,13 @@ public class RedisSessionService implements SessionService {
     public void logoutSession(UserDeviceKey udk) {
         RedisUserDeviceKey rUdk=new RedisUserDeviceKey(udk);
 
-        RedisConnection conn=redisConn.getConnection();
+        RedisConnection conn=null;
         try {
+            conn=redisConn.getConnection();
             conn.del(rUdk.getKey_UserLoginStatus().getBytes());
             conn.del(rUdk.getKey_UserLoginDeviceType().getBytes());
         } finally {
-            conn.close();
+            if (conn!=null) conn.close();
             conn=null;
         }
     }
