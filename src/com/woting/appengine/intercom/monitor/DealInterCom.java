@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.appengine.calling.mem.CallingMemoryManage;
 import com.woting.appengine.intercom.mem.GroupMemoryManage;
@@ -77,8 +78,10 @@ public class DealInterCom extends Thread {
             this.sourceMsg=sourceMsg;
         }
         public void run() {
+            System.out.println("=========001========deal入组消息："+sourceMsg.getMsgId());
             MobileUDKey mUdk=MobileUDKey.buildFromMsg(sourceMsg);
             if (mUdk==null) return;
+            System.out.println("=========002========deal入组消息："+mUdk.toString());
 
             String groupId="";
             try {
@@ -106,6 +109,7 @@ public class DealInterCom extends Thread {
                 else if (rt.equals("2")) retMsg.setReturnType(0x08);//该用户已经在指定组
                 else retMsg.setReturnType(0x01);//正确加入组
             }
+            System.out.println("=========003========deal入组消息：给本人发回执::"+mUdk.toString()+"::"+JsonUtils.objToJson(retMsg));
             pmm.getSendMemory().addMsg2Queue(mUdk, retMsg);
 
             //广播消息信息组织
@@ -128,6 +132,7 @@ public class DealInterCom extends Thread {
                 MapContent _mc=new MapContent(dataMap);
                 bMsg.setMsgContent(_mc);
                 //发送广播消息
+                int i=0;
                 for (String k: entryGroupUsers.keySet()) {
                     String _sp[] = k.split("::");
                     mUdk=new MobileUDKey();

@@ -577,6 +577,7 @@ public class SocketHandle extends Thread {
                             e.printStackTrace();
                         }
                         System.out.println(JsonUtils.objToJson(ms));
+
                         if (ms!=null&&!ms.isAck()) {
                             if (ms instanceof MsgNormal) {
                                 MobileUDKey _mUdk=MobileUDKey.buildFromMsg(ms);

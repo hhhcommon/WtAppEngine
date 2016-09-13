@@ -15,7 +15,7 @@ public class RedisBlockLock implements ExpirableBlockKey {
 
     private byte[] lockKey; //锁标识
     private byte[] lockValue; //锁值，尽量是一个随机数
-    private long expireTime=1000; //过期时间，默认锁的时间是100毫秒
+    private long expireTime=30000; //过期时间，默认锁的时间是30秒钟
 
     public BlockLockConfig getBlConf() {
         return blConf;
@@ -225,11 +225,9 @@ public class RedisBlockLock implements ExpirableBlockKey {
         int waitType=this.blConf.getWaitingType();
         while (true) {
             canContinue=conn.setNX(this.lockKey, this.lockValue);
-            if (canContinue) canContinue=conn.pExpireAt(this.lockKey, this.expireTime);
-            if (canContinue) {
-                byte[] _value=conn.get(lockKey);
-                canContinue=equalValue(_value);
-            }
+            if (canContinue) canContinue=conn.pExpire(this.lockKey, this.expireTime);
+            byte[] _value=conn.get(this.lockKey);
+            canContinue=equalValue(_value);
             if (canContinue) return;
 
             curTime=System.currentTimeMillis();
@@ -282,7 +280,7 @@ public class RedisBlockLock implements ExpirableBlockKey {
      */
     @Override
     public boolean unlock() throws Plat5001CException {
-        byte[] _value=conn.get(lockKey);
+        byte[] _value=conn.get(this.lockKey);
         long ret=conn.del(this.lockKey);
         if (ret==0) return false; //加锁过程中，锁被莫名/恶意删除了
         if (ret!=1) throw new Plat5001CException("释放锁");

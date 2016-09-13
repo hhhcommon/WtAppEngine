@@ -287,8 +287,23 @@ CREATE TABLE wt_BCFrequnce (
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='016电台频段子表';
 
+/**017 WT_BCPROGRAMME(电台节目列表)*/
+DROP TABLE IF EXISTS wt_BCProgramme;
+CREATE TABLE wt_BCProgramme (
+  id         varchar(32)      NOT NULL             COMMENT 'uuid(主键)',
+  bcId       varchar(32)      NOT NULL             COMMENT '电台Id,外键',
+  title      varchar(100)     NOT NULL             COMMENT '节目名称',
+  weekDay    int(1) unsigned  NOT NULL             COMMENT '星期的第几天',
+  sort       int unsigned     NOT NULL  DEFAULT 0  COMMENT '节目排序号',
+  beginTime  varchar(8)       NOT NULL             COMMENT '节目开始直播时间',
+  endTime    varchar(8)       NOT NULL             COMMENT '节目结束直播时间',
+  cTime      timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='017电台节目列表';
+
 /**== 四.2、单体资源 =============================================*/
-/**017 WT_MEDIAASSET(媒体资源，文件类聚合，原子性的)*/
+/**018 WT_MEDIAASSET(媒体资源，文件类聚合，原子性的)*/
 DROP TABLE IF EXISTS wt_MediaAsset;
 CREATE TABLE wt_MediaAsset (
   id             varchar(32)      NOT NULL             COMMENT 'uuid(主键)',
@@ -310,9 +325,9 @@ CREATE TABLE wt_MediaAsset (
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='017媒体资源';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='018媒体资源';
 
-/**018 WT_MASOURCE(资产来源以及播放地址)*/
+/**019 WT_MASOURCE(资产来源以及播放地址)*/
 DROP TABLE IF EXISTS wt_MaSource;
 CREATE TABLE wt_MaSource (
   id         varchar(32)   NOT NULL             COMMENT 'uuid(主键)',
@@ -327,10 +342,23 @@ CREATE TABLE wt_MaSource (
   cTime      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='018资产来源以及播放地址';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='019资产来源以及播放地址';
+
+/**020 资源播放次数统计[WT_MEDIAPLAYCOUNT]*/
+DROP TABLE IF EXISTS wt_MediaPlayCount;
+CREATE TABLE wt_MediaPlayCount (
+  id             varchar(32)      NOT NULL             COMMENT 'UUID',
+  resTableName   varchar(32)      NOT NULL             COMMENT '资源类型表名：电台；单体媒体资源；专辑资源',
+  resId          varchar(32)      NOT NULL             COMMENT '资源Id',
+  playCount      varchar(32)      NOT NULL             COMMENT '播放次数',
+  publisher      varchar(32)      NOT NULL             COMMENT '发布者',
+  cTime      timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='020资源播放次数统计';
 
 /**== 四.3、专辑 =============================================*/
-/**019 WT_SEQMEDIAASSET(专辑资源)*/
+/**021 WT_SEQMEDIAASSET(专辑资源)*/
 DROP TABLE IF EXISTS wt_SeqMediaAsset;
 CREATE TABLE wt_SeqMediaAsset (
   id              varchar(32)      NOT NULL             COMMENT 'uuid(主键)',
@@ -351,9 +379,9 @@ CREATE TABLE wt_SeqMediaAsset (
   cTime           timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='019专辑资源';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='021专辑资源';
 
-/**020 WT_SEQMA_REF(专辑与单体媒体对应表)*/
+/**022 WT_SEQMA_REF(专辑与单体媒体对应表)*/
 DROP TABLE IF EXISTS wt_SeqMA_Ref;
 CREATE TABLE wt_SeqMA_Ref (
   id          varchar(32)    NOT NULL  COMMENT 'uuid(主键)',
@@ -364,9 +392,9 @@ CREATE TABLE wt_SeqMA_Ref (
   cTime       timestamp      NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='020专辑与单体媒体对应表';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='022专辑与单体媒体对应表';
 
-/**021 vWT_FIRSTMAINSEQU(专辑中最新一条内容视图)*/
+/**023 vWT_FIRSTMAINSEQU(专辑中最新一条内容视图)*/
 CREATE OR REPLACE ALGORITHM=UNDEFINED SQL SECURITY DEFINER
 VIEW vWt_FirstMaInSequ AS 
   select sid, max(CONCAT('C:', (10000+columnNum),'|D:', cTime)) as firstMa from wt_SeqMA_Ref
@@ -374,7 +402,7 @@ VIEW vWt_FirstMaInSequ AS
 ;
 
 /**== 四.4、外围对象 =============================================*/
-/**021 WT_PERSON(干系人，主要是人的自然信息，和User不同)*/
+/**024 WT_PERSON(干系人，主要是人的自然信息，和User不同)*/
 DROP TABLE IF EXISTS wt_Person;
 CREATE TABLE wt_Person (
   id            varchar(32)      NOT NULL                COMMENT 'uuid(用户id)',
@@ -391,9 +419,9 @@ CREATE TABLE wt_Person (
   cTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='021干系人';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='024干系人';
 
-/**022 WT_ORGANIZE(组织机构，和Group不同)*/
+/**025 WT_ORGANIZE(组织机构，和Group不同)*/
 DROP TABLE IF EXISTS wt_Organize;
 CREATE TABLE wt_Organize (
   id           varchar(32)      NOT NULL                COMMENT 'uuid(用户id)',
@@ -406,10 +434,10 @@ CREATE TABLE wt_Organize (
   cTime        timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='022组织机构';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='025组织机构';
 
 /**== 四.5、各类关系关联 =============================================*/
-/**023 WT_USER_REF(干系人与资源关系)*/
+/**026 WT_USER_REF(干系人与资源关系)*/
 DROP TABLE IF EXISTS wt_User_Ref;
 CREATE TABLE wt_User_Ref (
   id            varchar(32)    NOT NULL                COMMENT 'uuid(id)',
@@ -422,9 +450,9 @@ CREATE TABLE wt_User_Ref (
   cTime         timestamp      NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='023干系人与资源关系';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='026干系人与资源关系';
 
-/**024 WT_RESDICT_REF(资源字典项对应关系)*/
+/**027 WT_RESDICT_REF(资源字典项对应关系)*/
 /**这里的关系时值res到dict之间的关联关系，是有向的*/
 DROP TABLE IF EXISTS wt_ResDict_Ref;
 CREATE TABLE wt_ResDict_Ref (
@@ -443,19 +471,19 @@ CREATE TABLE wt_ResDict_Ref (
   UNIQUE INDEX dataIdx (refName, resTableName, resId, dictMid, dictDid) USING HASH,
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='024资源字典项对应关系';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='027资源字典项对应关系';
 
 /**== 五、号码黑名单 =============================================*/
-/**025 WT_BLACK_GNUM(组号黑名单，名单中号码不会出现在组号中)*/
+/**028 WT_BLACK_GNUM(组号黑名单，名单中号码不会出现在组号中)*/
 DROP TABLE IF EXISTS wt_Black_GNum;
 CREATE TABLE wt_Black_GNum (
   groupNum  int(16) unsigned  NOT NULL  COMMENT '黑名单号码',
   PRIMARY KEY(groupNum)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='025组号黑名单';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='028组号黑名单';
 
 /**== 六、栏目及发布管理 =============================================*/
-/**026 栏目表[WT_CHANNEL]*/
+/**029 栏目表[WT_CHANNEL]*/
 DROP TABLE IF EXISTS wt_Channel;
 CREATE TABLE wt_Channel (
   id           varchar(32)      NOT NULL               COMMENT '表ID(UUID)',
@@ -472,10 +500,10 @@ CREATE TABLE wt_Channel (
   cTime        timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY (id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='026栏目表';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='029栏目表';
 /**栏目的编辑等干系人信息在，干系人与资源关系表023**/
 
-/**027 栏目内容发布表[WT_CHANNELASSET]*/
+/**030 栏目内容发布表[WT_CHANNELASSET]*/
 DROP TABLE IF EXISTS wt_ChannelAsset;
 CREATE TABLE wt_ChannelAsset (
   id            varchar(32)      NOT NULL             COMMENT '表ID(UUID)',
@@ -498,10 +526,10 @@ CREATE TABLE wt_ChannelAsset (
   INDEX bizIdx (assetType, assetId, channelId) USING BTREE,
   PRIMARY KEY (id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='027栏目内容发布';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='030栏目内容发布';
 
 /**== 七、数据操作日志（这类表只增加，不减少，类似log文件） =============================================*/
-/**028 数据日志[WT_CONTENTTRACKLOG]*/
+/**031 数据日志[WT_CONTENTTRACKLOG]*/
 /**这个表的内容，若都存在文件中似乎更加合适*/
 /**关于规则，在下一期处理，本期都写死在代码中 **/
 /**=====!!这个表没有实际用处了!!=====*/
@@ -524,10 +552,10 @@ CREATE TABLE wt_ContentTrackLog (
   INDEX bizIdx (tableName, ownerType, ownerId, dataMd5) USING HASH,
   PRIMARY KEY (id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='028数据日志';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='031数据日志';
 
 /**== 八、资源与外部系统对照 =============================================*/
-/**029 资产与外部系统对照表[WT_RESORGASSET_Ref]*/
+/**032 资产与外部系统对照表[WT_RESORGASSET_Ref]*/
 DROP TABLE IF EXISTS wt_ResOrgAsset_Ref;
 CREATE TABLE wt_ResOrgAsset_Ref (
   idxMd5        varchar(32)   NOT NULL             COMMENT '用于索引的Md5码，是resTableName+refType+origType+origId，作为唯一索引',
@@ -542,7 +570,7 @@ CREATE TABLE wt_ResOrgAsset_Ref (
   cTime         timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY (idxMd5)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='029资产与外部系统对照表';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='032资产与外部系统对照表';
 
 
 /*****************************************/
