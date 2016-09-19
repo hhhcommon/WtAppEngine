@@ -11,7 +11,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.context.annotation.Lazy;
-import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -28,7 +27,6 @@ import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.login.service.MobileUsedService;
 import com.woting.passport.mobile.MobileParam;
@@ -71,9 +69,9 @@ public class CommonController {
      * @param request 请求对象。数据包含在Data流中，以json格式存储，其中必须包括手机串号。如：{"imei":"123456789023456789"}
      * @return 分为如下情况<br/>
      *   若有异常：{ReturnType:T, TClass:exception.class, Message: e.getMessage()}
-     *   已经登录：{ReturnType:1001, sessionId:sid, userInfo:{userName:un, mphone:138XXXX2345, email:a@b.c, realName:实名, headImg:hiUrl}}
+     *   已经登录：{ReturnType:1001, userInfo:{userName:un, mphone:138XXXX2345, email:a@b.c, realName:实名, headImg:hiUrl}}
      *     其中用户信息若没有相关内容，则相关的key:value对就不存在
-     *   还未登录：{ReturnType:1002, sessionId:sid}
+     *   还未登录：{ReturnType:1002}
      */
     @RequestMapping(value="/common/entryApp.do")
     @ResponseBody
@@ -201,7 +199,7 @@ public class CommonController {
             int returnType=1;
             try {returnType=Integer.parseInt(m.get("ReturnType")+"");} catch(Exception e) {}
 
-            Owner o=new Owner(201, map.get("SessionId")+"");
+            Owner o=new Owner(201, mUdk.getUserId());
             List<String>[] retls=wordService.getHotWords(o, returnType, wordSize);
             if (retls==null||retls.length==0) map.put("ReturnType", "1011");
             else {
@@ -287,7 +285,7 @@ public class CommonController {
             int returnType=1;
             try {returnType=Integer.parseInt(m.get("ReturnType")+"");} catch(Exception e) {}
 
-            Owner o=new Owner(201, map.get("SessionId")+"");
+            Owner o=new Owner(201, mUdk.getUserId());
             List<String>[] retls=wordService.searchHotWords(searchStr, o, returnType, wordSize);
             if (retls==null||retls.length==0) map.put("ReturnType", "1011");
             else {
@@ -489,7 +487,7 @@ public class CommonController {
             }
 
             //敏感词处理
-            Owner o=new Owner(201, map.get("SessionId")+"");
+            Owner o=new Owner(201, mUdk.getUserId());
             String _s[]=searchStr.split(",");
             for (int i=0; i<_s.length; i++) wordService.addWord2Online(_s[i].trim(), o);
 
@@ -506,7 +504,7 @@ public class CommonController {
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
 
-            Map<String, Object> cl = new HashMap<String,Object>();
+            Map<String, Object> cl=new HashMap<String,Object>();
             long a=System.currentTimeMillis();
             if(page>0 && pageSize>0 && resultType==0 && pageType==0)cl=scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mUdk);
             else cl=contentService.searchAll(searchStr, resultType, pageType, mUdk);
@@ -562,7 +560,7 @@ public class CommonController {
                 return map;
             }
             //敏感词处理
-            Owner o=new Owner(201, map.get("SessionId")+"");
+            Owner o=new Owner(201, mUdk.getUserId());
             String _s[]=searchStr.split(",");
             for (int i=0; i<_s.length; i++) wordService.addWord2Online(_s[i].trim(), o);
 
@@ -579,9 +577,9 @@ public class CommonController {
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
 
-            Map<String, Object> cl = new HashMap<String,Object>();
+            Map<String, Object> cl=new HashMap<String,Object>();
             long a=System.currentTimeMillis();
-            if(resultType==0 && pageType==0) cl = scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mUdk);
+            if(resultType==0 && pageType==0) cl=scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mUdk);
             else cl=contentService.searchAll(searchStr, resultType, pageType, mUdk);
             a=System.currentTimeMillis()-a;
 
@@ -610,9 +608,9 @@ public class CommonController {
     public Map<String,Object> getlkTTSInfo(HttpServletRequest request) {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
-            String[] str = SearchUtils.readFile(SystemCache.getCache(FConstants.APPOSPATH).getContent()+"mweb/lkinfo.txt");
-            String uri = "";
-            int[] random = new int[10];
+            String[] str=SearchUtils.readFile(SystemCache.getCache(FConstants.APPOSPATH).getContent()+"mweb/lkinfo.txt");
+            String uri="";
+            int[] random=new int[10];
             for (int i=0;i<10;i++) {
 				random[i]=SpiritRandom.getRandom(new Random(), 0, 19);
 			}
@@ -623,7 +621,7 @@ public class CommonController {
             		}
             	}
             }
-            for (int i = 0; i < random.length; i++) {
+            for (int i=0; i < random.length; i++) {
 				if (random[i]>=0) uri+=str[random[i]];
 			}
             map.put("ContentURI", uri);

@@ -13,7 +13,6 @@ import com.woting.passport.session.key.GetUserDeviceKey;
  * mClass:设备型号;
  * gps:GPS信息;
  * screenSize:屏幕尺寸;
- * sessionId:会话ID;Web应用用到
  * </pre>
  * 注意这只是获得公共参数的方法，其他参数还需要其他方法获得。
  * @author wh

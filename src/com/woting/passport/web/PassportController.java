@@ -148,6 +148,9 @@ public class PassportController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
+                if (StringUtils.isNullOrEmptyOrSpace(mUdk.getDeviceId())) { //是PC端来的请求
+                    mUdk.setDeviceId(request.getSession().getId());
+                }
                 if (StringUtils.isNullOrEmptyOrSpace(mUdk.getDeviceId())) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -938,29 +941,6 @@ public class PassportController {
             map.put("Message", e.getMessage());
             return map;
         }
-    }
-
-    /**
-     * 找回密码——通过手机
-     * @throws IOException
-     */
-    @RequestMapping(value="user/retrieveByPwd.do")
-    @ResponseBody
-    public Map<String,Object> retrieveByPwd(HttpServletRequest request) {
-        System.out.println("===================");
-        //返回登录的情况
-        return null;
-    }
-
-    /**
-     * 找回密码——通过邮箱
-     */
-    @RequestMapping(value="user/retrieveByEmail.do")
-    @ResponseBody
-    public Map<String,Object> retrieveByEmail(HttpServletRequest request) {
-        System.out.println("===================");
-        //返回登录的情况
-        return null;
     }
 
     /**
