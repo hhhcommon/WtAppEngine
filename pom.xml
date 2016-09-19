@@ -55,9 +55,9 @@
     <dependency>
       <groupId>com.spiritdata</groupId>
       <artifactId>BasicPlat</artifactId>
-      <version>0.1.0.10</version>
+      <version>0.1.0.11</version>
       <scope>system</scope>
-      <systemPath>${projectDir}/lib/BasicPlat-0.1.0.10.jar</systemPath>
+      <systemPath>${projectDir}/lib/BasicPlat-0.1.0.11.jar</systemPath>
     </dependency>
     <!-- HTML解析包 -->
     <dependency>
@@ -76,6 +76,17 @@
       <artifactId>commons-codec</artifactId>
       <version>1.9</version>
     </dependency>
+    <!-- 图片处理 -->
+    <dependency>
+      <groupId>net.coobird</groupId>
+      <artifactId>thumbnailator</artifactId>
+      <version>0.4.8</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.4</version>
+    </dependency>  
   </dependencies>
   <build>
     <!-- 设置源代码的根目录 -->

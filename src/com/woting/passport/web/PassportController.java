@@ -148,6 +148,9 @@ public class PassportController {
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
+                if (StringUtils.isNullOrEmptyOrSpace(mUdk.getDeviceId())) { //是PC端来的请求
+                    mUdk.setDeviceId(request.getSession().getId());
+                }
                 if (StringUtils.isNullOrEmptyOrSpace(mUdk.getDeviceId())) {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取设备Id(IMEI)");
@@ -159,11 +162,21 @@ public class PassportController {
 
             String ln=(m.get("UserName")==null?null:m.get("UserName")+"");
             String pwd=(m.get("Password")==null?null:m.get("Password")+"");
+            String phonenum=m.get("MainPhoneNum")+"";
+            String checknum=m.get("CheckNum")+"";
+            String usePhone=(m.get("UsePhone")==null?null:m.get("UsePhone")+"");
             String errMsg="";
+
             if (StringUtils.isNullOrEmptyOrSpace(ln)) errMsg+=",用户名为空";
-            char[] c=ln.toCharArray();
-            if (c[0]>='0' && c[0]<='9') errMsg+=",登录名第一个字符不能是数字";
+            if (ln!=null) {
+                char[] c=ln.toCharArray();
+                if (c[0]>='0' && c[0]<='9') errMsg+=",登录名第一个字符不能是数字";
+            }
             if (StringUtils.isNullOrEmptyOrSpace(pwd)) errMsg+=",密码为空";
+            if (usePhone!=null&&usePhone.equals("1")) {
+                if(phonenum.toLowerCase().equals("null")) errMsg+=",手机号为空";
+                if(checknum.toLowerCase().equals("null")) errMsg+=",验证码为空";
+            }
             if (!StringUtils.isNullOrEmptyOrSpace(errMsg)) {
                 errMsg=errMsg.substring(1);
                 map.put("ReturnType", "1002");
@@ -180,16 +193,20 @@ public class PassportController {
                 map.put("Message", "登录名重复,无法注册.");
                 return map;
             }
-            //1.5-手机号码注册
             RedisConnection rConn=redisConn.getConnection();
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
-            String info=new String(rConn.get(redisUdk.getKey_UserPhoneCheck().getBytes()));
-            if (info.startsWith("OK")) {
-                nu.setMainPhoneNum(info.substring(4));
+            if (usePhone!=null&&usePhone.equals("1")) {
+                //1.5-手机号码注册
+                byte[] getValue=rConn.get(redisUdk.getKey_UserPhoneCheck().getBytes());
+                String info=getValue==null?"":new String(getValue);
+                if (info.startsWith("OK")) {
+                    nu.setMainPhoneNum(info.substring(4));
+                }
             }
             //2-保存用户
             nu.setCTime(new Timestamp(System.currentTimeMillis()));
             nu.setUserType(1);
+            nu.setMainPhoneNum(phonenum);
             nu.setUserId(SequenceUUID.getUUIDSubSegment(4));
             int rflag=userService.insertUser(nu);
             if (rflag!=1) {
@@ -496,7 +513,8 @@ public class PassportController {
             RedisConnection rConn=redisConn.getConnection();
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
             try {
-                info=new String(rConn.get(redisUdk.getKey_UserPhoneCheck().getBytes()));
+                byte[] getValue=redisUdk.getKey_UserPhoneCheck().getBytes();
+                info=getValue==null?"":new String(getValue);
             } finally {
                 rConn.close();
                 rConn=null;
@@ -938,29 +956,6 @@ public class PassportController {
             map.put("Message", e.getMessage());
             return map;
         }
-    }
-
-    /**
-     * 找回密码——通过手机
-     * @throws IOException
-     */
-    @RequestMapping(value="user/retrieveByPwd.do")
-    @ResponseBody
-    public Map<String,Object> retrieveByPwd(HttpServletRequest request) {
-        System.out.println("===================");
-        //返回登录的情况
-        return null;
-    }
-
-    /**
-     * 找回密码——通过邮箱
-     */
-    @RequestMapping(value="user/retrieveByEmail.do")
-    @ResponseBody
-    public Map<String,Object> retrieveByEmail(HttpServletRequest request) {
-        System.out.println("===================");
-        //返回登录的情况
-        return null;
     }
 
     /**
