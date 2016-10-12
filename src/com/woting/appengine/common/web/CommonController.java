@@ -27,7 +27,6 @@ import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.login.service.MobileUsedService;
 import com.woting.passport.mobile.MobileParam;
