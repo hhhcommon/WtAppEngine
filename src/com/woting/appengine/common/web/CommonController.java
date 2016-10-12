@@ -27,6 +27,7 @@ import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
+import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.login.service.MobileUsedService;
 import com.woting.passport.mobile.MobileParam;
@@ -98,7 +99,9 @@ public class CommonController {
                         map.put("ReturnType", "2002");
                         map.put("Message", "无法找到相应的用户");
                     }else {
+                        UserPo upo=userService.getUserById(retM.get("UserId")+"");
                         map.put("ReturnType", "1001");
+                        if (upo!=null) map.put("UserInfo", upo.toHashMap4Mobile());
                     }
                 }
                 map.put("ServerStatus", "1"); //服务器状态

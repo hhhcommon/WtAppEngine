@@ -64,6 +64,7 @@ public class RedisSessionService implements SessionService {
                 conn.set(rUdk.getKey_UserLoginStatus().getBytes(), (System.currentTimeMillis()+"::"+operDesc).getBytes());
                 conn.expire(rUdk.getKey_UserLoginStatus().getBytes(), 30*60);//30分钟后过期
                 map.put("ReturnType", "1001");
+                map.put("UserId", rUdk.getUserId());
                 map.put("Msg", "用户已登录");
             } else {//未登录
                 //查找用户

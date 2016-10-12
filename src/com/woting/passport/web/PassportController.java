@@ -825,7 +825,8 @@ public class PassportController {
 
             RedisConnection rConn=redisConn.getConnection();
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
-            String info=new String(rConn.get(redisUdk.getKey_UserPhoneCheck().getBytes()));
+            byte[] getValue=redisUdk.getKey_UserPhoneCheck().getBytes();
+            String info=(getValue==null?null:new String(rConn.get(getValue)));
 
             if (info==null||info.equals("null")||info.startsWith("OK")) {//错误
                 map.put("ReturnType", "1002");

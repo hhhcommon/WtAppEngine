@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
+
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Controller;
 import com.spiritdata.framework.FConstants;
@@ -32,7 +34,7 @@ public class FileUploadController extends AbstractFileUploadController {
     private SessionService sessionService;
 
     @Override
-    public Map<String, Object> afterUploadOneFileOnSuccess(Map<String, Object> m, Map<String, Object> a, Map<String, Object> p) {
+    public Map<String, Object> afterUploadOneFileOnSuccess(Map<String, Object> m, Map<String, Object> a, Map<String, Object> p, HttpSession session) {
         String tempFileName=m.get("storeFilename")+"";
         Map<String,Object> retmap=new HashMap<String, Object>();
         Map<String,Object> datamap=new HashMap<String, Object>();

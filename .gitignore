@@ -12,6 +12,7 @@ fs-config
 
 /WebContent/log
 /WebContent/tempUpload
+/WebContent/dataCenter
 /WebContent/asset
 /WebContent/uploadFiles
 /WebContent/checkCodeImges
