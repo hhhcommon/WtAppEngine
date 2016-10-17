@@ -3,8 +3,8 @@ package com.woting.passport.session;
 import java.util.List;
 import java.util.Map;
 
+import com.spiritdata.framework.UGA.UgaUser;
 import com.woting.passport.session.key.UserDeviceKey;
-
 /**
  * 与Session处理相关的方法
  * @author wanghui
@@ -36,13 +36,14 @@ public interface SessionService {
 
     /**
      * 把用户设备注册到Redis中
-     * @param mUdk
+     * @param mUdkUgaUser
      */
-    public void registUser(UserDeviceKey udk);
+    public <V extends UgaUser> void registUser(UserDeviceKey udk, V user);
 
     /**
      * 登录用户的注销
      * @param mUdk
      */
     public void logoutSession(UserDeviceKey udk);
+
 }
