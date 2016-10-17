@@ -91,7 +91,7 @@ public class RedisSessionService implements SessionService {
                 } else {//不是User，也自动登录
                     if (operDesc.equals("common/entryApp")) {//是进入也自动登录
                         MobileUsedPo mup=muService.getUsedInfo(udk.getDeviceId(), udk.getPCDType());
-                        if (mup.getStatus()==1) {//自动登录
+                        if (mup!=null&&mup.getStatus()==1) {//自动登录
                             rUdk.setUserId(mup.getUserId());
                             conn.set(rUdk.getKey_UserLoginStatus().getBytes(), (System.currentTimeMillis()+"::register").getBytes());
                             conn.expire(rUdk.getKey_UserLoginStatus().getBytes(), 30*60);//30分钟后过期
