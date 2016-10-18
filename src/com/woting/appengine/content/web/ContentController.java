@@ -6,13 +6,19 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.spiritdata.framework.util.StringUtils;
+import com.spiritdata.framework.FConstants;
+import com.spiritdata.framework.core.cache.SystemCache;
+import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.RequestUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
@@ -210,7 +216,14 @@ public class ContentController {
             Map<String, Object> contentInfo=null;
             if (mediaType.equals("SEQU")) contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page, mUdk);
             else
-            if (mediaType.equals("TTS"))  contentInfo=SearchUtils.getNewsInfo(contentId);
+            if (mediaType.equals("TTS")) {
+                ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+                if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                    JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+                    RedisOperService roService=new RedisOperService(conn);
+                    contentInfo=SearchUtils.getNewsInfo(contentId, roService);
+                }
+            }
             else 
             if (mediaType.equals("AUDIO"))  contentInfo=contentService.getMaInfo(contentId, mUdk);
 

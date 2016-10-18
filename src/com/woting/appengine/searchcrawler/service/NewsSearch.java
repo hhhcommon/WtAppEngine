@@ -2,10 +2,19 @@ package com.woting.appengine.searchcrawler.service;
 
 import java.io.IOException;
 import java.util.Map;
+
+import javax.servlet.ServletContext;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import com.spiritdata.framework.FConstants;
+import com.spiritdata.framework.core.cache.SystemCache;
+import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
@@ -52,8 +61,13 @@ public class NewsSearch extends Thread {
 			String contenturi = getContentInfo(url);
 			if(!StringUtils.isNullOrEmptyOrSpace(contenturi) && contenturi.length()>30){ // contenturi为抓取到的新闻内容
 				map.remove("ContentURL");
-				SearchUtils.addListInfo(constr, map);
-				SearchUtils.createNewsInfo(map.get("ContentId")+"", contenturi);
+	            ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+	            if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+	                JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+	                RedisOperService roService=new RedisOperService(conn);
+	                SearchUtils.addListInfo(constr, map, roService);
+	                SearchUtils.createNewsInfo(map.get("ContentId")+"", contenturi, roService);
+	            }
 			}
 		}
 	}

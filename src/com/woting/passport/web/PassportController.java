@@ -11,7 +11,6 @@ import java.util.Random;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,8 +19,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.SpiritRandom;
 import com.spiritdata.framework.util.StringUtils;
-import com.spiritdata.framework.ext.redis.ExpirableBlockKey;
-import com.spiritdata.framework.ext.redis.RedisBlockLock;
+import com.spiritdata.framework.core.lock.BlockLockConfig;
+import com.spiritdata.framework.core.lock.ExpirableBlockKey;
+import com.spiritdata.framework.ext.redis.lock.RedisBlockLock;
+import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.RequestUtils;
 import com.woting.passport.UGA.persistence.pojo.UserPo;
 import com.woting.passport.UGA.service.GroupService;
@@ -103,8 +104,9 @@ public class PassportController {
             //3-用户登录成功
             mUdk.setUserId(u.getUserId());
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
-            RedisConnection rConn=redisConn.getConnection();
-            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), rConn);
+            RedisOperService roService=new RedisOperService(redisConn, 4);
+            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService,
+                    new BlockLockConfig(5, 2, 0, 50));
             try {
                 sessionService.registUser(mUdk, u);
                 MobileUsedPo mu=new MobileUsedPo();
@@ -115,8 +117,8 @@ public class PassportController {
                 muService.saveMobileUsed(mu);
             } finally {
                 rLock.unlock();
-                rConn.close();
-                rConn=null;
+                roService.close();
+                roService=null;
             }
             //4-返回成功，若没有IMEI也返回成功
             map.put("ReturnType", "1001");
@@ -193,15 +195,13 @@ public class PassportController {
                 map.put("Message", "登录名重复,无法注册.");
                 return map;
             }
-            RedisConnection rConn=redisConn.getConnection();
+            RedisOperService roService=new RedisOperService(redisConn, 4);
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
             if (usePhone!=null&&usePhone.equals("1")) {
                 //1.5-手机号码注册
-                byte[] getValue=rConn.get(redisUdk.getKey_UserPhoneCheck().getBytes());
+                String getValue=roService.get(redisUdk.getKey_UserPhoneCheck());
                 String info=getValue==null?"":new String(getValue);
-                if (info.startsWith("OK")) {
-                    nu.setMainPhoneNum(info.substring(4));
-                }
+                if (info.startsWith("OK")) nu.setMainPhoneNum(info.substring(4));
             }
             //2-保存用户
             nu.setCTime(new Timestamp(System.currentTimeMillis()));
@@ -216,7 +216,8 @@ public class PassportController {
             }
             //3-注册成功后，自动登陆，及后处理
             mUdk.setUserId(nu.getUserId());
-            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), rConn);
+            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService,
+                    new BlockLockConfig(5, 2, 0, 50));
             try {
                 sessionService.registUser(mUdk, nu);
                 MobileUsedPo mu=new MobileUsedPo();
@@ -227,8 +228,8 @@ public class PassportController {
                 muService.saveMobileUsed(mu);
             } finally {
                 rLock.unlock();
-                rConn.close();
-                rConn=null;
+                roService.close();
+                roService=null;
             }
             //4-返回成功，若没有IMEI也返回成功
             map.put("ReturnType", "1001");
@@ -299,11 +300,11 @@ public class PassportController {
             //3-成功后，自动登陆，处理Redis
             String _userId=((UserPo)rm.get("userInfo")).getUserId();
             mUdk.setUserId(_userId);
-            RedisConnection rConn=null;
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
-            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), rConn);
+            RedisOperService roService=new RedisOperService(redisConn, 4);
+            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService,
+                    new BlockLockConfig(5, 2, 0, 50));
             try {
-                rConn=redisConn.getConnection();
                 sessionService.registUser(mUdk, (UserPo)rm.get("userInfo"));
                 //3.2-保存使用情况
                 MobileUsedPo mu=new MobileUsedPo();
@@ -314,8 +315,8 @@ public class PassportController {
                 muService.saveMobileUsed(mu);
             } finally {
                 rLock.unlock();
-                if (rConn!=null) rConn.close();
-                rConn=null;
+                roService.close();
+                roService=null;
             }
 
             //4设置返回值
@@ -369,9 +370,10 @@ public class PassportController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-注销
-            RedisConnection rConn=redisConn.getConnection();
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
-            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), rConn);
+            RedisOperService roService=new RedisOperService(redisConn, 4);
+            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService,
+                    new BlockLockConfig(5, 2, 0, 50));
             try {
                 sessionService.logoutSession(mUdk);
                 //保存使用情况
@@ -383,8 +385,8 @@ public class PassportController {
                 muService.saveMobileUsed(mu);
             } finally {
                 rLock.unlock();
-                rConn.close();
-                rConn=null;
+                roService.close();
+                roService=null;
             }
             //3-返回成功，不管后台处理情况，总返回成功
             map.put("ReturnType", "1001");
@@ -510,14 +512,14 @@ public class PassportController {
             }
             UserPo up=userService.getUserById(m.get("RetrieveUserId")==null?null:(m.get("RetrieveUserId")+""));
             String info=null;
-            RedisConnection rConn=redisConn.getConnection();
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
+            RedisOperService roService=new RedisOperService(redisConn, 4);
             try {
-                byte[] getValue=redisUdk.getKey_UserPhoneCheck().getBytes();
-                info=getValue==null?"":new String(getValue);
+                String getValue=redisUdk.getKey_UserPhoneCheck();
+                info=getValue==null?"":roService.get(getValue);
             } finally {
-                rConn.close();
-                rConn=null;
+                roService.close();
+                roService=null;
             }
             if (info.startsWith("OK")) {
                 up.setPassword(newPwd);
@@ -699,13 +701,13 @@ public class PassportController {
                 String checkNum=(random+"").substring(1);
                 String smsRetNum=SendSMS.sendSms(phoneNum, checkNum, "通过手机号注册用户");
                 //向Session中加入验证信息
-                RedisConnection rConn=redisConn.getConnection();
+                RedisOperService roService=new RedisOperService(redisConn, 4);
                 RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
                 try {
-                    rConn.pSetEx(redisUdk.getKey_UserPhoneCheck().getBytes(), 100*1000, (System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum).getBytes());
+                    roService.set(redisUdk.getKey_UserPhoneCheck(), System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum, "", 100*1000);
                 } finally {
-                    rConn.close();
-                    rConn=null;
+                    roService.close();
+                    roService=null;
                 }
                 map.put("SmsRetNum", smsRetNum);
             } else {
@@ -761,13 +763,13 @@ public class PassportController {
                 String checkNum=(random+"").substring(1);
                 String smsRetNum=SendSMS.sendSms(phoneNum, checkNum, "通过绑定手机号找回密码");
                 //向Session中加入验证信息
-                RedisConnection rConn=redisConn.getConnection();
                 RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
+                RedisOperService roService=new RedisOperService(redisConn, 4);
                 try {
-                    rConn.pSetEx(redisUdk.getKey_UserPhoneCheck().getBytes(), 100*1000, (System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum).getBytes());
+                    roService.set(redisUdk.getKey_UserPhoneCheck(), System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum, "", 100*1000);
                 } finally {
-                    rConn.close();
-                    rConn=null;
+                    roService.close();
+                    roService=null;
                 }
                 map.put("SmsRetNum", smsRetNum);
             } else {
@@ -823,10 +825,10 @@ public class PassportController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            RedisConnection rConn=redisConn.getConnection();
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
-            byte[] getValue=redisUdk.getKey_UserPhoneCheck().getBytes();
-            String info=(getValue==null?null:new String(rConn.get(getValue)));
+            RedisOperService roService=new RedisOperService(redisConn, 4);
+            String getValue=redisUdk.getKey_UserPhoneCheck();
+            String info=(getValue==null?null:roService.get(getValue));
 
             if (info==null||info.equals("null")||info.startsWith("OK")) {//错误
                 map.put("ReturnType", "1002");
@@ -847,16 +849,18 @@ public class PassportController {
                         String smsRetNum=SendSMS.sendSms(phoneNum, checkNum, operType==1?"通过手机号注册用户":"通过绑定手机号找回密码");
                         //向Session中加入验证信息
                         try {
-                            rConn.pSetEx(redisUdk.getKey_UserPhoneCheck().getBytes(), 100*1000, (System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum).getBytes());
+                            roService.set(redisUdk.getKey_UserPhoneCheck(), System.currentTimeMillis()+"::"+phoneNum+"::"+checkNum, "", 100*1000);
                         } finally {
-                            rConn.close();
-                            rConn=null;
+                            roService.close();
+                            roService=null;
                         }
                         map.put("ReturnType", "1001");
                         map.put("SmsRetNum", smsRetNum);
                     }
                 }
             }
+            if (roService!=null) roService.close();
+            roService=null;
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -910,9 +914,9 @@ public class PassportController {
             try {needUserId=Boolean.parseBoolean((m.get("NeedUserId")==null?"false":m.get("NeedUserId")+""));} catch(Exception e) {}
 
             //验证验证码
-            RedisConnection rConn=redisConn.getConnection();
+            RedisOperService roService=new RedisOperService(redisConn, 4);
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
-            String info=new String(rConn.get(redisUdk.getKey_UserPhoneCheck().getBytes()));
+            String info=roService.get(redisUdk.getKey_UserPhoneCheck());
             if (info==null||info.equals("null")) {
                 map.put("ReturnType", "1005");
                 map.put("Message", "状态错误");
@@ -936,10 +940,10 @@ public class PassportController {
                         map.put("Message", "验证码不匹配");
                     } else {
                         try {
-                            rConn.pSetEx(redisUdk.getKey_UserPhoneCheck().getBytes(), 100*1000, ("OK::"+_phoneNum).getBytes());
+                            roService.set(redisUdk.getKey_UserPhoneCheck(), ("OK::"+_phoneNum), "", 100*1000);
                         } finally {
-                            rConn.close();
-                            rConn=null;
+                            roService.close();
+                            roService=null;
                         }
                         if (needUserId) {
                             UserPo u=userService.getUserByPhoneNum(phoneNum);
@@ -949,6 +953,8 @@ public class PassportController {
                     }
                 }
             }
+            if (roService!=null) roService.close();
+            roService=null;
             return map;
         } catch(Exception e) {
             e.printStackTrace();

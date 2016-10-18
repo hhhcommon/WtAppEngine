@@ -2,10 +2,19 @@ package com.woting.appengine.searchcrawler.service;
 
 import java.io.IOException;
 import java.util.Map;
+
+import javax.servlet.ServletContext;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import com.spiritdata.framework.FConstants;
+import com.spiritdata.framework.core.cache.SystemCache;
+import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
@@ -48,7 +57,14 @@ public class XiMaLaYaSearch extends Thread {
 				station.setName(stationname); // 专辑名称
 				station.setContentPub("喜马拉雅FM");
 				station.setFestival(stationfestiavlS(hrefstation));
-				if(station!=null) SearchUtils.addListInfo(content, station); // 保存到在redis里key为constr的list里
+				if(station!=null) {
+                    ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+                    if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                        JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+                        RedisOperService roService=new RedisOperService(conn);
+                        SearchUtils.addListInfo(content, station, roService); // 保存到在redis里key为constr的list里
+                    }
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -126,7 +142,14 @@ public class XiMaLaYaSearch extends Thread {
 					festival.setHost(host==null?null:host.split(" ")[0]);
 					festival.setPlaynum(playnum);
 					festival = festivalS(festival.getAudioId(), festival);
-					if(festival!=null) SearchUtils.addListInfo(content, festival); // 保存到在redis里key为constr的list里
+					if(festival!=null) {
+	                    ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+	                    if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+	                        JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+	                        RedisOperService roService=new RedisOperService(conn);
+	                        SearchUtils.addListInfo(content, festival, roService); // 保存到在redis里key为constr的list里
+	                    }
+					}
 				}
 			}
 		} catch (IOException e) {
@@ -142,7 +165,12 @@ public class XiMaLaYaSearch extends Thread {
 		} catch (Exception e) {
 			System.out.println("喜马拉雅搜索异常");
 		}finally {
-			SearchUtils.updateSearchFinish(constr);
+            ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+            if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+                RedisOperService roService=new RedisOperService(conn);
+                SearchUtils.updateSearchFinish(constr, roService);
+            }
 	     	System.out.println("喜马拉雅搜索结束");
 		}
 	}

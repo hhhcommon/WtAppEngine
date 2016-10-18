@@ -6,10 +6,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletContext;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import com.spiritdata.framework.FConstants;
+import com.spiritdata.framework.core.cache.SystemCache;
+import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 
@@ -92,7 +100,12 @@ public class BaiDuNewsSearch extends Thread {
 		} catch (Exception e) {
 			System.out.println("百度搜索异常");
 		}finally {
-			SearchUtils.updateSearchFinish(constr); // 暂定开启新闻搜索所有线程后，新闻搜索完成
+	        ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+	        if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+	            JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+	            RedisOperService roService=new RedisOperService(conn);
+	            SearchUtils.updateSearchFinish(constr, roService); // 暂定开启新闻搜索所有线程后，新闻搜索完成
+	        }
 		    System.out.println("百度搜索完成");
 		}
 	}

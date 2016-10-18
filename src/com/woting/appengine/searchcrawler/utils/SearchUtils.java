@@ -15,6 +15,8 @@ import java.util.Map;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+
+import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.searchcrawler.model.Festival;
@@ -26,47 +28,12 @@ import com.woting.appengine.searchcrawler.service.QingTingSearch;
 import com.woting.appengine.searchcrawler.service.XiMaLaYaSearch;
 import com.woting.passport.mobile.MobileUDKey;
 
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-
 public abstract class SearchUtils {
 
 	private static int T = 5000; // 默认超时时间
 	private static String[] specialfield = { "扫一扫", "新闻", "关注", "微信", "好友", "分享", "朋友圈", "iphone", "客户端", "[详情]",
 			"京ICP证", "京网文", "|", "┊", "｜", "上一篇：", "我的收藏", "首页", "不良信息举报：", "经营许可证编号:", "2016.", "：", "订阅", "保留所有权利",
 			"@", "联系我们", "反垃圾邮件策略", "书面授权", "正北方网", "浏览本网主页", "显示屏的分辨率", "免责声明", "稿件侵权行为", "版权", "转载", "18183", "和讯网" };
-	private static JedisPool jedisPool = getPool();
-
-	public static JedisPool getPool() {
-		JedisPool pool = null;
-		if (pool == null) {
-			JedisPoolConfig config = new JedisPoolConfig();
-			// 控制一个pool可分配多少个jedis实例，通过pool.getResource()来获取；
-			// 如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted(耗尽)。
-			config.setMaxTotal(1000);
-			// 控制一个pool最多有多少个状态为idle(空闲的)的jedis实例。
-			config.setMaxIdle(5);
-			// 表示当borrow(引入)一个jedis实例时，最大的等待时间，如果超过等待时间，则直接抛出JedisConnectionException；
-			config.setMaxWaitMillis(1000 * 100);
-			// 在borrow一个jedis实例时，是否提前进行validate操作；如果为true，则得到的jedis实例均是可用的；
-			config.setTestOnBorrow(true);
-			config.setTestOnReturn(true);
-			pool = new JedisPool(config, "127.0.0.1", 6379);
-		}
-		return pool;
-	}
-
-	/**
-	 * 释放jedis客户端
-	 * 
-	 * @param jedis
-	 */
-	private static void release(Jedis jedis) {
-		if(jedis!=null)
-			jedisPool.returnResource(jedis);
-		System.out.println(jedisPool.getNumActive());
-	}
 
 	/**
 	 * 搜索内容中文转url编码
@@ -171,14 +138,11 @@ public abstract class SearchUtils {
 	 * @param key
 	 * @return
 	 */
-	public static long getListNum(String key) {
-		Jedis jedis = jedisPool.getResource();
-		if (jedis.exists("Search_" + key + "_Data")) {
-			long num = jedis.llen(("Search_" + key + "_Data"));
-			release(jedis);
+	public static long getListNum(String key, RedisOperService ros) {
+		if (ros.exist("Search_" + key + "_Data")) {
+			long num = ros.lLen("Search_" + key + "_Data");
 			return num;
 		} else {
-			release(jedis);
 			return 0;
 		}
 	}
@@ -191,90 +155,81 @@ public abstract class SearchUtils {
 	 * @param pageSize
 	 * @return
 	 */
-	public static List<Map<String, Object>> getListPage(String key, int page, int pageSize) {
-		Jedis jedis = jedisPool.getResource();
+	public static List<Map<String, Object>> getListPage(String key, int page, int pageSize, RedisOperService ros) {
 		List<Map<String, Object>> list = null;
 		String finishstr = "Search_" + key + "_Finish";
 		String datastr = "Search_" + key + "_Data";
-		try {
-			if (jedis.exists(finishstr)) { // 判断是否redis里有存储的数据
-				long num = jedis.llen(datastr); // 得到已存储数据的个数
-				num = num - (page - 1) * pageSize;
-				if (num <= 0) {
-					if (isOrNoSearchFinish(key)) {
-						return null;
-					} else {
-						long time = System.currentTimeMillis();
-						while ((System.currentTimeMillis()-time)<5000) {
-							num = jedis.llen(datastr)-(page-1)*pageSize;
-							if (num>=pageSize) {
-								list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,page*pageSize-1));
-								return list;
-							} else {
-								if(isOrNoSearchFinish(key)) {
-									list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
-									return list;
-								} else Thread.sleep(50);
-							}
-						}
-						//num<=0时未完成等待5s超时处理
-						if (num>=pageSize) {
-							list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,page*pageSize-1));
-							return list;
-						} else {
-							if ((num>0)&&(num<pageSize)) {
-								list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
-								return list;
-							} else {
-								return null;
-							}
-						}
-					}
-				} else if (num>=pageSize) {
-					list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,page*pageSize-1));
-					return list;
-				} else if (num<pageSize) {
-					if (isOrNoSearchFinish(key)) {
-						list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
-						return list;
-					} else {
-						long time = System.currentTimeMillis();
-						while ((System.currentTimeMillis()-time)<5000) {
-							num = jedis.llen(datastr)-(page-1)*pageSize;
-							if (num>=pageSize) {
-								list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,page*pageSize-1));
-								return list;
-							} else {
-								if(isOrNoSearchFinish(key))
-								{
-									list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
-									return list;
-								} else Thread.sleep(50);
-							}
-						}
-						// 0<num<pagesize时未完成等待5s超时处理
-						num = jedis.llen(datastr)-(page-1)*pageSize;
-						if(num>=pageSize){
-							list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,page*pageSize-1));
-						    return list;
-						} else {
-							list = convertJsonList(jedis.lrange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
-							return list;
-						}
-					}
-				}
-			} 
-		} catch (InterruptedException e) {} finally {release(jedis);}
-		return null;
+        if (ros.exist(finishstr)) { // 判断是否redis里有存储的数据
+            long num = ros.lLen(datastr); // 得到已存储数据的个数
+            num = num - (page - 1) * pageSize;
+            if (num <= 0) {
+                if (isOrNoSearchFinish(key, ros)) {
+                    return null;
+                } else {
+                    long time = System.currentTimeMillis();
+                    while ((System.currentTimeMillis()-time)<5000) {
+                        num = ros.lLen(datastr)-(page-1)*pageSize;
+                        if (num>=pageSize) {
+                            list = convertJsonList(ros.lRange(datastr,(page-1)*pageSize,page*pageSize-1));
+                            return list;
+                        } else {
+                            if(isOrNoSearchFinish(key, ros)) {
+                                list = convertJsonList(ros.lRange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
+                                return list;
+                            } else try {Thread.sleep(50);} catch(Exception e) {}
+                        }
+                    }
+                    //num<=0时未完成等待5s超时处理
+                    if (num>=pageSize) {
+                        list = convertJsonList(ros.lRange(datastr,(page-1)*pageSize,page*pageSize-1));
+                        return list;
+                    } else {
+                        if ((num>0)&&(num<pageSize)) {
+                            list = convertJsonList(ros.lRange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
+                            return list;
+                        } else {
+                            return null;
+                        }
+                    }
+                }
+            } else if (num>=pageSize) {
+                list = convertJsonList(ros.lRange(datastr,(page-1)*pageSize,page*pageSize-1));
+                return list;
+            } else if (num<pageSize) {
+                if (isOrNoSearchFinish(key, ros)) {
+                    list = convertJsonList(ros.lRange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
+                    return list;
+                } else {
+                    long time = System.currentTimeMillis();
+                    while ((System.currentTimeMillis()-time)<5000) {
+                        num = ros.lLen(datastr)-(page-1)*pageSize;
+                        if (num>=pageSize) {
+                            list = convertJsonList(ros.lRange(datastr,(page-1)*pageSize,page*pageSize-1));
+                            return list;
+                        } else {
+                            if(isOrNoSearchFinish(key, ros)) {
+                                list = convertJsonList(ros.lRange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
+                                return list;
+                            } else try {Thread.sleep(50);} catch(Exception e) {}
+                        }
+                    }
+                    // 0<num<pagesize时未完成等待5s超时处理
+                    num = ros.lLen(datastr)-(page-1)*pageSize;
+                    if(num>=pageSize){
+                        list = convertJsonList(ros.lRange(datastr,(page-1)*pageSize,page*pageSize-1));
+                        return list;
+                    } else {
+                        list = convertJsonList(ros.lRange(datastr,(page-1)*pageSize,(page-1)*pageSize+num-1));
+                        return list;
+                    }
+                }
+            }
+        }
+        return list;
 	}
 	
-	public static void createNewsInfo(String contentid, String contenturi){
-		Jedis jedis = jedisPool.getResource();
-		try {
-			jedis.set("Search_"+contentid+"_NewsInfo", contenturi);
-		} finally {
-			release(jedis);
-		}
+	public static void createNewsInfo(String contentid, String contenturi, RedisOperService ros){
+        ros.set("Search_"+contentid+"_NewsInfo", contenturi, "", -1);
 	}
 	
 	/**
@@ -282,20 +237,15 @@ public abstract class SearchUtils {
 	 * @param contentid
 	 * @return
 	 */
-	public static Map<String, Object> getNewsInfo(String contentid){
-		Jedis jedis = jedisPool.getResource();
+	public static Map<String, Object> getNewsInfo(String contentid, RedisOperService ros){
 		Map<String, Object> map = new HashMap<String,Object>();
-		try {
-			if (jedis.exists("Search_"+contentid+"_NewsInfo")) {
-				if(jedis.get("Search_"+contentid+"_NewsInfo")!=null) {
-					map.put("ContentURI", jedis.get("Search_"+contentid+"_NewsInfo"));
-					map.put("ContentId", contentid);
-					return map;
-				}
-			}
-		} catch (Exception e) {}finally {
-			release(jedis);
-		}
+        if (ros.exist("Search_"+contentid+"_NewsInfo")) {
+            if(ros.get("Search_"+contentid+"_NewsInfo")!=null) {
+                map.put("ContentURI", ros.get("Search_"+contentid+"_NewsInfo"));
+                map.put("ContentId", contentid);
+                return map;
+            }
+        }
 		return null;
 	}
 
@@ -324,25 +274,18 @@ public abstract class SearchUtils {
 	 * @param T
 	 * @return
 	 */
-	public static <T> boolean addListInfo(String key, T T) {
-		Jedis jedis = jedisPool.getResource();
+	public static <T> boolean addListInfo(String key, T T, RedisOperService ros) {
 		String value = "";
-		
-		try {
-			String classname = T.getClass().getSimpleName();
-		    if (classname.equals("Festival"))
-			    value = JsonUtils.objToJson(DataTransform.festival2Audio((Festival) T));
-		    else if (classname.equals("Station"))
-			    value = JsonUtils.objToJson(DataTransform.datas2Sequ_Audio((Station) T));
-		    else if (classname.equals("HashMap"))
-			    value = JsonUtils.objToJson(T);
-		    if (!StringUtils.isNullOrEmptyOrSpace(value)&&!value.toLowerCase().equals("null")) {
-			    jedis.rpush("Search_" + key + "_Data", value);
-		    }
-		} catch (Exception e) {
-		}finally {
-			release(jedis);
-		}
+        String classname = T.getClass().getSimpleName();
+        if (classname.equals("Festival"))
+            value = JsonUtils.objToJson(DataTransform.festival2Audio((Festival) T));
+        else if (classname.equals("Station"))
+            value = JsonUtils.objToJson(DataTransform.datas2Sequ_Audio((Station) T));
+        else if (classname.equals("HashMap"))
+            value = JsonUtils.objToJson(T);
+        if (!StringUtils.isNullOrEmptyOrSpace(value)&&!value.toLowerCase().equals("null")) {
+            ros.rPush("Search_" + key + "_Data", value);
+        }
 		return true;
 	}
 
@@ -352,9 +295,9 @@ public abstract class SearchUtils {
 	 * @param searchStr
 	 * @return
 	 */
-	public static boolean searchContent(String searchStr, MobileUDKey mUdk) {
-		createSearchTime(searchStr);
-		createBeginSearch(searchStr);
+	public static boolean searchContent(String searchStr, MobileUDKey mUdk, RedisOperService ros) {
+		createSearchTime(searchStr, ros);
+		createBeginSearch(searchStr, ros);
 		new KaoLaSearch(searchStr).start();
 		new XiMaLaYaSearch(searchStr).start();
 		new QingTingSearch(searchStr).start();
@@ -368,11 +311,9 @@ public abstract class SearchUtils {
 	 * 
 	 * @param key
 	 */
-	private static void createSearchTime(String key) {
-		Jedis jedis = jedisPool.getResource();
+	private static void createSearchTime(String key, RedisOperService ros) {
 		long time = System.currentTimeMillis();
-		jedis.set("Search_" + key + "_Date", Long.toString(time));
-		release(jedis);
+		ros.set("Search_" + key + "_Date", Long.toString(time));
 	}
 
 	/**
@@ -381,16 +322,13 @@ public abstract class SearchUtils {
 	 * @param key
 	 * @return
 	 */
-	public static boolean isOrNoSearchFinish(String key) {
-		Jedis jedis = jedisPool.getResource();
-		try {
-			if (jedis.exists("Search_" + key + "_Finish")) {
-				if (jedis.get("Search_" + key + "_Finish").equals("5")) { // 喜马拉雅，考拉，蜻蜓，百度新闻，服务器数据库
-					System.out.println("key:已搜索完成 ");
-					return true;
-					}
-				}
-			} catch (Exception e) {}finally {release(jedis);}
+	public static boolean isOrNoSearchFinish(String key, RedisOperService ros) {
+        if (ros.exist("Search_" + key + "_Finish")) {
+            if (ros.get("Search_" + key + "_Finish").equals("5")) { // 喜马拉雅，考拉，蜻蜓，百度新闻，服务器数据库
+                System.out.println("key:已搜索完成 ");
+                return true;
+            }
+        }
 		return false;
 	}
 	
@@ -408,10 +346,8 @@ public abstract class SearchUtils {
 	 * 
 	 * @param key
 	 */
-	public static void createBeginSearch(String key) {
-		Jedis jedis = jedisPool.getResource();
-		jedis.set("Search_" + key + "_Finish", "0");
-		release(jedis);
+	public static void createBeginSearch(String key, RedisOperService ros) {
+	    ros.set("Search_" + key + "_Finish", "0");
 	}
 
 	/**
@@ -419,14 +355,12 @@ public abstract class SearchUtils {
 	 * 
 	 * @param key
 	 */
-	public static void updateSearchFinish(String key) {
-		Jedis jedis = jedisPool.getResource();
-		if (jedis.exists("Search_" + key + "_Finish")) {
-			String finishnum = jedis.get("Search_" + key + "_Finish");
+	public static void updateSearchFinish(String key, RedisOperService ros) {
+		if (ros.exist("Search_" + key + "_Finish")) {
+			String finishnum = ros.get("Search_" + key + "_Finish");
 			finishnum = String.valueOf(Integer.valueOf(finishnum) + 1);
-			jedis.set("Search_" + key + "_Finish", finishnum);
+			ros.set("Search_" + key + "_Finish", finishnum);
 		}
-		release(jedis);
 	}
 
 	/**

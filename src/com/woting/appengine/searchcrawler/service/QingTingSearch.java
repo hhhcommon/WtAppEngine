@@ -3,10 +3,19 @@ package com.woting.appengine.searchcrawler.service;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.ServletContext;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import com.spiritdata.framework.FConstants;
+import com.spiritdata.framework.core.cache.SystemCache;
+import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.JsonUtils;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
@@ -46,7 +55,14 @@ public class QingTingSearch extends Thread {
 					Festival festival = new Festival();
 					festival = festivalS(href);
 					festival.setAudioName(title);
-					if(festival!=null) SearchUtils.addListInfo(constr, festival); // 保存到在redis里key为constr的list里
+					if(festival!=null) {
+			            ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+			            if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+			                JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+			                RedisOperService roService=new RedisOperService(conn);
+			                SearchUtils.addListInfo(constr, festival, roService);//保存到在redis里key为constr的list里
+			            }
+					}
 				}
 				if (i < r_num + s_num) {
 					Station station = new Station();
@@ -54,7 +70,14 @@ public class QingTingSearch extends Thread {
 					station.setId(href.replaceAll("http://www.qingting.fm/s/vchannels/", ""));
 					station.setName(title);
 					station.setContentPub("蜻蜓FM");
-					if(station!=null) SearchUtils.addListInfo(constr, station); // 保存到在redis里key为constr的list里
+					if(station!=null) {
+                        ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+                        if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                            JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+                            RedisOperService roService=new RedisOperService(conn);
+                            SearchUtils.addListInfo(constr, station, roService); // 保存到在redis里key为constr的list里
+                        }
+					}
 					if (i == r_num + (s_num > (S_S_NUM - 1) ? (S_S_NUM - 1) : s_num) && (r_num + s_num) > 0) {
 						i = r_num + s_num - 1;
 					}
@@ -141,7 +164,12 @@ public class QingTingSearch extends Thread {
 			System.out.println("蜻蜓搜索异常");
 		}
 		finally {
-			SearchUtils.updateSearchFinish(constr);
+            ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+            if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+                RedisOperService roService=new RedisOperService(conn);
+                SearchUtils.updateSearchFinish(constr, roService);
+            }
 		    System.out.println("蜻蜓结束搜索");
 		}
 	}

@@ -3,9 +3,12 @@ package com.woting.appengine.searchcrawler.service;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.ServletContext;
+
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.SystemCache;
+import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 import com.woting.passport.mobile.MobileUDKey;
@@ -37,15 +40,25 @@ public class LocalSearch extends Thread {
 		try {
 			if (map.get("ReturnType").equals("1001")) {
 				List<Map<String, Object>> list=(List<Map<String, Object>>) map.get("List");
-				for (Map<String, Object> m : list) {
-					SearchUtils.addListInfo(searchStr, m);
-				}
+	            ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+	            if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+	                JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+	                RedisOperService roService=new RedisOperService(conn);
+	                for (Map<String, Object> m : list) {
+	                    SearchUtils.addListInfo(searchStr, m, roService);
+	                }
+	            }
 			}
 		} catch (Exception e) {
 			System.out.println("本地搜索异常");
 		}
 		finally {
-			SearchUtils.updateSearchFinish(searchStr);
+            ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+            if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+                RedisOperService roService=new RedisOperService(conn);
+                SearchUtils.updateSearchFinish(searchStr, roService);
+            }
 			System.out.println("本地搜索完成");
 		}
 	}
