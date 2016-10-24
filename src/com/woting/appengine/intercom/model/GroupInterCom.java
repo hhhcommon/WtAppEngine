@@ -11,7 +11,7 @@ import com.woting.push.core.message.CompareMsg;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.push.core.message.content.MapContent;
 import com.woting.passport.UGA.model.Group;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.mobile.MobileUDKey;
 
 /**

@@ -22,7 +22,7 @@ import com.spiritdata.framework.util.StringUtils;
 import com.woting.cm.core.utils.ContentUtils;
 import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.favorite.persis.po.UserFavoritePo;
-import com.woting.passport.UGA.persistence.pojo.GroupPo;
+import com.woting.passport.UGA.persis.pojo.GroupPo;
 import com.woting.passport.mobile.MobileUDKey;
 
 @Lazy(true)

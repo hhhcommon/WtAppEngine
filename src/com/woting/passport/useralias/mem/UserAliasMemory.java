@@ -2,7 +2,7 @@ package com.woting.passport.useralias.mem;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
+import com.woting.passport.useralias.persis.pojo.UserAliasPo;
 
 public class UserAliasMemory {
     //java的占位单例模式===begin

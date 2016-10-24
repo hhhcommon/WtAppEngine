@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+  访问日志
+-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ApiLog">
+  <!-- 对象定义:任务组信息 -->
+  <resultMap id="BaseResultMap" type="apiLog">
+    <id     column="id"           property="id"           jdbcType="VARCHAR"/>
+    <result column="reqUrl"       property="reqUrl"       jdbcType="VARCHAR"/>
+    <result column="method"       property="method"       jdbcType="VARCHAR"/>
+    <result column="reqParam"     property="reqParam"     jdbcType="VARCHAR"/>
+    <result column="apiName"      property="apiName"      jdbcType="VARCHAR"/>
+    <result column="ownerType"    property="ownerType"    jdbcType="INTEGER"/>
+    <result column="ownerId"      property="ownerId"      jdbcType="VARCHAR"/>
+    <result column="deviceType"   property="deviceType"   jdbcType="INTEGER"/>
+    <result column="deviceId"     property="deviceId"     jdbcType="VARCHAR"/>
+    <result column="deviceClass"  property="deviceClass"  jdbcType="VARCHAR"/>
+    <result column="exploreName"  property="exploreName"  jdbcType="VARCHAR"/>
+    <result column="exploreVer"   property="exploreVer"   jdbcType="VARCHAR"/>
+    <result column="objType"      property="objType"      jdbcType="VARCHAR"/>
+    <result column="objId"        property="objId"        jdbcType="VARCHAR"/>
+    <result column="dealFlag"     property="dealFlag"     jdbcType="INTEGER"/>
+    <result column="returnData"   property="returnData"   jdbcType="VARCHAR"/>
+    <result column="beginTime"    property="beginTime"    jdbcType="TIMESTAMP"/>
+    <result column="endTime"      property="endTime"      jdbcType="TIMESTAMP"/>
+  </resultMap>
+
+  <!-- 所有列 -->
+  <sql id="Base_Column_List">
+    id, reqUrl, method, reqParam, apiName, ownerType, ownerId, deviceType, deviceId, deviceClass, exploreName, exploreVer, objType, objId, dealFlag, returnData, beginTime, endTime
+  </sql>
+
+  <!-- 新增数据 -->
+  <insert id="insert" parameterType="java.util.Map">
+    insert into ld_API
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="reqUrl!=null">reqUrl,</if>
+      <if test="method!=null">method,</if>
+      <if test="reqParam!=null">reqParam,</if>
+      <if test="apiName!=null">apiName,</if>
+      <if test="ownerType!=null and ownerType!=0">ownerType,</if>
+      <if test="ownerId!=null">ownerId,</if>
+      <if test="deviceType!=null and deviceType!=0">deviceType,</if>
+      <if test="deviceId!=null">deviceId,</if>
+      <if test="deviceClass!=null">deviceClass,</if>
+      <if test="exploreName!=null">exploreName,</if>
+      <if test="exploreVer!=null">exploreVer,</if>
+      <if test="objType!=null">objType,</if>
+      <if test="objId!=null">objId,</if>
+      <if test="dealFlag!=null">dealFlag,</if>
+      <if test="returnData!=null">returnData,</if>
+      <if test="beginTime!=null">beginTime,</if>
+      <if test="endTime!=null">endTime,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="reqUrl!=null">#{reqUrl,jdbcType=VARCHAR},</if>
+      <if test="method!=null">#{method,jdbcType=VARCHAR},</if>
+      <if test="reqParam!=null">#{reqParam,jdbcType=VARCHAR},</if>
+      <if test="apiName!=null">#{apiName,jdbcType=VARCHAR},</if>
+      <if test="ownerType!=null and ownerType!=0">#{ownerType,jdbcType=INTEGER},</if>
+      <if test="ownerId!=null">#{ownerId,jdbcType=VARCHAR},</if>
+      <if test="deviceType!=null and deviceType!=0">#{deviceType,jdbcType=INTEGER},</if>
+      <if test="deviceId!=null">#{deviceId,jdbcType=VARCHAR},</if>
+      <if test="deviceClass!=null">#{deviceClass,jdbcType=VARCHAR},</if>
+      <if test="exploreName!=null">#{exploreName,jdbcType=VARCHAR},</if>
+      <if test="exploreVer!=null">#{exploreVer,jdbcType=VARCHAR},</if>
+      <if test="objType!=null">#{objType,jdbcType=VARCHAR},</if>
+      <if test="objId!=null">#{objId,jdbcType=VARCHAR},</if>
+      <if test="dealFlag!=null">#{dealFlag,jdbcType=INTEGER},</if>
+      <if test="returnData!=null">#{returnData,jdbcType=VARCHAR},</if>
+      <if test="beginTime!=null">#{beginTime,jdbcType=TIMESTAMP},</if>
+      <if test="endTime!=null">#{endTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+</mapper>

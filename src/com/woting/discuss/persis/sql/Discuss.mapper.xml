@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+  针对应用的意见
+-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="WT_DISCUSS">
+  <!-- 对象定义:用户意见 -->
+  <resultMap id="discussMap" type="discuss">
+    <id      column="id"            property="id"            jdbcType="VARCHAR"/>
+    <result  column="userId"        property="userId"        jdbcType="VARCHAR"/>
+    <result  column="resTableName"  property="resTableName"  jdbcType="VARCHAR"/>
+    <result  column="resId"         property="resId"         jdbcType="VARCHAR"/>
+    <result  column="opinion"       property="opinion"       jdbcType="VARCHAR"/>
+    <result  column="cTime"         property="CTime"         jdbcType="TIMESTAMP"/>
+  </resultMap>
+
+  <!-- 所有列 -->
+  <sql id="Base_Column_List">
+    id, userId, resTableName, resId, opinion, cTime
+  </sql>
+  <sql id="Base_Column_List_A">
+    a.id, a.userId, a.resTableName, a.resId, a.opinion, a.cTime
+  </sql>
+
+  <!-- 条件子句 -->
+  <sql id="WhereClauseByEntiey">
+    <where>
+      <trim prefix="(" suffix=")" prefixOverrides="and">
+        <if test="id!=null"> and id=#{id,jdbcType=VARCHAR}</if>
+        <if test="userId!=null"> and userId=#{userId,jdbcType=VARCHAR}</if>
+        <if test="resTableName!=null"> and resTableName=#{resTableName,jdbcType=VARCHAR}</if>
+        <if test="resId!=null"> and resId=#{resId,jdbcType=VARCHAR}</if>
+        <if test="opinion!=null"> and opinion=#{opinion,jdbcType=VARCHAR}</if>
+        <if test="CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
+      </trim>
+    </where>
+  </sql>
+
+  <!-- 获得记录条数-->
+  <select id="getCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select count(*) from wt_Discuss <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </select>
+
+  <!-- 获得列表 -->
+  <select id="getList" resultMap="discussMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_Discuss
+    <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+    <if test="sortByClause!=null">order by ${sortByClause}</if>
+  </select>
+  <!-- 获得列表 -->
+  <select id="getPubList" resultMap="discussMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List_A"/> from wt_Discuss a, wt_wt_ChannelAsset b
+    where a.resTableName=b.assetType and a.resId=b.assetId and flowFlag=2 and
+    <trim prefix="(" suffix=")" prefixOverrides="and">
+      <if test="a.id!=null"> and id=#{id,jdbcType=VARCHAR}</if>
+      <if test="a.userId!=null"> and userId=#{userId,jdbcType=VARCHAR}</if>
+      <if test="a.resTableName!=null"> and resTableName=#{resTableName,jdbcType=VARCHAR}</if>
+      <if test="a.resId!=null"> and resId=#{resId,jdbcType=VARCHAR}</if>
+      <if test="a.opinion!=null"> and opinion=#{opinion,jdbcType=VARCHAR}</if>
+      <if test="a.CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
+    </trim>
+    <if test="sortByClause!=null">order by ${sortByClause}</if>
+  </select>
+  <!-- 获得重复列表 -->
+  <select id="getDuplicates" resultMap="discussMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_Discuss
+    <where>
+      <trim prefixOverrides="and">
+        <if test="userId!=null"> and userId=#{userId,jdbcType=VARCHAR}</if>
+        <if test="resTableName!=null"> and resTableName=#{resTableName,jdbcType=VARCHAR}</if>
+        <if test="resId!=null"> and resId=#{resId,jdbcType=VARCHAR}</if>
+        <if test="opinion!=null"> and opinion=#{opinion,jdbcType=VARCHAR}</if>
+      </trim>
+    </where>
+  </select>
+
+  <!-- 获得一条数据 -->
+  <select id="getInfo" resultMap="discussMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_Discuss <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </select>
+  <select id="getInfoById" resultMap="discussMap" parameterType="java.lang.String">
+    select <include refid="Base_Column_List"/> from wt_Discuss where id=#{id,jdbcType=VARCHAR}
+  </select>
+
+  <!-- 新增数据 -->
+  <insert id="insert" parameterType="java.util.Map">
+    insert into wt_Discuss
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="userId!=null">userId,</if>
+      <if test="resTableName!=null">resTableName,</if>
+      <if test="resId!=null">resId,</if>
+      <if test="opinion!=null">opinion,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="userId!=null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="resTableName!=null">#{resTableName,jdbcType=VARCHAR},</if>
+      <if test="resId!=null">#{resId,jdbcType=VARCHAR},</if>
+      <if test="opinion!=null">#{opinion,jdbcType=VARCHAR},</if>
+    </trim>
+  </insert>
+
+  <!-- 修改 根据主键-->
+  <update id="update" parameterType="java.util.Map">
+    update wt_Discuss
+    <set>
+      <if test="userId!=null">userId=#{userId,jdbcType=VARCHAR},</if>
+      <if test="resTableName!=null">resTableName=#{resTableName,jdbcType=VARCHAR},</if>
+      <if test="resId!=null">resId=#{resId,jdbcType=VARCHAR},</if>
+      <if test="opinion!=null">opinion=#{opinion,jdbcType=VARCHAR},</if>
+      <if test="CTime=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id=#{id,jdbcType=VARCHAR}
+  </update>
+
+  <!-- 删除数据 -->
+  <delete id="delete" parameterType="java.lang.String">
+    delete from wt_Discuss where id=#{id,jdbcType=VARCHAR}
+  </delete>
+  <delete id="deleteByEntity" parameterType="java.util.Map">
+    delete from wt_Discuss <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </delete>
+  <delete id="delArticle" parameterType="java.util.Map">
+    delete from wt_Discuss where articleId=#{resId,jdbcType=VARCHAR}
+  </delete>
+</mapper>

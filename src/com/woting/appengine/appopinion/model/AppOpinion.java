@@ -7,8 +7,8 @@ import com.spiritdata.framework.core.model.ModelSwapPo;
 import com.spiritdata.framework.exceptionC.Plat0006CException;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.appopinion.persistence.pojo.AppOpinionPo;
-import com.woting.appengine.appopinion.persistence.pojo.AppReOpinionPo;
+import com.woting.appengine.appopinion.persis.pojo.AppOpinionPo;
+import com.woting.appengine.appopinion.persis.pojo.AppReOpinionPo;
 
 /**
  * 反馈意见信息<br/>

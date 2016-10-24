@@ -11,8 +11,8 @@ import javax.annotation.Resource;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.appengine.appopinion.model.AppOpinion;
-import com.woting.appengine.appopinion.persistence.pojo.AppOpinionPo;
-import com.woting.appengine.appopinion.persistence.pojo.AppReOpinionPo;
+import com.woting.appengine.appopinion.persis.pojo.AppOpinionPo;
+import com.woting.appengine.appopinion.persis.pojo.AppReOpinionPo;
 
 public class AppOpinionService {
     @Resource(name="defaultDAO")

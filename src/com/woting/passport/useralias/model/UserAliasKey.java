@@ -2,7 +2,7 @@ package com.woting.passport.useralias.model;
 
 import com.mysql.jdbc.StringUtils;
 import com.spiritdata.framework.core.model.BaseObject;
-import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
+import com.woting.passport.useralias.persis.pojo.UserAliasPo;
 
 /**
  * 别名Key

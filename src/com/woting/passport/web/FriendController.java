@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.RequestUtils;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.friend.service.FriendService;
 import com.woting.passport.mobile.MobileParam;
@@ -23,7 +23,7 @@ import com.woting.passport.mobile.MobileUDKey;
 import com.woting.passport.session.SessionService;
 import com.woting.passport.useralias.mem.UserAliasMemoryManage;
 import com.woting.passport.useralias.model.UserAliasKey;
-import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
+import com.woting.passport.useralias.persis.pojo.UserAliasPo;
 
 @Controller
 @RequestMapping(value="/passport/friend/")

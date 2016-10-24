@@ -71,7 +71,7 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='DA002用户内容喜欢记录表';
 
 /**LogData**/
 /**== 三、日志相关数据 */
-/**LD001 消息收发日志
+/**LD001 消息收发日志**/
 DROP TABLE IF EXISTS ld_Message;
 CREATE TABLE ld_Message (
   id          varchar(32)   NOT NULL  COMMENT '消息Id',
@@ -84,7 +84,7 @@ CREATE TABLE ld_Message (
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='*LD001消息收发日志表';
 
-/**LD002 音频消息收发
+/**LD002 音频消息收发**/
 DROP TABLE IF EXISTS ld_Audio;
 CREATE TABLE ld_Audio (
   id           varchar(32)   NOT NULL  COMMENT '消息Id，可以和ld_Message中互查',
@@ -100,3 +100,28 @@ CREATE TABLE ld_Audio (
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='LD002音频消息收发表';
+
+/** LD003 API处理收集数据 **/
+DROP TABLE IF EXISTS ld_API;
+CREATE TABLE ld_API (
+  id           varchar(32)      NOT NULL             COMMENT '表ID(UUID)',
+  reqUrl       varchar(500)                          COMMENT '请求的URL',
+  method       varchar(20)                           COMMENT '请求方式是POST/GET/DEL等',
+  reqParam     varchar(1000)                         COMMENT '请求中的参数，形式为JSON',
+  apiName      varchar(200)     NOT NULL             COMMENT 'Api名称',
+  ownerType    int unsigned     NOT NULL             COMMENT '用户类型(1xx:系统;2xx:用户;)',
+  ownerId      varchar(32)      NOT NULL             COMMENT '用户Id或SessionID(或指向用户表)，引起文件生成的用户，可以是系统sys',
+  deviceType   int(2) unsigned  NOT NULL             COMMENT '设备类型',
+  deviceId     varchar(100)                          COMMENT '设备ID(移动端是IMEI,PC是SessionId)',
+  deviceClass  varchar(100)                          COMMENT '设备型号',
+  exploreName  varchar(100)                          COMMENT '浏览器名称',
+  exploreVer   varchar(100)                          COMMENT '浏览器型号',
+  objType      varchar(100)                          COMMENT '主对象类型，是数据库模型中主对象的编号',
+  objId        varchar(32)                           COMMENT '访问实体的ID',
+  dealFlag     int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '处理过程0正在处理1处理成功2处理失败',
+  returnData   text                                  COMMENT '返回数据，以JSON形式',
+  beginTime    timestamp                             COMMENT '开始处理时间',
+  endTime      timestamp                             COMMENT '结束处理时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='LD003 API处理收集数据';

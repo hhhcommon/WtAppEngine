@@ -473,6 +473,21 @@ CREATE TABLE wt_ResDict_Ref (
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='027资源字典项对应关系';
 
+/**== 四.6、评论 =============================================*/
+/**028 WT_DISCUSS(内容评论)*/
+DROP TABLE IF EXISTS wt_Discuss;
+CREATE TABLE wt_Discuss (
+  id            varchar(32)   NOT NULL  COMMENT 'uuid(主键)',
+  imei          varchar(32)   NOT NULL  COMMENT '手机是IMEI，若是web则是SessionId',
+  userId        varchar(32)             COMMENT '用户Id，若为0则是过客',
+  resTableName  varchar(200)  NOT NULL  COMMENT '资源类型，就是资源的主表名：1电台=wt_Broadcast；2单体媒体资源=wt_MediaAsset；3专辑资源=wt_SeqMediaAsset',
+  resId         varchar(32)   NOT NULL  COMMENT '资源Id',
+  opinion       varchar(600)  NOT NULL  COMMENT '所提意见，200汉字',
+  cTime         timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间，意见成功提交时间',
+  PRIMARY KEY(id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='028内容评论表';
+
 /**== 五、号码黑名单 =============================================*/
 /**028 WT_BLACK_GNUM(组号黑名单，名单中号码不会出现在组号中)*/
 DROP TABLE IF EXISTS wt_Black_GNum;

@@ -9,7 +9,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.woting.passport.useralias.model.UserAliasKey;
-import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
+import com.woting.passport.useralias.persis.pojo.UserAliasPo;
 import com.woting.passport.useralias.service.UserAliasService;
 
 public class UserAliasMemoryManage {

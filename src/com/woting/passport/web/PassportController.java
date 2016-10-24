@@ -24,11 +24,11 @@ import com.spiritdata.framework.core.lock.ExpirableBlockKey;
 import com.spiritdata.framework.ext.redis.lock.RedisBlockLock;
 import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.RequestUtils;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.GroupService;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.friend.service.FriendService;
-import com.woting.passport.login.persistence.pojo.MobileUsedPo;
+import com.woting.passport.login.persis.pojo.MobileUsedPo;
 import com.woting.passport.login.service.MobileUsedService;
 import com.woting.passport.mobile.MobileParam;
 import com.woting.passport.mobile.MobileUDKey;
@@ -36,7 +36,7 @@ import com.woting.passport.session.SessionService;
 import com.woting.passport.session.redis.RedisUserDeviceKey;
 import com.woting.passport.useralias.mem.UserAliasMemoryManage;
 import com.woting.passport.useralias.model.UserAliasKey;
-import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
+import com.woting.passport.useralias.persis.pojo.UserAliasPo;
 import com.woting.plugins.sms.SendSMS;
 
 @Controller
@@ -164,8 +164,7 @@ public class PassportController {
 
             String ln=(m.get("UserName")==null?null:m.get("UserName")+"");
             String pwd=(m.get("Password")==null?null:m.get("Password")+"");
-            String phonenum=m.get("MainPhoneNum")+"";
-            String checknum=m.get("CheckNum")+"";
+            String phonenum=m.get("MainPhoneNum")==null?null:m.get("Password")+"";
             String usePhone=(m.get("UsePhone")==null?null:m.get("UsePhone")+"");
             String errMsg="";
 
@@ -177,7 +176,6 @@ public class PassportController {
             if (StringUtils.isNullOrEmptyOrSpace(pwd)) errMsg+=",密码为空";
             if (usePhone!=null&&usePhone.equals("1")) {
                 if(phonenum.toLowerCase().equals("null")) errMsg+=",手机号为空";
-                if(checknum.toLowerCase().equals("null")) errMsg+=",验证码为空";
             }
             if (!StringUtils.isNullOrEmptyOrSpace(errMsg)) {
                 errMsg=errMsg.substring(1);
@@ -195,18 +193,15 @@ public class PassportController {
                 map.put("Message", "登录名重复,无法注册.");
                 return map;
             }
-            RedisOperService roService=new RedisOperService(redisConn, 4);
-            RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
             if (usePhone!=null&&usePhone.equals("1")) {
-                //1.5-手机号码注册
-                String getValue=roService.get(redisUdk.getKey_UserPhoneCheck());
-                String info=getValue==null?"":new String(getValue);
-                if (info.startsWith("OK")) nu.setMainPhoneNum(info.substring(4));
+//                //1.5-手机号码注册
+//                String getValue=roService.get(redisUdk.getKey_UserPhoneCheck());
+//                String info=getValue==null?"":new String(getValue);
+                nu.setMainPhoneNum(phonenum);
             }
             //2-保存用户
             nu.setCTime(new Timestamp(System.currentTimeMillis()));
             nu.setUserType(1);
-            nu.setMainPhoneNum(phonenum);
             nu.setUserId(SequenceUUID.getUUIDSubSegment(4));
             int rflag=userService.insertUser(nu);
             if (rflag!=1) {
@@ -216,6 +211,8 @@ public class PassportController {
             }
             //3-注册成功后，自动登陆，及后处理
             mUdk.setUserId(nu.getUserId());
+            RedisOperService roService=new RedisOperService(redisConn, 4);
+            RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
             ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService,
                     new BlockLockConfig(5, 2, 0, 50));
             try {

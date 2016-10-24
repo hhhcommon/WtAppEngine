@@ -14,6 +14,7 @@ import com.woting.appengine.mobile.mediaflow.MfConfig;
 import com.woting.appengine.mobile.mediaflow.MfListener;
 import com.woting.appengine.mobile.push.PushConfig;
 import com.woting.appengine.mobile.push.PushListener;
+import com.woting.dataanal.gather.API.ApiGatherListener;
 import com.woting.searchword.SearchWordListener;
 
 public class AppRunningListener implements ServletContextListener {
@@ -35,6 +36,10 @@ public class AppRunningListener implements ServletContextListener {
             PushListener.begin(new PushConfig());
             //启动缓存刷新服务
             CacheRefreshListener.begin();
+
+            //启动数据收集数据
+            //1-启动Api访问监听服务
+            ApiGatherListener.begin();
         } catch(Exception e) {
             logger.error("Web运行时监听启动异常：",e);
         }

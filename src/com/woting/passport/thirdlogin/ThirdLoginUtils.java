@@ -3,7 +3,7 @@ package com.woting.passport.thirdlogin;
 import java.util.Map;
 
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.persis.pojo.UserPo;
 
 public abstract class ThirdLoginUtils {
 

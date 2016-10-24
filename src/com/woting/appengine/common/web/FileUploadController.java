@@ -16,8 +16,8 @@ import com.spiritdata.framework.core.web.AbstractFileUploadController;
 import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.passport.UGA.persistence.pojo.GroupPo;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.persis.pojo.GroupPo;
+import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.GroupService;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.mobile.MobileParam;
@@ -54,6 +54,7 @@ public class FileUploadController extends AbstractFileUploadController {
                 datamap.put("Message", "需要登录");
             } else {
                 datamap.putAll(mUdk.toHashMapAsBean());
+                userId=retM.get("UserId")==null?"":retM.get("UserId")+"";
             }
             if (datamap.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
                 datamap.put("ReturnType", "1002");

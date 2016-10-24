@@ -19,13 +19,13 @@ import com.woting.push.core.message.CompareMsg;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.push.core.message.content.MapContent;
 import com.woting.passport.UGA.model.Group;
-import com.woting.passport.UGA.persistence.pojo.GroupPo;
-import com.woting.passport.UGA.persistence.pojo.GroupUserPo;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
-import com.woting.passport.groupinvite.persistence.pojo.InviteGroupPo;
+import com.woting.passport.UGA.persis.pojo.GroupPo;
+import com.woting.passport.UGA.persis.pojo.GroupUserPo;
+import com.woting.passport.UGA.persis.pojo.UserPo;
+import com.woting.passport.groupinvite.persis.pojo.InviteGroupPo;
 import com.woting.passport.mobile.MobileUDKey;
 import com.woting.passport.session.SessionService;
-import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
+import com.woting.passport.useralias.persis.pojo.UserAliasPo;
 import com.woting.passport.useralias.service.UserAliasService;
 
 /**

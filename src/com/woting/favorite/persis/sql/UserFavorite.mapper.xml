@@ -49,6 +49,11 @@
     <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
     <if test="sortByClause!=null">order by ${sortByClause}</if>
   </select>
+  <select id="getListByWhere" parameterType="java.util.Map" resultMap="channelAssetMap">
+    select <include refid="Base_Column_List"/>from wt_ChannelAsset 
+    <if test="whereByClause!=null">where ${whereByClause}</if>
+    <if test="sortByClause!=null">order by ${sortByClause}</if>
+  </select>
   <select id="getFavoriteAssets" parameterType="java.util.Map" resultMap="favoriteMap">
     select <include refid="Base_Column_List"/> from da_UserFavorite
     where ((ownerType='202' and ownerId=#{mobileId,jdbcType=TIMESTAMP}) <if test="userId!=null"> or (ownerType='201' and ownerId=#{userId,jdbcType=TIMESTAMP})</if>)

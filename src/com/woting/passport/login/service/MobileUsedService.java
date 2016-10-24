@@ -8,7 +8,7 @@ import javax.annotation.Resource;
 
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.SequenceUUID;
-import com.woting.passport.login.persistence.pojo.MobileUsedPo;
+import com.woting.passport.login.persis.pojo.MobileUsedPo;
 
 /**
  * 移动设备用户使用情况

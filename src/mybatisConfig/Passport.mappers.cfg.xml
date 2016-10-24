@@ -4,25 +4,25 @@
 <configuration>
   <!-- 别名设置 -->
   <typeAliases>
-    <typeAlias alias="WtUser" type="com.woting.passport.UGA.persistence.pojo.UserPo"/>
-    <typeAlias alias="WtGroup" type="com.woting.passport.UGA.persistence.pojo.GroupPo"/>
-    <typeAlias alias="WtGroupUser" type="com.woting.passport.UGA.persistence.pojo.GroupUserPo"/>
-    <typeAlias alias="MobileUsed" type="com.woting.passport.login.persistence.pojo.MobileUsedPo"/>
-    <typeAlias alias="InviteFriend" type="com.woting.passport.friend.persistence.pojo.InviteFriendPo"/>
-    <typeAlias alias="InviteGroup" type="com.woting.passport.groupinvite.persistence.pojo.InviteGroupPo"/>
-    <typeAlias alias="FriendRel" type="com.woting.passport.friend.persistence.pojo.FriendRelPo"/>
-    <typeAlias alias="UserAlias" type="com.woting.passport.useralias.persistence.pojo.UserAliasPo"/>
+    <typeAlias alias="WtUser" type="com.woting.passport.UGA.persis.pojo.UserPo"/>
+    <typeAlias alias="WtGroup" type="com.woting.passport.UGA.persis.pojo.GroupPo"/>
+    <typeAlias alias="WtGroupUser" type="com.woting.passport.UGA.persis.pojo.GroupUserPo"/>
+    <typeAlias alias="MobileUsed" type="com.woting.passport.login.persis.pojo.MobileUsedPo"/>
+    <typeAlias alias="InviteFriend" type="com.woting.passport.friend.persis.pojo.InviteFriendPo"/>
+    <typeAlias alias="InviteGroup" type="com.woting.passport.groupinvite.persis.pojo.InviteGroupPo"/>
+    <typeAlias alias="FriendRel" type="com.woting.passport.friend.persis.pojo.FriendRelPo"/>
+    <typeAlias alias="UserAlias" type="com.woting.passport.useralias.persis.pojo.UserAliasPo"/>
     <typeAlias alias="ThirdUser" type="com.woting.passport.thirdlogin.persis.po.ThirdUserPo"/>
   </typeAliases>
   <!-- SQL配置 -->
   <mappers>
-    <mapper resource="com/woting/passport/login/persistence/sql/MobileUsed.mapper.xml"/>
-    <mapper resource="com/woting/passport/UGA/persistence/sql/WotingUser.mapper.xml"/>
-    <mapper resource="com/woting/passport/UGA/persistence/sql/Group.mapper.xml"/>
-    <mapper resource="com/woting/passport/friend/persistence/sql/Invite.mapper.xml"/>
-    <mapper resource="com/woting/passport/groupinvite/persistence/sql/GroupInvite.mapper.xml"/>
-    <mapper resource="com/woting/passport/friend/persistence/sql/Friend.mapper.xml"/>
-    <mapper resource="com/woting/passport/useralias/persistence/sql/UserAlias.mapper.xml"/>
+    <mapper resource="com/woting/passport/login/persis/sql/MobileUsed.mapper.xml"/>
+    <mapper resource="com/woting/passport/UGA/persis/sql/WotingUser.mapper.xml"/>
+    <mapper resource="com/woting/passport/UGA/persis/sql/Group.mapper.xml"/>
+    <mapper resource="com/woting/passport/friend/persis/sql/Invite.mapper.xml"/>
+    <mapper resource="com/woting/passport/groupinvite/persis/sql/GroupInvite.mapper.xml"/>
+    <mapper resource="com/woting/passport/friend/persis/sql/Friend.mapper.xml"/>
+    <mapper resource="com/woting/passport/useralias/persis/sql/UserAlias.mapper.xml"/>
     <mapper resource="com/woting/passport/thirdlogin/persis/sql/ThirdUser.mapper.xml"/>
   </mappers>
 </configuration>

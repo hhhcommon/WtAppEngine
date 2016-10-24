@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.appopinion.model.AppOpinion;
-import com.woting.appengine.appopinion.persistence.pojo.AppOpinionPo;
-import com.woting.appengine.appopinion.persistence.pojo.AppReOpinionPo;
+import com.woting.appengine.appopinion.persis.pojo.AppOpinionPo;
+import com.woting.appengine.appopinion.persis.pojo.AppReOpinionPo;
 import com.woting.appengine.appopinion.service.AppOpinionService;
 import com.spiritdata.framework.util.RequestUtils;
 import com.woting.passport.mobile.MobileParam;

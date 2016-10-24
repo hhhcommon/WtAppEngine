@@ -8,15 +8,17 @@ import java.util.Map;
 import javax.annotation.Resource;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.stereotype.Service;
+
+import com.mysql.jdbc.StringUtils;
 import com.spiritdata.framework.UGA.UgaUser;
 import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.JsonUtils;
-import com.spiritdata.framework.util.StringUtils;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
-import com.woting.passport.login.persistence.pojo.MobileUsedPo;
+import com.woting.passport.login.persis.pojo.MobileUsedPo;
 import com.woting.passport.login.service.MobileUsedService;
 import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.DeviceType;
 import com.woting.passport.session.SessionService;
 import com.woting.passport.session.key.UserDeviceKey;
 import com.woting.passport.session.redis.RedisUserDeviceKey;
@@ -38,19 +40,40 @@ public class RedisSessionService implements SessionService {
      * 处理用户设备Key进入系统，若未登录要看之前的登录情况，自动登录
      * @param udk 根据用户设备Key
      * @return Map类型，key 和 value意义如下：
-     *   2001 未获得IMEI无法处理
-     *   2002 设备无法自动登录
-     *   2003 请先登录
-     *   1002 不能找到相应的用户
+     *
+     *   0000 用户设备key为空，无法处理
+     *
      *   1001 用户已登录
-     *   1001 设备自动登录成功
-     *   1001 设备自动登录成功，并返回用户的UserId
+     *
+     *   1002 不能找到相应的用户
+     *   1003 得不到相应的PCDType
+     *
+     *   2004 移动客户端——未获得IMEI无法处理
+     *   3004 PC客户端——未获得SessionId无法处理
+     *
+     *   2003 请先登录
      */
     public Map<String, Object> dealUDkeyEntry(UserDeviceKey udk, String operDesc) {
         Map<String,Object> map=new HashMap<String, Object>();
-        if (udk==null||StringUtils.isNullOrEmptyOrSpace(udk.getDeviceId())) {
-            map.put("ReturnType", "2001");
-            map.put("Msg", "未获得IMEI无法处理");
+        if (udk==null) {
+            map.put("ReturnType", "0000");
+            map.put("Msg", "用户设备key为空，无法处理");
+            return map;
+        }
+        DeviceType dt=DeviceType.buildDtByPCDType(udk.getPCDType());
+        if (dt==DeviceType.ERR) {
+            map.put("ReturnType", "1003");
+            map.put("Msg", "得不到相应的PCDType");
+            return map;
+        }
+        if (StringUtils.isEmptyOrWhitespaceOnly(udk.getDeviceId())) {
+            if (dt==DeviceType.PC) {
+                map.put("ReturnType", "3004");
+                map.put("Msg", "未获得SessionId无法处理");
+            } else {
+                map.put("ReturnType", "2004");
+                map.put("Msg", "未获得IMEI无法处理");
+            }
             return map;
         }
 
@@ -58,18 +81,34 @@ public class RedisSessionService implements SessionService {
         RedisOperService roService=null;
         try {
             roService=new RedisOperService(redisConn, 4);
+            //从Redis中获得对应额UserId
             String _value=roService.get(rUdk.getKey_DeviceType_UserId());
             String _userId=(_value==null?null:new String(_value));
             boolean hadLogon=_userId==null?false:(_userId.equals(rUdk.getUserId())&&roService.get(rUdk.getKey_UserLoginStatus())!=null);
 
-            //已经登录
-            if (hadLogon) {
+            
+            if (hadLogon) {//已经登录
                 roService.set(rUdk.getKey_UserLoginStatus(), System.currentTimeMillis()+"::"+operDesc);
                 roService.pExpire(rUdk.getKey_UserLoginStatus(), 30*60*1000);//30分钟后过期
-                try {//这里可能有问题，先这样
-                    roService.pExpire(rUdk.getKey_UserLoginDeviceType(), 30*60*1000);//30分钟后过期
-                    roService.pExpire(rUdk.getKey_DeviceType_UserId(), 30*60*1000);//30分钟后过期
-                    roService.pExpire(rUdk.getKey_DeviceType_UserInfo(), 30*60*1000);//30分钟后过期
+                try {
+                    if (!roService.pExpire(rUdk.getKey_UserLoginDeviceType(), 30*60*1000)) {//保持一致性
+                        roService.set(rUdk.getKey_UserLoginDeviceType(), udk.getDeviceId(), 30*60*1000);
+                    }
+                    if (!roService.pExpire(rUdk.getKey_DeviceType_UserId(), 30*60*1000)) {//保持一致性
+                        roService.set(rUdk.getKey_DeviceType_UserId(), _userId, 30*60*1000);
+                    }
+                    if (!roService.pExpire(rUdk.getKey_DeviceType_UserInfo(), 30*60*1000)) {//保持一致性
+                        UserPo up=userService.getUserById(_userId);
+                        if (up==null) {
+                            //删除所有用户相关的Key值
+                            delUserAll(_userId, roService);
+                            map.put("ReturnType", "1002");
+                            map.put("Msg", "不能找到相应的用户");
+                            return map;
+                        }
+                        roService.set(rUdk.getKey_DeviceType_UserInfo(), JsonUtils.objToJson(up.toHashMap4Mobile()), 30*60*1000);
+                    }
+                    
                 } catch(Exception e) {
                 }
                 map.put("ReturnType", "1001");
@@ -80,156 +119,73 @@ public class RedisSessionService implements SessionService {
                 } catch(Exception e) {
                 }
                 map.put("Msg", "用户已登录");
-                return map;
-            }
-
-            //处理未登录
-            MobileUsedPo mup=muService.getUsedInfo(udk.getDeviceId(), udk.getPCDType());
-            if (mup!=null&&mup.getStatus()==1) {//自动登录
-                if (!mup.getUserId().equals(_userId)) {
+            } else {//处理未登录
+                MobileUsedPo mup=muService.getUsedInfo(udk.getDeviceId(), udk.getPCDType());
+                boolean noLog=false;
+                noLog=mup==null||mup.getStatus()==1||mup.getUserId()==null||!mup.getUserId().equals(_userId);
+                if (noLog) {//无法登录
+                    //删除在该设备上的登录信息
+                    RedisUserDeviceKey _rUdk=new RedisUserDeviceKey(new UserDeviceKey());
+                    _rUdk.setDeviceId(udk.getDeviceId());
+                    _rUdk.setPCDType(dt.getPCDType());
+                    String uid=roService.get(_rUdk.getKey_DeviceType_UserId());
+                    if (!StringUtils.isEmptyOrWhitespaceOnly(uid)) { //进行删除工作
+                        _rUdk.setUserId(uid);
+                        cleanUserLogin(_rUdk, roService);
+                    }
+                    if (StringUtils.isEmptyOrWhitespaceOnly(_userId)) {
+                        _rUdk.setUserId(_userId);
+                        cleanUserLogin(_rUdk, roService);
+                    }
                     map.put("ReturnType", "2003");
                     map.put("Msg", "请先登录");
-                } else {
-                    //删除之前的用户设备登录信息
+                } else {//可以进行登录
+                    //1-删除该用户在此类设备上的登录信息——踢出（不允许同一用户在同一类型的不同设备上同时登录）
                     try {
-                        String bs=roService.get(rUdk.getKey_UserLoginDeviceType());
-                        if (bs!=null&&bs.length()>0) {
-                            String deviceId=new String(bs);
+                        String did=roService.get(rUdk.getKey_UserLoginDeviceType());
+                        if (did!=null&&did.trim().length()>0) {
                             RedisUserDeviceKey _oldKey=new RedisUserDeviceKey(udk);
-                            _oldKey.setDeviceId(deviceId);
-                            roService.del(_oldKey.getKey_UserLoginStatus());
-                            roService.del(_oldKey.getKey_UserLoginDeviceType());
-                            roService.del(_oldKey.getKey_DeviceType_UserId());
-                            roService.del(_oldKey.getKey_DeviceType_UserInfo());
+                            _oldKey.setDeviceId(did);
+                            cleanUserLogin(_oldKey, roService);
                         }
-                    } catch(Exception e) {
+                    } catch(Exception e) {}
+                    //2-删除之前的用户在该设备的登录信息（不允许同一设备上有两个用户同时登录）
+                    try {
+                        String uid=roService.get(rUdk.getKey_DeviceType_UserId());
+                        if (uid!=null&&uid.trim().length()>0) {
+                            RedisUserDeviceKey _oldKey=new RedisUserDeviceKey(udk);
+                            _oldKey.setUserId(uid);
+                            cleanUserLogin(_oldKey, roService);
+                        }
+                    } catch(Exception e) { }
+                    UserPo upo=userService.getUserById(mup.getUserId());
+                    if (upo==null) {
+                        //删除所有用户相关的Key值
+                        delUserAll(_userId, roService);
+                        map.put("ReturnType", "1002");
+                        map.put("Msg", "不能找到相应的用户");
+                        return map;
                     }
                     rUdk.setUserId(mup.getUserId());
                     udk.setUserId(mup.getUserId());
                     roService.set(rUdk.getKey_UserLoginStatus(), (System.currentTimeMillis()+"::register"));
                     roService.pExpire(rUdk.getKey_UserLoginStatus(), 30*60*1000);//30分钟后过期
-                    roService.set(rUdk.getKey_UserLoginDeviceType(), rUdk.getValue_DeviceId());
+                    roService.set(rUdk.getKey_UserLoginDeviceType(), rUdk.getDeviceId());
                     roService.pExpire(rUdk.getKey_UserLoginDeviceType(), 30*60*1000);//30分钟后过期
-                    UserPo upo=userService.getUserById(mup.getUserId());
                     roService.set(rUdk.getKey_DeviceType_UserId(), upo.getUserId());
                     roService.pExpire(rUdk.getKey_DeviceType_UserId(), 30*60*1000);//30分钟后过期
                     roService.set(rUdk.getKey_DeviceType_UserInfo(), (JsonUtils.objToJson(upo.toHashMap4Mobile())));
                     roService.pExpire(rUdk.getKey_DeviceType_UserInfo(), 30*60*1000);//30分钟后过期
 
                     map.put("ReturnType", "1001");
-                    map.put("Msg", "设备自动登录成功");
-                    map.put("UserId", mup.getUserId());
-                    map.put("UserInfo", upo.toHashMap4Mobile());
+                    map.put("UserId", upo.getUserId());
+                    try {
+                        map.put("UserInfo", upo.toHashMap4Mobile());
+                    } catch(Exception e) {
+                    }
+                    map.put("Msg", "用户已登录");
                 }
-            } else {
-                map.put("ReturnType", "2002");
-                map.put("Msg", "设备无法自动登录");
             }
-
-//            //检查是否有这个登录
-//            //byte[] _value=conn.get(rUdk.getKey_UserLoginStatus());
-//            if (_value!=null) {//已经登录
-//                conn.set(rUdk.getKey_UserLoginStatus(), (System.currentTimeMillis()+"::"+operDesc));
-//                conn.expire(rUdk.getKey_UserLoginStatus(), 30*60);//30分钟后过期
-//                try {//这里可能有问题，先这样
-//                    conn.expire(rUdk.getKey_UserLoginDeviceType(), 30*60);//30分钟后过期
-//                    conn.expire(rUdk.getKey_DeviceType_UserId(), 30*60);//30分钟后过期
-//                    conn.expire(rUdk.getKey_DeviceType_UserInfo(), 30*60);//30分钟后过期
-//                } catch(Exception e) {
-//                }
-//                map.put("ReturnType", "1001");
-//                map.put("UserId", rUdk.getUserId());
-//                try {
-//                    Map<String, Object> um=(Map<String, Object>)JsonUtils.jsonToObj(new String(conn.get(rUdk.getKey_DeviceType_UserInfo())), Map.class);
-//                    map.put("UserInfo", um);
-//                } catch(Exception e) {
-//                }
-//                map.put("Msg", "用户已登录");
-//            } else {//未登录
-//                //查找用户
-//                MobileUDKey mUdk=new MobileUDKey(udk);
-//                if (mUdk.isUser()) {
-//                    UserPo up=userService.getUserById(mUdk.getUserId());
-//                    if (up==null) {
-//                        map.put("ReturnType", "1002");
-//                        map.put("Msg", "不能找到相应的用户");
-//                    } else {
-//                        MobileUsedPo mup=muService.getUsedInfo(udk.getDeviceId(), udk.getPCDType());
-//                        if (mup.getStatus()==1&&mup.getUserId().equals(udk.getUserId())) {//自动登录
-//                            //删除之前的用户设备登录信息
-//                            try {
-//                                byte[] bs=conn.get(rUdk.getKey_UserLoginDeviceType());
-//                                if (bs!=null&&bs.length>0) {
-//                                    String deviceId=new String(bs);
-//                                    RedisUserDeviceKey _oldKey=new RedisUserDeviceKey(udk);
-//                                    _oldKey.setDeviceId(deviceId);
-//                                    conn.del(_oldKey.getKey_UserLoginStatus());
-//                                    conn.del(_oldKey.getKey_UserLoginDeviceType());
-//                                    conn.del(_oldKey.getKey_DeviceType_UserId());
-//                                    conn.del(_oldKey.getKey_DeviceType_UserInfo());
-//                                }
-//                            } catch(Exception e) {
-//                            }
-//                            conn.set(rUdk.getKey_UserLoginStatus(), (System.currentTimeMillis()+"::register"));
-//                            conn.expire(rUdk.getKey_UserLoginStatus(), 30*60);//30分钟后过期
-//                            conn.set(rUdk.getKey_UserLoginDeviceType(), rUdk.getValue_DeviceId());
-//                            conn.expire(rUdk.getKey_UserLoginDeviceType(), 30*60);//30分钟后过期
-//                            UserPo upo=userService.getUserById(mup.getUserId());
-//                            conn.set(rUdk.getKey_DeviceType_UserId(), upo.getUserId());
-//                            conn.expire(rUdk.getKey_DeviceType_UserId(), 30*60);//30分钟后过期
-//                            conn.set(rUdk.getKey_DeviceType_UserInfo(), (JsonUtils.objToJson(upo.toHashMap4Mobile())));
-//                            conn.expire(rUdk.getKey_DeviceType_UserInfo(), 30*60);//30分钟后过期
-//                            map.put("ReturnType", "1001");
-//                            map.put("Msg", "设备自动登录成功");
-//                        } else {
-//                            map.put("ReturnType", "2003");
-//                            map.put("Msg", "请先登录");
-//                        }
-//                    }
-//                } else {//不是User，自动登录
-//                    if (operDesc.equals("common/entryApp")||udk.getPCDType()==3) {//自动登录
-//                        MobileUsedPo mup=muService.getUsedInfo(udk.getDeviceId(), udk.getPCDType());
-//                        if (mup!=null&&mup.getStatus()==1) {//自动登录
-//                            //删除之前的用户设备登录信息
-//                            try {
-//                                byte[] bs=conn.get(rUdk.getKey_UserLoginDeviceType());
-//                                if (bs!=null&&bs.length>0) {
-//                                    String deviceId=new String(bs);
-//                                    RedisUserDeviceKey _oldKey=new RedisUserDeviceKey(udk);
-//                                    _oldKey.setDeviceId(deviceId);
-//                                    conn.del(_oldKey.getKey_UserLoginStatus());
-//                                    conn.del(_oldKey.getKey_UserLoginDeviceType());
-//                                    conn.del(_oldKey.getKey_DeviceType_UserId());
-//                                    conn.del(_oldKey.getKey_DeviceType_UserInfo());
-//                                }
-//                            } catch(Exception e) {
-//                            }
-//                            rUdk.setUserId(mup.getUserId());
-//                            udk.setUserId(mup.getUserId());
-//                            conn.set(rUdk.getKey_UserLoginStatus(), (System.currentTimeMillis()+"::register"));
-//                            conn.expire(rUdk.getKey_UserLoginStatus(), 30*60);//30分钟后过期
-//                            conn.set(rUdk.getKey_UserLoginDeviceType(), rUdk.getValue_DeviceId());
-//                            conn.expire(rUdk.getKey_UserLoginDeviceType(), 30*60);//30分钟后过期
-//                            UserPo upo=userService.getUserById(mup.getUserId());
-//                            conn.set(rUdk.getKey_DeviceType_UserId(), upo.getUserId());
-//                            conn.expire(rUdk.getKey_DeviceType_UserId(), 30*60);//30分钟后过期
-//                            conn.set(rUdk.getKey_DeviceType_UserInfo(), (JsonUtils.objToJson(upo.toHashMap4Mobile())));
-//                            conn.expire(rUdk.getKey_DeviceType_UserInfo(), 30*60);//30分钟后过期
-//
-//                            map.put("ReturnType", "1001");
-//                            map.put("Msg", "设备自动登录成功");
-//                            map.put("UserId", mup.getUserId());
-//                            map.put("UserInfo", upo.toHashMap4Mobile());
-//                        } else {
-//                            map.put("ReturnType", "2002");
-//                            map.put("Msg", "设备无法自动登录");
-//                        }
-//                    } else {
-//                        map.put("ReturnType", "2003");
-//                        map.put("Msg", "请先登录");
-//                    }
-//                }
-//            }
         } finally {
             if (roService!=null) roService.close();
             roService=null;
@@ -244,23 +200,28 @@ public class RedisSessionService implements SessionService {
         RedisOperService roService=null;
         try {
             roService=new RedisOperService(redisConn, 4);
-            //删除之前的用户设备登录信息
+            //1-删除该用户在此类设备上的登录信息——踢出（不允许同一用户在同一类型的不同设备上同时登录）
             try {
-                String bs=roService.get(rUdk.getKey_UserLoginDeviceType());
-                if (bs!=null&&bs.length()>0) {
-                    String deviceId=new String(bs);
+                String did=roService.get(rUdk.getKey_UserLoginDeviceType());
+                if (did!=null&&did.trim().length()>0) {
                     RedisUserDeviceKey _oldKey=new RedisUserDeviceKey(udk);
-                    _oldKey.setDeviceId(deviceId);
-                    roService.del(_oldKey.getKey_UserLoginStatus());
-                    roService.del(_oldKey.getKey_UserLoginDeviceType());
-                    roService.del(_oldKey.getKey_DeviceType_UserId());
-                    roService.del(_oldKey.getKey_DeviceType_UserInfo());
+                    _oldKey.setDeviceId(did);
+                    cleanUserLogin(_oldKey, roService);
                 }
-            } catch(Exception e) {
-            }
+            } catch(Exception e) {}
+            //2-删除在该设备上的其他用户登录信息（不允许同一设备上有两个用户同时登录）
+            try {
+                //删除用户在
+                String uid=roService.get(rUdk.getKey_DeviceType_UserId());
+                if (uid!=null&&uid.trim().length()>0) {
+                    RedisUserDeviceKey _oldKey=new RedisUserDeviceKey(udk);
+                    _oldKey.setUserId(uid);
+                    cleanUserLogin(_oldKey, roService);
+                }
+            } catch(Exception e) {}
             roService.set(rUdk.getKey_UserLoginStatus(), (System.currentTimeMillis()+"::register"));
             roService.pExpire(rUdk.getKey_UserLoginStatus(), 30*60*1000);//30分钟后过期
-            roService.set(rUdk.getKey_UserLoginDeviceType(), rUdk.getValue_DeviceId());
+            roService.set(rUdk.getKey_UserLoginDeviceType(), rUdk.getDeviceId());
             roService.pExpire(rUdk.getKey_UserLoginDeviceType(), 30*60*1000);//30分钟后过期
             UserPo upo=(UserPo)user;
             roService.set(rUdk.getKey_DeviceType_UserId(), upo.getUserId());
@@ -339,5 +300,26 @@ public class RedisSessionService implements SessionService {
             if (roService!=null) roService.close();
             roService=null;
         }
+    }
+
+    private void delUserAll(String userId, RedisOperService ros) {
+        for (DeviceType dt: DeviceType.values()) {
+            if (dt!=DeviceType.ERR) {
+                RedisUserDeviceKey rUdk=new RedisUserDeviceKey(new UserDeviceKey());
+                rUdk.setUserId(userId);
+                rUdk.setPCDType(dt.getPCDType());
+                String did=ros.get(rUdk.getKey_UserLoginDeviceType_OnlyUseUserId());
+                if (!StringUtils.isEmptyOrWhitespaceOnly(did)&&did.length()>5) { //进行删除工作
+                    rUdk.setDeviceId(did);
+                    cleanUserLogin(rUdk, ros);
+                }
+            }
+        }
+    }
+    private void cleanUserLogin(RedisUserDeviceKey rUdk, RedisOperService ros) {
+        ros.del(rUdk.getKey_UserLoginStatus());
+        ros.del(rUdk.getKey_UserLoginDeviceType());
+        ros.del(rUdk.getKey_DeviceType_UserId());
+        ros.del(rUdk.getKey_DeviceType_UserInfo());
     }
 }

@@ -23,7 +23,7 @@ import com.woting.appengine.mobile.mediaflow.model.WholeTalk;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.push.core.message.Message;
 import com.woting.push.core.message.MsgMedia;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.mobile.MobileUDKey;
 import com.woting.passport.session.SessionService;

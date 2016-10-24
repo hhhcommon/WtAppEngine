@@ -44,6 +44,12 @@ public class RedisUserDeviceKey extends UserDeviceKey implements RedisLoginData 
         String _userId=StringUtils.isNullOrEmptyOrSpace(this.getUserId())?this.getDeviceId():this.getUserId();
         return "Session_User_Login::UserId_DType::"+_userId+"_"+this.getPCDType();
     }
+    public String getKey_UserLoginDeviceType_OnlyUseUserId() {
+        if (this.getPCDType()<=0)  new Plat5101CException("未设置PCDType");
+        if (StringUtils.isNullOrEmptyOrSpace(this.getUserId()))  new Plat5101CException("未设置用户Id");
+
+        return "Session_User_Login::UserId_DType::"+this.getUserId()+"_"+this.getPCDType();
+    }
 
     @Override
     public String getKey_DeviceType_UserId() {
@@ -59,14 +65,6 @@ public class RedisUserDeviceKey extends UserDeviceKey implements RedisLoginData 
         if (this.getPCDType()<=0)  new Plat5101CException("未设置PCDType");
 
         return "Session_DeviceLogin_UserInfo::DType_DId::"+this.getPCDType()+"_"+this.getDeviceId();
-    }
-
-    @Override
-    public String getValue_DeviceId() {
-        if (StringUtils.isNullOrEmptyOrSpace(this.getDeviceId()))  new Plat5101CException("未设置设备Id");
-        if (this.getPCDType()<=0)  new Plat5101CException("未设置PCDType");
-
-        return this.getDeviceId();
     }
 
     public String getKey_UserPhoneCheck() {

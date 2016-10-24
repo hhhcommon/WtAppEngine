@@ -12,7 +12,7 @@ import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.thirdlogin.ThirdLoginUtils;
 import com.woting.passport.thirdlogin.persis.po.ThirdUserPo;
 
@@ -58,6 +58,24 @@ public class UserService implements UgaUserService {
     public UserPo getUserById(String userId) {
         try {
             return userDao.getInfoObject("getUserById", userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public List<UserPo> getUserByIds(List<String> userIds) {
+        try {
+            String whereStr="";
+            if (userIds!=null&&userIds.size()>0) {
+                for (String id: userIds) {
+                    whereStr+=" or id='"+id+"'";
+                }
+            }
+            Map<String, String> param=new HashMap<String, String>();
+            if (!StringUtils.isNullOrEmptyOrSpace(whereStr)) param.put("whereByClause", whereStr.substring(4));
+            param.put("orderByClause", "cTime desc");
+            return userDao.queryForList("getListByWhere", param);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -13,7 +13,7 @@ import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 //import com.woting.push.core.message.Message;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.push.core.message.content.MapContent;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.mobile.MobileUDKey;
 
 public class TalkMemoryManage {

@@ -14,11 +14,11 @@ import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.push.core.message.content.MapContent;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
-import com.woting.passport.friend.persistence.pojo.FriendRelPo;
-import com.woting.passport.friend.persistence.pojo.InviteFriendPo;
+import com.woting.passport.UGA.persis.pojo.UserPo;
+import com.woting.passport.friend.persis.pojo.FriendRelPo;
+import com.woting.passport.friend.persis.pojo.InviteFriendPo;
 import com.woting.passport.useralias.model.UserAliasKey;
-import com.woting.passport.useralias.persistence.pojo.UserAliasPo;
+import com.woting.passport.useralias.persis.pojo.UserAliasPo;
 import com.woting.passport.useralias.service.UserAliasService;
 
 public class FriendService {

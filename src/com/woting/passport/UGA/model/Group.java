@@ -7,8 +7,8 @@ import com.spiritdata.framework.core.model.ModelSwapPo;
 import com.spiritdata.framework.exceptionC.Plat0006CException;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.passport.UGA.persistence.pojo.GroupPo;
-import com.woting.passport.UGA.persistence.pojo.UserPo;
+import com.woting.passport.UGA.persis.pojo.GroupPo;
+import com.woting.passport.UGA.persis.pojo.UserPo;
 
 /**
  * 带用户组成员的用户组信息

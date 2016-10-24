@@ -5,26 +5,34 @@
   <!-- 别名设置 -->
   <typeAliases>
     <!-- 用户意见 -->
-    <typeAlias alias="WtAppOpinion"   type="com.woting.appengine.appopinion.persistence.pojo.AppOpinionPo"/>
-    <typeAlias alias="WtAppReOpinion" type="com.woting.appengine.appopinion.persistence.pojo.AppReOpinionPo"/>
+    <typeAlias alias="WtAppOpinion"   type="com.woting.appengine.appopinion.persis.pojo.AppOpinionPo"/>
+    <typeAlias alias="WtAppReOpinion" type="com.woting.appengine.appopinion.persis.pojo.AppReOpinionPo"/>
     <!-- 搜索词 -->
-    <typeAlias alias="DaUserWord"   type="com.woting.searchword.persis.po.UserWordPo"/>
+    <typeAlias alias="DaUserWord"     type="com.woting.searchword.persis.po.UserWordPo"/>
     <!-- 版本管理 -->
-    <typeAlias alias="PVersion"     type="com.woting.version.core.model.Version"/>
-    <typeAlias alias="PVerConfig"   type="com.woting.version.core.model.VersionConfig"/>
+    <typeAlias alias="PVersion"       type="com.woting.version.core.model.Version"/>
+    <typeAlias alias="PVerConfig"     type="com.woting.version.core.model.VersionConfig"/>
     <!-- 用户喜欢 -->
-    <typeAlias alias="DaUserFavorite"   type="com.woting.favorite.persis.po.UserFavoritePo"/>
+    <typeAlias alias="DaUserFavorite" type="com.woting.favorite.persis.po.UserFavoritePo"/>
+    <!-- 用户评论 -->
+    <typeAlias alias="discuss"        type="com.woting.discuss.persis.po.DiscussPo"/>
+    <!-- Api日志 -->
+    <typeAlias alias="apiLog"         type="com.woting.dataanal.gather.API.persis.pojo.ApiLogPo"/>
   </typeAliases>
   <!-- SQL配置 -->
   <mappers>
     <!-- 用户意见 -->
-    <mapper resource="com/woting/appengine/appopinion/persistence/sql/AppOpinion.mapper.xml"/>
-    <mapper resource="com/woting/appengine/appopinion/persistence/sql/AppReOpinion.mapper.xml"/>
+    <mapper resource="com/woting/appengine/appopinion/persis/sql/AppOpinion.mapper.xml"/>
+    <mapper resource="com/woting/appengine/appopinion/persis/sql/AppReOpinion.mapper.xml"/>
     <!-- 搜索词 -->
     <mapper resource="com/woting/searchword/persis/sql/UserWord.mapper.xml"/>
     <!-- 版本管理 -->
     <mapper resource="com/woting/version/core/persis/sql/Version.mapper.xml"/>
     <!-- 用户喜欢 -->
     <mapper resource="com/woting/favorite/persis/sql/UserFavorite.mapper.xml"/>
+    <!-- 用户评论 -->
+    <mapper resource="com/woting/discuss/persis/sql/Discuss.mapper.xml"/>
+    <!-- Api日志 -->
+    <mapper resource="com/woting/dataanal/gather/API/persis/sql/ApiLog.mapper.xml"/>
   </mappers>
 </configuration>

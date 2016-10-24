@@ -34,7 +34,7 @@ import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
 import com.woting.favorite.persis.po.UserFavoritePo;
 import com.woting.favorite.service.FavoriteService;
-import com.woting.passport.UGA.persistence.pojo.GroupPo;
+import com.woting.passport.UGA.persis.pojo.GroupPo;
 import com.woting.passport.mobile.MobileUDKey;
 
 @Lazy(true)
