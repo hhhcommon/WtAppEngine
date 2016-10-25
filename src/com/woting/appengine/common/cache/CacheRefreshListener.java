@@ -18,7 +18,7 @@ import com.woting.version.core.service.VersionService;
 /**
  * 缓存数据更新的的监听进程
  */
-public class CacheRefreshListener  extends Thread {
+public class CacheRefreshListener extends Thread {
     private long intervalRefreshTime=60*60*1000; //刷新间隔，1小时。注意，这个的刷新间隔是对所有内存数据有效的，这种粒度太粗糙，先这样
 
     public static void begin() {

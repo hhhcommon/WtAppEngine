@@ -1,5 +1,6 @@
 package com.woting.appengine.appopinion.web;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,9 +18,14 @@ import com.woting.appengine.appopinion.model.AppOpinion;
 import com.woting.appengine.appopinion.persis.pojo.AppOpinionPo;
 import com.woting.appengine.appopinion.persis.pojo.AppReOpinionPo;
 import com.woting.appengine.appopinion.service.AppOpinionService;
+import com.woting.dataanal.gather.API.ApiGatherUtils;
+import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
+import com.woting.dataanal.gather.API.persis.pojo.ApiLogPo;
+import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.RequestUtils;
 import com.woting.passport.mobile.MobileParam;
 import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.DeviceType;
 import com.woting.passport.session.SessionService;
 
 @Controller
@@ -38,32 +44,62 @@ public class OpinionController {
     @RequestMapping(value="commit.do")
     @ResponseBody
     public Map<String,Object> commit(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("3.1.1-opinion/app/commit");
+        alPo.setObjType("013");//设置为意见
+        alPo.setDealFlag(1);//处理成功
+
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
             String userId="";
             MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "opinion/commit");
-                if ((retM.get("ReturnType")+"").equals("2001")) {
-                    map.put("ReturnType", "0000");
-                    map.put("Message", "无法获取设备Id(IMEI)");
-                } else if ((retM.get("ReturnType")+"").equals("2003")) {
-                    map.put("ReturnType", "200");
-                    map.put("Message", "需要登录");
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "opinion/app/commit");
+                    if ((retM.get("ReturnType")+"").equals("2003")) {
+                        map.put("ReturnType", "200");
+                        map.put("Message", "需要登录");                    
+                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
+                        map.putAll(retM);
+                    } else {
+                        map.remove("ReturnType");
+                    }
                 } else {
-                    map.putAll(mUdk.toHashMapAsBean());
-                    userId=mUdk.getUserId();
-                    //注意这里可以写日志了
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
                 }
-                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
-                    map.put("ReturnType", "1002");
-                    map.put("Message", "无法获取用户Id");
+            }
+            //数据收集处理==2
+            alPo.setOwnerType(201);
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
+            }
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                    alPo.setExploreVer(m.get("MobileClass")+"");
+                }
+                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                    alPo.setExploreName(m.get("exploreName")+"");
+                }
+            } else {
+                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                    alPo.setDeviceClass(m.get("MobileClass")+"");
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -100,40 +136,78 @@ public class OpinionController {
             e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
-            map.put("Message", e.getMessage());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
             return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
         }
     }
 
     @RequestMapping(value="getList.do")
     @ResponseBody
     public Map<String,Object> getList(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("3.1.2-opinion/app/getList");
+        alPo.setObjType("013");//设置为意见
+        alPo.setDealFlag(1);//处理成功
+
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
             String userId="";
             MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "opinion/getList");
-                if ((retM.get("ReturnType")+"").equals("2001")) {
-                    map.put("ReturnType", "0000");
-                    map.put("Message", "无法获取设备Id(IMEI)");
-                } else if ((retM.get("ReturnType")+"").equals("2003")) {
-                    map.put("ReturnType", "200");
-                    map.put("Message", "还未登录");
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "opinion/app/getList");
+                    if ((retM.get("ReturnType")+"").equals("2003")) {
+                        map.put("ReturnType", "200");
+                        map.put("Message", "需要登录");                    
+                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
+                        map.putAll(retM);
+                    } else {
+                        map.remove("ReturnType");
+                    }
                 } else {
-                    map.putAll(mUdk.toHashMapAsBean());
-                    userId=mUdk.getUserId();
-                    //注意这里可以写日志了
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
                 }
-                if (map.get("ReturnType")==null&&StringUtils.isNullOrEmptyOrSpace(userId)) {
-                    map.put("ReturnType", "1002");
-                    map.put("Message", "无法获取用户Id");
+            }
+            //数据收集处理==2
+            alPo.setOwnerType(201);
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
+            }
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                    alPo.setExploreVer(m.get("MobileClass")+"");
+                }
+                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                    alPo.setExploreName(m.get("exploreName")+"");
+                }
+            } else {
+                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                    alPo.setDeviceClass(m.get("MobileClass")+"");
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -151,8 +225,16 @@ public class OpinionController {
             e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
-            map.put("Message", e.getMessage());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
             return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
         }
     }
 

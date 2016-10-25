@@ -1,5 +1,6 @@
 package com.woting.version.mobile.web;
 
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,8 +13,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.StringUtils;
+import com.woting.dataanal.gather.API.ApiGatherUtils;
+import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
+import com.woting.dataanal.gather.API.persis.pojo.ApiLogPo;
 import com.woting.passport.mobile.MobileParam;
 import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.DeviceType;
+import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.RequestUtils;
 import com.woting.version.core.model.Version;
 import com.woting.version.core.service.VersionService;
@@ -27,12 +33,44 @@ public class VersionController {
     @RequestMapping(value="/common/getVersion.do")
     @ResponseBody
     public Map<String,Object> getVersion(HttpServletRequest request) {//不需要登录
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("1.1.3-common/getVersion");
+        alPo.setObjType("P002");//设置为版本
+        alPo.setDealFlag(1);//处理成功
+
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
             if (m!=null&&m.size()>0) {
                 MobileUDKey mUdk=MobileParam.build(m).getUserDeviceKey();
                 if (mUdk!=null) map.putAll(mUdk.toHashMapAsBean());
+                //数据收集处理==2
+                alPo.setOwnerType(201);
+                if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                    alPo.setOwnerId(map.get("UserId")+"");
+                } else {
+                    //过客
+                    if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                    else alPo.setOwnerId("0");
+                }
+                if (mUdk!=null) {
+                    alPo.setDeviceType(mUdk.getPCDType());
+                    alPo.setDeviceId(mUdk.getDeviceId());
+                }
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
+                }
 
                 //1-获取版本号
                 String version=m.get("Version")==null?null:m.get("Version")+"";
@@ -58,20 +96,60 @@ public class VersionController {
             e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
-            map.put("Message", e.getMessage());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
             return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
         }
     }
 
     @RequestMapping(value="/common/judgeVersion.do")
     @ResponseBody
     public Map<String,Object> judgeVersion(HttpServletRequest request) {//不需要登录
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("1.1.2-common/judgeVersion");
+        alPo.setObjType("P002");//设置为版本
+        alPo.setDealFlag(1);//处理成功
+
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
             if (m!=null&&m.size()>0) {
                 MobileUDKey mUdk=MobileParam.build(m).getUserDeviceKey();
                 if (mUdk!=null) map.putAll(mUdk.toHashMapAsBean());
+                //数据收集处理==2
+                alPo.setOwnerType(201);
+                if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                    alPo.setOwnerId(map.get("UserId")+"");
+                } else {
+                    //过客
+                    if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                    else alPo.setOwnerId("0");
+                }
+                if (mUdk!=null) {
+                    alPo.setDeviceType(mUdk.getPCDType());
+                    alPo.setDeviceId(mUdk.getDeviceId());
+                }
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
+                }
 
                 //1-获取App版本号
                 String version=m.get("Version")==null?null:(m.get("Version")+"");
@@ -97,8 +175,16 @@ public class VersionController {
             e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
-            map.put("Message", e.getMessage());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
             return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
         }
     }
 }
