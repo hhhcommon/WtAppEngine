@@ -18,7 +18,7 @@ public class ApiLogPo extends BaseObject {
     private String apiName; //Api名称
     private int ownerType; //任务组所对应的所有者类型（1=注册用户;2=非注册用户(session);3=系统生成）
     private String ownerId; //所有者标识（可能是用户id，也可能是SessionID，也可能是'Sys'）
-    private int deviceType; //设备类型；1App;2WoTing;3Pc
+    private int deviceType=0; //设备类型；1App;2WoTing;3Pc
     private String deviceId; //设备ID(移动端是IMEI,PC是SessionId)
     private String deviceClass; //设备型号
     private String exploreName; //浏览器名称：若是PC的请求

@@ -49,7 +49,7 @@
     <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
     <if test="sortByClause!=null">order by ${sortByClause}</if>
   </select>
-  <select id="getListByWhere" parameterType="java.util.Map" resultMap="channelAssetMap">
+  <select id="getListByWhere" parameterType="java.util.Map" resultMap="favoriteMap">
     select <include refid="Base_Column_List"/>from wt_ChannelAsset 
     <if test="whereByClause!=null">where ${whereByClause}</if>
     <if test="sortByClause!=null">order by ${sortByClause}</if>

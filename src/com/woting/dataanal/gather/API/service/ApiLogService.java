@@ -26,7 +26,7 @@ public class ApiLogService {
 
     @PostConstruct
     public void initParam() {
-        apiLogDao.setNamespace("apiLog");
+        apiLogDao.setNamespace("ApiLog");
     }
 
     /**

@@ -43,7 +43,7 @@
       <if test="apiName!=null">apiName,</if>
       <if test="ownerType!=null and ownerType!=0">ownerType,</if>
       <if test="ownerId!=null">ownerId,</if>
-      <if test="deviceType!=null and deviceType!=0">deviceType,</if>
+      <if test="deviceType!=null">deviceType,</if>
       <if test="deviceId!=null">deviceId,</if>
       <if test="deviceClass!=null">deviceClass,</if>
       <if test="exploreName!=null">exploreName,</if>
@@ -63,7 +63,7 @@
       <if test="apiName!=null">#{apiName,jdbcType=VARCHAR},</if>
       <if test="ownerType!=null and ownerType!=0">#{ownerType,jdbcType=INTEGER},</if>
       <if test="ownerId!=null">#{ownerId,jdbcType=VARCHAR},</if>
-      <if test="deviceType!=null and deviceType!=0">#{deviceType,jdbcType=INTEGER},</if>
+      <if test="deviceType!=null">#{deviceType,jdbcType=INTEGER},</if>
       <if test="deviceId!=null">#{deviceId,jdbcType=VARCHAR},</if>
       <if test="deviceClass!=null">#{deviceClass,jdbcType=VARCHAR},</if>
       <if test="exploreName!=null">#{exploreName,jdbcType=VARCHAR},</if>

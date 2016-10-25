@@ -64,29 +64,41 @@ public class DiscussController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                mUdk=MobileParam.build(m).getUserDeviceKey();
-                if (StringUtils.isNullOrEmptyOrSpace(mUdk.getDeviceId())&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) { //是PC端来的请求
-                    mUdk.setDeviceId(request.getSession().getId());
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
                 }
-                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "discuss/add");
-                if ((retM.get("ReturnType")+"").equals("2003")) {
-                    map.put("ReturnType", "200");
-                    map.put("Message", "需要登录");                    
-                } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                    map.putAll(retM);
+                mUdk=mp.getUserDeviceKey();
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "discuss/add");
+                    if ((retM.get("ReturnType")+"").equals("2003")) {
+                        map.put("ReturnType", "200");
+                        map.put("Message", "需要登录");                    
+                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
+                        map.putAll(retM);
+                    } else {
+                        map.remove("ReturnType");
+                    }
+                    userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
-                    map.remove("ReturnType");
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
                 }
-                userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
             }
             //数据收集处理==2
-            if (userId!=null&&!StringUtils.isNullOrEmptyOrSpace(userId)) {
-                alPo.setOwnerType(201);
-                alPo.setOwnerId(userId);
+            alPo.setOwnerType(201);
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
             }
-            alPo.setDeviceType(mUdk.getPCDType());
-            alPo.setDeviceId(mUdk.getDeviceId());
-            if (DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
                 if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
                     alPo.setExploreVer(m.get("MobileClass")+"");
                 }
@@ -195,28 +207,41 @@ public class DiscussController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                mUdk=MobileParam.build(m).getUserDeviceKey();
-                if (StringUtils.isNullOrEmptyOrSpace(mUdk.getDeviceId())&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) { //是PC端来的请求
-                    mUdk.setDeviceId(request.getSession().getId());
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
                 }
-                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "discuss/del");
-                if ((retM.get("ReturnType")+"").equals("2003")) {
-                    map.put("ReturnType", "200");
-                    map.put("Message", "需要登录");                    
-                } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                    map.putAll(retM);
+                mUdk=mp.getUserDeviceKey();
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "discuss/add");
+                    if ((retM.get("ReturnType")+"").equals("2003")) {
+                        map.put("ReturnType", "200");
+                        map.put("Message", "需要登录");                    
+                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
+                        map.putAll(retM);
+                    } else {
+                        map.remove("ReturnType");
+                    }
+                    userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
-                    map.remove("ReturnType");
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
                 }
             }
             //数据收集处理==2
+            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
-                alPo.setOwnerType(201);
                 alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
             }
-            alPo.setDeviceType(mUdk.getPCDType());
-            alPo.setDeviceId(mUdk.getDeviceId());
-            if (DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
                 if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
                     alPo.setExploreVer(m.get("MobileClass")+"");
                 }
@@ -297,25 +322,35 @@ public class DiscussController {
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
-                return map;
             } else {
-                mUdk=MobileParam.build(m).getUserDeviceKey();
-                if (StringUtils.isNullOrEmptyOrSpace(mUdk.getDeviceId())&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) { //是PC端来的请求
-                    mUdk.setDeviceId(request.getSession().getId());
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
                 }
-                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "discuss/article/getList");
-                map.putAll(retM);
-                map.remove("ReturnType");
+                mUdk=mp.getUserDeviceKey();
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "discuss/article/getList");
+                    map.putAll(retM);
+                    map.remove("ReturnType");
+                } else {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
+                }
             }
-
             //数据收集处理==2
+            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
-                alPo.setOwnerType(201);
                 alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
             }
-            alPo.setDeviceType(mUdk.getPCDType());
-            alPo.setDeviceId(mUdk.getDeviceId());
-            if (DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
                 if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
                     alPo.setExploreVer(m.get("MobileClass")+"");
                 }
@@ -327,6 +362,7 @@ public class DiscussController {
                     alPo.setDeviceClass(m.get("MobileClass")+"");
                 }
             }
+            if (map.get("ReturnType")!=null) return map;
 
             //1-获得内容分类
             String mediaType=(m.get("MediaType")==null?null:m.get("MediaType")+"");
@@ -451,29 +487,41 @@ public class DiscussController {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
-                mUdk=MobileParam.build(m).getUserDeviceKey();
-                if (StringUtils.isNullOrEmptyOrSpace(mUdk.getDeviceId())&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) { //是PC端来的请求
-                    mUdk.setDeviceId(request.getSession().getId());
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
                 }
-                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "discuss/user/getList");
-                if ((retM.get("ReturnType")+"").equals("2003")) {
-                    map.put("ReturnType", "200");
-                    map.put("Message", "需要登录");                    
-                } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                    map.putAll(retM);
+                mUdk=mp.getUserDeviceKey();
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "discuss/add");
+                    if ((retM.get("ReturnType")+"").equals("2003")) {
+                        map.put("ReturnType", "200");
+                        map.put("Message", "需要登录");                    
+                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
+                        map.putAll(retM);
+                    } else {
+                        map.remove("ReturnType");
+                    }
+                    userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
-                    map.remove("ReturnType");
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
                 }
-                userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
             }
             //数据收集处理==2
-            if (userId!=null&&!StringUtils.isNullOrEmptyOrSpace(userId)) {
-                alPo.setOwnerType(201);
-                alPo.setOwnerId(userId);
+            alPo.setOwnerType(201);
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
             }
-            alPo.setDeviceType(mUdk.getPCDType());
-            alPo.setDeviceId(mUdk.getDeviceId());
-            if (DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
                 if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
                     alPo.setExploreVer(m.get("MobileClass")+"");
                 }
