@@ -23,7 +23,11 @@ import com.spiritdata.framework.core.lock.BlockLockConfig;
 import com.spiritdata.framework.core.lock.ExpirableBlockKey;
 import com.spiritdata.framework.ext.redis.lock.RedisBlockLock;
 import com.spiritdata.framework.ext.spring.redis.RedisOperService;
+import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.RequestUtils;
+import com.woting.dataanal.gather.API.ApiGatherUtils;
+import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
+import com.woting.dataanal.gather.API.persis.pojo.ApiLogPo;
 import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.GroupService;
 import com.woting.passport.UGA.service.UserService;
@@ -32,6 +36,7 @@ import com.woting.passport.login.persis.pojo.MobileUsedPo;
 import com.woting.passport.login.service.MobileUsedService;
 import com.woting.passport.mobile.MobileParam;
 import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.DeviceType;
 import com.woting.passport.session.SessionService;
 import com.woting.passport.session.redis.RedisUserDeviceKey;
 import com.woting.passport.useralias.mem.UserAliasMemoryManage;
@@ -64,11 +69,40 @@ public class PassportController {
     @RequestMapping(value="user/mlogin.do")
     @ResponseBody
     public Map<String,Object> login(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("2.2.1-user/mlogin");
+        alPo.setObjType("003");//设置为用户
+        alPo.setDealFlag(1);//处理成功
+
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
             MobileUDKey mUdk=MobileParam.build(m).getUserDeviceKey();
+            if (StringUtils.isNullOrEmptyOrSpace(mUdk.getDeviceId())&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) { //是PC端来的请求
+                mUdk.setDeviceId(request.getSession().getId());
+            }
+            //数据收集处理==2
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerType(201);
+                alPo.setOwnerId(map.get("UserId")+"");
+            }
+            alPo.setDeviceType(mUdk.getPCDType());
+            alPo.setDeviceId(mUdk.getDeviceId());
+            if (DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                    alPo.setExploreVer(m.get("MobileClass")+"");
+                }
+                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                    alPo.setExploreName(m.get("exploreName")+"");
+                }
+            } else {
+                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                    alPo.setDeviceClass(m.get("MobileClass")+"");
+                }
+            }
             if (m==null||m.size()==0||mUdk==null||!mUdk.isValidate()) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
@@ -128,8 +162,16 @@ public class PassportController {
             e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
-            map.put("Message", e.getMessage());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
             return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
         }
     }
 

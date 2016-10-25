@@ -1,5 +1,6 @@
 package com.woting.appengine.common.web;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.RequestUtils;
 import com.spiritdata.framework.util.SpiritRandom;
 import com.spiritdata.framework.util.StringUtils;
@@ -27,11 +29,15 @@ import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
+import com.woting.dataanal.gather.API.ApiGatherUtils;
+import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
+import com.woting.dataanal.gather.API.persis.pojo.ApiLogPo;
 import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.login.service.MobileUsedService;
 import com.woting.passport.mobile.MobileParam;
 import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.DeviceType;
 import com.woting.passport.session.SessionService;
 import com.woting.searchword.service.WordService;
 import com.spiritdata.framework.core.cache.SystemCache;
@@ -77,42 +83,64 @@ public class CommonController {
     @RequestMapping(value="/common/entryApp.do")
     @ResponseBody
     public Map<String,Object> entryApp(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("1.1.1-common/entryApp");
+        alPo.setObjType("000");//一般信息
+        alPo.setDealFlag(1);//处理成功
+
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
             MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
-                return map;
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
-                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "common/entryApp");
-                if ((retM.get("ReturnType")+"").equals("2001")) {
-                    map.put("ReturnType", "0000");
-                    map.put("Message", "无法获取设备Id(IMEI)");
-                } else {
-                    if ((retM.get("ReturnType")+"").equals("1002")) {
-                        map.put("ReturnType", "1002");
-                    } if ((retM.get("ReturnType")+"").equals("2002")) {
-                        map.put("ReturnType", "2002");
-                        map.put("Message", "无法找到相应的用户");
-                    }else {
-                        UserPo upo=userService.getUserById(retM.get("UserId")+"");
-                        map.put("ReturnType", "1001");
-                        if (upo!=null) map.put("UserInfo", upo.toHashMap4Mobile());
-                    }
+                if (StringUtils.isNullOrEmptyOrSpace(mUdk.getDeviceId())&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) { //是PC端来的请求
+                    mUdk.setDeviceId(request.getSession().getId());
                 }
+                Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "common/entryApp");
+                map.putAll(retM);
                 map.put("ServerStatus", "1"); //服务器状态
+            }
+            //数据收集处理==2
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerType(201);
+                alPo.setOwnerId(map.get("UserId")+"");
+            }
+            alPo.setDeviceType(mUdk.getPCDType());
+            alPo.setDeviceId(mUdk.getDeviceId());
+            if (DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                    alPo.setExploreVer(m.get("MobileClass")+"");
+                }
+                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                    alPo.setExploreName(m.get("exploreName")+"");
+                }
+            } else {
+                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                    alPo.setDeviceClass(m.get("MobileClass")+"");
+                }
             }
             return map;
         } catch(Exception e) {
             e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
-            map.put("Message", e.getMessage());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
             return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
         }
     }
 
@@ -463,20 +491,49 @@ public class CommonController {
     @RequestMapping(value="/searchByText.do")
     @ResponseBody
     public Map<String,Object> searchByText(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("4.1.5-searchByText");
+        alPo.setObjType("001");//设置为内容
+        alPo.setDealFlag(1);//处理成功
+
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
             MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
             if (m==null||m.size()==0) {
                 map.put("ReturnType", "0000");
                 map.put("Message", "无法获取需要的参数");
             } else {
                 mUdk=MobileParam.build(m).getUserDeviceKey();
+                if (StringUtils.isNullOrEmptyOrSpace(mUdk.getDeviceId())&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) { //是PC端来的请求
+                    mUdk.setDeviceId(request.getSession().getId());
+                }
                 Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "searchByText");
-                if ((retM.get("ReturnType")+"").equals("2001")) {
+                if ((retM.get("ReturnType")+"").equals("2004")||(retM.get("ReturnType")+"").equals("3004")) {
                     map.put("ReturnType", "0000");
-                    map.put("Message", "无法获取设备Id(IMEI)");
+                    map.put("Message", "无法获取设备Id(IMEI|SessionId)");
+                }
+            }
+            //数据收集处理==2
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerType(201);
+                alPo.setOwnerId(map.get("UserId")+"");
+            }
+            alPo.setDeviceType(mUdk.getPCDType());
+            alPo.setDeviceId(mUdk.getDeviceId());
+            if (DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                    alPo.setExploreVer(m.get("MobileClass")+"");
+                }
+                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                    alPo.setExploreName(m.get("exploreName")+"");
+                }
+            } else {
+                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                    alPo.setDeviceClass(m.get("MobileClass")+"");
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -528,8 +585,16 @@ public class CommonController {
             e.printStackTrace();
             map.put("ReturnType", "T");
             map.put("TClass", e.getClass().getName());
-            map.put("Message", e.getMessage());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
             return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
         }
     }
 
