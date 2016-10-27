@@ -74,11 +74,10 @@ public class FriendController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/friend/searchStranger");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -187,11 +186,10 @@ public class FriendController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/friend/invite");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -300,11 +298,10 @@ public class FriendController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/friend/getInvitedMeList");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -408,11 +405,10 @@ public class FriendController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/friend/inviteDeal");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -522,11 +518,10 @@ public class FriendController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/friend/delFriend");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -628,11 +623,10 @@ public class FriendController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/friend/getList");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -737,11 +731,10 @@ public class FriendController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/friend/updateFriendInfo");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
