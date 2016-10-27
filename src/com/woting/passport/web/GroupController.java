@@ -76,11 +76,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/buildGroup");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -285,11 +284,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/getGroupList");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -401,11 +399,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/getCreateGroupList");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -517,11 +514,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/getGroupMembers");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -629,14 +625,13 @@ public class GroupController {
                 }
                 mUdk=mp.getUserDeviceKey();
                 if (mUdk!=null) {
-                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/");
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/groupInvite");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -750,11 +745,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/getInviteMeList");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -871,11 +865,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/inviteDeal");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -994,11 +987,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/groupApply");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -1110,11 +1102,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/getApplyUserList");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -1250,11 +1241,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/getExistApplyUserGroupList");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -1364,11 +1354,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/applyDeal");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -1524,11 +1513,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/joinInGroup");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -1680,11 +1668,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/exitGroup");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -1794,11 +1781,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/kickoutGroup");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -1917,11 +1903,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/dissolveGroup");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -2031,11 +2016,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/changGroupAdminner");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -2153,11 +2137,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/searchGroup");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -2284,11 +2267,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/updateGroup");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -2406,11 +2388,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/updatePwd");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -2547,11 +2528,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/getNeedCheckInviteUserGroupList");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -2689,11 +2669,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/checkDeal");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -2833,11 +2812,10 @@ public class GroupController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/updateGroupUser");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {

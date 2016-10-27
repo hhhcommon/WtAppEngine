@@ -310,7 +310,7 @@ public class SocketHandle extends Thread {
             super.interrupt();
         }
         public void run() {
-            String filePath="C:/opt/logs/sendLogs";
+            String filePath="/opt/logs/sendLogs";
             File dir=new File(filePath);
             if (!dir.isDirectory()) dir.mkdirs();
             File f=new File(filePath+"/"+SocketHandle.this.socket.hashCode()+".log");
@@ -435,7 +435,7 @@ public class SocketHandle extends Thread {
             this.interrupt();
         }
         public void run() {
-            String filePath="C:/opt/logs/receiveLogs";
+            String filePath="/opt/logs/receiveLogs";
             File dir=new File(filePath);
             if (!dir.isDirectory()) dir.mkdirs();
             File f=new File(filePath+"/"+SocketHandle.this.socket.hashCode()+".log");

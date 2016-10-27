@@ -146,8 +146,7 @@ public class PassportController {
             mUdk.setUserId(u.getUserId());
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
             RedisOperService roService=new RedisOperService(redisConn, 4);
-            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService,
-                    new BlockLockConfig(5, 2, 0, 50));
+            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService, new BlockLockConfig(5, 2, 0, 50));
             try {
                 sessionService.registUser(mUdk, u);
                 MobileUsedPo mu=new MobileUsedPo();
@@ -497,11 +496,10 @@ public class PassportController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/user/mlogout");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                 } else {
                     map.put("ReturnType", "0000");
@@ -606,11 +604,10 @@ public class PassportController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/user/updatePwd");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -836,11 +833,10 @@ public class PassportController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/user/bindExtUserInfo");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
@@ -945,11 +941,10 @@ public class PassportController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/user/getRandomUserNum");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                 } else {
                     map.put("ReturnType", "0000");
@@ -1507,11 +1502,10 @@ public class PassportController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/getGroupsAndFriends");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                     userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {

@@ -2,6 +2,7 @@ package com.woting.appengine.common.web;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Resource;
@@ -14,14 +15,18 @@ import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.web.AbstractFileUploadController;
 import com.spiritdata.framework.util.FileNameUtils;
+import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
+import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
+import com.woting.dataanal.gather.API.persis.pojo.ApiLogPo;
 import com.woting.passport.UGA.persis.pojo.GroupPo;
 import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.GroupService;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.mobile.MobileParam;
 import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.session.DeviceType;
 import com.woting.passport.session.SessionService;
 
 @Controller
@@ -32,6 +37,64 @@ public class FileUploadController extends AbstractFileUploadController {
     private GroupService groupService;
     @Resource(name="redisSessionService")
     private SessionService sessionService;
+    private ApiLogPo alPo=new ApiLogPo();
+
+    @Override
+    public Map<String, Object> beforeUploadFile(Map<String, Object> rqtAttrs, Map<String, Object> rqtParams, HttpSession session) {
+        //数据收集处理==1
+        alPo.setId(SequenceUUID.getPureUUID());
+        alPo.setMethod("POST");
+        alPo.setBeginTime(new Timestamp(System.currentTimeMillis()));
+        alPo.setApiName("1.1.4-common/upload4App");
+        alPo.setObjType("000");//不确定对象
+        Map<String, Object> m=new HashMap<String, Object>();
+        m.putAll(rqtAttrs);
+        m.putAll(rqtParams);
+        alPo.setReqParam(JsonUtils.objToJson(m));
+        alPo.setDealFlag(2);//处理失败
+
+        //数据收集处理==2
+        alPo.setOwnerType(201);
+        if (m.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("UserId")+"")) {
+            alPo.setOwnerId(m.get("UserId")+"");
+        } else {
+            if (m.get("IMEI")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("IMEI")+"")) {
+                alPo.setOwnerId(m.get("IMEI")+"");
+            } else {
+                alPo.setOwnerId("0");
+            }
+        }
+        if (m.get("IMEI")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("IMEI")+"")) {
+            alPo.setDeviceId(m.get("IMEI")+"");
+        }
+        if (m.get("PCDType")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("PCDType")+"")) {
+            int pcdType=0;
+            try {pcdType=Integer.parseInt(m.get("PCDType")+"");} catch(Exception e) {}
+            alPo.setDeviceType(pcdType);
+        }
+        if (DeviceType.buildDtByPCDType(alPo.getDeviceType())==DeviceType.PC) {
+            if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                alPo.setExploreVer(m.get("MobileClass")+"");
+            }
+            if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                alPo.setExploreName(m.get("exploreName")+"");
+            }
+        } else {
+            if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                alPo.setDeviceClass(m.get("MobileClass")+"");
+            }
+        }
+        return null;
+    }
+    @Override
+    public void afterUploadAllFiles(Map<String, Object> fl, Map<String, Object> rqtAttrs, Map<String, Object> rqtParams, HttpSession session) {
+        alPo.setDealFlag(1);//处理成功
+        alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+        alPo.setReturnData(JsonUtils.objToJson(fl));
+        try {
+            ApiGatherMemory.getInstance().put2Queue(alPo);
+        } catch (InterruptedException e) {}
+    }
 
     @Override
     public Map<String, Object> afterUploadOneFileOnSuccess(Map<String, Object> m, Map<String, Object> a, Map<String, Object> p, HttpSession session) {

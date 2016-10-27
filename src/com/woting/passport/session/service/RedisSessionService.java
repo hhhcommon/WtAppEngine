@@ -123,7 +123,7 @@ public class RedisSessionService implements SessionService {
                 if (StringUtils.isEmptyOrWhitespaceOnly(udk.getUserId())) {
                     MobileUsedPo mup=muService.getUsedInfo(udk.getDeviceId(), udk.getPCDType());
                     boolean noLog=false;
-                    noLog=mup==null||mup.getStatus()!=1||mup.getUserId()==null||!mup.getUserId().equals(_userId);
+                    noLog=mup==null||mup.getStatus()!=1||mup.getUserId()==null;
                     if (noLog) {//无法登录
                         //删除在该设备上的登录信息
                         RedisUserDeviceKey _rUdk=new RedisUserDeviceKey(new UserDeviceKey());

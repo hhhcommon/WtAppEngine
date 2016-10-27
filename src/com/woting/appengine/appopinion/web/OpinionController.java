@@ -70,11 +70,10 @@ public class OpinionController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "opinion/app/commit");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                 } else {
                     map.put("ReturnType", "0000");
@@ -182,11 +181,10 @@ public class OpinionController {
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "opinion/app/getList");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
-                        map.put("Message", "需要登录");                    
-                    } else if (!(retM.get("ReturnType")+"").equals("1001")) {
-                        map.putAll(retM);
+                        map.put("Message", "需要登录");
                     } else {
-                        map.remove("ReturnType");
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
                 } else {
                     map.put("ReturnType", "0000");
