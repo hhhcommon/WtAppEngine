@@ -11,6 +11,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.structure.StrArrayQueue;
+import com.spiritdata.framework.util.JsonUtils;
 import com.woting.passport.mobile.MobileUDKey;
 import com.woting.passport.session.SessionService;
 import com.woting.push.core.message.Message;
@@ -95,6 +96,7 @@ public class PushMemoryManage {
         }
         if (canRead) m=sm.pollQueue(mk);
         if (m!=null) {
+            System.out.println("::=="+JsonUtils.objToJson(m));
             if (m.isAffirm()) {
 //                try {
 //                    sm.addSendedMsg(mk, m);

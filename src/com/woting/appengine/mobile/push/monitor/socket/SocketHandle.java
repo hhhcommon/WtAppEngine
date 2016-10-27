@@ -310,7 +310,7 @@ public class SocketHandle extends Thread {
             super.interrupt();
         }
         public void run() {
-            String filePath="/opt/logs/sendLogs";
+            String filePath="C:/opt/logs/sendLogs";
             File dir=new File(filePath);
             if (!dir.isDirectory()) dir.mkdirs();
             File f=new File(filePath+"/"+SocketHandle.this.socket.hashCode()+".log");
@@ -435,7 +435,7 @@ public class SocketHandle extends Thread {
             this.interrupt();
         }
         public void run() {
-            String filePath="/opt/logs/receiveLogs";
+            String filePath="C:/opt/logs/receiveLogs";
             File dir=new File(filePath);
             if (!dir.isDirectory()) dir.mkdirs();
             File f=new File(filePath+"/"+SocketHandle.this.socket.hashCode()+".log");
@@ -583,22 +583,33 @@ public class SocketHandle extends Thread {
                                 MobileUDKey _mUdk=MobileUDKey.buildFromMsg(ms);
                                 //处理注册
                                 Map<String, Object> retM=sessionService.dealUDkeyEntry(_mUdk, "socket/entry");
-                                if ((""+retM.get("ReturnType")).equals("2003")) {
+                                if (!(""+retM.get("ReturnType")).equals("1001")) {
                                     MsgNormal ackM=MessageUtils.buildAckMsg((MsgNormal)ms);
                                     ackM.setBizType(15);
                                     ackM.setPCDType(((MsgNormal)ms).getPCDType());
                                     ackM.setUserId(((MsgNormal)ms).getUserId());
                                     ackM.setIMEI(((MsgNormal)ms).getIMEI());
-                                    ackM.setReturnType(0);
+                                    ackM.setReturnType(0);//失败
                                     sendMsgQueue.add(ackM.toBytes());
-                                } else {
-                                    SocketHandle.this.mUdk=_mUdk;
-                                    if (SocketHandle.this.mUdk!=null) {//存入接收队列
-                                        pmm.setUserSocketMap(SocketHandle.this.mUdk, SocketHandle.this);
-                                        if (((MsgNormal)ms).getBizType()!=15) pmm.getReceiveMemory().addPureQueue(ms);
+                                } else {//登录成功
+                                    _mUdk.setUserId(""+retM.get("UserId"));
+                                    if (((MsgNormal)ms).getBizType()==15) {
+                                        MsgNormal ackM=MessageUtils.buildAckMsg((MsgNormal)ms);
+                                        ackM.setBizType(15);
+                                        ackM.setPCDType(((MsgNormal)ms).getPCDType());
+                                        ackM.setUserId(((MsgNormal)ms).getUserId());
+                                        ackM.setIMEI(((MsgNormal)ms).getIMEI());
+                                        ackM.setReturnType(1);//成功
+                                        sendMsgQueue.add(ackM.toBytes());
+                                    } else {
+                                        SocketHandle.this.mUdk=_mUdk;
+                                        if (SocketHandle.this.mUdk!=null) {//存入接收队列
+                                            pmm.setUserSocketMap(SocketHandle.this.mUdk, SocketHandle.this);
+                                            pmm.getReceiveMemory().addPureQueue(ms);
+                                        }
                                     }
                                 }
-                            } else {
+                            } else {//数据流
                                 ((MsgMedia)ms).setExtInfo(SocketHandle.this.mUdk);
                                 pmm.getReceiveMemory().addPureQueue(ms);
                             }

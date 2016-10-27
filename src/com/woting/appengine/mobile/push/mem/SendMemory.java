@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import com.woting.passport.mobile.MobileUDKey;
 import com.woting.push.core.message.CompareMsg;
 import com.woting.push.core.message.Message;
+import com.spiritdata.framework.util.JsonUtils;
 import com.woting.appengine.mobile.push.model.SendMessageList;
 
 public class SendMemory {
@@ -113,9 +114,9 @@ public class SendMemory {
      * @return 消息
      */
     public Message pollQueue(MobileUDKey mUdk) {
-        if (this.msgMap==null) return null;
-        if (this.msgMap.get(mUdk.toString())==null) return null;
+        if (this.msgMap!=null&&this.msgMap.get(mUdk.toString())!=null) 
         return this.msgMap.get(mUdk.toString()).poll();
+        return null;
     }
 
     /**
