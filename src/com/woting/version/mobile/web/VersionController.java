@@ -63,19 +63,20 @@ public class VersionController {
                     alPo.setDeviceType(mUdk.getPCDType());
                     alPo.setDeviceId(mUdk.getDeviceId());
                 }
-                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                        alPo.setExploreVer(m.get("MobileClass")+"");
-                    }
-                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                        alPo.setExploreName(m.get("exploreName")+"");
-                    }
-                } else {
-                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                if (m!=null) {
+                    if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                        if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                            alPo.setExploreVer(m.get("MobileClass")+"");
+                        }
+                        if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                            alPo.setExploreName(m.get("exploreName")+"");
+                        }
+                    } else {
+                        if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                            alPo.setDeviceClass(m.get("MobileClass")+"");
+                        }
                     }
                 }
-
                 //1-获取版本号
                 String version=m.get("Version")==null?null:m.get("Version")+"";
                 if (StringUtils.isNullOrEmptyOrSpace(version)) {
@@ -146,16 +147,18 @@ public class VersionController {
                     alPo.setDeviceType(mUdk.getPCDType());
                     alPo.setDeviceId(mUdk.getDeviceId());
                 }
-                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                        alPo.setExploreVer(m.get("MobileClass")+"");
-                    }
-                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                        alPo.setExploreName(m.get("exploreName")+"");
-                    }
-                } else {
-                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                if (m!=null) {
+                    if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                        if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                            alPo.setExploreVer(m.get("MobileClass")+"");
+                        }
+                        if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                            alPo.setExploreName(m.get("exploreName")+"");
+                        }
+                    } else {
+                        if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                            alPo.setDeviceClass(m.get("MobileClass")+"");
+                        }
                     }
                 }
 

@@ -47,7 +47,7 @@ public class RedisSessionService implements SessionService {
      *
      *   1002 不能找到相应的用户
      *   1003 得不到相应的PCDType
-     *   1004 请求用户与已登录用户不相符合
+     *   2005 请求用户与已登录用户不相符合
      *
      *   2004 移动客户端——未获得IMEI无法处理
      *   3004 PC客户端——未获得SessionId无法处理
@@ -120,27 +120,30 @@ public class RedisSessionService implements SessionService {
                 }
                 map.put("Msg", "用户已登录");
             } else {//处理未登录
-                if (StringUtils.isEmptyOrWhitespaceOnly(udk.getUserId())) {
-                    MobileUsedPo mup=muService.getUsedInfo(udk.getDeviceId(), udk.getPCDType());
-                    boolean noLog=false;
-                    noLog=mup==null||mup.getStatus()!=1||mup.getUserId()==null;
-                    if (noLog) {//无法登录
-                        //删除在该设备上的登录信息
-                        RedisUserDeviceKey _rUdk=new RedisUserDeviceKey(new UserDeviceKey());
-                        _rUdk.setDeviceId(udk.getDeviceId());
-                        _rUdk.setPCDType(dt.getPCDType());
-                        String uid=roService.get(_rUdk.getKey_DeviceType_UserId());
-                        if (!StringUtils.isEmptyOrWhitespaceOnly(uid)) { //进行删除工作
-                            _rUdk.setUserId(uid);
-                            cleanUserLogin(_rUdk, roService);
-                        }
-                        if (StringUtils.isEmptyOrWhitespaceOnly(_userId)) {
-                            _rUdk.setUserId(_userId);
-                            cleanUserLogin(_rUdk, roService);
-                        }
-                        map.put("ReturnType", "2003");
-                        map.put("Msg", "请先登录");
-                    } else {//可以进行登录
+                MobileUsedPo mup=muService.getUsedInfo(udk.getDeviceId(), udk.getPCDType());
+                boolean noLog=false;
+                noLog=mup==null||mup.getStatus()!=1||mup.getUserId()==null;
+                if (noLog) {//无法登录
+                    //删除在该设备上的登录信息
+                    RedisUserDeviceKey _rUdk=new RedisUserDeviceKey(new UserDeviceKey());
+                    _rUdk.setDeviceId(udk.getDeviceId());
+                    _rUdk.setPCDType(dt.getPCDType());
+                    String uid=roService.get(_rUdk.getKey_DeviceType_UserId());
+                    if (!StringUtils.isEmptyOrWhitespaceOnly(uid)) { //进行删除工作
+                        _rUdk.setUserId(uid);
+                        cleanUserLogin(_rUdk, roService);
+                    }
+                    if (StringUtils.isEmptyOrWhitespaceOnly(_userId)) {
+                        _rUdk.setUserId(_userId);
+                        cleanUserLogin(_rUdk, roService);
+                    }
+                    map.put("ReturnType", "2003");
+                    map.put("Msg", "请先登录");
+                } else {//可以进行登录
+                    if (!udk.getUserId().equals(mup.getUserId())) {
+                        map.put("ReturnType", "2005");
+                        map.put("Msg", "请求用户与已登录用户不相符合");
+                    } else {
                         //1-删除该用户在此类设备上的登录信息——踢出（不允许同一用户在同一类型的不同设备上同时登录）
                         try {
                             String did=roService.get(rUdk.getKey_UserLoginDeviceType());
@@ -162,7 +165,7 @@ public class RedisSessionService implements SessionService {
                         UserPo upo=userService.getUserById(mup.getUserId());
                         if (upo==null) {
                             //删除所有用户相关的Key值
-                            delUserAll(_userId, roService);
+                            delUserAll(mup.getUserId(), roService);
                             map.put("ReturnType", "1002");
                             map.put("Msg", "不能找到相应的用户");
                             return map;
@@ -185,11 +188,6 @@ public class RedisSessionService implements SessionService {
                         } catch(Exception e) {
                         }
                         map.put("Msg", "用户已登录");
-                    }
-                } else {
-                    if (!udk.getUserId().equals(_userId)) {
-                        map.put("ReturnType", "1004");
-                        map.put("Msg", "请求用户与已登录用户不相符合");
                     }
                 }
             }

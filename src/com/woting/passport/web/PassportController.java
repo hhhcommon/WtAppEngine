@@ -98,16 +98,18 @@ public class PassportController {
                 alPo.setDeviceType(mUdk.getPCDType());
                 alPo.setDeviceId(mUdk.getDeviceId());
             }
-            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setExploreVer(m.get("MobileClass")+"");
-                }
-                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                    alPo.setExploreName(m.get("exploreName")+"");
-                }
-            } else {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setDeviceClass(m.get("MobileClass")+"");
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
                 }
             }
             if (m==null||m.size()==0||mUdk==null||!mUdk.isValidate()) {
@@ -229,16 +231,18 @@ public class PassportController {
                 alPo.setDeviceType(mUdk.getPCDType());
                 alPo.setDeviceId(mUdk.getDeviceId());
             }
-            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setExploreVer(m.get("MobileClass")+"");
-                }
-                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                    alPo.setExploreName(m.get("exploreName")+"");
-                }
-            } else {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setDeviceClass(m.get("MobileClass")+"");
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -376,16 +380,18 @@ public class PassportController {
                 alPo.setDeviceType(mUdk.getPCDType());
                 alPo.setDeviceId(mUdk.getDeviceId());
             }
-            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setExploreVer(m.get("MobileClass")+"");
-                }
-                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                    alPo.setExploreName(m.get("exploreName")+"");
-                }
-            } else {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setDeviceClass(m.get("MobileClass")+"");
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -519,16 +525,18 @@ public class PassportController {
                 alPo.setDeviceType(mUdk.getPCDType());
                 alPo.setDeviceId(mUdk.getDeviceId());
             }
-            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setExploreVer(m.get("MobileClass")+"");
-                }
-                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                    alPo.setExploreName(m.get("exploreName")+"");
-                }
-            } else {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setDeviceClass(m.get("MobileClass")+"");
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -628,16 +636,18 @@ public class PassportController {
                 alPo.setDeviceType(mUdk.getPCDType());
                 alPo.setDeviceId(mUdk.getDeviceId());
             }
-            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setExploreVer(m.get("MobileClass")+"");
-                }
-                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                    alPo.setExploreName(m.get("exploreName")+"");
-                }
-            } else {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setDeviceClass(m.get("MobileClass")+"");
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -735,16 +745,18 @@ public class PassportController {
                 alPo.setDeviceType(mUdk.getPCDType());
                 alPo.setDeviceId(mUdk.getDeviceId());
             }
-            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setExploreVer(m.get("MobileClass")+"");
-                }
-                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                    alPo.setExploreName(m.get("exploreName")+"");
-                }
-            } else {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setDeviceClass(m.get("MobileClass")+"");
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -857,16 +869,18 @@ public class PassportController {
                 alPo.setDeviceType(mUdk.getPCDType());
                 alPo.setDeviceId(mUdk.getDeviceId());
             }
-            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setExploreVer(m.get("MobileClass")+"");
-                }
-                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                    alPo.setExploreName(m.get("exploreName")+"");
-                }
-            } else {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setDeviceClass(m.get("MobileClass")+"");
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -964,16 +978,18 @@ public class PassportController {
                 alPo.setDeviceType(mUdk.getPCDType());
                 alPo.setDeviceId(mUdk.getDeviceId());
             }
-            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setExploreVer(m.get("MobileClass")+"");
-                }
-                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                    alPo.setExploreName(m.get("exploreName")+"");
-                }
-            } else {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setDeviceClass(m.get("MobileClass")+"");
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -1036,16 +1052,18 @@ public class PassportController {
                 alPo.setDeviceType(mUdk.getPCDType());
                 alPo.setDeviceId(mUdk.getDeviceId());
             }
-            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setExploreVer(m.get("MobileClass")+"");
-                }
-                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                    alPo.setExploreName(m.get("exploreName")+"");
-                }
-            } else {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setDeviceClass(m.get("MobileClass")+"");
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -1142,16 +1160,18 @@ public class PassportController {
                 alPo.setDeviceType(mUdk.getPCDType());
                 alPo.setDeviceId(mUdk.getDeviceId());
             }
-            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setExploreVer(m.get("MobileClass")+"");
-                }
-                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                    alPo.setExploreName(m.get("exploreName")+"");
-                }
-            } else {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setDeviceClass(m.get("MobileClass")+"");
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -1248,16 +1268,18 @@ public class PassportController {
                 alPo.setDeviceType(mUdk.getPCDType());
                 alPo.setDeviceId(mUdk.getDeviceId());
             }
-            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setExploreVer(m.get("MobileClass")+"");
-                }
-                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                    alPo.setExploreName(m.get("exploreName")+"");
-                }
-            } else {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setDeviceClass(m.get("MobileClass")+"");
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -1378,16 +1400,18 @@ public class PassportController {
                 alPo.setDeviceType(mUdk.getPCDType());
                 alPo.setDeviceId(mUdk.getDeviceId());
             }
-            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setExploreVer(m.get("MobileClass")+"");
-                }
-                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                    alPo.setExploreName(m.get("exploreName")+"");
-                }
-            } else {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setDeviceClass(m.get("MobileClass")+"");
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -1526,16 +1550,18 @@ public class PassportController {
                 alPo.setDeviceType(mUdk.getPCDType());
                 alPo.setDeviceId(mUdk.getDeviceId());
             }
-            if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setExploreVer(m.get("MobileClass")+"");
-                }
-                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                    alPo.setExploreName(m.get("exploreName")+"");
-                }
-            } else {
-                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                    alPo.setDeviceClass(m.get("MobileClass")+"");
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
                 }
             }
             if (map.get("ReturnType")!=null) return map;

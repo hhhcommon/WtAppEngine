@@ -72,16 +72,18 @@ public class FileUploadController extends AbstractFileUploadController {
             try {pcdType=Integer.parseInt(m.get("PCDType")+"");} catch(Exception e) {}
             alPo.setDeviceType(pcdType);
         }
-        if (DeviceType.buildDtByPCDType(alPo.getDeviceType())==DeviceType.PC) {
-            if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                alPo.setExploreVer(m.get("MobileClass")+"");
-            }
-            if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                alPo.setExploreName(m.get("exploreName")+"");
-            }
-        } else {
-            if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                alPo.setDeviceClass(m.get("MobileClass")+"");
+        if (m!=null) {
+            if (DeviceType.buildDtByPCDType(alPo.getDeviceType())==DeviceType.PC) {
+                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                    alPo.setExploreVer(m.get("MobileClass")+"");
+                }
+                if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                    alPo.setExploreName(m.get("exploreName")+"");
+                }
+            } else {
+                if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                    alPo.setDeviceClass(m.get("MobileClass")+"");
+                }
             }
         }
         return null;
