@@ -134,7 +134,7 @@ CREATE TABLE wt_KeyWord (
   id             varchar(32)      NOT NULL             COMMENT '标签UUID',
   ownerId        varchar(32)      NOT NULL             COMMENT '所属者Id',
   ownerType      int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '所有者类型(0-系统,1-主播)',
-  ktName         varchar(200)     NOT NULL             COMMENT '标签名称',
+  kwName         varchar(200)     NOT NULL             COMMENT '标签名称',
   nPy            varchar(800)     NOT NULL             COMMENT '名称拼音',
   sort           int(5) unsigned  NOT NULL  DEFAULT 0  COMMENT '标签排序,从大到小排序，越大越靠前',
   isValidate     int(1) unsigned  NOT NULL  DEFAULT 1  COMMENT '是否生效(1-生效,2-无效)',
