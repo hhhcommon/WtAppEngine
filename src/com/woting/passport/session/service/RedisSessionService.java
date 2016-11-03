@@ -9,10 +9,10 @@ import javax.annotation.Resource;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.stereotype.Service;
 
-import com.mysql.jdbc.StringUtils;
 import com.spiritdata.framework.UGA.UgaUser;
 import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.JsonUtils;
+import com.spiritdata.framework.util.StringUtils;
 import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.login.persis.pojo.MobileUsedPo;
@@ -67,7 +67,7 @@ public class RedisSessionService implements SessionService {
             map.put("Msg", "得不到相应的PCDType");
             return map;
         }
-        if (StringUtils.isEmptyOrWhitespaceOnly(udk.getDeviceId())) {
+        if (StringUtils.isNullOrEmptyOrSpace(udk.getDeviceId())) {
             if (dt==DeviceType.PC) {
                 map.put("ReturnType", "3004");
                 map.put("Msg", "未获得SessionId无法处理");
@@ -129,18 +129,18 @@ public class RedisSessionService implements SessionService {
                     _rUdk.setDeviceId(udk.getDeviceId());
                     _rUdk.setPCDType(dt.getPCDType());
                     String uid=roService.get(_rUdk.getKey_DeviceType_UserId());
-                    if (!StringUtils.isEmptyOrWhitespaceOnly(uid)) { //进行删除工作
+                    if (!StringUtils.isNullOrEmptyOrSpace(uid)) { //进行删除工作
                         _rUdk.setUserId(uid);
                         cleanUserLogin(_rUdk, roService);
                     }
-                    if (StringUtils.isEmptyOrWhitespaceOnly(_userId)) {
+                    if (StringUtils.isNullOrEmptyOrSpace(_userId)) {
                         _rUdk.setUserId(_userId);
                         cleanUserLogin(_rUdk, roService);
                     }
                     map.put("ReturnType", "2003");
                     map.put("Msg", "请先登录");
                 } else {//可以进行登录
-                    if (!udk.getUserId().equals(mup.getUserId())) {
+                    if (udk.getUserId()!=null&&!udk.getUserId().equals(mup.getUserId())) {
                         map.put("ReturnType", "2005");
                         map.put("Msg", "请求用户与已登录用户不相符合");
                     } else {
@@ -314,7 +314,7 @@ public class RedisSessionService implements SessionService {
                 rUdk.setUserId(userId);
                 rUdk.setPCDType(dt.getPCDType());
                 String did=ros.get(rUdk.getKey_UserLoginDeviceType_OnlyUseUserId());
-                if (!StringUtils.isEmptyOrWhitespaceOnly(did)&&did.length()>5) { //进行删除工作
+                if (!StringUtils.isNullOrEmptyOrSpace(did)&&did.length()>5) { //进行删除工作
                     rUdk.setDeviceId(did);
                     cleanUserLogin(rUdk, ros);
                 }

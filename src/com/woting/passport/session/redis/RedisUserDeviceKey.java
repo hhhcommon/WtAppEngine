@@ -3,7 +3,6 @@ package com.woting.passport.session.redis;
 import com.spiritdata.framework.exceptionC.Plat5101CException;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.passport.session.key.UserDeviceKey;
-import com.woting.redis.session.RedisLoginData;
 
 public class RedisUserDeviceKey extends UserDeviceKey implements RedisLoginData {
     private static final long serialVersionUID = 2017041361668506482L;

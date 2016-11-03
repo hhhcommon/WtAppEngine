@@ -1,4 +1,4 @@
-package com.woting.redis.session;
+package com.woting.passport.session.redis;
 
 /**
  * 用于Redis数据操作中，生成Key或相应的值。本接口仅为实现RedisSession框架中的数据获取。
