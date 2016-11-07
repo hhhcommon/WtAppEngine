@@ -56,6 +56,8 @@ public class ContentController {
         alPo.setApiName("4.2.3-content/getLoopImgs");
         alPo.setObjType("001");//内容对象
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -75,7 +77,6 @@ public class ContentController {
                 map.putAll(mUdk.toHashMapAsBean());
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -116,22 +117,22 @@ public class ContentController {
             bcItem=new HashMap<String, Object>();
             bcItem.put("ImgUrl", "asset/contents/imgs/1280115949992.jpg");
             bcItem.put("ImgIdx", "0");
-            bcItem.put("ImgDesc", "北京怀旧金曲");
+            bcItem.put("ImgDescn", "北京怀旧金曲");
             bcItem.put("ImgContentUrl", "abc/content.do?contentId=1");
             sl.add(bcItem);
             bcItem.put("ImgUrl", "asset/contents/imgs/1303967876491.jpg");
             bcItem.put("ImgIdx", "1");
-            bcItem.put("ImgDesc", "故事新编");
+            bcItem.put("ImgDescn", "故事新编");
             bcItem.put("ImgContentUrl", "abc/content.do?contentId=2");
             sl.add(bcItem);
             bcItem.put("ImgUrl", "asset/contents/imgs/m_1303967844788.jpg");
             bcItem.put("ImgIdx", "2");
-            bcItem.put("ImgDesc", "新闻纵览");
+            bcItem.put("ImgDescn", "新闻纵览");
             bcItem.put("ImgContentUrl", "abc/content.do?contentId=3");
             sl.add(bcItem);
             bcItem.put("ImgUrl", "asset/contents/imgs/m_1303967870670.jpg");
             bcItem.put("ImgIdx", "3");
-            bcItem.put("ImgDesc", "体坛风云");
+            bcItem.put("ImgDescn", "体坛风云");
             bcItem.put("ImgContentUrl", "abc/content.do?contentId=3");
             sl.add(bcItem);
            bcClass.put("SubList", sl);
@@ -169,6 +170,8 @@ public class ContentController {
         alPo.setApiName("4.2.1-content/getContents");
         alPo.setObjType("001");//内容对象
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -188,7 +191,6 @@ public class ContentController {
                 map.putAll(mUdk.toHashMapAsBean());
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -283,6 +285,8 @@ public class ContentController {
         alPo.setApiName("4.2.2-content/getContentInfo");
         alPo.setObjType("001");//内容对象
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -302,7 +306,6 @@ public class ContentController {
                 map.putAll(mUdk.toHashMapAsBean());
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -396,6 +399,8 @@ public class ContentController {
         alPo.setApiName("4.3.1-content/clickFavorite");
         alPo.setObjType("DA002");//用户喜欢对象
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -427,7 +432,6 @@ public class ContentController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -518,6 +522,8 @@ public class ContentController {
         alPo.setApiName("4.3.2-content/getFavoriteList");
         alPo.setObjType("DA002");//用户喜欢对象
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -537,7 +543,6 @@ public class ContentController {
                 map.putAll(mUdk.toHashMapAsBean());
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -622,6 +627,8 @@ public class ContentController {
         alPo.setApiName("4.3.3-content/getFavoriteMTypeDistri");
         alPo.setObjType("DA002");//用户喜欢对象
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -641,7 +648,6 @@ public class ContentController {
                 map.putAll(mUdk.toHashMapAsBean());
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -704,6 +710,8 @@ public class ContentController {
         alPo.setApiName("4.3.4-content/delFavorites");
         alPo.setObjType("DA002");//用户喜欢对象
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -723,7 +731,6 @@ public class ContentController {
                 map.putAll(mUdk.toHashMapAsBean());
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {

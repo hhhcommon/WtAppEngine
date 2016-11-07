@@ -41,26 +41,26 @@ CREATE TABLE plat_DictD (
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='002字典项';
 
 /**== 二、用户用户组类=============================================*/
-/**003 PLAT_USER(用户)*/
 DROP TABLE IF EXISTS plat_User;
 CREATE TABLE plat_User (
   id             varchar(32)      NOT NULL                COMMENT 'uuid(用户id)',
   userName       varchar(100)               DEFAULT NULL  COMMENT '用户名称——实名',
   userNum        varchar(32)                              COMMENT '用户号，用于公开的号码，唯一',
   loginName      varchar(100)     NOT NULL                COMMENT '登录账号',
+  nickName       varchar(100)                             COMMENT '昵称',
+  userSign       varchar(100)                             COMMENT '个人签名',
   password       varchar(100)               DEFAULT NULL  COMMENT '密码',
   mailAddress    varchar(100)               DEFAULT NULL  COMMENT '邮箱(非空为一索引)',
   mainPhoneNum   varchar(100)               DEFAULT NULL  COMMENT '用户主手机号码',
-  age            varchar(15)                              COMMENT '年龄',
-  birthday       varchar(30)                DEFAULT NULL  COMMENT '生日',
-  sex            varchar(100)                             COMMENT '性别',
-  userNature     int(1) unsigned                          COMMENT '用户性质：1自然人用户，2机构用户',
-  userType       int(1) unsigned                          COMMENT '用户分类：1用户，2外围人员，3管理员',
+  birthday       timestamp                  DEFAULT NULL  COMMENT '生日',
+  starSign       varchar(100)                             COMMENT '星座',
+  userType       int(4) unsigned                          COMMENT '用户分类：对应OwnerType，1xx::系统:100-我们自己的系统(cm/crawl/push等);101-其他系统(wt_Organize表中的Id);2xx::用户:200-后台系统用户;201-前端用户-wt_Member表中的用户Id',
+  userClass      int(4) unsigned                          COMMENT '用户类型，现在还没有用，比如是一般用户还是管理原等',
   userState      int(1)           NOT NULL  DEFAULT '0'   COMMENT '用户状态，0-2,0代表未激活的用户，1代表已激用户，2代表失效用户,3根据邮箱找密码的用户',
   portraitBig    varchar(300)                             COMMENT '用户头像大',
   portraitMini   varchar(300)                             COMMENT '用户头像小',
   descn          varchar(2000)              DEFAULT NULL  COMMENT '备注',
-  homepage       varchar(100)                             COMMENT '个人主页',
+  homepage       varchar(300)                             COMMENT '个人主页',
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
   lmTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改：每次更新的时间',
   PRIMARY KEY(id),

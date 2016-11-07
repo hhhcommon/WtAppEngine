@@ -129,7 +129,7 @@ public abstract class DataTransform {
 		map.put("ContentTimes", festival.getDuration());// 以ms为计量单位
 		map.put("ContentPubTime", festival.getUpdateTime());
 		map.put("ContentPub", festival.getContentPub());
-		map.put("ContentDesc", festival.getAudioDes());
+		map.put("ContentDescn", festival.getAudioDes());
 		map.put("CTime", null);
 		map.put("MediaType", festival.getMediaType());
 		map.put("ContentCatalogs", null);
@@ -157,7 +157,7 @@ public abstract class DataTransform {
 		map.put("ContentPub", station.getContentPub());
 		map.put("MediaType", station.getMediaType());
 		map.put("ContentId", station.getId());
-		map.put("ContentDesc", station.getDesc());
+		map.put("ContentDescn", station.getDesc());
 		map.put("ContentImg", station.getPic());
 		map.put("ContentCatalogs", null);
 		map.put("ContentKeyWord", null);

@@ -3,6 +3,8 @@ package com.woting.passport.web;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +27,8 @@ import com.spiritdata.framework.ext.redis.lock.RedisBlockLock;
 import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.RequestUtils;
+import com.woting.cm.core.dict.model.DictRefRes;
+import com.woting.cm.core.dict.service.DictService;
 import com.woting.dataanal.gather.API.ApiGatherUtils;
 import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
 import com.woting.dataanal.gather.API.persis.pojo.ApiLogPo;
@@ -54,6 +58,8 @@ public class PassportController {
     @Resource
     private MobileUsedService muService;
     @Resource
+    private DictService dictService;
+    @Resource
     private FriendService friendService;
     @Resource(name="redisSessionService")
     private SessionService sessionService;
@@ -74,6 +80,8 @@ public class PassportController {
         alPo.setApiName("2.1.1-passport/user/mlogin");
         alPo.setObjType("003");//设置为用户
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -86,7 +94,6 @@ public class PassportController {
             }
             MobileUDKey mUdk=mp.getUserDeviceKey();
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -195,6 +202,8 @@ public class PassportController {
         alPo.setApiName("2.1.2-passport/user/register");
         alPo.setObjType("003");//设置为用户
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -219,7 +228,6 @@ public class PassportController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -346,6 +354,8 @@ public class PassportController {
         alPo.setApiName("2.1.12-passport/user/afterThirdAuth");
         alPo.setObjType("003");//设置为用户
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -368,7 +378,6 @@ public class PassportController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -482,6 +491,8 @@ public class PassportController {
         alPo.setApiName("2.1.3-passport/user/mlogout");
         alPo.setObjType("003");//设置为用户
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -513,7 +524,6 @@ public class PassportController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -591,6 +601,8 @@ public class PassportController {
         alPo.setApiName("2.1.4-passport/user/updatePwd");
         alPo.setObjType("003");//设置为用户
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -624,7 +636,6 @@ public class PassportController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -711,6 +722,8 @@ public class PassportController {
         alPo.setApiName("2.1.5-passport/user/updatePwd_AfterCheckPhoneOK");
         alPo.setObjType("003");//设置为用户
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -733,7 +746,6 @@ public class PassportController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -824,6 +836,8 @@ public class PassportController {
         alPo.setApiName("2.1.6-passport/user/bindExtUserInfo");
         alPo.setObjType("003");//设置为用户
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -857,7 +871,6 @@ public class PassportController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -935,7 +948,9 @@ public class PassportController {
         alPo.setApiName("2.1.7-passport/user/getRandomUserNum");
         alPo.setObjType("003");//设置为用户
         alPo.setDealFlag(1);//处理成功
- 
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
+
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
@@ -966,7 +981,6 @@ public class PassportController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -1022,6 +1036,8 @@ public class PassportController {
         alPo.setApiName("2.1.8-passport/user/registerByPhoneNum");
         alPo.setObjType("003");//设置为用户
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -1040,7 +1056,6 @@ public class PassportController {
                 mUdk=mp.getUserDeviceKey();
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -1125,6 +1140,8 @@ public class PassportController {
         alPo.setApiName("2.1.9-passport/user/retrieveByPhoneNum");
         alPo.setObjType("003");//设置为用户
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -1148,7 +1165,6 @@ public class PassportController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -1233,6 +1249,8 @@ public class PassportController {
         alPo.setApiName("2.1.10-passport/user/reSendPhoneCheckCode");
         alPo.setObjType("003");//设置为用户
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -1256,7 +1274,6 @@ public class PassportController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -1365,6 +1382,8 @@ public class PassportController {
         alPo.setApiName("2.1.11-passport/user/checkPhoneCheckCode");
         alPo.setObjType("003");//设置为用户
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -1388,7 +1407,6 @@ public class PassportController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -1505,6 +1523,8 @@ public class PassportController {
         alPo.setApiName("2.4.1-passport/getGroupsAndFriends");
         alPo.setObjType("005|009");//设置为好友
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -1538,7 +1558,6 @@ public class PassportController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -1641,6 +1660,247 @@ public class PassportController {
         }
     }
 
+    /**
+     * 修改用户详细信息
+     */
+    @RequestMapping(value="updateInfo.do")
+    @ResponseBody
+    public Map<String,Object> updateInfo(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("2.1.14-/passport/user/getUserInfo");
+        alPo.setObjType("003");//设置为好友
+        alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            String userId="";
+            MobileUDKey mUdk=null;
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
+                }
+                mUdk=mp.getUserDeviceKey();
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/user/getUserInfo");
+                    if ((retM.get("ReturnType")+"").equals("2003")) {
+                        map.put("ReturnType", "200");
+                        map.put("Message", "需要登录");
+                    } else {
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
+                    }
+                    userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
+                } else {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
+                }
+            }
+            //数据收集处理==2
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
+            }
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                map.put("ReturnType", "1002");
+                map.put("Message", "无法获得用户Id");
+                return map;
+            }
+            //1-获得用户Id
+            String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
+            if (!userId.equals(_userId)) {
+                map.put("ReturnType", "1003");
+                map.put("Message", "给定用户号和系统记录账号不匹配");
+            } else {
+                UserPo up=userService.getUserById(userId);
+                if (up!=null) {
+                    Map<String, Object> um=up.toDetailInfo();
+                    List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", "userId");
+                    for (DictRefRes drr: dictRefList) {
+                        if (drr.getDm().getId().equals("8")) {//性别
+                            um.put("Sex", drr.getDd().getNodeName());
+                        } else
+                        if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
+                            um.put("Region", drr.getDd().getTreePathName());
+                        }
+                    }
+                    um.put("Age", getAge(up.getBirthday().getTime())+"");
+                    map.put("ReturnType", "1001");
+                    map.put("UserInfo", um);
+                } else {
+                    map.put("ReturnType", "1011");
+                    map.put("Message", "无对应的用户信息");
+                }
+            }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
+            return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
+        }
+    }
+
+    /**
+     * 获得用户详细信息
+     */
+    @RequestMapping(value="getUserInfo.do")
+    @ResponseBody
+    public Map<String,Object> getUserInfo(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("2.1.14-/passport/user/getUserInfo");
+        alPo.setObjType("003");//设置为好友
+        alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
+
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            String userId="";
+            MobileUDKey mUdk=null;
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
+                }
+                mUdk=mp.getUserDeviceKey();
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/user/getUserInfo");
+                    if ((retM.get("ReturnType")+"").equals("2003")) {
+                        map.put("ReturnType", "200");
+                        map.put("Message", "需要登录");
+                    } else {
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
+                    }
+                    userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
+                } else {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
+                }
+            }
+            //数据收集处理==2
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
+            }
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                map.put("ReturnType", "1002");
+                map.put("Message", "无法获得用户Id");
+                return map;
+            }
+            //1-获得用户Id
+            String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
+            if (!userId.equals(_userId)) {
+                map.put("ReturnType", "1003");
+                map.put("Message", "给定用户号和系统记录账号不匹配");
+            } else {
+                UserPo up=userService.getUserById(userId);
+                if (up!=null) {
+                    Map<String, Object> um=up.toDetailInfo();
+                    List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", "userId");
+                    for (DictRefRes drr: dictRefList) {
+                        if (drr.getDm().getId().equals("8")) {//性别
+                            um.put("Sex", drr.getDd().getNodeName());
+                        } else
+                        if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
+                            um.put("Region", drr.getDd().getTreePathName());
+                        }
+                    }
+                    um.put("Age", getAge(up.getBirthday().getTime())+"");
+                    map.put("ReturnType", "1001");
+                    map.put("UserInfo", um);
+                } else {
+                    map.put("ReturnType", "1011");
+                    map.put("Message", "无对应的用户信息");
+                }
+            }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
+            return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
+        }
+    }
+
     /*
      * 获得新的用户编码
      * @return
@@ -1648,4 +1908,16 @@ public class PassportController {
     private int getNewUserNumber() {
         return SpiritRandom.getRandom(new Random(), 0, 999999);
     }
+
+    private int getAge(long timestamp) {
+        int age=0;
+        Calendar born=Calendar.getInstance();
+        Calendar now=Calendar.getInstance();
+        now.setTime(new Date());
+        born.setTimeInMillis(timestamp);
+        if (born.after(now)) throw new IllegalArgumentException("生日不能大于今日");
+        age=now.get(Calendar.YEAR) - born.get(Calendar.YEAR);
+        if (now.get(Calendar.DAY_OF_YEAR) < born.get(Calendar.DAY_OF_YEAR)) age -= 1;
+        return age;
+    } 
 }

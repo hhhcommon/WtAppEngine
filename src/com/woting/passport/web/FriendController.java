@@ -53,6 +53,8 @@ public class FriendController {
         alPo.setApiName("2.3.1-passport/friend/searchStranger");
         alPo.setObjType("009");//设置为好友
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -86,7 +88,6 @@ public class FriendController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -167,6 +168,8 @@ public class FriendController {
         alPo.setApiName("2.3.2-passport/friend/invite");
         alPo.setObjType("009");//设置为好友
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -200,7 +203,6 @@ public class FriendController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -281,6 +283,8 @@ public class FriendController {
         alPo.setApiName("2.3.3-passport/friend/getInvitedMeList");
         alPo.setObjType("009");//设置为好友
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -314,7 +318,6 @@ public class FriendController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -390,6 +393,8 @@ public class FriendController {
         alPo.setApiName("2.3.4-passport/friend/inviteDeal");
         alPo.setObjType("009");//设置为好友
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -423,7 +428,6 @@ public class FriendController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -505,6 +509,8 @@ public class FriendController {
         alPo.setApiName("2.3.5-passport/friend/delFriend");
         alPo.setObjType("009");//设置为好友
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -538,7 +544,6 @@ public class FriendController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -612,6 +617,8 @@ public class FriendController {
         alPo.setApiName("2.3.6-passport/friend/getList");
         alPo.setObjType("009");//设置为好友
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -645,7 +652,6 @@ public class FriendController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -722,6 +728,8 @@ public class FriendController {
         alPo.setApiName("2.3.7-passport/friend/updateFriendInfo");
         alPo.setObjType("009");//设置为好友
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -755,7 +763,6 @@ public class FriendController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {

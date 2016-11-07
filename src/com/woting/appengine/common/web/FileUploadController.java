@@ -55,6 +55,7 @@ public class FileUploadController extends AbstractFileUploadController {
 
         //数据收集处理==2
         alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
         if (m.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("UserId")+"")) {
             alPo.setOwnerId(m.get("UserId")+"");
         } else {

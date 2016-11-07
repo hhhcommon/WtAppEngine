@@ -87,6 +87,8 @@ public class CommonController {
         alPo.setApiName("1.1.1-common/entryApp");
         alPo.setObjType("000");//一般信息
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -110,7 +112,6 @@ public class CommonController {
                 map.put("ServerStatus", "1"); //服务器状态
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -162,6 +163,8 @@ public class CommonController {
         alPo.setApiName("4.1.1-mainPage");
         alPo.setObjType("001");//内容对象
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -190,7 +193,6 @@ public class CommonController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -268,6 +270,8 @@ public class CommonController {
         alPo.setApiName("4.1.2-getHotKeys");
         alPo.setObjType("DA001");//设置为热词
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -296,7 +300,6 @@ public class CommonController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -397,6 +400,8 @@ public class CommonController {
         alPo.setApiName("4.1.3-searchHotKeys");
         alPo.setObjType("DA001");//设置为热词
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -425,7 +430,6 @@ public class CommonController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {//过客
@@ -580,6 +584,8 @@ public class CommonController {
         alPo.setApiName("4.1.6-getCatalogInfo");
         alPo.setObjType("028");//设置为评论
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -608,7 +614,6 @@ public class CommonController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -708,6 +713,8 @@ public class CommonController {
         alPo.setApiName("4.1.5-searchByText");
         alPo.setObjType("001");//设置为内容
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -739,7 +746,6 @@ public class CommonController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -835,6 +841,8 @@ public class CommonController {
         alPo.setApiName("4.1.4-searchByVoice");
         alPo.setObjType("001");//设置为内容
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -867,7 +875,6 @@ public class CommonController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {

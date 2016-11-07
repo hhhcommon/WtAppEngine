@@ -52,6 +52,8 @@ public class DiscussController {
         alPo.setApiName("4.4.1-discuss/add");
         alPo.setObjType("028");//设置为评论
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -85,7 +87,6 @@ public class DiscussController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -196,6 +197,8 @@ public class DiscussController {
         alPo.setApiName("4.4.2-discuss/del");
         alPo.setObjType("028");//设置为评论
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -229,7 +232,6 @@ public class DiscussController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -314,6 +316,8 @@ public class DiscussController {
         alPo.setApiName("4.4.3-discuss/article/getList");
         alPo.setObjType("001");//设置为内容
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -340,7 +344,6 @@ public class DiscussController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
@@ -480,6 +483,8 @@ public class DiscussController {
         alPo.setApiName("4.4.4-discuss/user/getList");
         alPo.setObjType("001");//设置为内容
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -512,7 +517,6 @@ public class DiscussController {
                 }
             }
             //数据收集处理==2
-            alPo.setOwnerType(201);
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {

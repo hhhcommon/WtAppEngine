@@ -48,7 +48,7 @@ public abstract class ContentUtils {
         retM.put("ContentShareURL", getShareUrl_DT(preAddr, one.get("id")+""));//分享地址
         retM.put("ContentSource", one.get("bcSource"));//P09-公共：来源名称
         retM.put("ContentURIS", null);//P10-公共：其他播放地址列表，目前为空
-        retM.put("ContentDesc", one.get("descn"));//P11-公共：说明
+        retM.put("ContentDescn", one.get("descn"));//P11-公共：说明
 
         fillExtInfo(retM, "RADIO", personList, cataList, pubChannelList, favoriteList);//填充扩展信息
 
@@ -94,7 +94,7 @@ public abstract class ContentUtils {
         retM.put("ContentShareURL", getShareUrl_JM(preAddr, one.get("id")+""));//分享地址
 //        retM.put("ContentSource", one.get("maSource"));//P09-公共：来源名称
 //        retM.put("ContentURIS", null);//P10-公共：其他播放地址列表，目前为空
-        retM.put("ContentDesc", one.get("descn"));//P11-公共：说明
+        retM.put("ContentDescn", one.get("descn"));//P11-公共：说明
         retM.put("ContentStatus", one.get("maStatus"));
 
         fillExtInfo(retM, "AUDIO", personList, cataList, pubChannelList, favoriteList);//填充扩展信息
@@ -139,7 +139,7 @@ public abstract class ContentUtils {
         retM.put("ContentImg", one.get("smaImg"));//P07-公共：相关图片
         retM.put("ContentURI", "content/getContentInfo.do?MediaType=SEQU&ContentId="+retM.get("ContentId"));//P08-公共：在此是获得系列节目列表的Url
         retM.put("ContentShareURL", getShareUrl_ZJ(preAddr, one.get("id")+""));//分享地址
-        retM.put("ContentDesc", one.get("descn"));//P11-公共：说明
+        retM.put("ContentDescn", one.get("descn"));//P11-公共：说明
         retM.put("ContentStatus", one.get("smaStatus"));
 
         fillExtInfo(retM, "SEQU", personList, cataList, pubChannelList, favoriteList);//填充扩展信息

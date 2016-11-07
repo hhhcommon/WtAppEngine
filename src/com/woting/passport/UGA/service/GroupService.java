@@ -594,7 +594,7 @@ public class GroupService {
                             Map<String, Object> gMap=new HashMap<String, Object>();
                             gMap.put("GroupId", gp.getGroupId());
                             gMap.put("GroupName", gp.getGroupName());
-                            gMap.put("GroupDesc", gp.getDescn());
+                            gMap.put("GroupDescn", gp.getDescn());
                             dataMap.put("GroupInfo", gMap);
                         }
                         dataMap.put("InviteTime", inviteTime);
@@ -691,7 +691,7 @@ public class GroupService {
                 Map<String, Object> gMap=new HashMap<String, Object>();
                 gMap.put("GroupId", gp.getGroupId());
                 gMap.put("GroupName", gp.getGroupName());
-                gMap.put("GroupDesc", gp.getDescn());
+                gMap.put("GroupDescn", gp.getDescn());
                 dataMap.put("GroupInfo", gMap);
             }
             dataMap.put("ApplyTime", System.currentTimeMillis());
@@ -861,7 +861,7 @@ public class GroupService {
                 Map<String, Object> gMap=new HashMap<String, Object>();
                 gMap.put("GroupId", gp.getGroupId());
                 gMap.put("GroupName", gp.getGroupName());
-                gMap.put("GroupDesc", gp.getDescn());
+                gMap.put("GroupDescn", gp.getDescn());
                 dataMap.put("GroupInfo", gMap);
             }
             dataMap.put("DealType", isRefuse?"2":"1");
@@ -950,7 +950,7 @@ public class GroupService {
                     Map<String, Object> gMap=new HashMap<String, Object>();
                     gMap.put("GroupId", gp.getGroupId());
                     gMap.put("GroupName", gp.getGroupName());
-                    gMap.put("GroupDesc", gp.getDescn());
+                    gMap.put("GroupDescn", gp.getDescn());
                     dataMap.put("GroupInfo", gMap);
                 }
                 UserPo u=userDao.getInfoObject("getUserById", inviteUserId);
@@ -1316,7 +1316,7 @@ public class GroupService {
                 Map<String, Object> gMap=new HashMap<String, Object>();
                 gMap.put("GroupId", gp.getGroupId());
                 gMap.put("GroupName", gp.getGroupName());
-                gMap.put("GroupDesc", gp.getDescn());
+                gMap.put("GroupDescn", gp.getDescn());
                 dataMap.put("GroupInfo", gMap);
                 UserPo u=userDao.getInfoObject("getUserById", toUserId);
                 Map<String, Object> um=u.toHashMap4Mobile();

@@ -77,7 +77,7 @@ public class BaiDuNewsSearch extends Thread {
 				newmap.put("ContentName", contentname);
 				newmap.put("ContentURL", contenturl);
 				newmap.put("ContentImg", contentimg);
-				newmap.put("ContentDesc", contentdesc);
+				newmap.put("ContentDescn", contentdesc);
 				newmap.put("ContentPub", contentpub);
 				newmap.put("ContentPubTime", contentpubtime);
 				newmap.put("MediaType", "TTS");

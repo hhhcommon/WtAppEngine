@@ -38,6 +38,8 @@ public class VersionController {
         alPo.setApiName("1.1.3-common/getVersion");
         alPo.setObjType("P002");//设置为版本
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -51,7 +53,6 @@ public class VersionController {
                 MobileUDKey mUdk=mp.getUserDeviceKey();
                 if (mUdk!=null) map.putAll(mUdk.toHashMapAsBean());
                 //数据收集处理==2
-                alPo.setOwnerType(201);
                 if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                     alPo.setOwnerId(map.get("UserId")+"");
                 } else {
@@ -122,6 +123,8 @@ public class VersionController {
         alPo.setApiName("1.1.2-common/judgeVersion");
         alPo.setObjType("P002");//设置为版本
         alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -135,7 +138,6 @@ public class VersionController {
                 MobileUDKey mUdk=mp.getUserDeviceKey();
                 if (mUdk!=null) map.putAll(mUdk.toHashMapAsBean());
                 //数据收集处理==2
-                alPo.setOwnerType(201);
                 if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                     alPo.setOwnerId(map.get("UserId")+"");
                 } else {
