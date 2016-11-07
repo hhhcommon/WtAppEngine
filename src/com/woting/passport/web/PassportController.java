@@ -1672,6 +1672,7 @@ public class PassportController {
         alPo.setObjType("003");//设置为好友
         alPo.setDealFlag(1);//处理成功
         alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
@@ -1736,31 +1737,41 @@ public class PassportController {
                 map.put("Message", "无法获得用户Id");
                 return map;
             }
-            //1-获得用户Id
             String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
             if (!userId.equals(_userId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "给定用户号和系统记录账号不匹配");
-            } else {
-                UserPo up=userService.getUserById(userId);
-                if (up!=null) {
-                    Map<String, Object> um=up.toDetailInfo();
-                    List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", "userId");
-                    for (DictRefRes drr: dictRefList) {
-                        if (drr.getDm().getId().equals("8")) {//性别
-                            um.put("Sex", drr.getDd().getNodeName());
-                        } else
-                        if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
-                            um.put("Region", drr.getDd().getTreePathName());
-                        }
+                return map;
+            }
+            //1-获得用户Id
+            Map<String, Object> updateInfo=new HashMap<String, Object>();
+            String nickName=(m.get("nickName")==null?null:m.get("nickName")+"");
+            String userSign=(m.get("UserSign")==null?null:m.get("UserSign")+"");
+            String sex=(m.get("SexDictId")==null?null:m.get("SexDictId")+"");
+            String birthday=(m.get("Birthday")==null?null:m.get("Birthday")+"");
+            String starSign=(m.get("StarSign")==null?null:m.get("StarSign")+"");
+            String email=(m.get("Email")==null?null:m.get("Email")+"");
+            String userNum=(m.get("UserNum")==null?null:m.get("UserNum")+"");
+
+            
+            UserPo up=userService.getUserById(userId);
+            if (up!=null) {
+                Map<String, Object> um=up.toDetailInfo();
+                List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", "userId");
+                for (DictRefRes drr: dictRefList) {
+                    if (drr.getDm().getId().equals("8")) {//性别
+                        um.put("Sex", drr.getDd().getNodeName());
+                    } else
+                    if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
+                        um.put("Region", drr.getDd().getTreePathName());
                     }
-                    um.put("Age", getAge(up.getBirthday().getTime())+"");
-                    map.put("ReturnType", "1001");
-                    map.put("UserInfo", um);
-                } else {
-                    map.put("ReturnType", "1011");
-                    map.put("Message", "无对应的用户信息");
                 }
+                um.put("Age", getAge(up.getBirthday().getTime())+"");
+                map.put("ReturnType", "1001");
+                map.put("UserInfo", um);
+            } else {
+                map.put("ReturnType", "1011");
+                map.put("Message", "无对应的用户信息");
             }
             return map;
         } catch(Exception e) {
