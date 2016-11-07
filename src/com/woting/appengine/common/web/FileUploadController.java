@@ -48,7 +48,7 @@ public class FileUploadController extends AbstractFileUploadController {
         alPo.setApiName("1.1.4-common/upload4App");
         alPo.setObjType("000");//不确定对象
         Map<String, Object> m=new HashMap<String, Object>();
-        m.putAll(rqtAttrs);
+        //m.putAll(rqtAttrs);
         m.putAll(rqtParams);
         alPo.setReqParam(JsonUtils.objToJson(m));
         alPo.setDealFlag(2);//处理失败
