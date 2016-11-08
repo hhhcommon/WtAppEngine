@@ -99,4 +99,28 @@ public class DictRefRes extends BaseObject implements Serializable, ModelSwapPo 
         dm.setId(_po.getDictMid());
         this.dm=dm;
     }
+
+    @Override
+    public int hashCode() {
+        return this.getId()==null?0:this.getId().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o==null) return false;
+        if (!(o instanceof DictRefRes)) return false;
+        DictRefRes _other=(DictRefRes)o;
+        try {
+            if (this.getResId()==null&&_other.getResId()==null&&this.getResTableName()==null&&_other.getResTableName()==null
+              &&this.getRefName()==null&&_other.getRefName()==null&&this.getDm()==null&&_other.getDm()==null
+              &&this.getDd()==null&&_other.getDd()==null) return true;
+            if (this.getResId()!=null&&this.getResId().equals(_other.getResId())
+              &&this.getResTableName()!=null&&this.getResTableName().equals(_other.getResTableName())
+              &&this.getRefName()!=null&&this.getRefName().equals(_other.getRefName())
+              &&this.getDm()!=null&&this.getDm().getId().equals(_other.getDm()==null?null:_other.getDm().getId())
+              &&this.getDd()!=null&&this.getDd().getId().equals(_other.getDd()==null?null:_other.getDd().getId())
+              ) return true;
+        } catch(Exception e) {}
+        return false;
+    }
 }

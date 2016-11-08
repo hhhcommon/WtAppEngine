@@ -137,10 +137,11 @@ public class FileUploadController extends AbstractFileUploadController {
                     FileUtils.copyFile(new File(tempFileName), new File(FileNameUtils.concatPath(appPath,bigImgFileName)));
                     //图片文件缩略存储
                     //文件保存到数据库中
-                    UserPo u=(UserPo)userService.getUserById(userId);
-                    u.setPortraitBig(bigImgFileName);
-                    u.setPortraitMini(bigImgFileName);
-                    userService.updateUser(u);
+                    Map<String, Object> updateInfo=new HashMap<String, Object>();
+                    updateInfo.put("userId", userId);
+                    updateInfo.put("portraitBig", bigImgFileName);
+                    updateInfo.put("portraitMini", bigImgFileName);
+                    userService.updateUser(updateInfo);
                     datamap.put("ReturnType", "1001");
                     datamap.put("PortraitBig", bigImgFileName);
                     datamap.put("PortraitMini", bigImgFileName);
