@@ -832,7 +832,7 @@ public class PassportController {
     /**
      * 获得用户详细信息
      */
-    @RequestMapping(value="getUserInfo.do")
+    @RequestMapping(value="user/getUserInfo.do")
     @ResponseBody
     public Map<String,Object> getUserInfo(HttpServletRequest request) {
         //数据收集处理==1
@@ -908,23 +908,25 @@ public class PassportController {
             }
             //1-获得用户Id
             String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
-            if (!userId.equals(_userId)) {
+            if (_userId!=null&&!userId.equals(_userId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "给定用户号和系统记录账号不匹配");
             } else {
                 UserPo up=userService.getUserById(userId);
                 if (up!=null) {
                     Map<String, Object> um=up.toDetailInfo();
-                    List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", "userId");
-                    for (DictRefRes drr: dictRefList) {
-                        if (drr.getDm().getId().equals("8")) {//性别
-                            um.put("Sex", drr.getDd().getNodeName());
-                        } else
-                        if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
-                            um.put("Region", drr.getDd().getTreePathName());
+                    List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", userId);
+                    if (dictRefList!=null&&!dictRefList.isEmpty()) {
+                        for (DictRefRes drr: dictRefList) {
+                            if (drr.getDm().getId().equals("8")) {//性别
+                                um.put("Sex", drr.getDd().getNodeName());
+                            } else
+                            if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
+                                um.put("Region", drr.getDd().getTreePathName());
+                            }
                         }
                     }
-                    um.put("Age", getAge(up.getBirthday().getTime())+"");
+                    if (up.getBirthday()!=null) um.put("Age", getAge(up.getBirthday().getTime())+"");
                     map.put("ReturnType", "1001");
                     map.put("UserInfo", um);
                 } else {
@@ -1676,7 +1678,7 @@ public class PassportController {
     /**
      * 修改用户详细信息
      */
-    @RequestMapping(value="updateUserInfo.do")
+    @RequestMapping(value="user/updateUserInfo.do")
     @ResponseBody
     public Map<String,Object> updateUserInfo(HttpServletRequest request) {
         //数据收集处理==1
@@ -1751,7 +1753,7 @@ public class PassportController {
                 return map;
             }
             String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
-            if (!userId.equals(_userId)) {
+            if (_userId!=null&&!userId.equals(_userId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "给定用户号和系统记录账号不匹配");
                 return map;
@@ -1764,24 +1766,26 @@ public class PassportController {
             String region=(m.get("RegionDictId")==null?null:m.get("RegionDictId")+"");
             String birthday=(m.get("Birthday")==null?null:m.get("Birthday")+"");
             String starSign=(m.get("StarSign")==null?null:m.get("StarSign")+"");
-            String email=(m.get("Email")==null?null:m.get("Email")+"");
+            String email=(m.get("MailAddr")==null?null:m.get("MailAddr")+"");
             String userNum=(m.get("UserNum")==null?null:m.get("UserNum")+"");
+            String phoneNum=(m.get("PhoneNum")==null?null:m.get("PhoneNum")+"");
             updateInfo.put("userId", userId);
             if (!StringUtils.isNullOrEmptyOrSpace(nickName)) updateInfo.put("nickName", nickName);
             if (!StringUtils.isNullOrEmptyOrSpace(userSign)) updateInfo.put("userSign", userSign);
             if (!StringUtils.isNullOrEmptyOrSpace(sex)) updateInfo.put("sex", sex);
             if (!StringUtils.isNullOrEmptyOrSpace(region)) updateInfo.put("region", region);
             if (!StringUtils.isNullOrEmptyOrSpace(birthday)) updateInfo.put("birthday", Long.parseLong(birthday));
-            if (!StringUtils.isNullOrEmptyOrSpace(starSign)) updateInfo.put("starSign", Long.parseLong(starSign));
-            if (!StringUtils.isNullOrEmptyOrSpace(email)) updateInfo.put("email", Long.parseLong(email));
-            if (!StringUtils.isNullOrEmptyOrSpace(userNum)) updateInfo.put("userNum", Long.parseLong(userNum));
+            if (!StringUtils.isNullOrEmptyOrSpace(starSign)) updateInfo.put("starSign", starSign);
+            if (!StringUtils.isNullOrEmptyOrSpace(email)) updateInfo.put("email", email);
+            if (!StringUtils.isNullOrEmptyOrSpace(userNum)) updateInfo.put("userNum", userNum);
+            if (!StringUtils.isNullOrEmptyOrSpace(phoneNum)) updateInfo.put("phoneNum", phoneNum);
 
             updateInfo=userService.updateUser(updateInfo);
             if (updateInfo==null) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "找不到对应的用户");
             } else {
-                map=updateInfo;
+                map.putAll(updateInfo);
             }
             return map;
         } catch(Exception e) {
@@ -1804,7 +1808,7 @@ public class PassportController {
     /**
      * 判断用户号
      */
-    @RequestMapping(value="decideUserNum.do")
+    @RequestMapping(value="user/decideUserNum.do")
     @ResponseBody
     public Map<String,Object> decideUserNum(HttpServletRequest request) {
         //数据收集处理==1
@@ -1879,7 +1883,7 @@ public class PassportController {
                 return map;
             }
             String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
-            if (!userId.equals(_userId)) {
+            if (_userId!=null&&!userId.equals(_userId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "给定用户号和系统记录账号不匹配");
                 return map;

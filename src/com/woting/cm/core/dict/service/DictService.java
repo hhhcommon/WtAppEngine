@@ -182,29 +182,32 @@ public class DictService {
 
             List<DictRefRes> drrl=this.getDictRefs(drr.getResTableName(), drr.getResId());
             boolean exist=false;
-            for (DictRefRes _drr: drrl) {
-                exist=_drr.equals(drr);
-                if (exist) break;
-            }
-            if (exist) return 4;
-            exist=false;//是否已有相同的内容
-            for (DictRefRes _drr: drrl) {
-                if (_drr.getResId()!=null&&_drr.getResId().equals(drr.getResId())
-                  &&_drr.getResTableName()!=null&&_drr.getResTableName().equals(drr.getResTableName())
-                  &&_drr.getRefName()!=null&&_drr.getRefName().equals(drr.getRefName())
-                  &&_drr.getDm()!=null&&_drr.getDm().getId().equals(drr.getDm()==null?null:drr.getDm().getId())
-                  ) {
-                    drr.setId(_drr.getId());
-                    exist=true;
+            if (drrl!=null&&!drrl.isEmpty()) {
+                for (DictRefRes _drr: drrl) {
+                    exist=_drr.equals(drr);
+                    if (exist) break;
                 }
-                if (exist) break;
+                if (exist) return 4;
+                exist=false;//是否已有相同的内容
+                for (DictRefRes _drr: drrl) {
+                    if (_drr.getResId()!=null&&_drr.getResId().equals(drr.getResId())
+                      &&_drr.getResTableName()!=null&&_drr.getResTableName().equals(drr.getResTableName())
+                      &&_drr.getRefName()!=null&&_drr.getRefName().equals(drr.getRefName())
+                      &&_drr.getDm()!=null&&_drr.getDm().getId().equals(drr.getDm()==null?null:drr.getDm().getId())
+                      ) {
+                        newDrrPo.setId(_drr.getId());
+                        exist=true;
+                    }
+                    if (exist) break;
+                }
             }
             if (exist) {//update
-                return dictRefDao.update(drr);
+                return dictRefDao.update(newDrrPo);
             } else {//insert
                 return dictRefDao.insert(newDrrPo);//可以重复
             }
         } catch(Exception e) {
+            e.printStackTrace();
         }
         return 0;
     }

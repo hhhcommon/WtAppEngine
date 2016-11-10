@@ -121,7 +121,7 @@ public class UserService implements UgaUserService {
      *   1002          更新错误
      */
     public Map<String, Object> updateUser(Map<String, Object> userInfo) {
-        if (userInfo.get("UserId")==null) return null;
+        if (userInfo.get("userId")==null) return null;
 
         @SuppressWarnings("unchecked")
         CacheEle<_CacheDictionary> cache=((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT));
@@ -129,7 +129,7 @@ public class UserService implements UgaUserService {
 
         Map<String, Object> retMap=new HashMap<String, Object>();
         try {
-            UserPo up=this.getUserById(""+userInfo.get("UserId"));
+            UserPo up=this.getUserById(""+userInfo.get("userId"));
             if (up==null) return null;
             Map<String, String> noMap=new HashMap<String, String>();
             String OKFields="";
@@ -158,8 +158,8 @@ public class UserService implements UgaUserService {
                 } else {
                     drr.setDd(sexNode);
                     flag=dictService.bindDictRef(drr, 1);
-                    if (flag!=1) noMap.put("Sex", "用户性别保存错误");
-                    else OKFields+=",Sex";
+                    if (flag==1||flag==4) OKFields+=",Sex";
+                    else noMap.put("Sex", "用户性别保存错误");
                 }
             }
             //4-地区Region
@@ -177,8 +177,8 @@ public class UserService implements UgaUserService {
                 } else {
                     drr.setDd(regionNode);
                     flag=dictService.bindDictRef(drr, 1);
-                    if (flag!=1) noMap.put("Region", "地区保存错误");
-                    else OKFields+=",Region";
+                    if (flag==1||flag==4) OKFields+=",Region";
+                    else noMap.put("Sex", "地区保存错误");
                 }
             }
             //5-生日Birthday
@@ -209,7 +209,7 @@ public class UserService implements UgaUserService {
                 if (flag==1) OKFields+=",UserNum";
                 else {
                     if (flag==2) {
-                        noMap.put("UserNum", "该用户号已存在用户号");
+                        noMap.put("UserNum", "该用户已存在用户号");
                     } else if (flag==3) {
                         noMap.put("UserNum", "用户号重复");
                     } else {
@@ -237,10 +237,14 @@ public class UserService implements UgaUserService {
                 OKFields+=",PortraitMini";
             }
             //更新
-            userDao.update(userInfo);//用户信息
+            if (userInfo.size()==1) {
+                retMap.put("ReturnType", "0000");
+            } else {
+                userDao.update(userInfo);//用户信息
+            }
 
             retMap.put("ReturnType", "1001");
-            retMap.put("OkFields", OKFields.substring(1));
+            if (!StringUtils.isNullOrEmptyOrSpace(OKFields))  retMap.put("OkFields", OKFields.substring(1));
             retMap.put("NoFields", noMap);
         } catch (Exception e) {
             e.printStackTrace();
@@ -254,7 +258,7 @@ public class UserService implements UgaUserService {
      * 判断用户号是否合法
      * @param userId 用户信息
      * @param userNum 用户号
-     * @return 1=成功;2=该用户号已存在用户号;3=用户号重复;-1参数错误
+     * @return 1=合法;2=该用户号已存在用户号;3=用户号重复;-1参数错误
      */
     public int decideUserNum(String userId, String userNum) {
         if (StringUtils.isNullOrEmptyOrSpace(userId)) return -1;
@@ -263,7 +267,7 @@ public class UserService implements UgaUserService {
         if (uPo!=null) return 3;
         uPo=userDao.getInfoObject("getUserById", userId);
         if (!StringUtils.isNullOrEmptyOrSpace(uPo.getUserNum())) return 2;
-        return 0;
+        return 1;
     }
 
     /**

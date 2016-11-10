@@ -64,6 +64,7 @@ public class CommonController {
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
 
+    @SuppressWarnings("unchecked")
     @PostConstruct
     public void initParam() {
         _cd=(SystemCache.getCache(WtAppEngineConstants.CACHE_DICT)==null?null:((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT)).getContent());

@@ -62,7 +62,7 @@
       <if test="refName!=null">refName=#{refName,jdbcType=VARCHAR},</if>
       <if test="resTableName!=null">resTableName=#{resTableName,jdbcType=VARCHAR},</if>
       <if test="resId!=null">resId=#{resId,jdbcType=VARCHAR},</if>
-      <if test="dictMid!=null">pId=#{dictMid,jdbcType=VARCHAR},</if>
+      <if test="dictMid!=null">dictMid=#{dictMid,jdbcType=VARCHAR},</if>
       <if test="dictDid!=null">dictDid=#{dictDid,jdbcType=VARCHAR},</if>
       <if test="CTime=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
     </set>
