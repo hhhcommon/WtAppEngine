@@ -156,3 +156,15 @@ CREATE TABLE wt_Kw_Ref (
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='KW02标签库对应关系表';
+
+/** 内容定时发布关系表[WT_CHANNELASSETDATEPUB_RES]*/
+DROP TABLE IF EXISTS wt_ChannelAssetDatePub_Res;
+CREATE TABLE wt_ChannelAssetDatePub_Res (
+  id             varchar(32)      NOT NULL             COMMENT '关系UUID',
+  channelAssetId varchar(32)      NOT NULL             COMMENT '栏目发布表Id',
+  status         int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '内容状态，0：未生效；1：已生效；3：已执行；',
+  pubTime        timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '定时发布时间',
+  cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='内容定时发布关系表';
