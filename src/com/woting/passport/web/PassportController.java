@@ -429,6 +429,7 @@ public class PassportController {
             //1.3-获取业务参数：头像Url
             String tuserImg=(m.get("ThirdUserImg")==null?null:m.get("ThirdUserImg")+"");
             //1.4-获取业务参数：详细数据
+            @SuppressWarnings("unchecked")
             Map<String, Object> tuserData=(Map<String, Object>)m.get("ThirdUserInfo");
 
             //2第三方登录
@@ -682,9 +683,11 @@ public class PassportController {
             }
             UserPo u=(UserPo)userService.getUserById(userId);
             if (u.getPassword().equals(oldPwd)) {
-                u.setPassword(newPwd);
-                int retFlag=userService.updateUser(u);
-                if (retFlag==1) map.put("ReturnType", "1001");
+                Map<String, Object> updateInfo=new HashMap<String, Object>();
+                updateInfo.put("userId",  userId);
+                updateInfo.put("password",  newPwd);
+                updateInfo=userService.updateUser(updateInfo);
+                if (updateInfo.get("ReturnType").equals("1001")) map.put("ReturnType", "1001");
                 else {
                     map.put("ReturnType", "1006");
                     map.put("Message", "存储新密码失败");
@@ -795,9 +798,11 @@ public class PassportController {
                 roService=null;
             }
             if (info.startsWith("OK")) {
-                up.setPassword(newPwd);
-                int retFlag=userService.updateUser(up);
-                if (retFlag==1) map.put("ReturnType", "1001");
+                Map<String, Object> updateInfo=new HashMap<String, Object>();
+                updateInfo.put("userId",  up.getUserId());
+                updateInfo.put("password",  newPwd);
+                updateInfo=userService.updateUser(updateInfo);
+                if (updateInfo.get("ReturnType").equals("1001")) map.put("ReturnType", "1001");
                 else {
                     map.put("ReturnType", "1004");
                     map.put("Message", "存储新密码失败");
@@ -825,16 +830,15 @@ public class PassportController {
     }
 
     /**
-     * 绑定用户的其他信息，目前有手机/eMail
-     * @throws IOException
+     * 获得用户详细信息
      */
-    @RequestMapping(value="user/bindExtUserInfo.do")
+    @RequestMapping(value="getUserInfo.do")
     @ResponseBody
-    public Map<String,Object> bindExtUserInfo(HttpServletRequest request) {
+    public Map<String,Object> getUserInfo(HttpServletRequest request) {
         //数据收集处理==1
         ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
-        alPo.setApiName("2.1.6-passport/user/bindExtUserInfo");
-        alPo.setObjType("003");//设置为用户
+        alPo.setApiName("2.1.6-/passport/user/getUserInfo");
+        alPo.setObjType("003");//设置为好友
         alPo.setDealFlag(1);//处理成功
         alPo.setOwnerType(201);
         alPo.setOwnerId("--");
@@ -856,7 +860,7 @@ public class PassportController {
                 }
                 mUdk=mp.getUserDeviceKey();
                 if (mUdk!=null) {
-                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/user/bindExtUserInfo");
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/user/getUserInfo");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
                         map.put("Message", "需要登录");
@@ -897,26 +901,35 @@ public class PassportController {
                 }
             }
             if (map.get("ReturnType")!=null) return map;
-
-            String phoneNum=(m.get("PhoneNum")==null?null:m.get("PhoneNum")+"");
-            String mail=(m.get("MailAddr")==null?null:m.get("MailAddr")+"");
-            String userNum=(m.get("UserNum")==null?null:m.get("MailAddr")+"");
-            if (StringUtils.isNullOrEmptyOrSpace(phoneNum)&&StringUtils.isNullOrEmptyOrSpace(mail)&&StringUtils.isNullOrEmptyOrSpace(userNum)) {
+            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
+                map.put("ReturnType", "1002");
+                map.put("Message", "无法获得用户Id");
+                return map;
+            }
+            //1-获得用户Id
+            String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
+            if (!userId.equals(_userId)) {
                 map.put("ReturnType", "1003");
-                map.put("Message", "邮箱、手机号码或用户号不能同时为空");
+                map.put("Message", "给定用户号和系统记录账号不匹配");
             } else {
-                UserPo u=(UserPo)userService.getUserById(userId);
-                if (!StringUtils.isNullOrEmptyOrSpace(userNum)) u.setUserNum(userNum);
-                if (!StringUtils.isNullOrEmptyOrSpace(phoneNum)) u.setMainPhoneNum(phoneNum);
-                if (!StringUtils.isNullOrEmptyOrSpace(mail)) u.setMailAddress(mail);
-                int retFlag=userService.updateUser(u);
-                if (retFlag==1) map.put("ReturnType", "1001");
-                else if (retFlag==1) {
-                    map.put("ReturnType", "10011");
-                    map.put("Message", "用户号重复，其他信息保存成功");
+                UserPo up=userService.getUserById(userId);
+                if (up!=null) {
+                    Map<String, Object> um=up.toDetailInfo();
+                    List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", "userId");
+                    for (DictRefRes drr: dictRefList) {
+                        if (drr.getDm().getId().equals("8")) {//性别
+                            um.put("Sex", drr.getDd().getNodeName());
+                        } else
+                        if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
+                            um.put("Region", drr.getDd().getTreePathName());
+                        }
+                    }
+                    um.put("Age", getAge(up.getBirthday().getTime())+"");
+                    map.put("ReturnType", "1001");
+                    map.put("UserInfo", um);
                 } else {
-                    map.put("ReturnType", "1004");
-                    map.put("Message", "存储账户绑定信息失败");
+                    map.put("ReturnType", "1011");
+                    map.put("Message", "无对应的用户信息");
                 }
             }
             return map;
@@ -1663,12 +1676,12 @@ public class PassportController {
     /**
      * 修改用户详细信息
      */
-    @RequestMapping(value="updateInfo.do")
+    @RequestMapping(value="updateUserInfo.do")
     @ResponseBody
-    public Map<String,Object> updateInfo(HttpServletRequest request) {
+    public Map<String,Object> updateUserInfo(HttpServletRequest request) {
         //数据收集处理==1
         ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
-        alPo.setApiName("2.1.14-/passport/user/getUserInfo");
+        alPo.setApiName("2.1.13-/passport/user/updateUserInfo");
         alPo.setObjType("003");//设置为好友
         alPo.setDealFlag(1);//处理成功
         alPo.setOwnerType(201);
@@ -1691,7 +1704,7 @@ public class PassportController {
                 }
                 mUdk=mp.getUserDeviceKey();
                 if (mUdk!=null) {
-                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/user/getUserInfo");
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/user/updateUserInfo");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
                         map.put("Message", "需要登录");
@@ -1748,30 +1761,27 @@ public class PassportController {
             String nickName=(m.get("nickName")==null?null:m.get("nickName")+"");
             String userSign=(m.get("UserSign")==null?null:m.get("UserSign")+"");
             String sex=(m.get("SexDictId")==null?null:m.get("SexDictId")+"");
+            String region=(m.get("RegionDictId")==null?null:m.get("RegionDictId")+"");
             String birthday=(m.get("Birthday")==null?null:m.get("Birthday")+"");
             String starSign=(m.get("StarSign")==null?null:m.get("StarSign")+"");
             String email=(m.get("Email")==null?null:m.get("Email")+"");
             String userNum=(m.get("UserNum")==null?null:m.get("UserNum")+"");
+            updateInfo.put("userId", userId);
+            if (!StringUtils.isNullOrEmptyOrSpace(nickName)) updateInfo.put("nickName", nickName);
+            if (!StringUtils.isNullOrEmptyOrSpace(userSign)) updateInfo.put("userSign", userSign);
+            if (!StringUtils.isNullOrEmptyOrSpace(sex)) updateInfo.put("sex", sex);
+            if (!StringUtils.isNullOrEmptyOrSpace(region)) updateInfo.put("region", region);
+            if (!StringUtils.isNullOrEmptyOrSpace(birthday)) updateInfo.put("birthday", Long.parseLong(birthday));
+            if (!StringUtils.isNullOrEmptyOrSpace(starSign)) updateInfo.put("starSign", Long.parseLong(starSign));
+            if (!StringUtils.isNullOrEmptyOrSpace(email)) updateInfo.put("email", Long.parseLong(email));
+            if (!StringUtils.isNullOrEmptyOrSpace(userNum)) updateInfo.put("userNum", Long.parseLong(userNum));
 
-            
-            UserPo up=userService.getUserById(userId);
-            if (up!=null) {
-                Map<String, Object> um=up.toDetailInfo();
-                List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", "userId");
-                for (DictRefRes drr: dictRefList) {
-                    if (drr.getDm().getId().equals("8")) {//性别
-                        um.put("Sex", drr.getDd().getNodeName());
-                    } else
-                    if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
-                        um.put("Region", drr.getDd().getTreePathName());
-                    }
-                }
-                um.put("Age", getAge(up.getBirthday().getTime())+"");
-                map.put("ReturnType", "1001");
-                map.put("UserInfo", um);
+            updateInfo=userService.updateUser(updateInfo);
+            if (updateInfo==null) {
+                map.put("ReturnType", "1004");
+                map.put("Message", "找不到对应的用户");
             } else {
-                map.put("ReturnType", "1011");
-                map.put("Message", "无对应的用户信息");
+                map=updateInfo;
             }
             return map;
         } catch(Exception e) {
@@ -1792,14 +1802,14 @@ public class PassportController {
     }
 
     /**
-     * 获得用户详细信息
+     * 判断用户号
      */
-    @RequestMapping(value="getUserInfo.do")
+    @RequestMapping(value="decideUserNum.do")
     @ResponseBody
-    public Map<String,Object> getUserInfo(HttpServletRequest request) {
+    public Map<String,Object> decideUserNum(HttpServletRequest request) {
         //数据收集处理==1
         ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
-        alPo.setApiName("2.1.14-/passport/user/getUserInfo");
+        alPo.setApiName("2.1.14-/passport/user/decideUserNum");
         alPo.setObjType("003");//设置为好友
         alPo.setDealFlag(1);//处理成功
         alPo.setOwnerType(201);
@@ -1822,7 +1832,7 @@ public class PassportController {
                 }
                 mUdk=mp.getUserDeviceKey();
                 if (mUdk!=null) {
-                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/user/getUserInfo");
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/user/decideUserNum");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
                         map.put("Message", "需要登录");
@@ -1868,30 +1878,27 @@ public class PassportController {
                 map.put("Message", "无法获得用户Id");
                 return map;
             }
-            //1-获得用户Id
             String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
             if (!userId.equals(_userId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "给定用户号和系统记录账号不匹配");
+                return map;
+            }
+            //1-获得用户号
+            String userNum=(m.get("UserNum")==null?null:m.get("UserNum")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(userNum)) {
+                map.put("ReturnType", "1004");
+                map.put("Message", "无法获得用户号");
             } else {
-                UserPo up=userService.getUserById(userId);
-                if (up!=null) {
-                    Map<String, Object> um=up.toDetailInfo();
-                    List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", "userId");
-                    for (DictRefRes drr: dictRefList) {
-                        if (drr.getDm().getId().equals("8")) {//性别
-                            um.put("Sex", drr.getDd().getNodeName());
-                        } else
-                        if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
-                            um.put("Region", drr.getDd().getTreePathName());
-                        }
-                    }
-                    um.put("Age", getAge(up.getBirthday().getTime())+"");
+                int flag=userService.decideUserNum(userId, userNum);
+                if (flag==1) {
                     map.put("ReturnType", "1001");
-                    map.put("UserInfo", um);
-                } else {
-                    map.put("ReturnType", "1011");
-                    map.put("Message", "无对应的用户信息");
+                } else if (flag==2) {
+                    map.put("ReturnType", "1005");
+                    map.put("Message", "该用户已存在用户号，不能再编辑");
+                } else if (flag==3) {
+                    map.put("ReturnType", "1006");
+                    map.put("Message", "该用户号重复");
                 }
             }
             return map;

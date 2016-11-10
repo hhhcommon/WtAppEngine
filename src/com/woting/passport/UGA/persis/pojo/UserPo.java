@@ -15,7 +15,6 @@ public class UserPo extends UgaUser {
     private String userSign; //用户签名
     private Timestamp birthday; //生日
     private String starSign; //星座
-    private String homePage; //用户主页
     private String mainPhoneNum; //用户主手机号码，用户可能有多个手机号码
     private String mailAddress; //用户邮箱
     private int userType; //用户分类：1=普通用户;2=编辑用户
@@ -123,12 +122,6 @@ public class UserPo extends UgaUser {
     }
     public void setStarSign(String starSign) {
         this.starSign = starSign;
-    }
-    public String getHomePage() {
-        return homePage;
-    }
-    public void setHomePage(String homePage) {
-        this.homePage = homePage;
     }
 
     public Map<String, Object> toHashMap4Mobile() {
