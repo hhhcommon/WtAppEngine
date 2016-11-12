@@ -84,6 +84,7 @@ public class GroupService {
      * @param g 用户组
      * @param u 用户
      */
+    @SuppressWarnings("unchecked")
     public int insertGroupUser(GroupPo g, UserPo u, int isSelfIn) {
         GroupUserPo gu=new GroupUserPo();
         gu.setId(SequenceUUID.getUUIDSubSegment(4));
@@ -366,6 +367,7 @@ public class GroupService {
      * @param user 退出的用户
      * @return 0用户不在组，1退出组，2退出组并删除组
      */
+    @SuppressWarnings("unchecked")
     public int exitUserFromGroup(GroupPo gp, UserPo u) {
         String groupId=gp.getGroupId();
         GroupInterCom gic = gmm.getGroupInterCom(groupId);
@@ -1036,6 +1038,7 @@ public class GroupService {
      * @param userIds 用户Id，用逗号隔开
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> kickoutGroup(GroupPo gp, String userIds) {
         String groupId=gp.getGroupId();
         GroupInterCom gic = gmm.getGroupInterCom(groupId);
@@ -1185,6 +1188,7 @@ public class GroupService {
      * @param gp 被解散的组
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> dissolve(GroupPo gp) {
         String groupId=gp.getGroupId();
         GroupInterCom gic = gmm.getGroupInterCom(groupId);

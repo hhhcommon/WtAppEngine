@@ -330,5 +330,16 @@
   <delete id="multiM2SRefBySId" parameterType="java.lang.String">
       delete from wt_SeqMA_Ref where sid=#{sid,jdbcType=VARCHAR}
   </delete>
-  
+
+  <select id="getMaListByWhereStr" resultType="java.util.HashMap" parameterType="java.lang.String">
+    select a.*, b.smType, b.maSource, b.playURI from wt_MediaAsset a
+    left join wt_MaSource b on a.id=b.maId and b.isMain=1
+    where (${value})
+  </select>
+
+  <select id="getSeqMaListByWhereStr" resultType="java.util.HashMap" parameterType="java.lang.String">
+    select a.*, case when b.count is null then 0 else b.count end as count from wt_SeqMediaAsset a
+    left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) b on a.id=b.sid
+    where (${value})
+  </select>
 </mapper>

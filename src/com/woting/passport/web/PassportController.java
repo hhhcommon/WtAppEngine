@@ -171,6 +171,23 @@ public class PassportController {
             }
             //4-返回成功，若没有IMEI也返回成功
             map.put("ReturnType", "1001");
+            if (u!=null) {
+                Map<String, Object> um=u.toDetailInfo();
+                List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", u.getUserId());
+                if (dictRefList!=null&&!dictRefList.isEmpty()) {
+                    for (DictRefRes drr: dictRefList) {
+                        if (drr.getDm().getId().equals("8")) {//性别
+                            um.put("Sex", drr.getDd().getNodeName());
+                        } else
+                        if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
+                            um.put("Region", drr.getDd().getTreePathName());
+                        }
+                    }
+                }
+                if (u.getBirthday()!=null) um.put("Age", getAge(u.getBirthday().getTime())+"");
+                map.put("ReturnType", "1001");
+                map.put("UserInfo", um);
+            }
             map.put("UserInfo", u.toHashMap4Mobile());
             return map;
         } catch(Exception e) {
@@ -1774,7 +1791,11 @@ public class PassportController {
             if (!StringUtils.isNullOrEmptyOrSpace(userSign)) updateInfo.put("userSign", userSign);
             if (!StringUtils.isNullOrEmptyOrSpace(sex)) updateInfo.put("sex", sex);
             if (!StringUtils.isNullOrEmptyOrSpace(region)) updateInfo.put("region", region);
-            if (!StringUtils.isNullOrEmptyOrSpace(birthday)) updateInfo.put("birthday", Long.parseLong(birthday));
+            if (!StringUtils.isNullOrEmptyOrSpace(birthday)) {
+                Timestamp t=null;
+                try {t=new Timestamp(Long.parseLong(birthday));} catch(Exception e) {}
+                if (t!=null) updateInfo.put("birthday", t);
+            }
             if (!StringUtils.isNullOrEmptyOrSpace(starSign)) updateInfo.put("starSign", starSign);
             if (!StringUtils.isNullOrEmptyOrSpace(email)) updateInfo.put("email", email);
             if (!StringUtils.isNullOrEmptyOrSpace(userNum)) updateInfo.put("userNum", userNum);

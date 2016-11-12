@@ -308,6 +308,7 @@ public class DiscussController {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @RequestMapping(value="article/getList.do")
     @ResponseBody
     public Map<String,Object> getArticleList(HttpServletRequest request) {
@@ -545,17 +546,19 @@ public class DiscussController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-获得内容分类
-            String mediaTypes=(m.get("MediaType")==null?null:m.get("MediaType")+"");
-            if (StringUtils.isNullOrEmptyOrSpace(mediaTypes)) {
+            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
                 map.put("ReturnType", "1003");
-                map.put("Message", "无法获取内容分类");
+                map.put("Message", "该用户不存在");
                 return map;
             }
-            String[] ms=mediaTypes.split(",");
             List<MediaType> ml=new ArrayList<MediaType>();
-            for (String oneMt: ms) {
-                if (MediaType.buildByTypeName(oneMt)!=MediaType.ERR) {
-                    ml.add(MediaType.buildByTypeName(oneMt));
+            String mediaTypes=(m.get("MediaType")==null?null:m.get("MediaType")+"");
+            if (!StringUtils.isNullOrEmptyOrSpace(mediaTypes)) {
+                String[] ms=mediaTypes.split(",");
+                for (String oneMt: ms) {
+                    if (MediaType.buildByTypeName(oneMt)!=MediaType.ERR) {
+                        ml.add(MediaType.buildByTypeName(oneMt));
+                    }
                 }
             }
             if (ml.isEmpty()) ml=null;

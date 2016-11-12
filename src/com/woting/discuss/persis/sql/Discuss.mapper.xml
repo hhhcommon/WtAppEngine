@@ -50,15 +50,15 @@
   </select>
   <!-- 获得列表 -->
   <select id="getPubList" resultMap="discussMap" parameterType="java.util.Map">
-    select <include refid="Base_Column_List_A"/> from wt_Discuss a, wt_wt_ChannelAsset b
-    where a.resTableName=b.assetType and a.resId=b.assetId and flowFlag=2 and
+    select <include refid="Base_Column_List_A"/> from wt_Discuss a, wt_ChannelAsset b
+    where a.resTableName=b.assetType and a.resId=b.assetId and flowFlag=2
     <trim prefix="(" suffix=")" prefixOverrides="and">
-      <if test="a.id!=null"> and id=#{id,jdbcType=VARCHAR}</if>
-      <if test="a.userId!=null"> and userId=#{userId,jdbcType=VARCHAR}</if>
-      <if test="a.resTableName!=null"> and resTableName=#{resTableName,jdbcType=VARCHAR}</if>
-      <if test="a.resId!=null"> and resId=#{resId,jdbcType=VARCHAR}</if>
-      <if test="a.opinion!=null"> and opinion=#{opinion,jdbcType=VARCHAR}</if>
-      <if test="a.CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
+      <if test="id!=null"> and a.id=#{id,jdbcType=VARCHAR}</if>
+      <if test="userId!=null"> and a.userId=#{userId,jdbcType=VARCHAR}</if>
+      <if test="resTableName!=null"> and a.resTableName=#{resTableName,jdbcType=VARCHAR}</if>
+      <if test="resId!=null"> and a.resId=#{resId,jdbcType=VARCHAR}</if>
+      <if test="opinion!=null"> and a.opinion=#{opinion,jdbcType=VARCHAR}</if>
+      <if test="CTime!=null"> and a.cTime=#{CTime,jdbcType=TIMESTAMP}</if>
     </trim>
     <if test="sortByClause!=null">order by ${sortByClause}</if>
   </select>

@@ -2,6 +2,8 @@ package com.woting.appengine.common.web;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,9 +31,12 @@ import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
+import com.woting.cm.core.dict.model.DictRefRes;
+import com.woting.cm.core.dict.service.DictService;
 import com.woting.dataanal.gather.API.ApiGatherUtils;
 import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
 import com.woting.dataanal.gather.API.persis.pojo.ApiLogPo;
+import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.login.service.MobileUsedService;
 import com.woting.passport.mobile.MobileParam;
@@ -60,6 +65,8 @@ public class CommonController {
     private SearchCrawlerService scs;
     @Resource(name="redisSessionService")
     private SessionService sessionService;
+    @Resource
+    private DictService dictService;
 
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
@@ -136,6 +143,26 @@ public class CommonController {
                     if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
                         alPo.setDeviceClass(m.get("MobileClass")+"");
                     }
+                }
+            }
+            String userId=map.get("UserId")==null?null:map.get("UserId")+"";
+            if (!StringUtils.isNullOrEmptyOrSpace(userId)) {
+                UserPo up=userService.getUserById(userId);
+                if (up!=null) {
+                    Map<String, Object> um=up.toDetailInfo();
+                    List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", userId);
+                    if (dictRefList!=null&&!dictRefList.isEmpty()) {
+                        for (DictRefRes drr: dictRefList) {
+                            if (drr.getDm().getId().equals("8")) {//性别
+                                um.put("Sex", drr.getDd().getNodeName());
+                            } else
+                            if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
+                                um.put("Region", drr.getDd().getTreePathName());
+                            }
+                        }
+                    }
+                    if (up.getBirthday()!=null) um.put("Age", getAge(up.getBirthday().getTime())+"");
+                    map.put("UserInfo", um);
                 }
             }
             return map;
@@ -993,4 +1020,16 @@ public class CommonController {
         }
         return map;
     }
+
+    private int getAge(long timestamp) {
+        int age=0;
+        Calendar born=Calendar.getInstance();
+        Calendar now=Calendar.getInstance();
+        now.setTime(new Date());
+        born.setTimeInMillis(timestamp);
+        if (born.after(now)) throw new IllegalArgumentException("生日不能大于今日");
+        age=now.get(Calendar.YEAR) - born.get(Calendar.YEAR);
+        if (now.get(Calendar.DAY_OF_YEAR) < born.get(Calendar.DAY_OF_YEAR)) age -= 1;
+        return age;
+    } 
 }

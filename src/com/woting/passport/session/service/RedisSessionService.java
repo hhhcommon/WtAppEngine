@@ -32,7 +32,6 @@ public class RedisSessionService implements SessionService {
     @Resource
     private MobileUsedService muService;
 
-    @Override
     /**
      * return 
      */
@@ -54,6 +53,8 @@ public class RedisSessionService implements SessionService {
      *
      *   2003 请先登录
      */
+    @SuppressWarnings("unchecked")
+    @Override
     public Map<String, Object> dealUDkeyEntry(UserDeviceKey udk, String operDesc) {
         Map<String,Object> map=new HashMap<String, Object>();
         if (udk==null) {

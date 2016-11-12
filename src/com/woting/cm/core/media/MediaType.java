@@ -23,7 +23,7 @@ public enum MediaType {
         if (tabName.toUpperCase().equals("wt_BroadCast")) return RADIO;
         else if (tabName.toUpperCase().equals("wt_MediaAsset")) return AUDIO;
         else if (tabName.toUpperCase().equals("wt_SeqMediaAsset")) return SEQU;
-        else if (tabName.toUpperCase().equals("wt_Article")) return AUDIO;
+        else if (tabName.toUpperCase().equals("wt_Article")) return TEXT;
         else return ERR;
     }
 
