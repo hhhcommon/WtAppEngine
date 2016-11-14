@@ -482,7 +482,7 @@ CREATE TABLE wt_Discuss (
   userId        varchar(32)             COMMENT '用户Id，若为0则是过客',
   resTableName  varchar(200)  NOT NULL  COMMENT '资源类型，就是资源的主表名：1电台=wt_Broadcast；2单体媒体资源=wt_MediaAsset；3专辑资源=wt_SeqMediaAsset',
   resId         varchar(32)   NOT NULL  COMMENT '资源Id',
-  opinion       varchar(600)  NOT NULL  COMMENT '所提意见，200汉字',
+  discuss       varchar(600)  NOT NULL  COMMENT '所提意见，200汉字',
   cTime         timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间，意见成功提交时间',
   PRIMARY KEY(id)
 )
