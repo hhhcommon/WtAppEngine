@@ -188,7 +188,6 @@ public class PassportController {
                 map.put("ReturnType", "1001");
                 map.put("UserInfo", um);
             }
-            map.put("UserInfo", u.toHashMap4Mobile());
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -323,8 +322,7 @@ public class PassportController {
             mUdk.setUserId(nu.getUserId());
             RedisOperService roService=new RedisOperService(redisConn, 4);
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
-            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService,
-                    new BlockLockConfig(5, 2, 0, 50));
+            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService, new BlockLockConfig(5, 2, 0, 50));
             try {
                 sessionService.registUser(mUdk, nu);
                 MobileUsedPo mu=new MobileUsedPo();

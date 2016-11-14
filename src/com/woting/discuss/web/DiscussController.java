@@ -115,8 +115,8 @@ public class DiscussController {
             if (map.get("ReturnType")!=null) return map;
             
             //1-获取意见
-            String opinion=(m.get("Opinion")==null?null:m.get("Opinion")+"");
-            if (StringUtils.isNullOrEmptyOrSpace(opinion)) {
+            String discu=(m.get("Discuss")==null?null:m.get("Discuss")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(discu)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法评论内容");
                 return map;
@@ -125,7 +125,7 @@ public class DiscussController {
             String mediaType=(m.get("MediaType")==null?null:m.get("MediaType")+"");
             if (StringUtils.isNullOrEmptyOrSpace(mediaType)) {
                 map.put("ReturnType", "1004");
-                map.put("Message", "无法获取内容分类");
+                map.put("Message", "无法获取媒体类型");
                 return map;
             }
             if (MediaType.buildByTypeName(mediaType)==MediaType.ERR) {
@@ -144,7 +144,7 @@ public class DiscussController {
             try {
                 Discuss discuss=new Discuss();
                 discuss.setUserId(userId);
-                discuss.setOpinion(opinion);
+                discuss.setDiscuss(discu);
                 discuss.setResTableName((MediaType.buildByTypeName(mediaType)).getTabName());
                 discuss.setResId(contentId);
                 //是否重复提交意见

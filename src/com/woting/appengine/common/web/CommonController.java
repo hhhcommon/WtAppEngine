@@ -691,9 +691,7 @@ public class CommonController {
                 if (dm!=null&&dm.dictTree!=null) root=dm.dictTree;
             }
             //获得相应的结点，通过查找
-            if (root!=null) {
-                if (catalogId!=null) root=root.findNode(catalogId);
-            }
+            if (root!=null&&catalogId!=null) root=root.findNode(catalogId);
             //根据层级参数，对树进行截取
             if (root!=null&&relLevel>0) root=TreeUtils.cutLevelClone(root, relLevel);
 

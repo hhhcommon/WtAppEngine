@@ -11,16 +11,16 @@
     <result  column="userId"        property="userId"        jdbcType="VARCHAR"/>
     <result  column="resTableName"  property="resTableName"  jdbcType="VARCHAR"/>
     <result  column="resId"         property="resId"         jdbcType="VARCHAR"/>
-    <result  column="opinion"       property="opinion"       jdbcType="VARCHAR"/>
+    <result  column="discuss"       property="discuss"       jdbcType="VARCHAR"/>
     <result  column="cTime"         property="CTime"         jdbcType="TIMESTAMP"/>
   </resultMap>
 
   <!-- 所有列 -->
   <sql id="Base_Column_List">
-    id, userId, resTableName, resId, opinion, cTime
+    id, userId, resTableName, resId, discuss, cTime
   </sql>
   <sql id="Base_Column_List_A">
-    a.id, a.userId, a.resTableName, a.resId, a.opinion, a.cTime
+    a.id, a.userId, a.resTableName, a.resId, a.discuss, a.cTime
   </sql>
 
   <!-- 条件子句 -->
@@ -31,7 +31,7 @@
         <if test="userId!=null"> and userId=#{userId,jdbcType=VARCHAR}</if>
         <if test="resTableName!=null"> and resTableName=#{resTableName,jdbcType=VARCHAR}</if>
         <if test="resId!=null"> and resId=#{resId,jdbcType=VARCHAR}</if>
-        <if test="opinion!=null"> and opinion=#{opinion,jdbcType=VARCHAR}</if>
+        <if test="discuss!=null"> and discuss=#{discuss,jdbcType=VARCHAR}</if>
         <if test="CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
       </trim>
     </where>
@@ -58,7 +58,7 @@
       <if test="userId!=null"> and a.userId=#{userId,jdbcType=VARCHAR}</if>
       <if test="resTableName!=null"> and a.resTableName=#{resTableName,jdbcType=VARCHAR}</if>
       <if test="resId!=null"> and a.resId=#{resId,jdbcType=VARCHAR}</if>
-      <if test="opinion!=null"> and a.opinion=#{opinion,jdbcType=VARCHAR}</if>
+      <if test="discuss!=null"> and a.discuss=#{discuss,jdbcType=VARCHAR}</if>
       <if test="CTime!=null"> and a.cTime=#{CTime,jdbcType=TIMESTAMP}</if>
     </trim>
     <if test="sortByClause!=null">order by ${sortByClause}</if>
@@ -71,7 +71,7 @@
         <if test="userId!=null"> and userId=#{userId,jdbcType=VARCHAR}</if>
         <if test="resTableName!=null"> and resTableName=#{resTableName,jdbcType=VARCHAR}</if>
         <if test="resId!=null"> and resId=#{resId,jdbcType=VARCHAR}</if>
-        <if test="opinion!=null"> and opinion=#{opinion,jdbcType=VARCHAR}</if>
+        <if test="discuss!=null"> and discuss=#{discuss,jdbcType=VARCHAR}</if>
       </trim>
     </where>
   </select>
@@ -92,14 +92,14 @@
       <if test="userId!=null">userId,</if>
       <if test="resTableName!=null">resTableName,</if>
       <if test="resId!=null">resId,</if>
-      <if test="opinion!=null">opinion,</if>
+      <if test="discuss!=null">discuss,</if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
       <if test="userId!=null">#{userId,jdbcType=VARCHAR},</if>
       <if test="resTableName!=null">#{resTableName,jdbcType=VARCHAR},</if>
       <if test="resId!=null">#{resId,jdbcType=VARCHAR},</if>
-      <if test="opinion!=null">#{opinion,jdbcType=VARCHAR},</if>
+      <if test="discuss!=null">#{discuss,jdbcType=VARCHAR},</if>
     </trim>
   </insert>
 
@@ -110,7 +110,7 @@
       <if test="userId!=null">userId=#{userId,jdbcType=VARCHAR},</if>
       <if test="resTableName!=null">resTableName=#{resTableName,jdbcType=VARCHAR},</if>
       <if test="resId!=null">resId=#{resId,jdbcType=VARCHAR},</if>
-      <if test="opinion!=null">opinion=#{opinion,jdbcType=VARCHAR},</if>
+      <if test="discuss!=null">discuss=#{discuss,jdbcType=VARCHAR},</if>
       <if test="CTime=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
     </set>
     where id=#{id,jdbcType=VARCHAR}
