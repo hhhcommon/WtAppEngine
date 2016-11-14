@@ -1775,7 +1775,7 @@ public class PassportController {
             }
             //1-获得用户Id
             Map<String, Object> updateInfo=new HashMap<String, Object>();
-            String nickName=(m.get("nickName")==null?null:m.get("nickName")+"");
+            String nickName=(m.get("NickName")==null?null:m.get("NickName")+"");
             String userSign=(m.get("UserSign")==null?null:m.get("UserSign")+"");
             String sex=(m.get("SexDictId")==null?null:m.get("SexDictId")+"");
             String region=(m.get("RegionDictId")==null?null:m.get("RegionDictId")+"");

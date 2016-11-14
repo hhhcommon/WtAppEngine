@@ -9,6 +9,8 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import org.springframework.stereotype.Service;
+
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
@@ -32,6 +34,7 @@ import com.woting.passport.useralias.service.UserAliasService;
  * 用户组处理，包括创建组，查询组；组邀请等信息
  * @author wanghui
  */
+@Service
 public class GroupService {
     private GroupMemoryManage gmm=GroupMemoryManage.getInstance();
     private PushMemoryManage pmm=PushMemoryManage.getInstance();
