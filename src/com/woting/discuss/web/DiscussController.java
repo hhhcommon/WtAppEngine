@@ -590,8 +590,7 @@ public class DiscussController {
 
             if (al!=null&&al.size()>0) {
                 map.put("ReturnType", "1001");
-                map.put("AllCount", al.get("AllCount"));
-                map.put("ContentList", al.get("List"));
+                map.putAll(al);
             } else {
                 map.put("ReturnType", "1011");
                 map.put("Message", "无用户评论列表");

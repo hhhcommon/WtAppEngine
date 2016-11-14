@@ -47,6 +47,7 @@ public class DiscussService {
         discussDao.setNamespace("WT_DISCUSS");
         channelAssetDao.setNamespace("A_CHANNELASSET");
         favoriteDao.setNamespace("DA_USERFAVORITE");
+        dictRefDao.setNamespace("A_DREFRES");
     }
 
     /**
@@ -199,8 +200,8 @@ public class DiscussService {
             long allCount=0;
 
             if (rType==1||(ml==null||ml.isEmpty())) { //按一个列表进行返回
+                param.put("userId", userId);
                 if (isPub==1) { //发布的内容
-                    param.put("a.userId", userId);
                     param.put("sortByClause", " a.cTime desc");
                     if (page>=0) { //分页
                         if (page==0) page=1;
@@ -216,7 +217,6 @@ public class DiscussService {
                         allCount=dl.size();
                     }
                 } else {
-                    param.put("userId", userId);
                     param.put("sortByClause", " cTime desc");
                     if (page>=0) { //分页
                         if (page==0) page=1;
@@ -240,9 +240,9 @@ public class DiscussService {
                     s+=" or (assetType='"+dPo.getResTableName()+"' and assetId='"+dPo.getResId()+"')";
                     f+=" or (resTableName='"+dPo.getResTableName()+"' and resId='"+dPo.getResId()+"')";
                     switch (MediaType.buildByTabName(dPo.getResTableName())) {
-                        case RADIO: bcIds+="or a.id='"+dPo.getResId()+"'";
-                        case AUDIO: maIds+="or a.id='"+dPo.getResId()+"'";
-                        case SEQU: seqMaIds+="or a.id='"+dPo.getResId()+"'";
+                        case RADIO: bcIds+=" or a.id='"+dPo.getResId()+"'";break;
+                        case AUDIO: maIds+=" or a.id='"+dPo.getResId()+"'";break;
+                        case SEQU: seqMaIds+=" or a.id='"+dPo.getResId()+"'";break;
                         default: ;
                     }
                 }
@@ -286,46 +286,211 @@ public class DiscussService {
 
                 //组织返回值
                 int i=0;
-                List<Map<String, Object>> rl=new ArrayList<>();
+                Map<String, Object>[] rl=new Map[dl.size()];
                 //单体
-                List<Map<String, Object>> mas=mediaService.getMaListByWhereStr(maIds);
-                for (Map<String, Object> ma : mas) {
-                    Map<String, Object> mam=ContentUtils.convert2Ma(ma, null, cataml, chaml, fml);
-                    for (i=0; i<dl.size(); i++) {
-                        DiscussPo dPo=dl.get(i);
-                        if (dPo.getResTableName().equals(MediaType.AUDIO.getTabName())&&dPo.getResId().equals(ma.get("id"))) {
-                            rl.add(i, mam);
+                if (!StringUtils.isNullOrEmpty(maIds)) {
+                    List<Map<String, Object>> mas=mediaService.getMaListByWhereStr(maIds.substring(4));
+                    for (Map<String, Object> ma : mas) {
+                        Map<String, Object> mam=ContentUtils.convert2Ma(ma, null, cataml, chaml, fml);
+                        for (i=0; i<dl.size(); i++) {
+                            DiscussPo dPo=dl.get(i);
+                            if (dPo.getResTableName().equals(MediaType.AUDIO.getTabName())&&dPo.getResId().equals(ma.get("id"))) {
+                                rl[i]=mam;
+                            }
                         }
                     }
                 }
                 //专辑
-                List<Map<String, Object>> smas=mediaService.getSeqMaListByWhereStr(seqMaIds);
-                for (Map<String, Object> sma : smas) {
-                    Map<String, Object> seqMam=ContentUtils.convert2Sma(sma, null, cataml, chaml, fml);
-                    for (i=0; i<dl.size(); i++) {
-                        DiscussPo dPo=dl.get(i);
-                        if (dPo.getResTableName().equals(MediaType.SEQU.getTabName())&&dPo.getResId().equals(sma.get("id"))) {
-                            rl.add(i, seqMam);
+                if (!StringUtils.isNullOrEmpty(seqMaIds)) {
+                    List<Map<String, Object>> smas=mediaService.getSeqMaListByWhereStr(seqMaIds.substring(4));
+                    for (Map<String, Object> sma : smas) {
+                        Map<String, Object> seqMam=ContentUtils.convert2Sma(sma, null, cataml, chaml, fml);
+                        for (i=0; i<dl.size(); i++) {
+                            DiscussPo dPo=dl.get(i);
+                            if (dPo.getResTableName().equals(MediaType.SEQU.getTabName())&&dPo.getResId().equals(sma.get("id"))) {
+                                rl[i]=seqMam;
+                            }
                         }
                     }
                 }
                 //电台
-                List<Map<String, Object>> bcs=bcService.getListByWhereStr(bcIds);
-                for (Map<String, Object> bc : bcs) {
-                    Map<String, Object> bcm=ContentUtils.convert2Bc(bc, null, cataml, chaml, fml);
-                    for (i=0; i<dl.size(); i++) {
-                        DiscussPo dPo=dl.get(i);
-                        if (dPo.getResTableName().equals(MediaType.RADIO.getTabName())&&dPo.getResId().equals(bc.get("id"))) {
-                            rl.add(i, bcm);
+                if (!StringUtils.isNullOrEmpty(bcIds)) {
+                    List<Map<String, Object>> bcs=bcService.getListByWhereStr(bcIds.substring(4));
+                    for (Map<String, Object> bc : bcs) {
+                        Map<String, Object> bcm=ContentUtils.convert2Bc(bc, null, cataml, chaml, fml);
+                        for (i=0; i<dl.size(); i++) {
+                            DiscussPo dPo=dl.get(i);
+                            if (dPo.getResTableName().equals(MediaType.RADIO.getTabName())&&dPo.getResId().equals(bc.get("id"))) {
+                                rl[i]=bcm;
+                            }
                         }
                     }
                 }
                 param.clear();
                 param.put("AllCount", allCount);
-                param.put("List", rl);
+                param.put("ResultType", 1);
+                param.put("ContentList", rl);
                 return param;
-            } else { //按分类列表进行返回
-                
+            } else if (rType==2&&ml!=null&&!ml.isEmpty()) { //按分类列表进行返回
+                //得到总数
+                param.put("userId", userId);
+                if (isPub==1) { //发布的内容
+                    dl=this.discussDao.queryForList("getPubList", param);
+                } else {
+                    dl=this.discussDao.queryForList(param);
+                }
+                if (dl==null) return null;
+                allCount=dl.size();
+
+                List<Map<String, Object>> rl=new ArrayList<>();
+                for (MediaType mt: ml) {
+                    int typeCount=0;
+                    param.clear();
+                    param.put("resTableName", mt.getTabName());
+                    param.put("userId", userId);
+                    if (isPub==1) { //发布的内容
+                        param.put("sortByClause", " a.cTime desc");
+                        if (page>=0) { //分页
+                            if (page==0) page=1;
+                            if (pageSize<0) pageSize=10;
+                            Page<DiscussPo> p=this.discussDao.pageQuery("getPubList", param, page, pageSize);
+                            if (!p.getResult().isEmpty()) {
+                                dl=new ArrayList<DiscussPo>();
+                                dl.addAll(p.getResult());
+                            }
+                            typeCount=p.getDataCount();
+                        } else { //获得所有
+                            dl=this.discussDao.queryForList("getPubList", param);
+                            typeCount=dl.size();
+                        }
+                    } else {
+                        param.put("sortByClause", " cTime desc");
+                        if (page>=0) { //分页
+                            if (page==0) page=1;
+                            if (pageSize<0) pageSize=10;
+                            Page<DiscussPo> p=this.discussDao.pageQuery(param, page, pageSize);
+                            if (!p.getResult().isEmpty()) {
+                                dl=new ArrayList<DiscussPo>();
+                                dl.addAll(p.getResult());
+                            }
+                            typeCount=p.getDataCount();
+                        } else { //获得所有
+                            dl=this.discussDao.queryForList(param);
+                            typeCount=dl.size();
+                        }
+                    }
+                    if (typeCount>0) {
+                        //处理参数
+                        String s="", f="";
+                        String maIds="", seqMaIds="", bcIds="";
+                        for (DiscussPo dPo: dl) {
+                            s+=" or (assetType='"+dPo.getResTableName()+"' and assetId='"+dPo.getResId()+"')";
+                            f+=" or (resTableName='"+dPo.getResTableName()+"' and resId='"+dPo.getResId()+"')";
+                            switch (MediaType.buildByTabName(dPo.getResTableName())) {
+                                case RADIO: bcIds+=" or a.id='"+dPo.getResId()+"'";break;
+                                case AUDIO: maIds+=" or a.id='"+dPo.getResId()+"'";break;
+                                case SEQU: seqMaIds+=" or a.id='"+dPo.getResId()+"'";break;
+                                default: ;
+                            }
+                        }
+                        //相关栏目信息
+                        param.clear();
+                        param.put("whereByClause", s.substring(4));
+                        List<ChannelAssetPo> chas=channelAssetDao.queryForList("getListByWhere", param);
+                        List<Map<String, Object>> chaml=new ArrayList<Map<String, Object>>();
+                        if (chas!=null&&!chas.isEmpty()) {
+                            _CacheChannel _cc=(SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)==null?null:((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)).getContent());
+                            for (ChannelAssetPo caPo: chas) {
+                                Map<String, Object> one=caPo.toHashMap();
+                                if (_cc!=null) {
+                                    TreeNode<Channel> _c=(TreeNode<Channel>)_cc.channelTree.findNode(caPo.getChannelId());
+                                    if (_c!=null) one.put("channelName", _c.getNodeName());
+                                }
+                                chaml.add(one);
+                            }
+                        }
+                        if (chaml.isEmpty()) chaml=null;
+                        //分类型获得列表
+                        param.clear();
+                        param.put("whereByClause", f.substring(4));
+                        List<DictRefResPo> drrs=dictRefDao.queryForList("getListByWhere", param);
+                        List<Map<String, Object>> cataml=new ArrayList<Map<String, Object>>();
+                        if (drrs!=null&&!drrs.isEmpty()) {
+                            for (DictRefResPo drrPo: drrs) {
+                                cataml.add(drrPo.toHashMap());
+                            }
+                        }
+                        if (cataml.isEmpty()) cataml=null;
+                        //获得喜欢列表
+                        List<UserFavoritePo> fs=favoriteDao.queryForList("getListByWhere", param);
+                        List<Map<String, Object>> fml=new ArrayList<Map<String, Object>>();
+                        if (fs!=null&&!fs.isEmpty()) {
+                            for (UserFavoritePo ufPo: fs) {
+                                fml.add(ufPo.toHashMap());
+                            }
+                        }
+                        if (fml.isEmpty()) fml=null;
+
+                        //组织返回值
+                        int i=0;
+                        Map<String, Object>[] typel=new Map[dl.size()];
+                        //单体
+                        if (!StringUtils.isNullOrEmpty(maIds)) {
+                            List<Map<String, Object>> mas=mediaService.getMaListByWhereStr(maIds.substring(4));
+                            for (Map<String, Object> ma : mas) {
+                                Map<String, Object> mam=ContentUtils.convert2Ma(ma, null, cataml, chaml, fml);
+                                for (i=0; i<dl.size(); i++) {
+                                    DiscussPo dPo=dl.get(i);
+                                    if (dPo.getResTableName().equals(MediaType.AUDIO.getTabName())&&dPo.getResId().equals(ma.get("id"))) {
+                                        typel[i]=mam;
+                                    }
+                                }
+                            }
+                        }
+                        //专辑
+                        if (!StringUtils.isNullOrEmpty(seqMaIds)) {
+                            List<Map<String, Object>> smas=mediaService.getSeqMaListByWhereStr(seqMaIds.substring(4));
+                            for (Map<String, Object> sma : smas) {
+                                Map<String, Object> seqMam=ContentUtils.convert2Sma(sma, null, cataml, chaml, fml);
+                                for (i=0; i<dl.size(); i++) {
+                                    DiscussPo dPo=dl.get(i);
+                                    if (dPo.getResTableName().equals(MediaType.SEQU.getTabName())&&dPo.getResId().equals(sma.get("id"))) {
+                                        typel[i]=seqMam;
+                                    }
+                                }
+                            }
+                        }
+                        //电台
+                        if (!StringUtils.isNullOrEmpty(bcIds)) {
+                            List<Map<String, Object>> bcs=bcService.getListByWhereStr(bcIds.substring(4));
+                            for (Map<String, Object> bc : bcs) {
+                                Map<String, Object> bcm=ContentUtils.convert2Bc(bc, null, cataml, chaml, fml);
+                                for (i=0; i<dl.size(); i++) {
+                                    DiscussPo dPo=dl.get(i);
+                                    if (dPo.getResTableName().equals(MediaType.RADIO.getTabName())&&dPo.getResId().equals(bc.get("id"))) {
+                                        typel[i]=bcm;
+                                    }
+                                }
+                            }
+                        }
+                        Map<String, Object> oneMedie=new HashMap<String, Object>();
+                        oneMedie.put("AllCount", typeCount);
+                        oneMedie.put("MediaType", mt.getTypeName());
+                        oneMedie.put("ContentList", typel);
+                        rl.add(oneMedie);
+                    } else {
+                        Map<String, Object> oneMedie=new HashMap<String, Object>();
+                        oneMedie.put("AllCount", typeCount);
+                        oneMedie.put("MediaType", mt.getTypeName());
+                        rl.add(oneMedie);
+                    }
+                }
+                if (rl==null||rl.isEmpty()) return null;
+                param.clear();
+                param.put("AllCount", allCount);
+                param.put("ResultType", 2);
+                param.put("ContentList", rl);
+                return param;
             }
         } catch (Exception e) {
             e.printStackTrace();

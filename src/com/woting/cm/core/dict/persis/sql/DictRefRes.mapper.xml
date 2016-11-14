@@ -98,6 +98,11 @@
   <select id="getInfoById" resultMap="dictRefResMap" parameterType="java.lang.String">
     select <include refid="Base_Column_List"/> from wt_ResDict_Ref where id=#{id,jdbcType=VARCHAR}
   </select>
+  <select id="getListByWhere" resultMap="dictRefResMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_ResDict_Ref
+    <if test="whereByClause!=null">where ${whereByClause}</if>
+    <if test="orderByClause!=null">order by ${orderByClause}</if>
+  </select>
 
   <!-- 删除数据 -->
   <delete id="multiDelBc" parameterType="java.lang.String">

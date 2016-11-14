@@ -20,10 +20,10 @@ public enum MediaType {
      * @return 对应的美剧值
      */
     public static MediaType buildByTabName(String tabName) {
-        if (tabName.toUpperCase().equals("wt_BroadCast")) return RADIO;
-        else if (tabName.toUpperCase().equals("wt_MediaAsset")) return AUDIO;
-        else if (tabName.toUpperCase().equals("wt_SeqMediaAsset")) return SEQU;
-        else if (tabName.toUpperCase().equals("wt_Article")) return TEXT;
+        if (tabName.toUpperCase().equals("_BroadCast".toUpperCase())) return RADIO;
+        else if (tabName.toUpperCase().equals("wt_MediaAsset".toUpperCase())) return AUDIO;
+        else if (tabName.toUpperCase().equals("wt_SeqMediaAsset".toUpperCase())) return SEQU;
+        else if (tabName.toUpperCase().equals("wt_Article".toUpperCase())) return TEXT;
         else return ERR;
     }
 
