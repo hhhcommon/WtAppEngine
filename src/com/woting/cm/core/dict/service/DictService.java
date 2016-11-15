@@ -245,6 +245,36 @@ public class DictService {
     }
 
     /**
+     * 获得字典资源关系
+     * @param resTableName 资源分类(资源表名称)
+     * @param resId 资源Id
+     * @return 资源关系列表
+     */
+    @SuppressWarnings("unchecked")
+    public List<DictRefRes> getDictRefs(Map<String, Object> condition) {
+        if (condition==null||condition.isEmpty()) return null;
+        List<DictRefRes> ret=new ArrayList<DictRefRes>();
+        try {
+            List<DictRefResPo> l=dictRefDao.queryForList(condition);
+            if (l==null||l.isEmpty()) return null;
+
+            CacheEle<_CacheDictionary> cache=((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT));
+            _CacheDictionary cd=cache.getContent();
+            for (DictRefResPo drrPo: l) {
+                DictRefRes drr=new DictRefRes();
+                drr.buildFromPo(drrPo);
+                DictModel dm=cd.dictModelMap.get(drrPo.getDictMid());
+                drr.setDm(dm);
+                TreeNode<DictDetail> dd=(TreeNode<DictDetail>)dm.dictTree.findNode(drrPo.getDictDid());
+                drr.setDd(dd);
+                ret.add(drr);
+            }
+        } catch(Exception e) {
+        }
+        return ret.isEmpty()?null:ret;
+    }
+
+    /**
      * 加入新字典项，同时处理字典缓存
      * @param dd 字典项信息
      * @return 新增的字典项Id；2-未找到字典组；3-未找到父亲结点；4-名称重复，同级重复；5-bCode重复，某分类下重复
@@ -369,7 +399,7 @@ public class DictService {
             TreeNode<DictDetail> myInTree=(TreeNode<DictDetail>)dm.dictTree.findNode(dd.getId());
             if (myInTree==null) return "2";
 
-            List<TreeNodeBean> ddl=myInTree.getAllBeansList();
+            List<? extends TreeNodeBean> ddl=myInTree.getAllBeansList();
             //检查是否有相关信息，注意是递归查找
             String inStr="";
             String inStr2="";
@@ -391,5 +421,18 @@ public class DictService {
                 return "1";
             }
         }
+    }
+
+    /**
+     * 根据Id得到字典模式
+     * @param dictMId 字典组Id
+     * @return 元数据信息
+     */
+    @SuppressWarnings("unchecked")
+    public DictModel getDictModelById(String dictMid) {
+        if (StringUtils.isNullOrEmptyOrSpace(dictMid)) return null;
+        CacheEle<_CacheDictionary> cache=((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT));
+        _CacheDictionary cd=cache.getContent();
+        return cd.dictModelMap.get(dictMid);
     }
 }

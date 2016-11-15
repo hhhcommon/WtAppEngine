@@ -41,6 +41,7 @@ import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.login.service.MobileUsedService;
 import com.woting.passport.mobile.MobileParam;
 import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.preference.service.PreferenceService;
 import com.woting.passport.session.DeviceType;
 import com.woting.passport.session.SessionService;
 import com.woting.searchword.service.WordService;
@@ -67,6 +68,8 @@ public class CommonController {
     private SessionService sessionService;
     @Resource
     private DictService dictService;
+    @Resource
+    private PreferenceService pService;
 
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
@@ -859,112 +862,6 @@ public class CommonController {
         }
     }
 
-    @RequestMapping(value="/getPreferenceCatalog.do")
-    @ResponseBody
-    public Map<String,Object> getPreferenceCatalog(HttpServletRequest request) {
-        //数据收集处理==1
-        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
-        alPo.setApiName("4.1.7-getPreferenceCatalog");
-        alPo.setObjType("001");//设置为分类
-        alPo.setDealFlag(1);//处理成功
-        alPo.setOwnerType(201);
-        alPo.setOwnerId("--");
-
-        Map<String,Object> map=new HashMap<String, Object>();
-        try {
-            //0-获取参数
-            MobileUDKey mUdk=null;
-            boolean isLogin=true;
-            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
-            alPo.setReqParam(JsonUtils.objToJson(m));
-            if (m==null||m.size()==0) {
-                map.put("ReturnType", "0000");
-                map.put("Message", "无法获取需要的参数");
-            } else {
-                MobileParam mp=MobileParam.build(m);
-                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
-                    mp.setImei(request.getSession().getId());
-                }
-                mUdk=mp.getUserDeviceKey();
-                if (mUdk!=null) {
-                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "getPreferenceCatalog");
-                    if ((retM.get("ReturnType")+"").equals("2004")||(retM.get("ReturnType")+"").equals("3004")) {
-                        map.put("ReturnType", "0000");
-                        map.put("Message", "无法获取设备Id(IMEI)");
-                    } else if ((retM.get("ReturnType")+"").equals("2003")) {
-                        isLogin=false;
-                    }
-                } else {
-                    map.put("ReturnType", "0000");
-                    map.put("Message", "无法获取需要的参数");
-                }
-            }
-            //数据收集处理==2
-            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
-                alPo.setOwnerId(map.get("UserId")+"");
-            } else {
-                //过客
-                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
-                else alPo.setOwnerId("0");
-            }
-            if (mUdk!=null) {
-                alPo.setDeviceType(mUdk.getPCDType());
-                alPo.setDeviceId(mUdk.getDeviceId());
-            }
-            if (m!=null) {
-                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
-                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                        alPo.setExploreVer(m.get("MobileClass")+"");
-                    }
-                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
-                        alPo.setExploreName(m.get("exploreName")+"");
-                    }
-                } else {
-                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
-                        alPo.setDeviceClass(m.get("MobileClass")+"");
-                    }
-                }
-            }
-            if (map.get("ReturnType")!=null) return map;
-
-            //1-得到模式Id
-            String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
-            if (StringUtils.isNullOrEmptyOrSpace(_userId)) {//判断是否需要登录
-                if (!isLogin) {
-                    map.put("ReturnType", "200");
-                    map.put("Message", "需要登录");
-                } else {
-                    if (map.get("UserId")==null||(map.get("UserId")!=null&&!map.get("UserId").equals(_userId))) {
-                        map.put("ReturnType", "1002");
-                        map.put("Message", "用户不匹配");
-                    }
-                }
-            }
-            if (map.get("ReturnType")!=null) return map;
-
-            if (StringUtils.isNullOrEmptyOrSpace(_userId)) {//获得纯的偏好内容
-                
-            } else {//获得用户偏好
-                
-            }
-            return map;
-        } catch(Exception e) {
-            e.printStackTrace();
-            map.put("ReturnType", "T");
-            map.put("TClass", e.getClass().getName());
-            map.put("Message", StringUtils.getAllMessage(e));
-            alPo.setDealFlag(2);
-            return map;
-        } finally {
-            //数据收集处理=3
-            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
-            alPo.setReturnData(JsonUtils.objToJson(map));
-            try {
-                ApiGatherMemory.getInstance().put2Queue(alPo);
-            } catch (InterruptedException e) {}
-        }
-    }
-
     @RequestMapping(value="/searchByVoice.do")
     @ResponseBody
     public Map<String,Object> searchByVoice(HttpServletRequest request) {
@@ -1092,7 +989,242 @@ public class CommonController {
             } catch (InterruptedException e) {}
         }
     }
+
+    @RequestMapping(value="/getPreferenceCatalog.do")
+    @ResponseBody
+    public Map<String,Object> getPreferenceCatalog(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("4.1.7-getPreferenceCatalog");
+        alPo.setObjType("001");//设置为分类
+        alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
+
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            MobileUDKey mUdk=null;
+            boolean isLogin=false;
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
+                }
+                mUdk=mp.getUserDeviceKey();
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "getPreferenceCatalog");
+                    if ((retM.get("ReturnType")+"").equals("2004")||(retM.get("ReturnType")+"").equals("3004")) {
+                        map.put("ReturnType", "0000");
+                        map.put("Message", "无法获取设备Id(IMEI)");
+                    } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                        isLogin=false;
+                    } else if ((retM.get("ReturnType")+"").equals("1001")) {
+                        isLogin=true;
+                    }
+                } else {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
+                }
+            }
+            //数据收集处理==2
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
+            }
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //1-得到UserId
+            String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(_userId)) {//判断是否需要登录
+                if (!isLogin) {
+                    map.put("ReturnType", "200");
+                    map.put("Message", "需要登录");
+                } else {
+                    if (map.get("UserId")==null||(map.get("UserId")!=null&&!map.get("UserId").equals(_userId))) {
+                        map.put("ReturnType", "1002");
+                        map.put("Message", "用户不匹配");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            TreeNode<? extends TreeNodeBean> root=null;
+            if (StringUtils.isNullOrEmptyOrSpace(_userId)) {//获得纯的偏好内容
+                root=pService.getPreference();
+            } else {//获得用户偏好
+                root=pService.getUserPreference(_userId);
+            }
+            if (root!=null&&root.getChildren()!=null&&!root.getChildren().isEmpty()) {
+                map.put("ReturnType", "1001");
+                map.put("PrefTree", root);
+            } else {
+                map.put("ReturnType", "1011");
+                map.put("Message", "无内容");
+            }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
+            return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
+        }
+    }
     
+
+    @RequestMapping(value="/setPreference.do")
+    @ResponseBody
+    public Map<String,Object> setPreference(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("4.1.8-setPreference");
+        alPo.setObjType("001");//设置为分类
+        alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
+
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            MobileUDKey mUdk=null;
+            boolean isLogin=false;
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
+                }
+                mUdk=mp.getUserDeviceKey();
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "setPreference");
+                    if ((retM.get("ReturnType")+"").equals("2004")||(retM.get("ReturnType")+"").equals("3004")) {
+                        map.put("ReturnType", "0000");
+                        map.put("Message", "无法获取设备Id(IMEI)");
+                    } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                        isLogin=false;
+                    } else if ((retM.get("ReturnType")+"").equals("1001")) {
+                        isLogin=true;
+                    }
+                } else {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
+                }
+            }
+            //数据收集处理==2
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
+            }
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+            //1-得到UserId
+            String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(_userId)) {//判断是否需要登录
+                if (isLogin) {
+                    if (map.get("UserId")==null||(map.get("UserId")!=null&&!map.get("UserId").equals(_userId))) {
+                        map.put("ReturnType", "1002");
+                        map.put("Message", "用户不匹配");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+            //2-得到偏好设置串
+            String prefStr=(m.get("PrefStr")==null?null:m.get("PrefStr")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(prefStr)) {//判断是否需要登录
+                map.put("ReturnType", "1003");
+                map.put("Message", "无法获得偏好字符串");
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            String objId=mUdk.getDeviceId();
+            int flag=2;
+            if (isLogin) {
+                objId=map.get("UserId")+"";
+                flag=1;
+            }
+            flag=pService.setPreference(objId, prefStr, flag);
+            if (flag==1) {
+                map.put("ReturnType", "1001");
+            } else {
+                map.put("ReturnType", "1002");
+            }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
+            return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
+        }
+    }
+
     @RequestMapping(value="/lkTTS.do")
     @ResponseBody
     public Map<String,Object> getlkTTSInfo(HttpServletRequest request) {
