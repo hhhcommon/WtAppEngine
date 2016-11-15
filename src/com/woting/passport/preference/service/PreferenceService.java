@@ -26,6 +26,7 @@ public class PreferenceService {
         DictModel pModel=dictService.getDictModelById("6");
         TreeNode<? extends TreeNodeBean> ret=pModel.dictTree.clone();
         //删除掉偏好下面的所有子结点
+        if (ret.getChildren()==null||ret.getChildren().isEmpty()) return null;
         for (TreeNode<? extends TreeNodeBean> tn: ret.getChildren()) {
             tn.setChildren(null);
         }
@@ -35,11 +36,14 @@ public class PreferenceService {
             drrl=null;
             Map<String, Object> param=new HashMap<String, Object>();
             param.put("resId", tn.getId());
+            param.put("refName", "偏好对应分类");
             param.put("resTableName", "plat_DictD::6");
             drrl=dictService.getDictRefs(param);
             if (drrl!=null&&!drrl.isEmpty()) {
                 for (DictRefRes drr: drrl) {
-                    tn.addChild(drr.getDd());
+                    if (drr.getDd()!=null) {
+                        tn.addChild(drr.getDd().clone());
+                    }
                 }
             }
         }
@@ -50,8 +54,9 @@ public class PreferenceService {
      * 得到用户偏好信息
      * @param userId 用户Id
      * @return
+     * @throws CloneNotSupportedException 
      */
-    public TreeNode<? extends TreeNodeBean> getUserPreference(String userId) {
+    public TreeNode<? extends TreeNodeBean> getUserPreference(String userId) throws CloneNotSupportedException {
         if (StringUtils.isNullOrEmptyOrSpace(userId)) return null;
         
         Map<String, Object> param=new HashMap<String, Object>();
@@ -71,7 +76,7 @@ public class PreferenceService {
             TreeNode<? extends TreeNodeBean> root=new TreeNode<DictDetail>(_t);
 
             for (DictRefRes drr: drrl) {
-                root.addChild(drr.getDd());
+                if (drr.getDd()!=null) root.addChild(drr.getDd().clone());
             }
         }
         return null;

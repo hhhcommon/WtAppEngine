@@ -30,6 +30,7 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
+import com.woting.cm.core.dict.model.DictDetail;
 import com.woting.cm.core.dict.model.DictModel;
 import com.woting.cm.core.dict.model.DictRefRes;
 import com.woting.cm.core.dict.service.DictService;
@@ -48,6 +49,7 @@ import com.woting.searchword.service.WordService;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
+import com.spiritdata.framework.ui.tree.ZTree;
 import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.CacheEle;
 
@@ -1062,7 +1064,7 @@ public class CommonController {
 
             //1-得到UserId
             String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
-            if (StringUtils.isNullOrEmptyOrSpace(_userId)) {//判断是否需要登录
+            if (!StringUtils.isNullOrEmptyOrSpace(_userId)) {//判断是否需要登录
                 if (!isLogin) {
                     map.put("ReturnType", "200");
                     map.put("Message", "需要登录");
@@ -1083,7 +1085,7 @@ public class CommonController {
             }
             if (root!=null&&root.getChildren()!=null&&!root.getChildren().isEmpty()) {
                 map.put("ReturnType", "1001");
-                map.put("PrefTree", root);
+                map.put("PrefTree", (new ZTree<DictDetail>(root)).toTreeMap());
             } else {
                 map.put("ReturnType", "1011");
                 map.put("Message", "无内容");

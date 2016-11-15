@@ -139,6 +139,7 @@ public class PassportController {
 
             UserPo u=userService.getUserByLoginName(ln);
             if (u==null) u=userService.getUserByPhoneNum(ln);
+            if (u==null) u=userService.getUserByUserNum(ln);
             //1-判断是否存在用户
             if (u==null) { //无用户
                 map.put("ReturnType", "1002");
@@ -570,8 +571,7 @@ public class PassportController {
             //2-注销
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
             RedisOperService roService=new RedisOperService(redisConn, 4);
-            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService,
-                    new BlockLockConfig(5, 2, 0, 50));
+            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService, new BlockLockConfig(5, 2, 0, 50));
             try {
                 sessionService.logoutSession(mUdk);
                 //保存使用情况

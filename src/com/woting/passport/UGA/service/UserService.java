@@ -64,6 +64,20 @@ public class UserService implements UgaUserService {
         return null;
     }
 
+    /**
+     * 根据绑定手机号，获得用户信息
+     * @param userNum 用户号码
+     * @return 用户信息
+     */
+    public UserPo getUserByUserNum(String usersNum) {
+        try {
+            return userDao.getInfoObject("getUserByUserNum", usersNum);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public UserPo getUserById(String userId) {
