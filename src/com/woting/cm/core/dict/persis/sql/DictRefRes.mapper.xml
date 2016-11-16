@@ -114,4 +114,14 @@
   <delete id="delByDicts" parameterType="java.lang.String">
     delete from wt_ResDict_Ref where ${value}
   </delete>
+
+  <!-- ===偏好相关===================================== -->
+  <!-- 取消偏好 -->
+  <update id="cancelPref" parameterType="java.util.Map">
+    update wt_ResDict_Ref set refName=#{refName,jdbcType=VARCHAR} where resTableName=#{resTableName,jdbcType=VARCHAR} and resId=#{resId,jdbcType=VARCHAR}
+  </update>
+  <!-- 取消偏好 -->
+  <update id="changeToLike" parameterType="java.util.Map">
+    update wt_ResDict_Ref set refName=#{refName,jdbcType=VARCHAR} where ${whereStr}
+  </update>
 </mapper>

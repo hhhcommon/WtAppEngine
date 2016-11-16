@@ -1196,6 +1196,9 @@ public class CommonController {
                 map.put("Message", "无法获得偏好字符串");
             }
             if (map.get("ReturnType")!=null) return map;
+            //3-是否只是分类设置
+            int isOnlyCata=1;
+            try {isOnlyCata=Integer.parseInt(m.get("isOnlyCata")+"");} catch(Exception e) {};
 
             String objId=mUdk.getDeviceId();
             int flag=2;
@@ -1203,7 +1206,7 @@ public class CommonController {
                 objId=map.get("UserId")+"";
                 flag=1;
             }
-            flag=pService.setPreference(objId, prefStr, flag);
+            flag=pService.setPreference(objId, prefStr, flag, isOnlyCata);
             if (flag==1) {
                 map.put("ReturnType", "1001");
             } else {

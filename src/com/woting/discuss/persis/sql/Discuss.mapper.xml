@@ -51,8 +51,7 @@
   <!-- 获得列表 -->
   <select id="getPubList" resultMap="discussMap" parameterType="java.util.Map">
     select <include refid="Base_Column_List_A"/> from wt_Discuss a, wt_ChannelAsset b
-    where a.resTableName=b.assetType and a.resId=b.assetId and flowFlag=2 
-    
+    where a.resTableName=b.assetType and a.resId=b.assetId and flowFlag=2
     <trim prefix="and (" suffix=")" prefixOverrides="and">
       <if test="id!=null"> and a.id=#{id,jdbcType=VARCHAR}</if>
       <if test="userId!=null"> and a.userId=#{userId,jdbcType=VARCHAR}</if>

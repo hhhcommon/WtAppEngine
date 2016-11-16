@@ -124,8 +124,8 @@ public class DiscussService {
             List<DiscussPo> ol=null;
             long allCount=0;
             if (isPub==1) {
-                param.put("a.resTableName", mt.getTabName());
-                param.put("a.resId", contentId);
+                param.put("resTableName", mt.getTabName());
+                param.put("resId", contentId);
                 param.put("sortByClause", " a.cTime desc");
                 if (page>=0) { //分页
                     if (page==0) page=1;

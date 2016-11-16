@@ -1,23 +1,37 @@
 package com.woting.passport.preference.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
+
+import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
+import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.cm.core.dict.model.DictDetail;
 import com.woting.cm.core.dict.model.DictModel;
 import com.woting.cm.core.dict.model.DictRefRes;
+import com.woting.cm.core.dict.persis.po.DictRefResPo;
 import com.woting.cm.core.dict.service.DictService;
 
 @Service
 public class PreferenceService {
+    @Resource(name="defaultDAO")
+    private MybatisDAO<DictRefResPo> dictRefDao;
     @Resource
     DictService dictService;
+
+    @PostConstruct
+    public void initParam() {
+        dictRefDao.setNamespace("A_DREFRES");
+    }
+
     /**
      * 得到所有的偏好信息
      * @return 偏好树
@@ -42,7 +56,7 @@ public class PreferenceService {
             if (drrl!=null&&!drrl.isEmpty()) {
                 for (DictRefRes drr: drrl) {
                     if (drr.getDd()!=null) {
-                        tn.addChild(drr.getDd().clone());
+                        tn.addChild(drr.getDd());
                     }
                 }
             }
@@ -85,18 +99,185 @@ public class PreferenceService {
     /**
      * 偏好设置
      * @param objId 用户Id，或IMEI
-     * @param preferenceStr 偏好字符串
+     * @param prefStr 偏好字符串
      * @param flag =1是用户; =2是IMEI
+     * @param isOnlyCata =1仅包括分类(这是默认值); =2包括分类和偏好类型
      * @return 保存成功返回1，失败返回0
      */
-    public int setPreference(String objId, String preferenceStr, int flag) {
-        if (flag==1) {//是IMEI的方式
-            //先修改为不喜欢
-            
-            
-        } else if (flag==2) {
-            
+    public int setPreference(String objId, String prefStr, int flag, int isOnlyCata) {
+        if (StringUtils.isNullOrEmptyOrSpace(prefStr)||StringUtils.isNullOrEmptyOrSpace(objId)||(flag!=1&&flag!=2)) return 0;
+
+        DictModel pModel=dictService.getDictModelById("6");
+        DictModel cModel=dictService.getDictModelById("3");
+
+        List<String> prefIds=new ArrayList<String>();
+        List<String> cataIds=new ArrayList<String>();
+
+        String[] oneArray=prefStr.split(",");
+        for (String s:oneArray) {
+            String[] fields=s.split("::");
+            if (fields.length==2) {
+                if (fields[0].equals("6")) {
+                    if (pModel.dictTree!=null&&pModel.dictTree.findNode(fields[1])!=null) {
+                        prefIds.add(fields[1]);
+                    }
+                }
+                if (fields[0].equals("2")) {
+                    if (cModel.dictTree!=null&&cModel.dictTree.findNode(fields[1])!=null) {
+                        cataIds.add(fields[1]);
+                    }
+                }
+            }
         }
-        return 0;
+        Map<String, Object> param=new HashMap<String, Object>();
+        String setUpdateWhere="";
+        if (flag==1) {//是用户
+            if (isOnlyCata==2) { //包括分类和偏好
+                //取消已经选择的
+                param.clear();
+                param.put("resTableName", "plat_User");
+                param.put("resId", objId);
+                List<DictRefResPo> existList=dictRefDao.queryForList(param);
+                if (existList!=null&&!existList.isEmpty()) {
+                    param.put("refName", "偏好设置-取消");
+                    dictRefDao.update("cancelPref", param);
+                    if (!prefIds.isEmpty()) {
+                        for (int i=prefIds.size()-1; i>=0; i--) {
+                            boolean needDel=false;
+                            for (DictRefResPo drrPo: existList) {
+                                if (drrPo.getDictDid().equals(prefIds.get(i))) {
+                                    setUpdateWhere+=" or id='"+drrPo.getId()+"'";
+                                    needDel=true;
+                                    break;
+                                }
+                            }
+                            if (needDel) prefIds.remove(i);
+                        }
+                    }
+                    if (!cataIds.isEmpty()) {
+                        for (int i=cataIds.size()-1; i>=0; i--) {
+                            boolean needDel=false;
+                            for (DictRefResPo drrPo: existList) {
+                                if (drrPo.getDictDid().equals(cataIds.get(i))) {
+                                    setUpdateWhere+=" or id='"+drrPo.getId()+"'";
+                                    needDel=true;
+                                    break;
+                                }
+                            }
+                            if (needDel) cataIds.remove(i);
+                        }
+                    }
+                }
+                //更新现有的
+                if (!StringUtils.isNullOrEmptyOrSpace(setUpdateWhere)) {
+                    param.clear();
+                    param.put("refName", "偏好设置-喜欢");
+                    param.put("whereStr", setUpdateWhere.substring(4));
+                    dictRefDao.update("changeToLike", param);
+                }
+                //插入新的
+                if (!prefIds.isEmpty()) {
+                    for (String prefId: prefIds) {
+                        param.put("id", SequenceUUID.getPureUUID());
+                        param.put("refName", "偏好设置-喜欢");
+                        param.put("dictMid", "6");
+                        param.put("dictDid", prefId);
+                        dictRefDao.insert(param);
+                    }
+                }
+                if (!cataIds.isEmpty()) {
+                    for (String cataId: cataIds) {
+                        param.put("id", SequenceUUID.getPureUUID());
+                        param.put("refName", "偏好设置-喜欢");
+                        param.put("dictMid", "3");
+                        param.put("dictDid", cataId);
+                        dictRefDao.insert(param);
+                    }
+                }
+            } else { //仅包括分类
+                //取消已经选择的
+                param.clear();
+                param.put("resTableName", "plat_User");
+                param.put("resId", objId);
+                param.put("dictMid", "3");
+                List<DictRefResPo> existList=dictRefDao.queryForList(param);
+                if (existList!=null&&!existList.isEmpty()) {
+                    param.put("refName", "偏好设置-取消");
+                    dictRefDao.update("cancelPref", param);
+                    if (!cataIds.isEmpty()) {
+                        for (int i=cataIds.size()-1; i>=0; i--) {
+                            boolean needDel=false;
+                            for (DictRefResPo drrPo: existList) {
+                                if (drrPo.getDictDid().equals(cataIds.get(i))) {
+                                    setUpdateWhere+=" or id='"+drrPo.getId()+"'";
+                                    needDel=true;
+                                    break;
+                                }
+                            }
+                            if (needDel) cataIds.remove(i);
+                        }
+                    }
+                }
+                //更新现有的
+                if (!StringUtils.isNullOrEmptyOrSpace(setUpdateWhere)) {
+                    param.clear();
+                    param.put("refName", "偏好设置-喜欢");
+                    param.put("whereStr", setUpdateWhere.substring(4));
+                    dictRefDao.update("changeToLike", param);
+                }
+                //插入新的
+                if (!cataIds.isEmpty()) {
+                    for (String cataId: cataIds) {
+                        param.put("id", SequenceUUID.getPureUUID());
+                        param.put("refName", "偏好设置-喜欢");
+                        param.put("dictMid", "3");
+                        param.put("dictDid", cataId);
+                        dictRefDao.insert(param);
+                    }
+                }
+            }
+            return 1;
+        } else { //是IMEI
+            //取消已经选择的
+            param.clear();
+            param.put("resTableName", "Device");
+            param.put("resId", objId);
+            List<DictRefResPo> existList=dictRefDao.queryForList(param);
+            if (existList!=null&&!existList.isEmpty()) {
+                param.put("refName", "偏好设置-取消");
+                dictRefDao.update("cancelPref", param);
+                if (!prefIds.isEmpty()) {
+                    for (int i=prefIds.size()-1; i>=0; i--) {
+                        boolean needDel=false;
+                        for (DictRefResPo drrPo: existList) {
+                            if (drrPo.getDictDid().equals(prefIds.get(i))) {
+                                setUpdateWhere+=" or id='"+drrPo.getId()+"'";
+                                needDel=true;
+                                break;
+                            }
+                        }
+                        if (needDel) prefIds.remove(i);
+                    }
+                }
+            }
+            //更新现有的
+            if (!StringUtils.isNullOrEmptyOrSpace(setUpdateWhere)) {
+                param.clear();
+                param.put("refName", "偏好设置-喜欢");
+                param.put("whereStr", setUpdateWhere.substring(4));
+                dictRefDao.update("changeToLike", param);
+            }
+            //插入新的
+            if (!prefIds.isEmpty()) {
+                for (String prefId: prefIds) {
+                    param.put("id", SequenceUUID.getPureUUID());
+                    param.put("refName", "偏好设置-喜欢");
+                    param.put("dictMid", "6");
+                    param.put("dictDid", prefId);
+                    dictRefDao.insert(param);
+                }
+            }
+            return 1;
+        }
     }
 }

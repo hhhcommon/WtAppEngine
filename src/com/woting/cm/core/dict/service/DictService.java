@@ -15,7 +15,6 @@ import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
-import com.spiritdata.framework.ui.tree.ZTree;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
@@ -238,7 +237,7 @@ public class DictService {
                 drr.setDm(dm);
                 if (dm.dictTree!=null&&dm.dictTree.getChildren()!=null&&!dm.dictTree.getChildren().isEmpty()) {
                     TreeNode<DictDetail> dd=(TreeNode<DictDetail>)dm.dictTree.findNode(drrPo.getDictDid());
-                    if (dd!=null) drr.setDd(new ZTree<DictDetail>(dd));
+                    if (dd!=null) drr.setDd(dd);
                 }
                 ret.add(drr);
             }
@@ -270,7 +269,7 @@ public class DictService {
                 drr.setDm(dm);
                 if (dm.dictTree!=null&&dm.dictTree.getChildren()!=null&&!dm.dictTree.getChildren().isEmpty()) {
                     TreeNode<DictDetail> dd=(TreeNode<DictDetail>)dm.dictTree.findNode(drrPo.getDictDid());
-                    if (dd!=null) drr.setDd(new ZTree<DictDetail>(dd));
+                    if (dd!=null) drr.setDd(dd);
                 }
                 ret.add(drr);
             }
