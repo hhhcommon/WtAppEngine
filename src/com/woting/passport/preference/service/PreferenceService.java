@@ -90,7 +90,10 @@ public class PreferenceService {
             TreeNode<? extends TreeNodeBean> root=new TreeNode<DictDetail>(_t);
 
             for (DictRefRes drr: drrl) {
-                if (drr.getDd()!=null) root.addChild(drr.getDd().clone());
+                if (drr.getDd()!=null) root.addChild(drr.getDd());
+            }
+            if (root.getChildren()!=null&&!root.getChildren().isEmpty()) {
+                return root;
             }
         }
         return null;
@@ -116,13 +119,13 @@ public class PreferenceService {
         String[] oneArray=prefStr.split(",");
         for (String s:oneArray) {
             String[] fields=s.split("::");
-            if (fields.length==2) {
+            if (fields.length==2) {//分类和偏好类型都设置
                 if (fields[0].equals("6")) {
                     if (pModel.dictTree!=null&&pModel.dictTree.findNode(fields[1])!=null) {
                         prefIds.add(fields[1]);
                     }
                 }
-                if (fields[0].equals("2")) {
+                if (fields[0].equals("3")) {
                     if (cModel.dictTree!=null&&cModel.dictTree.findNode(fields[1])!=null) {
                         cataIds.add(fields[1]);
                     }
@@ -137,9 +140,12 @@ public class PreferenceService {
                 param.clear();
                 param.put("resTableName", "plat_User");
                 param.put("resId", objId);
-                List<DictRefResPo> existList=dictRefDao.queryForList(param);
+                List<DictRefResPo> existList=dictRefDao.queryForList("queryPrefList", param);
                 if (existList!=null&&!existList.isEmpty()) {
                     param.put("refName", "偏好设置-取消");
+                    param.put("dictMid", "3");
+                    dictRefDao.update("cancelPref", param);
+                    param.put("dictMid", "6");
                     dictRefDao.update("cancelPref", param);
                     if (!prefIds.isEmpty()) {
                         for (int i=prefIds.size()-1; i>=0; i--) {
@@ -176,22 +182,27 @@ public class PreferenceService {
                     dictRefDao.update("changeToLike", param);
                 }
                 //插入新的
-                if (!prefIds.isEmpty()) {
-                    for (String prefId: prefIds) {
-                        param.put("id", SequenceUUID.getPureUUID());
-                        param.put("refName", "偏好设置-喜欢");
-                        param.put("dictMid", "6");
-                        param.put("dictDid", prefId);
-                        dictRefDao.insert(param);
+                if (!prefIds.isEmpty()&&!cataIds.isEmpty()) {
+                    param.clear();
+                    param.put("resTableName", "plat_User");
+                    param.put("resId", objId);
+                    if (!prefIds.isEmpty()) {
+                        for (String prefId: prefIds) {
+                            param.put("id", SequenceUUID.getPureUUID());
+                            param.put("refName", "偏好设置-喜欢");
+                            param.put("dictMid", "6");
+                            param.put("dictDid", prefId);
+                            dictRefDao.insert(param);
+                        }
                     }
-                }
-                if (!cataIds.isEmpty()) {
-                    for (String cataId: cataIds) {
-                        param.put("id", SequenceUUID.getPureUUID());
-                        param.put("refName", "偏好设置-喜欢");
-                        param.put("dictMid", "3");
-                        param.put("dictDid", cataId);
-                        dictRefDao.insert(param);
+                    if (!cataIds.isEmpty()) {
+                        for (String cataId: cataIds) {
+                            param.put("id", SequenceUUID.getPureUUID());
+                            param.put("refName", "偏好设置-喜欢");
+                            param.put("dictMid", "3");
+                            param.put("dictDid", cataId);
+                            dictRefDao.insert(param);
+                        }
                     }
                 }
             } else { //仅包括分类
@@ -242,6 +253,7 @@ public class PreferenceService {
             param.clear();
             param.put("resTableName", "Device");
             param.put("resId", objId);
+            param.put("dictMid", "6");
             List<DictRefResPo> existList=dictRefDao.queryForList(param);
             if (existList!=null&&!existList.isEmpty()) {
                 param.put("refName", "偏好设置-取消");

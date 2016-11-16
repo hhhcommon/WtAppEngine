@@ -1028,6 +1028,7 @@ public class CommonController {
                         isLogin=false;
                     } else if ((retM.get("ReturnType")+"").equals("1001")) {
                         isLogin=true;
+                        map.put("UserId", retM.get("UserId"));
                     }
                 } else {
                     map.put("ReturnType", "0000");
@@ -1145,6 +1146,7 @@ public class CommonController {
                         isLogin=false;
                     } else if ((retM.get("ReturnType")+"").equals("1001")) {
                         isLogin=true;
+                        map.put("UserId", retM.get("UserId"));
                     }
                 } else {
                     map.put("ReturnType", "0000");
@@ -1198,12 +1200,12 @@ public class CommonController {
             if (map.get("ReturnType")!=null) return map;
             //3-是否只是分类设置
             int isOnlyCata=1;
-            try {isOnlyCata=Integer.parseInt(m.get("isOnlyCata")+"");} catch(Exception e) {};
+            try {isOnlyCata=Integer.parseInt(m.get("IsOnlyCata")+"");} catch(Exception e) {};
 
             String objId=mUdk.getDeviceId();
             int flag=2;
             if (isLogin) {
-                objId=map.get("UserId")+"";
+                objId=_userId;
                 flag=1;
             }
             flag=pService.setPreference(objId, prefStr, flag, isOnlyCata);
