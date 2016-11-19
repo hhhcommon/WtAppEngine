@@ -1182,12 +1182,10 @@ public class CommonController {
             if (map.get("ReturnType")!=null) return map;
             //1-得到UserId
             String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
-            if (StringUtils.isNullOrEmptyOrSpace(_userId)) {//判断是否需要登录
-                if (isLogin) {
-                    if (map.get("UserId")==null||(map.get("UserId")!=null&&!map.get("UserId").equals(_userId))) {
-                        map.put("ReturnType", "1002");
-                        map.put("Message", "用户不匹配");
-                    }
+            if (!StringUtils.isNullOrEmptyOrSpace(_userId)&&isLogin) {//判断是否需要登录
+                if (map.get("UserId")==null||(map.get("UserId")!=null&&!map.get("UserId").equals(_userId))) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "用户不匹配");
                 }
             }
             if (map.get("ReturnType")!=null) return map;
@@ -1206,6 +1204,7 @@ public class CommonController {
             int flag=2;
             if (isLogin) {
                 objId=_userId;
+                if (StringUtils.isNullOrEmptyOrSpace(objId)) objId=mUdk.getUserId();
                 flag=1;
             }
             flag=pService.setPreference(objId, prefStr, flag, isOnlyCata);
