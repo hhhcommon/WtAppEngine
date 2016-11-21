@@ -1109,7 +1109,7 @@ public class ContentService {
                     if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
                     sql+=" and (SQL)  and "+filterSql_inwhere;
                     sql+=" and a.resTableName=b.resTableName and a.resId=b.resId";
-                    sql+=" order by a.cTime desc) union (";
+                    sql+=" order by a.cTime desc limit 0,"+perSize+") union (";
                     sql+="select distinct a.resTableName,a.resId from wt_ResDict_Ref a ";
                     sql+="left join wt_ResDict_Ref b on a.resTableName=b.resTableName and a.resId=b.resId";
                     sql+=" and "+filterSql_inwhere;
@@ -1216,8 +1216,7 @@ public class ContentService {
                                     oneData.put("pubCount", rs.getInt("pubCount"));
                                     oneData.put("bcSource", rs.getString("bcSource"));
                                     oneData.put("flowURI", rs.getString("flowURI"));
-                                    oneData.put("cTime", rs.getTimestamp("cTime"));
-
+                                    oneData.put("CTime", rs.getTimestamp("cTime"));
                                     Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, null, cataList, pubChannelList, fList);
                                     int i=0;
                                     for (; i<sortIdList.size(); i++) {
