@@ -77,6 +77,7 @@ public class OpinionController {
                         map.putAll(retM);
                         if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
+                    userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取需要的参数");
@@ -191,6 +192,7 @@ public class OpinionController {
                         map.putAll(retM);
                         if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
+                    userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取需要的参数");

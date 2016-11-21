@@ -93,13 +93,13 @@ public class DictService {
                 param.put("ownerId", "cm");
                 param.put("ownerType", "100");
                 int i=1;
-                Page<DictDetailPo> ddPage=dictDDao.pageQuery("getListByOnwerDemo", param, i++, 10000);
+                Page<DictDetailPo> ddPage=dictDDao.pageQuery("getListByOnwer", param, i++, 10000);
                 List<DictDetailPo> ddpol=new ArrayList<DictDetailPo>();
                 boolean hasDD=!ddPage.getResult().isEmpty();
                 //分页处理
                 while (hasDD) {
                     ddpol.addAll(ddPage.getResult());
-                    ddPage=dictDDao.pageQuery("getListByOnwerDemo", param, i++,10000);
+                    ddPage=dictDDao.pageQuery("getListByOnwer", param, i++,10000);
                     hasDD=!ddPage.getResult().isEmpty();
                 }
                 if (ddpol==null||ddpol.size()==0) return _cd;
@@ -182,29 +182,32 @@ public class DictService {
 
             List<DictRefRes> drrl=this.getDictRefs(drr.getResTableName(), drr.getResId());
             boolean exist=false;
-            for (DictRefRes _drr: drrl) {
-                exist=_drr.equals(drr);
-                if (exist) break;
-            }
-            if (exist) return 4;
-            exist=false;//是否已有相同的内容
-            for (DictRefRes _drr: drrl) {
-                if (_drr.getResId()!=null&&_drr.getResId().equals(drr.getResId())
-                  &&_drr.getResTableName()!=null&&_drr.getResTableName().equals(drr.getResTableName())
-                  &&_drr.getRefName()!=null&&_drr.getRefName().equals(drr.getRefName())
-                  &&_drr.getDm()!=null&&_drr.getDm().getId().equals(drr.getDm()==null?null:drr.getDm().getId())
-                  ) {
-                    drr.setId(_drr.getId());
-                    exist=true;
+            if (drrl!=null&&!drrl.isEmpty()) {
+                for (DictRefRes _drr: drrl) {
+                    exist=_drr.equals(drr);
+                    if (exist) break;
                 }
-                if (exist) break;
+                if (exist) return 4;
+                exist=false;//是否已有相同的内容
+                for (DictRefRes _drr: drrl) {
+                    if (_drr.getResId()!=null&&_drr.getResId().equals(drr.getResId())
+                      &&_drr.getResTableName()!=null&&_drr.getResTableName().equals(drr.getResTableName())
+                      &&_drr.getRefName()!=null&&_drr.getRefName().equals(drr.getRefName())
+                      &&_drr.getDm()!=null&&_drr.getDm().getId().equals(drr.getDm()==null?null:drr.getDm().getId())
+                      ) {
+                        newDrrPo.setId(_drr.getId());
+                        exist=true;
+                    }
+                    if (exist) break;
+                }
             }
             if (exist) {//update
-                return dictRefDao.update(drr);
+                return dictRefDao.update(newDrrPo);
             } else {//insert
                 return dictRefDao.insert(newDrrPo);//可以重复
             }
         } catch(Exception e) {
+            e.printStackTrace();
         }
         return 0;
     }
@@ -232,8 +235,42 @@ public class DictService {
                 drr.buildFromPo(drrPo);
                 DictModel dm=cd.dictModelMap.get(drrPo.getDictMid());
                 drr.setDm(dm);
-                TreeNode<DictDetail> dd=(TreeNode<DictDetail>)dm.dictTree.findNode(drrPo.getDictDid());
-                drr.setDd(dd);
+                if (dm.dictTree!=null&&dm.dictTree.getChildren()!=null&&!dm.dictTree.getChildren().isEmpty()) {
+                    TreeNode<DictDetail> dd=(TreeNode<DictDetail>)dm.dictTree.findNode(drrPo.getDictDid());
+                    if (dd!=null) drr.setDd(dd);
+                }
+                ret.add(drr);
+            }
+        } catch(Exception e) {
+        }
+        return ret.isEmpty()?null:ret;
+    }
+
+    /**
+     * 获得字典资源关系
+     * @param resTableName 资源分类(资源表名称)
+     * @param resId 资源Id
+     * @return 资源关系列表
+     */
+    @SuppressWarnings("unchecked")
+    public List<DictRefRes> getDictRefs(Map<String, Object> condition) {
+        if (condition==null||condition.isEmpty()) return null;
+        List<DictRefRes> ret=new ArrayList<DictRefRes>();
+        try {
+            List<DictRefResPo> l=dictRefDao.queryForList(condition);
+            if (l==null||l.isEmpty()) return null;
+
+            CacheEle<_CacheDictionary> cache=((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT));
+            _CacheDictionary cd=cache.getContent();
+            for (DictRefResPo drrPo: l) {
+                DictRefRes drr=new DictRefRes();
+                drr.buildFromPo(drrPo);
+                DictModel dm=cd.dictModelMap.get(drrPo.getDictMid());
+                drr.setDm(dm);
+                if (dm.dictTree!=null&&dm.dictTree.getChildren()!=null&&!dm.dictTree.getChildren().isEmpty()) {
+                    TreeNode<DictDetail> dd=(TreeNode<DictDetail>)dm.dictTree.findNode(drrPo.getDictDid());
+                    if (dd!=null) drr.setDd(dd);
+                }
                 ret.add(drr);
             }
         } catch(Exception e) {
@@ -366,7 +403,7 @@ public class DictService {
             TreeNode<DictDetail> myInTree=(TreeNode<DictDetail>)dm.dictTree.findNode(dd.getId());
             if (myInTree==null) return "2";
 
-            List<TreeNodeBean> ddl=myInTree.getAllBeansList();
+            List<? extends TreeNodeBean> ddl=myInTree.getAllBeansList();
             //检查是否有相关信息，注意是递归查找
             String inStr="";
             String inStr2="";
@@ -388,5 +425,18 @@ public class DictService {
                 return "1";
             }
         }
+    }
+
+    /**
+     * 根据Id得到字典模式
+     * @param dictMId 字典组Id
+     * @return 元数据信息
+     */
+    @SuppressWarnings("unchecked")
+    public DictModel getDictModelById(String dictMid) {
+        if (StringUtils.isNullOrEmptyOrSpace(dictMid)) return null;
+        CacheEle<_CacheDictionary> cache=((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT));
+        _CacheDictionary cd=cache.getContent();
+        return cd.dictModelMap.get(dictMid);
     }
 }

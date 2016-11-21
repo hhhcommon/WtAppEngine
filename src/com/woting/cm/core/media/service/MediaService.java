@@ -107,8 +107,7 @@ public class MediaService {
 	}
     
     public List<MediaAssetPo> getMaListBySmaId(String smaid) {
-    	List<MediaAssetPo> malist = mediaAssetDao.queryForList("getMaInfoBySmaId", smaid);
-		return null;
+    	return mediaAssetDao.queryForList("getMaInfoBySmaId", smaid);
     }
     
     public List<SeqMaRefPo> getSmaListBySid(String sid) {
@@ -292,5 +291,12 @@ public class MediaService {
 		removeCha(id);
 		removeMa2SmaBySid(id);
 		removeSma(id);
+    }
+
+    public List<Map<String, Object>> getMaListByWhereStr(String where) {
+        return mediaAssetDao.queryForListAutoTranform("getMaListByWhereStr", where);
+    }
+    public List<Map<String, Object>> getSeqMaListByWhereStr(String where) {
+        return seqMediaAssetDao.queryForListAutoTranform("getSeqMaListByWhereStr", where);
     }
 }

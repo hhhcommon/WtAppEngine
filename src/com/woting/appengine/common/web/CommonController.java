@@ -2,6 +2,8 @@ package com.woting.appengine.common.web;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,20 +30,26 @@ import com.woting.appengine.searchcrawler.utils.SearchUtils;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
+import com.woting.cm.core.dict.model.DictDetail;
 import com.woting.cm.core.dict.model.DictModel;
+import com.woting.cm.core.dict.model.DictRefRes;
+import com.woting.cm.core.dict.service.DictService;
 import com.woting.dataanal.gather.API.ApiGatherUtils;
 import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
 import com.woting.dataanal.gather.API.persis.pojo.ApiLogPo;
+import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.login.service.MobileUsedService;
 import com.woting.passport.mobile.MobileParam;
 import com.woting.passport.mobile.MobileUDKey;
+import com.woting.passport.preference.service.PreferenceService;
 import com.woting.passport.session.DeviceType;
 import com.woting.passport.session.SessionService;
 import com.woting.searchword.service.WordService;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
+import com.spiritdata.framework.ui.tree.ZTree;
 import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.CacheEle;
 
@@ -60,10 +68,15 @@ public class CommonController {
     private SearchCrawlerService scs;
     @Resource(name="redisSessionService")
     private SessionService sessionService;
+    @Resource
+    private DictService dictService;
+    @Resource
+    private PreferenceService pService;
 
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
 
+    @SuppressWarnings("unchecked")
     @PostConstruct
     public void initParam() {
         _cd=(SystemCache.getCache(WtAppEngineConstants.CACHE_DICT)==null?null:((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT)).getContent());
@@ -135,6 +148,26 @@ public class CommonController {
                     if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
                         alPo.setDeviceClass(m.get("MobileClass")+"");
                     }
+                }
+            }
+            String userId=map.get("UserId")==null?null:map.get("UserId")+"";
+            if (!StringUtils.isNullOrEmptyOrSpace(userId)) {
+                UserPo up=userService.getUserById(userId);
+                if (up!=null) {
+                    Map<String, Object> um=up.toDetailInfo();
+                    List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", userId);
+                    if (dictRefList!=null&&!dictRefList.isEmpty()) {
+                        for (DictRefRes drr: dictRefList) {
+                            if (drr.getDm().getId().equals("8")) {//性别
+                                um.put("Sex", drr.getDd().getNodeName());
+                            } else
+                            if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
+                                um.put("Region", drr.getDd().getTreePathName());
+                            }
+                        }
+                    }
+                    if (up.getBirthday()!=null) um.put("Age", getAge(up.getBirthday().getTime())+"");
+                    map.put("UserInfo", um);
                 }
             }
             return map;
@@ -582,7 +615,7 @@ public class CommonController {
         //数据收集处理==1
         ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
         alPo.setApiName("4.1.6-getCatalogInfo");
-        alPo.setObjType("028");//设置为评论
+        alPo.setObjType("001");//设置为分类
         alPo.setDealFlag(1);//处理成功
         alPo.setOwnerType(201);
         alPo.setOwnerId("--");
@@ -651,7 +684,7 @@ public class CommonController {
             int resultType=2;
             try {resultType=Integer.parseInt(m.get("ResultType")+"");} catch(Exception e) {}
             //4-得到相对层次
-            int relLevel=1;
+            int relLevel=0;
             try {relLevel=Integer.parseInt(m.get("RelLevel")+"");} catch(Exception e) {}
 
             //根据分类获得根
@@ -663,9 +696,7 @@ public class CommonController {
                 if (dm!=null&&dm.dictTree!=null) root=dm.dictTree;
             }
             //获得相应的结点，通过查找
-            if (root!=null) {
-                if (catalogId!=null) root=root.findNode(catalogId);
-            }
+            if (root!=null&&catalogId!=null) root=root.findNode(catalogId);
             //根据层级参数，对树进行截取
             if (root!=null&&relLevel>0) root=TreeUtils.cutLevelClone(root, relLevel);
 
@@ -960,7 +991,247 @@ public class CommonController {
             } catch (InterruptedException e) {}
         }
     }
+
+    @RequestMapping(value="/getPreferenceCatalog.do")
+    @ResponseBody
+    public Map<String,Object> getPreferenceCatalog(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("4.1.7-getPreferenceCatalog");
+        alPo.setObjType("001");//设置为分类
+        alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
+
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            MobileUDKey mUdk=null;
+            boolean isLogin=false;
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
+                }
+                mUdk=mp.getUserDeviceKey();
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "getPreferenceCatalog");
+                    if ((retM.get("ReturnType")+"").equals("2004")||(retM.get("ReturnType")+"").equals("3004")) {
+                        map.put("ReturnType", "0000");
+                        map.put("Message", "无法获取设备Id(IMEI)");
+                    } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                        isLogin=false;
+                    } else if ((retM.get("ReturnType")+"").equals("1001")) {
+                        isLogin=true;
+                        map.put("UserId", retM.get("UserId"));
+                    }
+                } else {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
+                }
+            }
+            //数据收集处理==2
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
+            }
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //1-得到UserId
+            String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
+            if (!StringUtils.isNullOrEmptyOrSpace(_userId)) {//判断是否需要登录
+                if (!isLogin) {
+                    map.put("ReturnType", "200");
+                    map.put("Message", "需要登录");
+                } else {
+                    if (map.get("UserId")==null||(map.get("UserId")!=null&&!map.get("UserId").equals(_userId))) {
+                        map.put("ReturnType", "1002");
+                        map.put("Message", "用户不匹配");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            TreeNode<? extends TreeNodeBean> root=null;
+            if (StringUtils.isNullOrEmptyOrSpace(_userId)) {//获得纯的偏好内容
+                root=pService.getPreference();
+            } else {//获得用户偏好
+                root=pService.getUserPreference(_userId);
+            }
+            if (root!=null&&root.getChildren()!=null&&!root.getChildren().isEmpty()) {
+                map.put("ReturnType", "1001");
+                map.put("PrefTree", (new ZTree<DictDetail>(root)).toTreeMap());
+            } else {
+                map.put("ReturnType", "1011");
+                map.put("Message", "无内容");
+            }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
+            return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
+        }
+    }
     
+
+    @RequestMapping(value="/setPreference.do")
+    @ResponseBody
+    public Map<String,Object> setPreference(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("4.1.8-setPreference");
+        alPo.setObjType("001");//设置为分类
+        alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
+
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            MobileUDKey mUdk=null;
+            boolean isLogin=false;
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
+                }
+                mUdk=mp.getUserDeviceKey();
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "setPreference");
+                    if ((retM.get("ReturnType")+"").equals("2004")||(retM.get("ReturnType")+"").equals("3004")) {
+                        map.put("ReturnType", "0000");
+                        map.put("Message", "无法获取设备Id(IMEI)");
+                    } else if ((retM.get("ReturnType")+"").equals("2003")) {
+                        isLogin=false;
+                    } else if ((retM.get("ReturnType")+"").equals("1001")) {
+                        isLogin=true;
+                        map.put("UserId", retM.get("UserId"));
+                    }
+                } else {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
+                }
+            }
+            //数据收集处理==2
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
+            }
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+            //1-得到UserId
+            String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(_userId)) {//判断是否需要登录
+                if (isLogin) {
+                    if (map.get("UserId")==null||(map.get("UserId")!=null&&!map.get("UserId").equals(_userId))) {
+                        map.put("ReturnType", "1002");
+                        map.put("Message", "用户不匹配");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+            //2-得到偏好设置串
+            String prefStr=(m.get("PrefStr")==null?null:m.get("PrefStr")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(prefStr)) {//判断是否需要登录
+                map.put("ReturnType", "1003");
+                map.put("Message", "无法获得偏好字符串");
+            }
+            if (map.get("ReturnType")!=null) return map;
+            //3-是否只是分类设置
+            int isOnlyCata=1;
+            try {isOnlyCata=Integer.parseInt(m.get("IsOnlyCata")+"");} catch(Exception e) {};
+
+            String objId=mUdk.getDeviceId();
+            int flag=2;
+            if (isLogin) {
+                objId=_userId;
+                flag=1;
+            }
+            flag=pService.setPreference(objId, prefStr, flag, isOnlyCata);
+            if (flag==1) {
+                map.put("ReturnType", "1001");
+            } else {
+                map.put("ReturnType", "1002");
+            }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
+            return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
+        }
+    }
+
     @RequestMapping(value="/lkTTS.do")
     @ResponseBody
     public Map<String,Object> getlkTTSInfo(HttpServletRequest request) {
@@ -992,4 +1263,16 @@ public class CommonController {
         }
         return map;
     }
+
+    private int getAge(long timestamp) {
+        int age=0;
+        Calendar born=Calendar.getInstance();
+        Calendar now=Calendar.getInstance();
+        now.setTime(new Date());
+        born.setTimeInMillis(timestamp);
+        if (born.after(now)) throw new IllegalArgumentException("生日不能大于今日");
+        age=now.get(Calendar.YEAR) - born.get(Calendar.YEAR);
+        if (now.get(Calendar.DAY_OF_YEAR) < born.get(Calendar.DAY_OF_YEAR)) age -= 1;
+        return age;
+    } 
 }

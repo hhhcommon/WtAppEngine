@@ -26,9 +26,6 @@ import com.woting.cm.core.channel.model.ChannelAsset;
 import com.woting.cm.core.channel.persis.po.ChannelAssetPo;
 import com.woting.cm.core.channel.persis.po.ChannelPo;
 import com.woting.cm.core.common.model.Owner;
-import com.woting.cm.core.dict.mem._CacheDictionary;
-import com.woting.cm.core.dict.model.DictDetail;
-import com.woting.cm.core.dict.model.DictModel;
 import com.woting.exceptionC.Wtcm0201CException;
 import com.woting.exceptionC.Wtcm1000CException;
 
@@ -275,7 +272,7 @@ public class ChannelService {
         TreeNode<Channel> myInTree=(TreeNode<Channel>)cc.channelTree.findNode(c.getId());
         if (myInTree==null) return "2";
 
-        List<TreeNodeBean> cl=myInTree.getAllBeansList();
+        List<? extends TreeNodeBean> cl=myInTree.getAllBeansList();
         //检查是否有相关信息，注意是递归查找
         String inStr="";
         String inStr2="";

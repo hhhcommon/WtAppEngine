@@ -32,7 +32,6 @@ public class RedisSessionService implements SessionService {
     @Resource
     private MobileUsedService muService;
 
-    @Override
     /**
      * return 
      */
@@ -54,26 +53,28 @@ public class RedisSessionService implements SessionService {
      *
      *   2003 请先登录
      */
+    @SuppressWarnings("unchecked")
+    @Override
     public Map<String, Object> dealUDkeyEntry(UserDeviceKey udk, String operDesc) {
         Map<String,Object> map=new HashMap<String, Object>();
         if (udk==null) {
             map.put("ReturnType", "0000");
-            map.put("Msg", "用户设备key为空，无法处理");
+            map.put("Message", "用户设备key为空，无法处理");
             return map;
         }
         DeviceType dt=DeviceType.buildDtByPCDType(udk.getPCDType());
         if (dt==DeviceType.ERR) {
             map.put("ReturnType", "1003");
-            map.put("Msg", "得不到相应的PCDType");
+            map.put("Message", "得不到相应的PCDType");
             return map;
         }
         if (StringUtils.isNullOrEmptyOrSpace(udk.getDeviceId())) {
             if (dt==DeviceType.PC) {
                 map.put("ReturnType", "3004");
-                map.put("Msg", "未获得SessionId无法处理");
+                map.put("Message", "未获得SessionId无法处理");
             } else {
                 map.put("ReturnType", "2004");
-                map.put("Msg", "未获得IMEI无法处理");
+                map.put("Message", "未获得IMEI无法处理");
             }
             return map;
         }
@@ -103,7 +104,7 @@ public class RedisSessionService implements SessionService {
                             //删除所有用户相关的Key值
                             delUserAll(_userId, roService);
                             map.put("ReturnType", "1002");
-                            map.put("Msg", "不能找到相应的用户");
+                            map.put("Message", "不能找到相应的用户");
                             return map;
                         }
                         roService.set(rUdk.getKey_DeviceType_UserInfo(), JsonUtils.objToJson(up.toHashMap4Mobile()), 30*60*1000);
@@ -118,7 +119,7 @@ public class RedisSessionService implements SessionService {
                     map.put("UserInfo", um);
                 } catch(Exception e) {
                 }
-                map.put("Msg", "用户已登录");
+                map.put("Message", "用户已登录");
             } else {//处理未登录
                 MobileUsedPo mup=muService.getUsedInfo(udk.getDeviceId(), udk.getPCDType());
                 boolean noLog=false;
@@ -138,11 +139,11 @@ public class RedisSessionService implements SessionService {
                         cleanUserLogin(_rUdk, roService);
                     }
                     map.put("ReturnType", "2003");
-                    map.put("Msg", "请先登录");
+                    map.put("Message", "请先登录");
                 } else {//可以进行登录
                     if (udk.getUserId()!=null&&!udk.getUserId().equals(mup.getUserId())) {
                         map.put("ReturnType", "2005");
-                        map.put("Msg", "请求用户与已登录用户不相符合");
+                        map.put("Message", "请求用户与已登录用户不相符合");
                     } else {
                         //1-删除该用户在此类设备上的登录信息——踢出（不允许同一用户在同一类型的不同设备上同时登录）
                         try {
@@ -167,7 +168,7 @@ public class RedisSessionService implements SessionService {
                             //删除所有用户相关的Key值
                             delUserAll(mup.getUserId(), roService);
                             map.put("ReturnType", "1002");
-                            map.put("Msg", "不能找到相应的用户");
+                            map.put("Message", "不能找到相应的用户");
                             return map;
                         }
                         rUdk.setUserId(mup.getUserId());
@@ -187,7 +188,7 @@ public class RedisSessionService implements SessionService {
                             map.put("UserInfo", upo.toHashMap4Mobile());
                         } catch(Exception e) {
                         }
-                        map.put("Msg", "用户已登录");
+                        map.put("Message", "用户已登录");
                     }
                 }
             }

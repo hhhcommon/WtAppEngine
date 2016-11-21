@@ -62,7 +62,7 @@
       <if test="refName!=null">refName=#{refName,jdbcType=VARCHAR},</if>
       <if test="resTableName!=null">resTableName=#{resTableName,jdbcType=VARCHAR},</if>
       <if test="resId!=null">resId=#{resId,jdbcType=VARCHAR},</if>
-      <if test="dictMid!=null">pId=#{dictMid,jdbcType=VARCHAR},</if>
+      <if test="dictMid!=null">dictMid=#{dictMid,jdbcType=VARCHAR},</if>
       <if test="dictDid!=null">dictDid=#{dictDid,jdbcType=VARCHAR},</if>
       <if test="CTime=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
     </set>
@@ -98,6 +98,11 @@
   <select id="getInfoById" resultMap="dictRefResMap" parameterType="java.lang.String">
     select <include refid="Base_Column_List"/> from wt_ResDict_Ref where id=#{id,jdbcType=VARCHAR}
   </select>
+  <select id="getListByWhere" resultMap="dictRefResMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_ResDict_Ref
+    <if test="whereByClause!=null">where ${whereByClause}</if>
+    <if test="orderByClause!=null">order by ${orderByClause}</if>
+  </select>
 
   <!-- 删除数据 -->
   <delete id="multiDelBc" parameterType="java.lang.String">
@@ -109,4 +114,17 @@
   <delete id="delByDicts" parameterType="java.lang.String">
     delete from wt_ResDict_Ref where ${value}
   </delete>
+
+  <!-- ===偏好相关===================================== -->
+  <select id="queryPrefList" resultMap="dictRefResMap" parameterType="java.util.Map">
+    select * from wt_ResDict_Ref where (dictMid='3' or dictMid='6') and resTableName=#{resTableName,jdbcType=VARCHAR} and resId=#{resId,jdbcType=VARCHAR}
+  </select>
+  <!-- 取消偏好 -->
+  <update id="cancelPref" parameterType="java.util.Map">
+    update wt_ResDict_Ref set refName=#{refName,jdbcType=VARCHAR} where resTableName=#{resTableName,jdbcType=VARCHAR} and resId=#{resId,jdbcType=VARCHAR} and dictMid=#{dictMid,jdbcType=VARCHAR}
+  </update>
+  <!-- 取消偏好 -->
+  <update id="changeToLike" parameterType="java.util.Map">
+    update wt_ResDict_Ref set refName=#{refName,jdbcType=VARCHAR} where ${whereStr}
+  </update>
 </mapper>

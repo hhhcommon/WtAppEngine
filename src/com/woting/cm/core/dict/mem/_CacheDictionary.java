@@ -41,6 +41,7 @@ public class _CacheDictionary {
      * @param dictMId 字典组Id
      * @return 元数据信息
      */
+    @SuppressWarnings("unchecked")
     public DictDetail getDictDetail(String dictMid, String dictDid) {
         if (dictModelMap==null) return null;
         DictModel dm=dictModelMap.get(dictMid);

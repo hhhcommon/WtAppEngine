@@ -524,12 +524,10 @@ public class ContentService {
         personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
         //2、得到明细内容
         List<Map<String, Object>> tempList=groupDao.queryForListAutoTranform("getSmSubMedias", contentId);
-        String subMedisIds="";
         //3、得到发布情况
         List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
         if (tempList!=null&&tempList.size()>0) {
             for (Map<String, Object> one: tempList) {
-                subMedisIds+=",'"+one.get("id")+"'";
                 Map<String, Object> oneAsset=new HashMap<String, Object>();
                 oneAsset.put("resId", one.get("id"));
                 oneAsset.put("resTableName", "wt_MediaAsset");

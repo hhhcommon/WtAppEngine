@@ -104,6 +104,7 @@ public class FavoriteService {
      * @return 该页内容
      */
     //注意这里的内容分类目前只有Radio,Audio,Sequ,Text四种，而且就是按这个顺序排列的
+    @SuppressWarnings({ "null", "unchecked" })
     public Map<String, Object> getFavoriteList(int resultType, int pageType, String mediaType, int pageSize, int page, int perSize, String beginCatalogId, MobileUDKey mUdk) {
         Map<String, Object> param=new HashMap<String, Object>();//返回数据，以及查询参数
 
@@ -380,6 +381,7 @@ public class FavoriteService {
     }
     private void add2FavoretList4Extract(Map<String, Object>[] favoriteArray, Map<String, Object> oneContent, List<Map<String, Object>> fList) {
         for (int i=0; i<fList.size(); i++) {
+            @SuppressWarnings("unchecked")
             Map<String, Object> srcConn=(Map<String, Object>)oneContent.get("SeqInfo");
             if (equalContent(srcConn, fList.get(i))) {
                 favoriteArray[i]=oneContent;

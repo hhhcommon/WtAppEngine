@@ -9,6 +9,8 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import org.springframework.stereotype.Service;
+
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
@@ -32,6 +34,7 @@ import com.woting.passport.useralias.service.UserAliasService;
  * 用户组处理，包括创建组，查询组；组邀请等信息
  * @author wanghui
  */
+@Service
 public class GroupService {
     private GroupMemoryManage gmm=GroupMemoryManage.getInstance();
     private PushMemoryManage pmm=PushMemoryManage.getInstance();
@@ -84,6 +87,7 @@ public class GroupService {
      * @param g 用户组
      * @param u 用户
      */
+    @SuppressWarnings("unchecked")
     public int insertGroupUser(GroupPo g, UserPo u, int isSelfIn) {
         GroupUserPo gu=new GroupUserPo();
         gu.setId(SequenceUUID.getUUIDSubSegment(4));
@@ -366,6 +370,7 @@ public class GroupService {
      * @param user 退出的用户
      * @return 0用户不在组，1退出组，2退出组并删除组
      */
+    @SuppressWarnings("unchecked")
     public int exitUserFromGroup(GroupPo gp, UserPo u) {
         String groupId=gp.getGroupId();
         GroupInterCom gic = gmm.getGroupInterCom(groupId);
@@ -1036,6 +1041,7 @@ public class GroupService {
      * @param userIds 用户Id，用逗号隔开
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> kickoutGroup(GroupPo gp, String userIds) {
         String groupId=gp.getGroupId();
         GroupInterCom gic = gmm.getGroupInterCom(groupId);
@@ -1185,6 +1191,7 @@ public class GroupService {
      * @param gp 被解散的组
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> dissolve(GroupPo gp) {
         String groupId=gp.getGroupId();
         GroupInterCom gic = gmm.getGroupInterCom(groupId);

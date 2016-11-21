@@ -115,8 +115,8 @@ public class DiscussController {
             if (map.get("ReturnType")!=null) return map;
             
             //1-获取意见
-            String opinion=(m.get("Opinion")==null?null:m.get("Opinion")+"");
-            if (StringUtils.isNullOrEmptyOrSpace(opinion)) {
+            String discu=(m.get("Discuss")==null?null:m.get("Discuss")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(discu)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "无法评论内容");
                 return map;
@@ -125,7 +125,7 @@ public class DiscussController {
             String mediaType=(m.get("MediaType")==null?null:m.get("MediaType")+"");
             if (StringUtils.isNullOrEmptyOrSpace(mediaType)) {
                 map.put("ReturnType", "1004");
-                map.put("Message", "无法获取内容分类");
+                map.put("Message", "无法获取媒体类型");
                 return map;
             }
             if (MediaType.buildByTypeName(mediaType)==MediaType.ERR) {
@@ -144,7 +144,7 @@ public class DiscussController {
             try {
                 Discuss discuss=new Discuss();
                 discuss.setUserId(userId);
-                discuss.setOpinion(opinion);
+                discuss.setDiscuss(discu);
                 discuss.setResTableName((MediaType.buildByTypeName(mediaType)).getTabName());
                 discuss.setResId(contentId);
                 //是否重复提交意见
@@ -308,6 +308,7 @@ public class DiscussController {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @RequestMapping(value="article/getList.do")
     @ResponseBody
     public Map<String,Object> getArticleList(HttpServletRequest request) {
@@ -545,17 +546,19 @@ public class DiscussController {
             if (map.get("ReturnType")!=null) return map;
 
             //1-获得内容分类
-            String mediaTypes=(m.get("MediaType")==null?null:m.get("MediaType")+"");
-            if (StringUtils.isNullOrEmptyOrSpace(mediaTypes)) {
+            if (StringUtils.isNullOrEmptyOrSpace(userId)) {
                 map.put("ReturnType", "1003");
-                map.put("Message", "无法获取内容分类");
+                map.put("Message", "该用户不存在");
                 return map;
             }
-            String[] ms=mediaTypes.split(",");
             List<MediaType> ml=new ArrayList<MediaType>();
-            for (String oneMt: ms) {
-                if (MediaType.buildByTypeName(oneMt)!=MediaType.ERR) {
-                    ml.add(MediaType.buildByTypeName(oneMt));
+            String mediaTypes=(m.get("MediaType")==null?null:m.get("MediaType")+"");
+            if (!StringUtils.isNullOrEmptyOrSpace(mediaTypes)) {
+                String[] ms=mediaTypes.split(",");
+                for (String oneMt: ms) {
+                    if (MediaType.buildByTypeName(oneMt)!=MediaType.ERR) {
+                        ml.add(MediaType.buildByTypeName(oneMt));
+                    }
                 }
             }
             if (ml.isEmpty()) ml=null;
@@ -587,8 +590,7 @@ public class DiscussController {
 
             if (al!=null&&al.size()>0) {
                 map.put("ReturnType", "1001");
-                map.put("AllCount", al.get("AllCount"));
-                map.put("ContentList", al.get("List"));
+                map.putAll(al);
             } else {
                 map.put("ReturnType", "1011");
                 map.put("Message", "无用户评论列表");

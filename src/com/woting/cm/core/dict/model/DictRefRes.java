@@ -60,6 +60,12 @@ public class DictRefRes extends BaseObject implements Serializable, ModelSwapPo 
         if (dm!=null&&!dm.getId().equals(dd.getTnEntity().getMId())) return;
         this.dd=dd;
     }
+    public void setDd(DictDetail dd) {
+        if (dm!=null&&!dm.getId().equals(dd.getMId())) return;
+        TreeNode<DictDetail> tn=new TreeNode<DictDetail>();
+        tn.setTnEntity(dd);
+        this.dd=tn;
+    }
     public Timestamp getCTime() {
         return CTime;
     }

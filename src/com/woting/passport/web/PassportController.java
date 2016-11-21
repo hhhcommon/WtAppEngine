@@ -139,6 +139,7 @@ public class PassportController {
 
             UserPo u=userService.getUserByLoginName(ln);
             if (u==null) u=userService.getUserByPhoneNum(ln);
+            if (u==null) u=userService.getUserByUserNum(ln);
             //1-判断是否存在用户
             if (u==null) { //无用户
                 map.put("ReturnType", "1002");
@@ -171,7 +172,23 @@ public class PassportController {
             }
             //4-返回成功，若没有IMEI也返回成功
             map.put("ReturnType", "1001");
-            map.put("UserInfo", u.toHashMap4Mobile());
+            if (u!=null) {
+                Map<String, Object> um=u.toDetailInfo();
+                List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", u.getUserId());
+                if (dictRefList!=null&&!dictRefList.isEmpty()) {
+                    for (DictRefRes drr: dictRefList) {
+                        if (drr.getDm().getId().equals("8")) {//性别
+                            um.put("Sex", drr.getDd().getNodeName());
+                        } else
+                        if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
+                            um.put("Region", drr.getDd().getTreePathName());
+                        }
+                    }
+                }
+                if (u.getBirthday()!=null) um.put("Age", getAge(u.getBirthday().getTime())+"");
+                map.put("ReturnType", "1001");
+                map.put("UserInfo", um);
+            }
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -306,8 +323,7 @@ public class PassportController {
             mUdk.setUserId(nu.getUserId());
             RedisOperService roService=new RedisOperService(redisConn, 4);
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
-            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService,
-                    new BlockLockConfig(5, 2, 0, 50));
+            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService, new BlockLockConfig(5, 2, 0, 50));
             try {
                 sessionService.registUser(mUdk, nu);
                 MobileUsedPo mu=new MobileUsedPo();
@@ -555,8 +571,7 @@ public class PassportController {
             //2-注销
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
             RedisOperService roService=new RedisOperService(redisConn, 4);
-            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService,
-                    new BlockLockConfig(5, 2, 0, 50));
+            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService, new BlockLockConfig(5, 2, 0, 50));
             try {
                 sessionService.logoutSession(mUdk);
                 //保存使用情况
@@ -832,7 +847,7 @@ public class PassportController {
     /**
      * 获得用户详细信息
      */
-    @RequestMapping(value="getUserInfo.do")
+    @RequestMapping(value="user/getUserInfo.do")
     @ResponseBody
     public Map<String,Object> getUserInfo(HttpServletRequest request) {
         //数据收集处理==1
@@ -908,23 +923,25 @@ public class PassportController {
             }
             //1-获得用户Id
             String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
-            if (!userId.equals(_userId)) {
+            if (_userId!=null&&!userId.equals(_userId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "给定用户号和系统记录账号不匹配");
             } else {
                 UserPo up=userService.getUserById(userId);
                 if (up!=null) {
                     Map<String, Object> um=up.toDetailInfo();
-                    List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", "userId");
-                    for (DictRefRes drr: dictRefList) {
-                        if (drr.getDm().getId().equals("8")) {//性别
-                            um.put("Sex", drr.getDd().getNodeName());
-                        } else
-                        if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
-                            um.put("Region", drr.getDd().getTreePathName());
+                    List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", userId);
+                    if (dictRefList!=null&&!dictRefList.isEmpty()) {
+                        for (DictRefRes drr: dictRefList) {
+                            if (drr.getDm().getId().equals("8")) {//性别
+                                um.put("Sex", drr.getDd().getNodeName());
+                            } else
+                            if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
+                                um.put("Region", drr.getDd().getTreePathName());
+                            }
                         }
                     }
-                    um.put("Age", getAge(up.getBirthday().getTime())+"");
+                    if (up.getBirthday()!=null) um.put("Age", getAge(up.getBirthday().getTime())+"");
                     map.put("ReturnType", "1001");
                     map.put("UserInfo", um);
                 } else {
@@ -1676,7 +1693,7 @@ public class PassportController {
     /**
      * 修改用户详细信息
      */
-    @RequestMapping(value="updateUserInfo.do")
+    @RequestMapping(value="user/updateUserInfo.do")
     @ResponseBody
     public Map<String,Object> updateUserInfo(HttpServletRequest request) {
         //数据收集处理==1
@@ -1751,37 +1768,43 @@ public class PassportController {
                 return map;
             }
             String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
-            if (!userId.equals(_userId)) {
+            if (_userId!=null&&!userId.equals(_userId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "给定用户号和系统记录账号不匹配");
                 return map;
             }
             //1-获得用户Id
             Map<String, Object> updateInfo=new HashMap<String, Object>();
-            String nickName=(m.get("nickName")==null?null:m.get("nickName")+"");
+            String nickName=(m.get("NickName")==null?null:m.get("NickName")+"");
             String userSign=(m.get("UserSign")==null?null:m.get("UserSign")+"");
             String sex=(m.get("SexDictId")==null?null:m.get("SexDictId")+"");
             String region=(m.get("RegionDictId")==null?null:m.get("RegionDictId")+"");
             String birthday=(m.get("Birthday")==null?null:m.get("Birthday")+"");
             String starSign=(m.get("StarSign")==null?null:m.get("StarSign")+"");
-            String email=(m.get("Email")==null?null:m.get("Email")+"");
+            String email=(m.get("MailAddr")==null?null:m.get("MailAddr")+"");
             String userNum=(m.get("UserNum")==null?null:m.get("UserNum")+"");
+            String phoneNum=(m.get("PhoneNum")==null?null:m.get("PhoneNum")+"");
             updateInfo.put("userId", userId);
             if (!StringUtils.isNullOrEmptyOrSpace(nickName)) updateInfo.put("nickName", nickName);
             if (!StringUtils.isNullOrEmptyOrSpace(userSign)) updateInfo.put("userSign", userSign);
             if (!StringUtils.isNullOrEmptyOrSpace(sex)) updateInfo.put("sex", sex);
             if (!StringUtils.isNullOrEmptyOrSpace(region)) updateInfo.put("region", region);
-            if (!StringUtils.isNullOrEmptyOrSpace(birthday)) updateInfo.put("birthday", Long.parseLong(birthday));
-            if (!StringUtils.isNullOrEmptyOrSpace(starSign)) updateInfo.put("starSign", Long.parseLong(starSign));
-            if (!StringUtils.isNullOrEmptyOrSpace(email)) updateInfo.put("email", Long.parseLong(email));
-            if (!StringUtils.isNullOrEmptyOrSpace(userNum)) updateInfo.put("userNum", Long.parseLong(userNum));
+            if (!StringUtils.isNullOrEmptyOrSpace(birthday)) {
+                Timestamp t=null;
+                try {t=new Timestamp(Long.parseLong(birthday));} catch(Exception e) {}
+                if (t!=null) updateInfo.put("birthday", t);
+            }
+            if (!StringUtils.isNullOrEmptyOrSpace(starSign)) updateInfo.put("starSign", starSign);
+            if (!StringUtils.isNullOrEmptyOrSpace(email)) updateInfo.put("email", email);
+            if (!StringUtils.isNullOrEmptyOrSpace(userNum)) updateInfo.put("userNum", userNum);
+            if (!StringUtils.isNullOrEmptyOrSpace(phoneNum)) updateInfo.put("phoneNum", phoneNum);
 
             updateInfo=userService.updateUser(updateInfo);
             if (updateInfo==null) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "找不到对应的用户");
             } else {
-                map=updateInfo;
+                map.putAll(updateInfo);
             }
             return map;
         } catch(Exception e) {
@@ -1804,7 +1827,7 @@ public class PassportController {
     /**
      * 判断用户号
      */
-    @RequestMapping(value="decideUserNum.do")
+    @RequestMapping(value="user/decideUserNum.do")
     @ResponseBody
     public Map<String,Object> decideUserNum(HttpServletRequest request) {
         //数据收集处理==1
@@ -1879,7 +1902,7 @@ public class PassportController {
                 return map;
             }
             String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
-            if (!userId.equals(_userId)) {
+            if (_userId!=null&&!userId.equals(_userId)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "给定用户号和系统记录账号不匹配");
                 return map;

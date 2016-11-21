@@ -15,7 +15,7 @@ import com.woting.discuss.persis.po.DiscussPo;
  * 包括意见的反馈列表
  * @author wh
  */
-public class Discuss extends DiscussPo implements  ModelSwapPo {
+public class Discuss extends DiscussPo implements ModelSwapPo {
     private static final long serialVersionUID = 1020093563227522687L;
 
 
@@ -28,7 +28,7 @@ public class Discuss extends DiscussPo implements  ModelSwapPo {
         this.setUserId(_po.getUserId());
         this.setResTableName(_po.getResTableName());
         this.setResId(_po.getResId());
-        this.setOpinion(_po.getOpinion());
+        this.setDiscuss(_po.getDiscuss());
         this.setCTime(_po.getCTime());
     }
     @Override
@@ -39,7 +39,7 @@ public class Discuss extends DiscussPo implements  ModelSwapPo {
         ret.setUserId(this.getUserId());
         ret.setResTableName(this.getResTableName());
         ret.setResId(this.getResId());
-        ret.setOpinion(this.getOpinion());
+        ret.setDiscuss(this.getDiscuss());
         ret.setCTime(this.getCTime());
         return ret;
     }
@@ -50,7 +50,7 @@ public class Discuss extends DiscussPo implements  ModelSwapPo {
         if (!StringUtils.isNullOrEmptyOrSpace(this.userId)) retM.put("UserId", this.userId);
         if (!StringUtils.isNullOrEmptyOrSpace(this.resTableName)) retM.put("MediaType", MediaType.buildByTabName(this.resTableName).getTypeName());
         if (!StringUtils.isNullOrEmptyOrSpace(this.resId)) retM.put("ContentId", this.resId);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.opinion)) retM.put("Discuss", this.opinion);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.discuss)) retM.put("Discuss", this.discuss);
         if (this.CTime!=null) retM.put("Time", this.CTime.getTime());
         return retM;
     }

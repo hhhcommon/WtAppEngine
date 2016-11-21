@@ -188,7 +188,7 @@ public class ContentController {
                     mp.setImei(request.getSession().getId());
                 }
                 mUdk=mp.getUserDeviceKey();
-                map.putAll(mUdk.toHashMapAsBean());
+                if (mUdk!=null) map.putAll(mUdk.toHashMapAsBean());
             }
             //数据收集处理==2
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
