@@ -57,7 +57,7 @@
   </bean>
 
   <!-- 平台缓存池 -->
-  <bean id="cachePool" class=" com.spiritdata.framework.core.cache.CachePool">
+  <bean id="cachePool" class="com.spiritdata.framework.core.cache.CachePool">
     <property name="caches">
       <map>
         <entry key="1" value-ref="cacheAppEngineCLU"/>
@@ -104,6 +104,12 @@
     <property name="port" value="${redis.port}"/>
     <property name="password" value="${redis.password}"/>
     <property name="poolConfig" ref="poolConfig"/>
+  </bean>
+
+  <!-- 以下为jsonConf配置信息 -->
+  <!--Uga缓存：平台 -->
+  <bean id="loadJsonConfig" class="com.woting.appengine.LoadJsonConfig" scope="prototype" init-method="loadConfig">
+    <property name="configFilePath" value="app.conf"/>
   </bean>
 
   <context:annotation-config/>
