@@ -11,7 +11,6 @@ import javax.annotation.Resource;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.push.core.message.content.MapContent;
 import com.woting.passport.UGA.persis.pojo.UserPo;
@@ -24,7 +23,6 @@ import com.woting.passport.useralias.service.UserAliasService;
 public class FriendService {
     static private int INVITE_INTERVAL_TIME=5*60*1000;//毫秒数：5分钟
     static private int INVITE_REFUSE_TIME=5*60*1000;//7*24*60*60*1000;//毫秒数：一周
-    private PushMemoryManage pmm=PushMemoryManage.getInstance();
 
     @Resource(name="defaultDAO")
     private MybatisDAO<UserPo> userDao;
@@ -182,7 +180,8 @@ public class FriendService {
             dataMap.put("InviteUserInfo", um);
             MapContent mc=new MapContent(dataMap);
             nMsg.setMsgContent(mc);
-            pmm.getSendMemory().addMsg2NotifyQueue(beInvitedUserId, nMsg);//发送通知消息
+            //TODO
+            //pmm.getSendMemory().addMsg2NotifyQueue(beInvitedUserId, nMsg);//发送通知消息
 
             m.put("ReturnType", "1001");
             m.put("InviteCount", ifPo.getInviteVector());
@@ -278,7 +277,8 @@ public class FriendService {
                 dataMap.put("BeInvitedUserInfo", um);
                 MapContent mc=new MapContent(dataMap);
                 bMsg.setMsgContent(mc);
-                pmm.getSendMemory().addMsg2NotifyQueue(inviteUserId, bMsg);
+                //TODO
+//                pmm.getSendMemory().addMsg2NotifyQueue(inviteUserId, bMsg);
 
                 m.put("ReturnType", "1001");
             }
@@ -330,7 +330,8 @@ public class FriendService {
             dataMap.put("DealTime", System.currentTimeMillis());
             MapContent mc=new MapContent(dataMap);
             bMsg.setMsgContent(mc);
-            pmm.getSendMemory().addMsg2NotifyQueue(friendUserId, bMsg);
+            //TODO
+//            pmm.getSendMemory().addMsg2NotifyQueue(friendUserId, bMsg);
         }
         return ret;
     }
