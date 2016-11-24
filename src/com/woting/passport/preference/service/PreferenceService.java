@@ -118,16 +118,16 @@ public class PreferenceService {
 
         String[] oneArray=prefStr.split(",");
         for (String s:oneArray) {
-            String[] fields=s.split("::");
+            String[] fields=s.trim().split("::");
             if (fields.length==2) {//分类和偏好类型都设置
-                if (fields[0].equals("6")) {
+                if (fields[0].trim().equals("6")) {
                     if (pModel.dictTree!=null&&pModel.dictTree.findNode(fields[1])!=null) {
-                        prefIds.add(fields[1]);
+                        prefIds.add(fields[1].trim());
                     }
                 }
-                if (fields[0].equals("3")) {
+                if (fields[0].trim().equals("3")) {
                     if (cModel.dictTree!=null&&cModel.dictTree.findNode(fields[1])!=null) {
-                        cataIds.add(fields[1]);
+                        cataIds.add(fields[1].trim());
                     }
                 }
             }
@@ -182,7 +182,7 @@ public class PreferenceService {
                     dictRefDao.update("changeToLike", param);
                 }
                 //插入新的
-                if (!prefIds.isEmpty()&&!cataIds.isEmpty()) {
+                if (!prefIds.isEmpty()||!cataIds.isEmpty()) {
                     param.clear();
                     param.put("resTableName", "plat_User");
                     param.put("resId", objId);
