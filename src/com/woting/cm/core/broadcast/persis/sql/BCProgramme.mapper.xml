@@ -7,6 +7,7 @@
 		<result column="bcId"      property="bcId"      jdbcType="VARCHAR" />
 		<result column="title"     property="title"     jdbcType="VARCHAR" />
 		<result column="weekDay"   property="weekDay"   jdbcType="INTEGER" />
+		<result column="sort"      property="sort"      jdbcType="INTEGER" />
 		<result column="beginTime" property="beginTime" jdbcType="VARCHAR" />
 		<result column="endTime"   property="endTime"   jdbcType="VARCHAR" />
 		<result column="cTime"     property="cTime"     jdbcType="TIMESTAMP" />
@@ -23,18 +24,28 @@
 				<if test="bcId!=null"> and bcId=#{bcId,jdbcType=VARCHAR}</if>
 				<if test="title!=null"> and title=#{title,jdbcType=VARCHAR}</if>
 				<if test="weekDay!=null and weekDay!=0"> and weekDay=#{weekDay,jdbcType=INTEGER}</if>
+				<if test="sort!=null"> and sort=#{sort,jdbcType=INTEGER}</if>
 				<if test="beginTime!=null"> and beginTime=#{beginTime,jdbcType=VARCHAR}</if>
 				<if test="endTime!=null"> and endTime=#{endTime,jdbcType=VARCHAR}</if>
 				<if test="cTime!=null"> and cTime=#{cTime,jdbcType=TIMESTAMP}</if>
 			</trim>
 		</where>
 	</sql>
+	
+	<!-- 获得列表 -->
+    <select id="getList" resultMap="BaseResultMap" parameterType="java.util.Map">
+      select <include refid="Base_Column_List"/> from wt_BCProgramme
+      <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+      <if test="wheresql!=null"> and (${wheresql})</if>
+      <if test="orderByClause!=null">order by ${orderByClause}</if>
+    </select>
+	
 	<insert id="insertList" parameterType="java.util.List">
 		insert into
-		wt_BCProgramme(id,bcId,title,weekDay,beginTime,endTime,cTime) values
+		wt_BCProgramme(id,bcId,title,weekDay,sort,beginTime,endTime,cTime) values
 		<foreach collection="list" item="list" index="index"
 			separator=",">
-			(#{list.id},#{list.bcId},#{list.title},#{list.weekDay},#{list.beginTime},#{list.endTime},#{list.cTime})
+			(#{list.id},#{list.bcId},#{list.title},#{list.weekDay},#{list.sort},#{list.beginTime},#{list.endTime},#{list.cTime})
 		</foreach>
 	</insert>
 	

@@ -14,6 +14,10 @@
     <typeAlias alias="seqMaRef"      type="com.woting.cm.core.media.persis.po.SeqMaRefPo"/>
     <typeAlias alias="channel"       type="com.woting.cm.core.channel.persis.po.ChannelPo"/>
     <typeAlias alias="channelAsset"  type="com.woting.cm.core.channel.persis.po.ChannelAssetPo"/>
+    <!-- 电台相关 -->
+    <typeAlias alias="broadcast" type="com.woting.cm.core.broadcast.persis.po.BroadcastPo"/>
+    <typeAlias alias="bcliveflow" type="com.woting.cm.core.broadcast.persis.po.BCLiveFlowPo"/>
+    <typeAlias alias="bcprogramme" type="com.woting.cm.core.broadcast.persis.po.BCProgrammePo"/>
   </typeAliases>
   <!-- SQL文件设置 -->
   <mappers>
@@ -24,5 +28,9 @@
     <mapper resource="com/woting/cm/core/media/persis/sql/Media.mapper.xml"/>
     <mapper resource="com/woting/cm/core/channel/persis/sql/Channel.mapper.xml"/>
     <mapper resource="com/woting/cm/core/channel/persis/sql/ChannelAsset.mapper.xml"/>
+    <!-- 电台相关 -->
+    <mapper resource="com/woting/cm/core/broadcast/persis/sql/Broadcast.mapper.xml"/>
+    <mapper resource="com/woting/cm/core/broadcast/persis/sql/BCProgramme.mapper.xml"/>
+    <mapper resource="com/woting/cm/core/broadcast/persis/sql/BCLiveFlow.mapper.xml"/>
   </mappers>
 </configuration>
