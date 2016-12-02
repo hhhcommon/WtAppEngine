@@ -28,6 +28,7 @@ public class BcProgrammeService {
 		Map<String, Object> m = new HashMap<>();
 		m.put("bcId", bcId);
 		m.put("weekDay", weekDay);
+		m.put("sort", 0);
 		if (validTime!=0) {
 			m.put("validTime", new Timestamp(validTime));
 		}

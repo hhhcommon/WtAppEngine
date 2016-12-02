@@ -6,6 +6,7 @@
 		<id column="id" property="id" jdbcType="VARCHAR" />
 		<result column="bcId"      property="bcId"      jdbcType="VARCHAR" />
 		<result column="title"     property="title"     jdbcType="VARCHAR" />
+		<result column="sort"      property="sort"      jdbcType="INTEGER" />
 		<result column="weekDay"   property="weekDay"   jdbcType="INTEGER" />
 		<result column="beginTime" property="beginTime" jdbcType="VARCHAR" />
 		<result column="endTime"   property="endTime"   jdbcType="VARCHAR" />
@@ -14,7 +15,7 @@
 	</resultMap>
 	<!-- 所有列 -->
 	<sql id="Base_Column_List">
-		id, bcId, title, weekDay, beginTime, endTime, cTime, validTime
+		id, bcId, title, sort, weekDay, beginTime, endTime, cTime, validTime
 	</sql>
 	<!-- 条件子句 -->
 	<sql id="WhereClauseByEntiey">
@@ -23,6 +24,7 @@
 				<if test="id!=null"> and id=#{id,jdbcType=VARCHAR}</if>
 				<if test="bcId!=null"> and bcId=#{bcId,jdbcType=VARCHAR}</if>
 				<if test="title!=null"> and title=#{title,jdbcType=VARCHAR}</if>
+				<if test="sort!=null"> and sort=#{sort,jdbcType=INTEGER}</if>
 				<if test="weekDay!=null and weekDay!=0"> and weekDay=#{weekDay,jdbcType=INTEGER}</if>
 				<if test="beginTime!=null"> and beginTime=#{beginTime,jdbcType=VARCHAR}</if>
 				<if test="endTime!=null"> and endTime=#{endTime,jdbcType=VARCHAR}</if>
@@ -43,10 +45,9 @@
 	
 	<insert id="insertList" parameterType="java.util.List">
 		insert into
-		wt_BCProgramme(id,bcId,title,weekDay,beginTime,endTime,cTime,validTime) values
-		<foreach collection="list" item="list" index="index"
-			separator=",">
-			(#{list.id},#{list.bcId},#{list.title},#{list.weekDay},#{list.beginTime},#{list.endTime},#{list.cTime},#{list.validTime})
+		wt_BCProgramme(id,bcId,title,sort,weekDay,beginTime,endTime,cTime,validTime) values
+		<foreach collection="list" item="list" index="index" separator=",">
+			(#{list.id},#{list.bcId},#{list.title},#{list.sort},#{list.weekDay},#{list.beginTime},#{list.endTime},#{list.cTime},#{list.validTime})
 		</foreach>
 	</insert>
 	
