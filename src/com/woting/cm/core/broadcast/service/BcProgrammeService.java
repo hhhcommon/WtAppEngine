@@ -24,13 +24,22 @@ public class BcProgrammeService {
         bcProDao.setNamespace("A_BCPROGRAMME");
     }
 	
-	public List<BCProgrammePo> getBCProgrammeListByTime(String bcId, int weekDay, long time) {
+	public List<BCProgrammePo> getBCProgrammeListByTime(String bcId, int weekDay, long time, long validTime, String ordersql, int limitnum) {
 		Map<String, Object> m = new HashMap<>();
 		m.put("bcId", bcId);
 		m.put("weekDay", weekDay);
-		m.put("sort", "0");
-		m.put("wheresql", "cTime < '"+new Timestamp(time)+"'");
-		m.put("orderByClause", "beginTime");
+		if (validTime!=0) {
+			m.put("validTime", new Timestamp(validTime));
+		}
+		if (time!=0) {
+			m.put("wheresql", " validTime < '"+new Timestamp(time)+"'");
+		}
+		if (ordersql!=null) {
+			m.put("orderByClause", ordersql);
+		}
+		if (limitnum!=0) {
+			m.put("limitNum", limitnum);
+		}
 		List<BCProgrammePo> bcps = bcProDao.queryForList("getList", m);
 		if (bcps!=null && bcps.size()>0) {
 			return bcps;

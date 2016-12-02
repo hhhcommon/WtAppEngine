@@ -1413,7 +1413,11 @@ public class ContentService {
 				Calendar cal = Calendar.getInstance();
 				cal.setTime(new Date(time));
 				int week = cal.get(Calendar.DAY_OF_WEEK);
-				List<BCProgrammePo> bcps = bcProgrammeService.getBCProgrammeListByTime(bcId, week, time);
+				List<BCProgrammePo> bcps = bcProgrammeService.getBCProgrammeListByTime(bcId, week, time, 0, " validTime desc", 1);
+				if (bcps!=null && bcps.size()>0) {
+					long validTime = bcps.get(0).getValidTime().getTime();
+					bcps = bcProgrammeService.getBCProgrammeListByTime(bcId, week, 0, validTime, " beginTime", 0);
+				}
 				if (bcps!=null && bcps.size()>0) {
 					List<Map<String, Object>> bcpsm = new ArrayList<>();
 					for (BCProgrammePo bcProgrammePo : bcps) {
