@@ -10,6 +10,9 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.stereotype.Service;
 
 import com.spiritdata.framework.UGA.UgaUser;
+import com.spiritdata.framework.core.lock.BlockLockConfig;
+import com.spiritdata.framework.core.lock.ExpirableBlockKey;
+import com.spiritdata.framework.ext.redis.lock.RedisBlockLock;
 import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
@@ -32,27 +35,6 @@ public class RedisSessionService implements SessionService {
     @Resource
     private MobileUsedService muService;
 
-    /**
-     * return 
-     */
-    /**
-     * 处理用户设备Key进入系统，若未登录要看之前的登录情况，自动登录
-     * @param udk 根据用户设备Key
-     * @return Map类型，key 和 value意义如下：
-     *
-     *   0000 用户设备key为空，无法处理
-     *
-     *   1001 用户已登录
-     *
-     *   1002 不能找到相应的用户
-     *   1003 得不到相应的PCDType
-     *   2005 请求用户与已登录用户不相符合
-     *
-     *   2004 移动客户端——未获得IMEI无法处理
-     *   3004 PC客户端——未获得SessionId无法处理
-     *
-     *   2003 请先登录
-     */
     @SuppressWarnings("unchecked")
     @Override
     public Map<String, Object> dealUDkeyEntry(UserDeviceKey udk, String operDesc) {
@@ -80,13 +62,13 @@ public class RedisSessionService implements SessionService {
         }
 
         RedisUserDeviceKey rUdk=new RedisUserDeviceKey(udk);
-        RedisOperService roService=null;
+        RedisOperService roService=new RedisOperService(redisConn, 4);
+        ExpirableBlockKey rLock=RedisBlockLock.lock(rUdk.getKey_Lock(), roService, new BlockLockConfig(5, 2, 0, 50));
         try {
-            roService=new RedisOperService(redisConn, 4);
             //从Redis中获得对应额UserId
             String _value=roService.get(rUdk.getKey_DeviceType_UserId());
             String _userId=(_value==null?null:new String(_value));
-            boolean hadLogon=_userId==null?false:(_userId.equals(rUdk.getUserId())&&roService.get(rUdk.getKey_UserLoginStatus())!=null);
+            boolean hadLogon=(_userId==null?false:(_userId.equals(rUdk.getUserId())&&roService.get(rUdk.getKey_UserLoginStatus())!=null));
 
             if (hadLogon) {//已经登录
                 roService.set(rUdk.getKey_UserLoginStatus(), System.currentTimeMillis()+"::"+operDesc);
@@ -123,7 +105,7 @@ public class RedisSessionService implements SessionService {
             } else {//处理未登录
                 MobileUsedPo mup=muService.getUsedInfo(udk.getDeviceId(), udk.getPCDType());
                 boolean noLog=false;
-                noLog=mup==null||mup.getStatus()!=1||mup.getUserId()==null;
+                noLog=(mup==null||mup.getStatus()!=1||mup.getUserId()==null);
                 if (noLog) {//无法登录
                     //删除在该设备上的登录信息
                     RedisUserDeviceKey _rUdk=new RedisUserDeviceKey(new UserDeviceKey());
@@ -193,6 +175,7 @@ public class RedisSessionService implements SessionService {
                 }
             }
         } finally {
+            rLock.unlock();
             if (roService!=null) roService.close();
             roService=null;
         }

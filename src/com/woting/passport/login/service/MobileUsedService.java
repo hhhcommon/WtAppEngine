@@ -38,6 +38,8 @@ public class MobileUsedService {
                 e1.printStackTrace();
             }
         }
+        //把其他的用户使用情况设置为未登录
+        muDao.update("adjustByIMEI", mu);
     }
 
     /**
