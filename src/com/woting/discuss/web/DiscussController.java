@@ -217,7 +217,7 @@ public class DiscussController {
                 }
                 mUdk=mp.getUserDeviceKey();
                 if (mUdk!=null) {
-                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "discuss/add");
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "discuss/del");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
                         map.put("Message", "需要登录");
