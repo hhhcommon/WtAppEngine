@@ -251,14 +251,25 @@ public class UserService implements UgaUserService {
                 OKFields+=",PortraitMini";
             }
             //更新
-            if (userInfo.size()==1) {
+            boolean onlyDict=true;
+            if (!StringUtils.isNullOrEmptyOrSpace(OKFields)) {
+                OKFields=OKFields.substring(1);
+                String[] _s=OKFields.split(",");
+                for (int i=0; i<_s.length; i++) {
+                    if (!_s[i].equals("Sex")&&!_s[i].equals("Region")) {
+                        onlyDict=false;
+                        break;
+                    }
+                }
+            }
+            if (userInfo.size()==1||onlyDict) {
                 retMap.put("ReturnType", "0000");
             } else {
                 userDao.update(userInfo);//用户信息
             }
 
             retMap.put("ReturnType", "1001");
-            if (!StringUtils.isNullOrEmptyOrSpace(OKFields))  retMap.put("OkFields", OKFields.substring(1));
+            if (!StringUtils.isNullOrEmptyOrSpace(OKFields))  retMap.put("OkFields", OKFields);
             retMap.put("NoFields", noMap);
         } catch (Exception e) {
             e.printStackTrace();
