@@ -413,7 +413,7 @@ public class DiscussController {
             if (ol!=null&&ol.size()>0) {
                 map.put("ReturnType", "1001");
                 map.put("AllCount", ol.get("AllCount"));
-                map.put("OpinionList", convertDiscissView((List<Discuss>)(ol.get("List"))));
+                map.put("DiscussList", convertDiscissView((List<Discuss>)(ol.get("List"))));
             } else {
                 map.put("ReturnType", "1011");
                 map.put("Message", "无评论信息");
