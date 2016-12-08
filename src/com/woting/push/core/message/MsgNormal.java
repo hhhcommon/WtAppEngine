@@ -20,7 +20,7 @@ public class MsgNormal extends Message {
     private int command; //命令编号
     private int returnType; //返回值类型
 
-    private int PCDType; //设备：设备类型:1手机;2设备;3网站;0服务器
+    private int PCDType; //设备：设备类型
     private String userId; //设备：当前登录用户
     private String IMEI; //设备：设备串号
 
