@@ -3,8 +3,10 @@ package com.woting.appengine.content.service;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -23,11 +25,12 @@ import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.util.DateUtils;
-import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.cm.core.utils.ContentUtils;
+import com.woting.cm.core.broadcast.persis.po.BCProgrammePo;
+import com.woting.cm.core.broadcast.service.BcProgrammeService;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.cm.core.dict.mem._CacheDictionary;
@@ -49,7 +52,9 @@ public class ContentService {
     private FavoriteService favoriteService;
     @Resource
     private ChannelService channelService;
-
+    @Resource
+    private BcProgrammeService bcProgrammeService;
+    
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
 
@@ -1398,6 +1403,42 @@ public class ContentService {
         insertIndex=insertIndex==-1?ret.size():insertIndex;
         ret.add(insertIndex, oneM);
     }
+
+	public List<Map<String, Object>> BcProgrammes(String bcId, String requestTimesstr) {
+		String [] times = requestTimesstr.split(",");
+		if (times!=null && times.length>0) {
+			List<Map<String, Object>> l = new ArrayList<>();
+			for (String ts : times) {
+				long time = Long.valueOf(ts);
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(new Date(time));
+				int week = cal.get(Calendar.DAY_OF_WEEK);
+				List<BCProgrammePo> bcps = bcProgrammeService.getBCProgrammeListByTime(bcId, week, time, 0, " validTime desc", 1);
+				if (bcps!=null && bcps.size()>0) {
+					long validTime = bcps.get(0).getValidTime().getTime();
+					bcps = bcProgrammeService.getBCProgrammeListByTime(bcId, week, 0, validTime, " beginTime", 0);
+				}
+				if (bcps!=null && bcps.size()>0) {
+					List<Map<String, Object>> bcpsm = new ArrayList<>();
+					for (BCProgrammePo bcProgrammePo : bcps) {
+						Map<String, Object> m = new HashMap<>();
+					    m.put("Title", bcProgrammePo.getTitle());
+					    m.put("BeginTime", bcProgrammePo.getBeginTime());
+					    m.put("EndTime", bcProgrammePo.getEndTime());
+					    bcpsm.add(m);
+					}
+					Map<String, Object> mm = new HashMap<>();
+					mm.put("Day", time);
+					mm.put("List", bcpsm);
+					l.add(mm);
+				}
+			}
+			if (l!=null && l.size()>0) {
+				return l;
+			}
+		}
+		return null;
+	}
 }
 //测试的消息{"IMEI":"12356","UserId":"107fc906ae0f","ResultType":"0","SearchStr":"罗,电影,安徽"}=
 //http://localhost:808/wt/searchByVoice.do

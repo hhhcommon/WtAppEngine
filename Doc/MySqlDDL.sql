@@ -587,6 +587,50 @@ CREATE TABLE wt_ResOrgAsset_Ref (
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='032资产与外部系统对照表';
 
+/**033标签库[WT_KEYWORD]*/
+DROP TABLE IF EXISTS wt_KeyWord;
+CREATE TABLE wt_KeyWord (
+  id             varchar(32)      NOT NULL             COMMENT '标签UUID',
+  ownerId        varchar(32)      NOT NULL             COMMENT '所属者Id',
+  ownerType      int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '所有者类型(0-系统,1-主播)',
+  ktName         varchar(200)     NOT NULL             COMMENT '标签名称',
+  nPy            varchar(800)     NOT NULL             COMMENT '名称拼音',
+  sort           int(5) unsigned  NOT NULL  DEFAULT 0  COMMENT '标签排序,从大到小排序，越大越靠前',
+  isValidate     int(1) unsigned  NOT NULL  DEFAULT 1  COMMENT '是否生效(1-生效,2-无效)',
+  descn          varchar(500)     NOT NULL             COMMENT '描述',
+  cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='033标签库';
+
+/**034标签库对应关系表[WT_KW_REF]*/
+DROP TABLE IF EXISTS wt_Kw_Ref;
+CREATE TABLE wt_Kw_Ref (
+  id             varchar(32)      NOT NULL             COMMENT '关系UUID',
+  refName        varchar(200)     NOT NULL             COMMENT '关系名称，例如标签-栏目，标签-专辑',
+  kwId           varchar(32)      NOT NULL             COMMENT '标签Id',
+  resTableName   varchar(200)     NOT NULL             COMMENT '资源类型表名',
+  resId          varchar(32)      NOT NULL             COMMENT '资源Id',
+  cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='034标签库对应关系表';
+
+/**035复杂关系表[WT_COMPLEX_REF]*/
+DROP TABLE IF EXISTS wt_Complex_Ref;
+CREATE TABLE wt_Complex_Ref (
+  id             varchar(32)      NOT NULL             COMMENT '关系UUID',
+  assetTableName varchar(200)     NOT NULL             COMMENT '资源类型表名',
+  assetId        varchar(32)      NOT NULL             COMMENT '资源Id',
+  resTableName   varchar(200)                          COMMENT '关系资源类型表名',
+  resId          varchar(32)      NOT NULL             COMMENT '关系资源Id',
+  dictMId        varchar(32)      NOT NULL             COMMENT '字典组Id',
+  dictDId        varchar(32)      NOT NULL             COMMENT '字典项Id',
+  cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='035复杂关系表';
+
 
 /*****************************************/
 /**
