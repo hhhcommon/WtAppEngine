@@ -2145,7 +2145,6 @@ public class GroupController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            String userId="";
             MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             alPo.setReqParam(JsonUtils.objToJson(m));
@@ -2167,7 +2166,6 @@ public class GroupController {
                         map.putAll(retM);
                         if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
-                    userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取需要的参数");
