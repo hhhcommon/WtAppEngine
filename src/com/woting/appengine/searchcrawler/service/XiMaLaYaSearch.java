@@ -37,6 +37,7 @@ public class XiMaLaYaSearch extends Thread {
 	    festivalsS(content);
 	}
 
+	//专辑搜索
 	private void stationS(String content) {
 		String url = "http://www.ximalaya.com/search/" + SearchUtils.utf8TOurl(content) + "/t3";
 		Document doc = null;
@@ -122,6 +123,10 @@ public class XiMaLaYaSearch extends Thread {
 		}
 	}
 
+	/**
+	 * 单体节目搜索
+	 * @param content
+	 */
 	private void festivalsS(String content) {
 		String url = "http://www.ximalaya.com/search/" + SearchUtils.utf8TOurl(content) + "/t2";
 		Document doc = null;
