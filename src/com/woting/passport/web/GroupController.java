@@ -1604,7 +1604,7 @@ public class GroupController {
             }
             //3-加入用户组
             UserPo u=(UserPo)userService.getUserById(userId);
-            if (c==0) groupService.insertGroupUser(gp, u, 1);
+            if (c==0) groupService.insertGroupUser(gp, u, 1, true);
             //组织返回值
             map.put("ReturnType", (c==0?"1001":"1101"));
             //组信息
