@@ -132,7 +132,6 @@ public class DealInterCom extends Thread {
                 MapContent _mc=new MapContent(dataMap);
                 bMsg.setMsgContent(_mc);
                 //发送广播消息
-                int i=0;
                 for (String k: entryGroupUsers.keySet()) {
                     String _sp[] = k.split("::");
                     mUdk=new MobileUDKey();

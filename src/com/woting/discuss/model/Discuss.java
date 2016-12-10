@@ -51,7 +51,7 @@ public class Discuss extends DiscussPo implements ModelSwapPo {
         if (!StringUtils.isNullOrEmptyOrSpace(this.resTableName)) retM.put("MediaType", MediaType.buildByTabName(this.resTableName).getTypeName());
         if (!StringUtils.isNullOrEmptyOrSpace(this.resId)) retM.put("ContentId", this.resId);
         if (!StringUtils.isNullOrEmptyOrSpace(this.discuss)) retM.put("Discuss", this.discuss);
-        if (this.CTime!=null) retM.put("Time", this.CTime.getTime());
+        if (this.CTime!=null) retM.put("Time", this.CTime.getTime()+"");
         return retM;
     }
 }

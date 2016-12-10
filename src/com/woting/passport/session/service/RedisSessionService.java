@@ -89,7 +89,7 @@ public class RedisSessionService implements SessionService {
             //从Redis中获得对应额UserId
             String _value=roService.get(rUdk.getKey_DeviceType_UserId());
             String _userId=(_value==null?null:new String(_value));
-            boolean hadLogon=_userId==null?false:(_userId.equals(rUdk.getUserId())&&roService.get(rUdk.getKey_UserLoginStatus())!=null);
+            boolean hadLogon=(_userId==null?false:(_userId.equals(rUdk.getUserId())&&roService.get(rUdk.getKey_UserLoginStatus())!=null));
 
             if (hadLogon) {//已经登录
                 roService.set(rUdk.getKey_UserLoginStatus(), System.currentTimeMillis()+"::"+operDesc);
@@ -126,7 +126,7 @@ public class RedisSessionService implements SessionService {
             } else {//处理未登录
                 MobileUsedPo mup=muService.getUsedInfo(udk.getDeviceId(), udk.getPCDType());
                 boolean noLog=false;
-                noLog=mup==null||mup.getStatus()!=1||mup.getUserId()==null;
+                noLog=(mup==null||mup.getStatus()!=1||mup.getUserId()==null);
                 if (noLog) {//无法登录
                     //删除在该设备上的登录信息
                     RedisUserDeviceKey _rUdk=new RedisUserDeviceKey(new UserDeviceKey());

@@ -217,7 +217,7 @@ public class DiscussController {
                 }
                 mUdk=mp.getUserDeviceKey();
                 if (mUdk!=null) {
-                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "discuss/add");
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "discuss/del");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
                         map.put("Message", "需要登录");
@@ -413,7 +413,7 @@ public class DiscussController {
             if (ol!=null&&ol.size()>0) {
                 map.put("ReturnType", "1001");
                 map.put("AllCount", ol.get("AllCount"));
-                map.put("OpinionList", convertDiscissView((List<Discuss>)(ol.get("List"))));
+                map.put("DiscussList", convertDiscissView((List<Discuss>)(ol.get("List"))));
             } else {
                 map.put("ReturnType", "1011");
                 map.put("Message", "无评论信息");
