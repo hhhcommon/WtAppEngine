@@ -8,6 +8,7 @@ import java.util.Map;
 import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.model.tree.TreeNode;
+import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.cm.core.dict.mem._CacheDictionary;
@@ -49,6 +50,13 @@ public abstract class ContentUtils {
         retM.put("ContentSource", one.get("bcSource"));//P09-公共：来源名称
         retM.put("ContentURIS", null);//P10-公共：其他播放地址列表，目前为空
         retM.put("ContentDescn", one.get("descn"));//P11-公共：说明
+        
+        String ext = FileNameUtils.getExt(one.containsKey("maURL")?(one.get("maURL")+""):null);
+        if (ext!=null) {
+			retM.put("ContentPlayType", ext.contains("/flv")?"flv":ext.replace(".", ""));
+		} else {
+			retM.put("ContentPlayType", null);
+		}
 
         fillExtInfo(retM, "RADIO", personList, cataList, pubChannelList, favoriteList);//填充扩展信息
 
@@ -94,6 +102,13 @@ public abstract class ContentUtils {
         retM.put("ContentShareURL", getShareUrl_JM(preAddr, one.get("id")+""));//分享地址
 //        retM.put("ContentSource", one.get("maSource"));//P09-公共：来源名称
 //        retM.put("ContentURIS", null);//P10-公共：其他播放地址列表，目前为空
+        String ext = FileNameUtils.getExt(one.containsKey("maURL")?(one.get("maURL")+""):null);
+        if (ext!=null) {
+			retM.put("ContentPlayType", ext.contains("/flv")?"flv":ext.replace(".", ""));
+		} else {
+			retM.put("ContentPlayType", null);
+		}
+        
         retM.put("ContentDescn", one.get("descn"));//P11-公共：说明
         retM.put("ContentStatus", one.get("maStatus"));
 
@@ -102,7 +117,6 @@ public abstract class ContentUtils {
 //        if (StringUtils.isNullOrEmptyOrSpace(retM.get("ContentPlay")+"")) {
 //            retM.put("ContentPlay", one.get("maURL"));
 //        }
-
         retM.put("ContentTimes", one.get("timeLong"));//S01-特有：播放时长
 
         retM.put("CTime", one.get("CTime"));//A1-管控：节目创建时间，目前以此进行排序
