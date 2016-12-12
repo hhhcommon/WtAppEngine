@@ -35,27 +35,6 @@ public class RedisSessionService implements SessionService {
     @Resource
     private MobileUsedService muService;
 
-    /**
-     * return 
-     */
-    /**
-     * 处理用户设备Key进入系统，若未登录要看之前的登录情况，自动登录
-     * @param udk 根据用户设备Key
-     * @return Map类型，key 和 value意义如下：
-     *
-     *   0000 用户设备key为空，无法处理
-     *
-     *   1001 用户已登录
-     *
-     *   1002 不能找到相应的用户
-     *   1003 得不到相应的PCDType
-     *   2005 请求用户与已登录用户不相符合
-     *
-     *   2004 移动客户端——未获得IMEI无法处理
-     *   3004 PC客户端——未获得SessionId无法处理
-     *
-     *   2003 请先登录
-     */
     @SuppressWarnings("unchecked")
     @Override
     public Map<String, Object> dealUDkeyEntry(UserDeviceKey udk, String operDesc) {
@@ -196,7 +175,7 @@ public class RedisSessionService implements SessionService {
                 }
             }
         } finally {
-        	rLock.unlock();
+            rLock.unlock();
             if (roService!=null) roService.close();
             roService=null;
         }

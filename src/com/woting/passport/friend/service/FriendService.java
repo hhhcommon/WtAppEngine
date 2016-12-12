@@ -11,9 +11,10 @@ import javax.annotation.Resource;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.mobile.push.mem.PushMemoryManage;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.push.core.message.content.MapContent;
+import com.woting.push.socketclient.oio.SocketClient;
+import com.woting.WtAppEngineConstants;
 import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.friend.persis.pojo.FriendRelPo;
 import com.woting.passport.friend.persis.pojo.InviteFriendPo;
@@ -21,10 +22,12 @@ import com.woting.passport.useralias.model.UserAliasKey;
 import com.woting.passport.useralias.persis.pojo.UserAliasPo;
 import com.woting.passport.useralias.service.UserAliasService;
 
+import com.spiritdata.framework.core.cache.CacheEle;
+import com.spiritdata.framework.core.cache.SystemCache;
+
 public class FriendService {
     static private int INVITE_INTERVAL_TIME=5*60*1000;//毫秒数：5分钟
     static private int INVITE_REFUSE_TIME=5*60*1000;//7*24*60*60*1000;//毫秒数：一周
-    private PushMemoryManage pmm=PushMemoryManage.getInstance();
 
     @Resource(name="defaultDAO")
     private MybatisDAO<UserPo> userDao;
@@ -32,15 +35,17 @@ public class FriendService {
     private MybatisDAO<InviteFriendPo> inviteFriendDao;
     @Resource(name="defaultDAO")
     private MybatisDAO<FriendRelPo> friendRelDao;
-
     @Resource
     private UserAliasService userAliasService;
+
+    private SocketClient sc=null;
 
     @PostConstruct
     public void initParam() {
         userDao.setNamespace("WT_USER");
         inviteFriendDao.setNamespace("WT_INVITE");
         friendRelDao.setNamespace("WT_FRIEND");
+        sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
     }
 
     /**
@@ -161,28 +166,36 @@ public class FriendService {
             if (!isUpdate) inviteFriendDao.insert(ifPo);
             else inviteFriendDao.update(ifPo);
 
-            //通知消息
-            MsgNormal nMsg=new MsgNormal();
-            nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            nMsg.setFromType(1);
-            nMsg.setToType(0);
-            nMsg.setMsgType(0);
-            nMsg.setAffirm(1);
-            nMsg.setBizType(0x04);
-            nMsg.setCmdType(1);
-            nMsg.setCommand(1);
-            Map<String, Object> dataMap=new HashMap<String, Object>();
-            dataMap.put("InviteMsg", inviteMsg);
-            dataMap.put("InviteTime", System.currentTimeMillis());
-            UserPo u=userDao.getInfoObject("getUserById", userId);
-            Map<String, Object> um=u.toHashMap4Mobile();
-            um.remove("PhoneNum");
-            um.remove("Email");
-            um.remove("Email");
-            dataMap.put("InviteUserInfo", um);
-            MapContent mc=new MapContent(dataMap);
-            nMsg.setMsgContent(mc);
-            pmm.getSendMemory().addMsg2NotifyQueue(beInvitedUserId, nMsg);//发送通知消息
+            if (sc!=null) {
+                //通知消息
+                MsgNormal nMsg=new MsgNormal();
+                nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                nMsg.setFromType(1);
+                nMsg.setToType(1);
+                nMsg.setMsgType(0);
+                nMsg.setAffirm(0);
+                nMsg.setBizType(0x04);
+                nMsg.setCmdType(1);
+                nMsg.setCommand(1);
+                Map<String, Object> dataMap=new HashMap<String, Object>();
+                dataMap.put("InviteMsg", inviteMsg);
+                dataMap.put("InviteTime", System.currentTimeMillis());
+                UserPo u=userDao.getInfoObject("getUserById", userId);
+                Map<String, Object> um=u.toHashMap4Mobile();
+                um.remove("PhoneNum");
+                um.remove("Email");
+                um.remove("Email");
+                dataMap.put("InviteUserInfo", um);
+                MapContent mc=new MapContent(dataMap);
+                nMsg.setMsgContent(mc);
+
+                dataMap.put("_TOUSERS", beInvitedUserId);
+                try {
+                    sc.addSendMsg(nMsg.toBytes());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
             m.put("ReturnType", "1001");
             m.put("InviteCount", ifPo.getInviteVector());
@@ -254,31 +267,38 @@ public class FriendService {
                 }
                 inviteFriendDao.update(ifPo);
 
-                //发送消息——给邀请人
-                MsgNormal bMsg=new MsgNormal();
-                bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                bMsg.setFromType(1);
-                bMsg.setMsgType(0);
-                bMsg.setAffirm(0);
-                bMsg.setBizType(0x04);
-                bMsg.setCmdType(1);
-                bMsg.setCommand(3);//处理组邀请信息
-                //发送给inviteUserId
-                bMsg.setToType(0);
-                Map<String, Object> dataMap=new HashMap<String, Object>();
-                dataMap.put("DealType", isRefuse?"2":"1");
-                if (isRefuse&&!StringUtils.isNullOrEmptyOrSpace(refuseMsg)) dataMap.put("RefuseMsg", refuseMsg);
-                dataMap.put("DealTime", System.currentTimeMillis());
-                //加入被邀请人信息
-                UserPo u=userDao.getInfoObject("getUserById", userId);
-                Map<String, Object> um=u.toHashMap4Mobile();
-                um.remove("PhoneNum");
-                um.remove("Email");
-                um.remove("Email");
-                dataMap.put("BeInvitedUserInfo", um);
-                MapContent mc=new MapContent(dataMap);
-                bMsg.setMsgContent(mc);
-                pmm.getSendMemory().addMsg2NotifyQueue(inviteUserId, bMsg);
+                if (sc!=null) {
+                    //通知：发送消息——给邀请人
+                    MsgNormal nMsg=new MsgNormal();
+                    nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                    nMsg.setFromType(1);
+                    nMsg.setToType(1);
+                    nMsg.setMsgType(0);
+                    nMsg.setAffirm(0);
+                    nMsg.setBizType(0x04);
+                    nMsg.setCmdType(1);
+                    nMsg.setCommand(3);//处理组邀请信息
+                    Map<String, Object> dataMap=new HashMap<String, Object>();
+                    dataMap.put("DealType", isRefuse?"2":"1");
+                    if (isRefuse&&!StringUtils.isNullOrEmptyOrSpace(refuseMsg)) dataMap.put("RefuseMsg", refuseMsg);
+                    dataMap.put("DealTime", System.currentTimeMillis());
+                    //加入被邀请人信息
+                    UserPo u=userDao.getInfoObject("getUserById", userId);
+                    Map<String, Object> um=u.toHashMap4Mobile();
+                    um.remove("PhoneNum");
+                    um.remove("Email");
+                    um.remove("Email");
+                    dataMap.put("BeInvitedUserInfo", um);
+                    MapContent mc=new MapContent(dataMap);
+                    nMsg.setMsgContent(mc);
+
+                    dataMap.put("_TOUSERS", inviteUserId);
+                    try {
+                        sc.addSendMsg(nMsg.toBytes());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
 
                 m.put("ReturnType", "1001");
             }
@@ -314,23 +334,30 @@ public class FriendService {
             UserAliasKey uak=new UserAliasKey("FRIEND", userId, friendUserId);
             userAliasService.del(uak);
             ret.put("ReturnType", "1001");
-            //发送消息
-            MsgNormal bMsg=new MsgNormal();
-            bMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            bMsg.setFromType(1);
-            bMsg.setMsgType(0);
-            bMsg.setAffirm(0);
-            bMsg.setBizType(0x04);
-            bMsg.setCmdType(1);
-            bMsg.setCommand(5);//处理组邀请信息
-            //发送给inviteUserId
-            bMsg.setToType(0);
-            Map<String, Object> dataMap=new HashMap<String, Object>();
-            dataMap.put("UserId", userId);
-            dataMap.put("DealTime", System.currentTimeMillis());
-            MapContent mc=new MapContent(dataMap);
-            bMsg.setMsgContent(mc);
-            pmm.getSendMemory().addMsg2NotifyQueue(friendUserId, bMsg);
+            if (sc!=null) {
+                //通知：发送消息
+                MsgNormal nMsg=new MsgNormal();
+                nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                nMsg.setFromType(1);
+                nMsg.setToType(1);
+                nMsg.setMsgType(0);
+                nMsg.setAffirm(0);
+                nMsg.setBizType(0x04);
+                nMsg.setCmdType(1);
+                nMsg.setCommand(5);//处理组邀请信息
+                Map<String, Object> dataMap=new HashMap<String, Object>();
+                dataMap.put("UserId", userId);
+                dataMap.put("DealTime", System.currentTimeMillis());
+                MapContent mc=new MapContent(dataMap);
+                nMsg.setMsgContent(mc);
+
+                dataMap.put("_TOUSERS", friendUserId);
+                try {
+                    sc.addSendMsg(nMsg.toBytes());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return ret;
     }

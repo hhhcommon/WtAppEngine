@@ -65,6 +65,12 @@
       <artifactId>commons-codec</artifactId>
       <version>1.9</version>
     </dependency>
+    <!-- 表达式运算 -->
+    <dependency>
+      <groupId>org.eweb4j</groupId>
+      <artifactId>fel</artifactId>
+      <version>0.8</version>
+    </dependency>
     <!-- 图片处理 -->
     <dependency>
       <groupId>net.coobird</groupId>

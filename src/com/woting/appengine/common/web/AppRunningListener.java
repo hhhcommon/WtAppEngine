@@ -5,17 +5,14 @@ import javax.servlet.ServletContextListener;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.woting.appengine.calling.CallingConfig;
-import com.woting.appengine.calling.CallingListener;
+
+import com.spiritdata.framework.core.cache.CacheEle;
+import com.spiritdata.framework.core.cache.SystemCache;
+import com.woting.WtAppEngineConstants;
 import com.woting.appengine.common.cache.CacheRefreshListener;
-import com.woting.appengine.intercom.InterComConfig;
-import com.woting.appengine.intercom.InterComListener;
-import com.woting.appengine.mobile.mediaflow.MfConfig;
-import com.woting.appengine.mobile.mediaflow.MfListener;
-import com.woting.appengine.mobile.push.PushConfig;
-import com.woting.appengine.mobile.push.PushListener;
 import com.woting.dataanal.gather.API.ApiGatherListener;
 import com.woting.searchword.SearchWordListener;
+import com.woting.push.socketclient.oio.SocketClient;
 
 public class AppRunningListener implements ServletContextListener {
     private Logger logger=LoggerFactory.getLogger(this.getClass());
@@ -26,20 +23,15 @@ public class AppRunningListener implements ServletContextListener {
         try {
             //启动搜索词服务
             SearchWordListener.begin();
-            //启动对讲处理服务
-            InterComListener.begin(new InterComConfig());
-            //启动电话处理服务
-            CallingListener.begin(new CallingConfig());
-            //启动流数据处理服务
-            MfListener.begin(new MfConfig());
-            //启动推送服务
-            PushListener.begin(new PushConfig());
             //启动缓存刷新服务
             CacheRefreshListener.begin();
-
             //启动数据收集数据
-            //1-启动Api访问监听服务
             ApiGatherListener.begin();
+            //启动Socket
+            SocketClient sc=new SocketClient(null);
+            sc.workStart();
+            //注册到我们的内存
+            SystemCache.setCache(new CacheEle<SocketClient>(WtAppEngineConstants.SOCKET_OBJ, "模块", sc));
         } catch(Exception e) {
             logger.error("Web运行时监听启动异常：",e);
         }

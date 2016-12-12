@@ -1604,7 +1604,7 @@ public class GroupController {
             }
             //3-加入用户组
             UserPo u=(UserPo)userService.getUserById(userId);
-            if (c==0) groupService.insertGroupUser(gp, u, 1);
+            if (c==0) groupService.insertGroupUser(gp, u, 1, true);
             //组织返回值
             map.put("ReturnType", (c==0?"1001":"1101"));
             //组信息
@@ -2145,7 +2145,6 @@ public class GroupController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
-            String userId="";
             MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             alPo.setReqParam(JsonUtils.objToJson(m));
@@ -2167,7 +2166,6 @@ public class GroupController {
                         map.putAll(retM);
                         if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
                     }
-                    userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
                 } else {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取需要的参数");

@@ -1,4 +1,4 @@
-package com.woting.appengine.calling.model;
+package com.woting.push.core.message;
 
 import com.woting.push.core.message.MsgNormal;
 
@@ -13,8 +13,7 @@ public class ProcessedMsg {
     private int status=0;//消息处理状态0正在处里;1处理成功;2被抛弃;3处理失败，由于信息不匹配;-1处理异常
     private String className; //处理消息的类名称
     private String errMsg;//若消息处理失败，这里存储失败的描述
-    private Throwable ext;//若消息处理异常，这里存储引起异常的类实例
-    //TODO 这个可能以后会用到 private int isLogged;//是否已经记录到日志  
+    private Throwable ext;//若消息处理异常，这里存储引起异常的类实例  
 
     /**
      * 已处理消息的构造函数，这个构造函数限定：

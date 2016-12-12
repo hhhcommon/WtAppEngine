@@ -97,7 +97,7 @@ public class UserAliasService {
     }
 
     /**
-     * 删除某一用户群组下的所有别名
+     * 删除某一用户群组下，某一用户的别名
      * @param uaPo
      */
     public void delUserAliasInGroup(String groupId, String userId) {
