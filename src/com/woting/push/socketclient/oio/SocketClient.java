@@ -67,7 +67,8 @@ public class SocketClient {
         this.scc=scc;
         //以下设置参数的方式，应该从参数scc中获取，scc应该读取一个配置文件
         this.scc=new SocketClientConfig();
-        this.scc.setIp("10.172.161.67");
+//        this.scc.setIp("10.172.161.67");
+        this.scc.setIp("localhost");
         //this.scc.ip="123.56.254.75";
         this.scc.setPort(16789);
 //        this.scc.port=9966;
