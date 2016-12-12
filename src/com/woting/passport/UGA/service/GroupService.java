@@ -47,14 +47,11 @@ public class GroupService {
     @Resource(name="redisSessionService")
     private SessionService sessionService;
 
-    private SocketClient sc=null;
-
     @PostConstruct
     public void initParam() {
         userDao.setNamespace("WT_USER");
         groupDao.setNamespace("WT_GROUP");
         inviteGroupDao.setNamespace("WT_GROUPINVITE");
-        sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
     }
 
     /**
@@ -74,7 +71,8 @@ public class GroupService {
             }
             group.setCTime(new Timestamp(System.currentTimeMillis()));
 
-            //告诉大家创建了新组
+            @SuppressWarnings("unchecked")
+            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
             if (sc!=null) {
                 //通知消息
                 MsgNormal nMsg=new MsgNormal();
@@ -123,50 +121,54 @@ public class GroupService {
         try {
             groupDao.insert("insertGroupUser", gu);
             i=1;
-            if (sc!=null&&isMsg) {
-                //同步消息：加入组内成员
-                MsgNormal sMsg=new MsgNormal();
-                sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                sMsg.setFromType(1);
-                sMsg.setToType(1);
-                sMsg.setMsgType(0);
-                sMsg.setAffirm(1);
-                sMsg.setBizType(0x08);
-                sMsg.setCmdType(1);//组
-                sMsg.setCommand(4);//加入成员
-                Map<String, Object> dataMap=new HashMap<String, Object>();
-                dataMap.put("GroupId", g.getGroupId());
-                dataMap.put("UserInfo", u.toHashMap());
-                MapContent mc=new MapContent(dataMap);
-                sMsg.setMsgContent(mc);
-                try {
-                    sc.addSendMsg(sMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            if (isMsg) {
+                @SuppressWarnings("unchecked")
+                SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                if (sc!=null) {
+                    //同步消息：加入组内成员
+                    MsgNormal sMsg=new MsgNormal();
+                    sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                    sMsg.setFromType(1);
+                    sMsg.setToType(1);
+                    sMsg.setMsgType(0);
+                    sMsg.setAffirm(1);
+                    sMsg.setBizType(0x08);
+                    sMsg.setCmdType(1);//组
+                    sMsg.setCommand(4);//加入成员
+                    Map<String, Object> dataMap=new HashMap<String, Object>();
+                    dataMap.put("GroupId", g.getGroupId());
+                    dataMap.put("UserInfo", u.toHashMap());
+                    MapContent mc=new MapContent(dataMap);
+                    sMsg.setMsgContent(mc);
+                    try {
+                        sc.addSendMsg(sMsg.toBytes());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
-                //通知消息
-                MsgNormal nMsg=new MsgNormal();
-                nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                nMsg.setFromType(1);
-                nMsg.setToType(1);
-                nMsg.setMsgType(0);
-                nMsg.setAffirm(1);
-                nMsg.setBizType(0x04);
-                nMsg.setCmdType(2);
-                nMsg.setCommand(4);
-                Map<String, Object> dataMap1=new HashMap<String, Object>();
-                dataMap1.put("GroupId", g.getGroupId());
-                dataMap1.put("UserInfo", u.toHashMap4Mobile());
-                MapContent mc1=new MapContent(dataMap1);
-                nMsg.setMsgContent(mc1);
+                    //通知消息
+                    MsgNormal nMsg=new MsgNormal();
+                    nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                    nMsg.setFromType(1);
+                    nMsg.setToType(1);
+                    nMsg.setMsgType(0);
+                    nMsg.setAffirm(1);
+                    nMsg.setBizType(0x04);
+                    nMsg.setCmdType(2);
+                    nMsg.setCommand(4);
+                    Map<String, Object> dataMap1=new HashMap<String, Object>();
+                    dataMap1.put("GroupId", g.getGroupId());
+                    dataMap1.put("UserInfo", u.toHashMap4Mobile());
+                    MapContent mc1=new MapContent(dataMap1);
+                    nMsg.setMsgContent(mc1);
 
-                dataMap1.put("_TOGROUPS", g.getGroupId());
-                dataMap1.put("_NOUSERS", u.getUserId());
-                try {
-                    sc.addSendMsg(nMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    dataMap1.put("_TOGROUPS", g.getGroupId());
+                    dataMap1.put("_NOUSERS", u.getUserId());
+                    try {
+                        sc.addSendMsg(nMsg.toBytes());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         } catch (Exception e) {
@@ -343,6 +345,8 @@ public class GroupService {
         newInfo.put("userId", userId);
         groupDao.update("updateGroupUserByUserIdGroupId", newInfo);
 
+        @SuppressWarnings("unchecked")
+        SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
         if (sc!=null) {
             //同步消息：组信息修改
             MsgNormal sMsg=new MsgNormal();
@@ -456,7 +460,8 @@ public class GroupService {
             }
         }
 
-        //消息
+        @SuppressWarnings("unchecked")
+        SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
         if (sc!=null) {
             if (r==3||r==1) {//删除组用户
                 //同步消息：删除组用户
@@ -687,7 +692,8 @@ public class GroupService {
                         inviteGroupDao.insert(igp);
                         oneResult.put("InviteCount", "1");
 
-                        //发送消息
+                        @SuppressWarnings("unchecked")
+                        SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
                         if (sc!=null) {
                             MsgNormal nMsg=new MsgNormal();
                             nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -789,6 +795,8 @@ public class GroupService {
             m.put("ReturnType", "1001");
 
             //发送通知类消息
+            @SuppressWarnings("unchecked")
+            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
             if (sc!=null) {
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -969,6 +977,8 @@ public class GroupService {
             inviteGroupDao.update("sameUserInviteDeal", igPo);
             inviteGroupDao.update(igPo);//更新组邀请信息
 
+            @SuppressWarnings("unchecked")
+            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
             if (sc!=null) {
                 //发送消息
                 MsgNormal nMsg=new MsgNormal();
@@ -1066,6 +1076,8 @@ public class GroupService {
                 m.put("ReturnType", "1001");
             }
 
+            @SuppressWarnings("unchecked")
+            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
             if (isRefuse&&sc!=null) {
                 //通知：发送消息
                 MsgNormal nMsg=new MsgNormal();
@@ -1178,6 +1190,9 @@ public class GroupService {
             //删除组内所有成员的别名
             userAliasService.delAliasInGroup(groupId);
         }
+
+        @SuppressWarnings("unchecked")
+        SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
         if (beKickoutUserList!=null&&!beKickoutUserList.isEmpty()&&sc!=null) {
             //通知
             MsgNormal nMsg=new MsgNormal();
@@ -1306,6 +1321,8 @@ public class GroupService {
         //删除组内所有成员的别名
         userAliasService.delAliasInGroup(groupId);
 
+        @SuppressWarnings("unchecked")
+        SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
         if (sc!=null) {
             //通知:告诉大家
             MsgNormal nMsg=new MsgNormal();
@@ -1382,6 +1399,8 @@ public class GroupService {
             groupDao.update(param);
             ret.put("ReturnType", "1001");
 
+            @SuppressWarnings("unchecked")
+            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
             if (sc!=null) {
                 //通知消息：权限转移消息
                 MsgNormal nMsg=new MsgNormal();

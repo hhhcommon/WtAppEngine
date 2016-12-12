@@ -12,23 +12,18 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 //import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 //import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.spiritdata.framework.util.JsonUtils;
-import com.spiritdata.framework.util.SequenceUUID;
 //import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.push.core.message.Message;
 import com.woting.push.core.message.MessageUtils;
-import com.woting.push.core.message.MsgMedia;
 //import com.woting.push.core.message.content.MapContent;
 import com.woting.push.core.message.MsgNormal;
 
-import com.woting.push.core.message.content.MapContent;
 import com.woting.push.socketclient.SocketClientConfig;
 
 public class SocketClient {
@@ -72,6 +67,7 @@ public class SocketClient {
         this.scc=scc;
         //以下设置参数的方式，应该从参数scc中获取，scc应该读取一个配置文件
         this.scc=new SocketClientConfig();
+//        this.scc.setIp("10.172.161.67");
         this.scc.setIp("localhost");
         //this.scc.ip="123.56.254.75";
         this.scc.setPort(16789);
@@ -400,7 +396,7 @@ public class SocketClient {
                             endMsgFlag[1]=endMsgFlag[2];
                             endMsgFlag[2]=(byte)r;
                             if (!hasBeginMsg) {
-                                if (endMsgFlag[0]=='b'&&endMsgFlag[1]=='^'&&endMsgFlag[2]=='^') {
+                                if (endMsgFlag[0]=='B'&&endMsgFlag[1]=='^'&&endMsgFlag[2]=='^') {
                                     break;//是心跳消息
                                 } else if ((endMsgFlag[0]=='|'&&endMsgFlag[1]=='^')||(endMsgFlag[0]=='^'&&endMsgFlag[1]=='|')) {
                                     hasBeginMsg=true;
@@ -473,6 +469,7 @@ public class SocketClient {
 
                         //
                         mba=Arrays.copyOfRange(ba, 0, i);
+                        lastReceiveTime=System.currentTimeMillis();
                         if (mba==null||mba.length<3) break; //若没有得到任何内容
                         if (ba[0]=='B'&&ba[1]=='^'&&ba[2]=='^') {
                             System.out.println("B======");
