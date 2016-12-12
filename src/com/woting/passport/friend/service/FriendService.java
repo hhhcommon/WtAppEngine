@@ -38,14 +38,11 @@ public class FriendService {
     @Resource
     private UserAliasService userAliasService;
 
-    private SocketClient sc=null;
-
     @PostConstruct
     public void initParam() {
         userDao.setNamespace("WT_USER");
         inviteFriendDao.setNamespace("WT_INVITE");
         friendRelDao.setNamespace("WT_FRIEND");
-        sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
     }
 
     /**
@@ -166,6 +163,8 @@ public class FriendService {
             if (!isUpdate) inviteFriendDao.insert(ifPo);
             else inviteFriendDao.update(ifPo);
 
+            @SuppressWarnings("unchecked")
+            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
             if (sc!=null) {
                 //通知消息
                 MsgNormal nMsg=new MsgNormal();
@@ -267,6 +266,8 @@ public class FriendService {
                 }
                 inviteFriendDao.update(ifPo);
 
+                @SuppressWarnings("unchecked")
+                SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
                 if (sc!=null) {
                     //通知：发送消息——给邀请人
                     MsgNormal nMsg=new MsgNormal();
@@ -334,6 +335,9 @@ public class FriendService {
             UserAliasKey uak=new UserAliasKey("FRIEND", userId, friendUserId);
             userAliasService.del(uak);
             ret.put("ReturnType", "1001");
+
+            @SuppressWarnings("unchecked")
+            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
             if (sc!=null) {
                 //通知：发送消息
                 MsgNormal nMsg=new MsgNormal();
