@@ -1639,7 +1639,7 @@ public class PassportController {
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
                     gm.put("GroupCount", g.get("groupCount"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDescn", g.get("descn"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDesc", g.get("groupDescn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDescn", g.get("groupDescn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));
                     rgl.add(gm);
                 }

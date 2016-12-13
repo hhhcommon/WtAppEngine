@@ -18,10 +18,11 @@ import org.slf4j.LoggerFactory;
 
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.JsonUtils;
+import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.push.core.message.Message;
 import com.woting.push.core.message.MessageUtils;
-
+import com.woting.push.core.message.MsgNormal;
 import com.woting.push.socketclient.SocketClientConfig;
 
 public class SocketClient {
@@ -40,6 +41,7 @@ public class SocketClient {
     private int nextReConnIndex; //重连策略下一个执行序列;
 
     private volatile boolean toBeStop=false;
+    private volatile boolean isRegister=false;//是否注册了
     private volatile long lastReceiveTime; //最后收到服务器消息时间
     private volatile Object socketSendLock=new Object();//发送锁
 
@@ -61,7 +63,7 @@ public class SocketClient {
      * @param intervalTime 新的发送频率
      */
     public void changeBeatCycle(long intervalTime) {
-        this.scc.setIntervalBeat(intervalTime);
+        scc.setIntervalBeat(intervalTime);
     }
 
     /**
@@ -71,10 +73,14 @@ public class SocketClient {
      */
     public void addSendMsg(Message msg) {
         try {
+            if (msg instanceof MsgNormal) {
+                ((MsgNormal)msg).setPCDType(3);
+                ((MsgNormal)msg).setUserId("AppEngin");
+                ((MsgNormal)msg).setIMEI("AppEngin001");//获得本机信息（CPU号）
+            }
             sendMsgQueue.offer(msg.toBytes());
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.debug(StringUtils.getAllMessage(e));
         }
     }
 //以上对外接口：end
@@ -144,6 +150,7 @@ public class SocketClient {
         if (recvLogFile!=null) try { recvLogFile.close(); } catch (Exception e) {} finally{ recvLogFile=null; };
 
         socket=null;
+        isRegister=false;
     }
 
     /*
@@ -319,7 +326,39 @@ public class SocketClient {
                     try {
                         if (toBeStop) break;
                         if (socketOk()) {
-                            byte[] msg4Send=sendMsgQueue.poll();
+                            byte[] msg4Send=null;
+                            if (!isRegister) {
+                                synchronized (socketSendLock) {
+                                    //构造注册消息
+                                    MsgNormal registerMsg=new MsgNormal();
+                                    registerMsg.setMsgType(0);
+                                    registerMsg.setAffirm(0);
+                                    registerMsg.setBizType(15);
+                                    registerMsg.setCmdType(0);
+                                    registerMsg.setCommand(0);
+                                    registerMsg.setFromType(1);
+                                    registerMsg.setToType(1);
+                                    registerMsg.setPCDType(3);
+                                    registerMsg.setUserId("AppEngin");
+                                    registerMsg.setIMEI("AppEngin001");
+                                    registerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                                    registerMsg.setSendTime(System.currentTimeMillis());
+
+                                    if (out==null) out=new BufferedOutputStream(socketOut);
+                                    msg4Send=registerMsg.toBytes();
+                                    out.write(msg4Send);
+                                    out.flush();
+                                    if (sendLogFile!=null) {
+                                        sendLogFile.write((DateUtils.convert2LongLocalStr(new Date())+"::>>").getBytes());
+                                        sendLogFile.write(msg4Send);
+                                        sendLogFile.write(13);
+                                        sendLogFile.write(10);
+                                        sendLogFile.flush();
+                                    }
+                                }
+                                isRegister=true;
+                            }
+                            msg4Send=sendMsgQueue.poll();
                             if (msg4Send==null) continue;
                             synchronized (socketSendLock) {
                                 if (out==null) out=new BufferedOutputStream(socketOut);

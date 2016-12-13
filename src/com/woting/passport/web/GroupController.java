@@ -345,7 +345,7 @@ public class GroupController {
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
                     gm.put("GroupCount", g.get("groupCount"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDescn", g.get("descn"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDesc", g.get("groupDescn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDescn", g.get("groupDescn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));
                     rgl.add(gm);
                 }
@@ -463,8 +463,8 @@ public class GroupController {
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
                     gm.put("GroupCount", g.get("groupCount"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDesc", g.get("descn"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDesc", g.get("groupDescn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDescn", g.get("descn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDescn", g.get("groupDescn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));
                     rgl.add(gm);
                 }
@@ -1325,7 +1325,7 @@ public class GroupController {
                     if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("adminUserIds"))) gInfo.put("GroupManager", one.get("adminUserIds"));
                     gInfo.put("GroupCount", one.get("groupCount"));
                     if (one.get("inviteCount")!=null) gInfo.put("InviteCount", one.get("inviteCount"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("descn"))) gInfo.put("GroupDesc", one.get("descn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("descn"))) gInfo.put("GroupDescn", one.get("descn"));
                     rEauGl.add(gInfo);
                 }
                 map.put("ReturnType", "1001");
@@ -1618,7 +1618,7 @@ public class GroupController {
             if (!StringUtils.isNullOrEmptyOrSpace(gp.getCreateUserId())) gm.put("GroupCreator", gp.getCreateUserId());
             if (!StringUtils.isNullOrEmptyOrSpace(gp.getAdminUserIds())) gm.put("GroupManager", gp.getAdminUserIds());
             gm.put("CreateTime", gp.getCTime().getTime()+"");
-            if (!StringUtils.isNullOrEmptyOrSpace(gp.getDescn())) gm.put("GroupDesc", gp.getDescn());
+            if (!StringUtils.isNullOrEmptyOrSpace(gp.getDescn())) gm.put("GroupDescn", gp.getDescn());
 
             //组成员
             List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
@@ -2222,7 +2222,7 @@ public class GroupController {
                     if (!StringUtils.isNullOrEmptyOrSpace(_g.getCreateUserId())) oneGroup.put("GroupCreator", _g.getCreateUserId());
                     if (!StringUtils.isNullOrEmptyOrSpace(_g.getAdminUserIds())) oneGroup.put("GroupManager", _g.getAdminUserIds());
                     oneGroup.put("GroupCount", _g.getUserList().size()+"");
-                    if (!StringUtils.isNullOrEmptyOrSpace(_g.getDescn())) oneGroup.put("GroupOriDesc", _g.getDescn());
+                    if (!StringUtils.isNullOrEmptyOrSpace(_g.getDescn())) oneGroup.put("GroupOriDescn", _g.getDescn());
                     oneGroup.put("CreateTime", _g.getCTime().getTime()+"");
 
                     List<UserPo> ul=_g.getUserList();
