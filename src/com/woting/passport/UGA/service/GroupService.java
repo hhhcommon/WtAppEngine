@@ -91,11 +91,7 @@ public class GroupService {
 
                 dataMap.put("_TOGROUPS", group.getGroupId());
                 dataMap.put("_NOUSERS", group.getCreateUserId());
-                try {
-                    sc.addSendMsg(nMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                sc.addSendMsg(nMsg);
             }
             i=1;
         } catch (Exception e) {
@@ -140,11 +136,7 @@ public class GroupService {
                     dataMap.put("UserInfo", u.toHashMap());
                     MapContent mc=new MapContent(dataMap);
                     sMsg.setMsgContent(mc);
-                    try {
-                        sc.addSendMsg(sMsg.toBytes());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    sc.addSendMsg(sMsg);
 
                     //通知消息
                     MsgNormal nMsg=new MsgNormal();
@@ -164,11 +156,7 @@ public class GroupService {
 
                     dataMap1.put("_TOGROUPS", g.getGroupId());
                     dataMap1.put("_NOUSERS", u.getUserId());
-                    try {
-                        sc.addSendMsg(nMsg.toBytes());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    sc.addSendMsg(nMsg);
                 }
             }
         } catch (Exception e) {
@@ -362,11 +350,8 @@ public class GroupService {
             dataMap1.put("GroupId", g.getGroupId());
             MapContent mc1=new MapContent(dataMap1);
             sMsg.setMsgContent(mc1);
-            try {
-                sc.addSendMsg(sMsg.toBytes());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            sc.addSendMsg(sMsg);
+
             //通知消息
             MsgNormal nMsg=new MsgNormal();
             nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -394,11 +379,7 @@ public class GroupService {
             nMsg.setMsgContent(mc);
 
             dataMap.put("_TOGROUPS", g.getGroupId());
-            try {
-                sc.addSendMsg(nMsg.toBytes());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            sc.addSendMsg(nMsg);
         }
     }
 
@@ -479,11 +460,8 @@ public class GroupService {
                 dataMap.put("UserId", u.getUserId());
                 MapContent mc=new MapContent(dataMap);
                 sMsg.setMsgContent(mc);
-                try {
-                    sc.addSendMsg(sMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                sc.addSendMsg(sMsg);
+
                 //通知消息：删除组用户
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -500,13 +478,8 @@ public class GroupService {
                 MapContent mc1=new MapContent(dataMap1);
                 nMsg.setMsgContent(mc1);
 
-                try {
-                    dataMap.put("_TOGROUPS", gp.getGroupId());
-                    dataMap.put("_NOUSERS", u.getUserId());
-                    sc.addSendMsg(nMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                dataMap1.put("_TOGROUPS", gp.getGroupId());
+                sc.addSendMsg(nMsg);
             }
             if (r==3) {//更改用户
                 //同步消息：组信息修改
@@ -523,11 +496,8 @@ public class GroupService {
                 dataMap.put("GroupId", gp.getGroupId());
                 MapContent mc=new MapContent(dataMap);
                 sMsg.setMsgContent(mc);
-                try {
-                    sc.addSendMsg(sMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                sc.addSendMsg(sMsg);
+
                 //通知消息：组信息修改
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -543,13 +513,9 @@ public class GroupService {
                 MapContent mc1=new MapContent(dataMap1);
                 nMsg.setMsgContent(mc1);
 
-                try {
-                    dataMap.put("_TOGROUPS", gp.getGroupId());
-                    dataMap.put("_NOUSERS", u.getUserId());
-                    sc.addSendMsg(nMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                dataMap1.put("_TOGROUPS", gp.getGroupId());
+                dataMap1.put("_NOUSERS", u.getUserId());
+                sc.addSendMsg(nMsg);
             }
             if (r==2) {//删除用户组
                 //同步消息：组信息修改
@@ -566,11 +532,7 @@ public class GroupService {
                 dataMap.put("GroupId", gp.getGroupId());
                 MapContent mc=new MapContent(dataMap);
                 sMsg.setMsgContent(mc);
-                try {
-                    sc.addSendMsg(sMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                sc.addSendMsg(sMsg);
 
                 //通知消息：组信息修改
                 String toUser="";
@@ -595,12 +557,8 @@ public class GroupService {
                     MapContent mc1=new MapContent(dataMap1);
                     nMsg.setMsgContent(mc1);
 
-                    try {
-                        dataMap.put("_TOUSERS", toUser.substring(1));
-                        sc.addSendMsg(nMsg.toBytes());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    dataMap1.put("_TOUSERS", toUser.substring(1));
+                    sc.addSendMsg(nMsg);
                 }
             }
         }
@@ -720,11 +678,7 @@ public class GroupService {
                             nMsg.setMsgContent(mc);
 
                             dataMap.put("_TOUSERS", _beInvitedUserId);
-                            try {
-                                sc.addSendMsg(nMsg.toBytes());
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+                            sc.addSendMsg(nMsg);
                         }
                     }
                 }
@@ -827,11 +781,7 @@ public class GroupService {
                 nMsg.setMsgContent(mc);
 
                 dataMap.put("_TOUSERS", adminId);
-                try {
-                    sc.addSendMsg(nMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                sc.addSendMsg(nMsg);
             }
         }
         return m;
@@ -1011,11 +961,7 @@ public class GroupService {
                 } else if (type==2) {
                     dataMap.put("_TOUSERS", userId);
                 }
-                try {
-                    sc.addSendMsg(nMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                sc.addSendMsg(nMsg);
             }
         }
         return m;
@@ -1115,11 +1061,7 @@ public class GroupService {
                 nMsg.setMsgContent(mc);
 
                 dataMap.put("_TOUSERS", inviteUserId);
-                try {
-                    sc.addSendMsg(nMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                sc.addSendMsg(nMsg);
             }
         }
         return m;
@@ -1216,12 +1158,9 @@ public class GroupService {
             dataMap.put("UserList", userMapList);
             MapContent mc=new MapContent(dataMap);
             nMsg.setMsgContent(mc);
-            try {
-                dataMap.put("_TOGROUPS", gp.getGroupId());
-                sc.addSendMsg(nMsg.toBytes());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            dataMap.put("_TOGROUPS", gp.getGroupId());
+            sc.addSendMsg(nMsg);
+
             //同步消息：删除组用户
             MsgNormal sMsg=new MsgNormal();
             sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -1238,14 +1177,10 @@ public class GroupService {
             for (UserPo _up: beKickoutUserList) {
                 _userIds+=","+_up.getUserId();
             }
-            dataMap.put("UserIds", _userIds.substring(1));
+            dataMap1.put("UserIds", _userIds.substring(1));
             MapContent mc1=new MapContent(dataMap1);
             sMsg.setMsgContent(mc1);
-            try {
-                sc.addSendMsg(sMsg.toBytes());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            sc.addSendMsg(sMsg);
         }
         if (ul.size()==1&&sc!=null) {
             //同步消息：组信息修改
@@ -1262,11 +1197,7 @@ public class GroupService {
             dataMap.put("GroupId", gp.getGroupId());
             MapContent mc=new MapContent(dataMap);
             sMsg.setMsgContent(mc);
-            try {
-                sc.addSendMsg(sMsg.toBytes());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            sc.addSendMsg(sMsg);
 
             //通知消息：组信息修改
             String toUser="";
@@ -1290,13 +1221,8 @@ public class GroupService {
                 dataMap1.put("Del", "2");//=2因为退组而删除组;=1直接删除组
                 MapContent mc1=new MapContent(dataMap1);
                 nMsg.setMsgContent(mc1);
-
-                try {
-                    dataMap.put("_TOUSERS", toUser.substring(1));
-                    sc.addSendMsg(nMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                dataMap1.put("_TOUSERS", toUser.substring(1));
+                sc.addSendMsg(nMsg);
             }
         }
         return ret;
@@ -1339,12 +1265,8 @@ public class GroupService {
             dataMap.put("Del", "1");//==1直接删除组;2因为退组而删除组
             MapContent mc=new MapContent(dataMap);
             nMsg.setMsgContent(mc);
-            try {
-                dataMap.put("_TOGROUPS", gp.getGroupId());
-                sc.addSendMsg(nMsg.toBytes());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            dataMap.put("_TOGROUPS", gp.getGroupId());
+            sc.addSendMsg(nMsg);
 
             //同步消息：加入组内成员
             MsgNormal sMsg=new MsgNormal();
@@ -1360,11 +1282,7 @@ public class GroupService {
             dataMap1.put("GroupId", gp.getGroupId());
             MapContent mc1=new MapContent(dataMap1);
             sMsg.setMsgContent(mc1);
-            try {
-                sc.addSendMsg(sMsg.toBytes());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            sc.addSendMsg(sMsg);
         }
         ret.put("ReturnType", "1001");
         return ret;
@@ -1425,13 +1343,8 @@ public class GroupService {
                 dataMap.put("NewAdminInfo", um);
                 MapContent mc=new MapContent(dataMap);
                 nMsg.setMsgContent(mc);
-
-                try {
-                    dataMap.put("_TOGROUPS", gp.getGroupId());
-                    sc.addSendMsg(nMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                dataMap.put("_TOGROUPS", gp.getGroupId());
+                sc.addSendMsg(nMsg);
             }
         }
         return ret;

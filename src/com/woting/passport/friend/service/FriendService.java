@@ -189,11 +189,7 @@ public class FriendService {
                 nMsg.setMsgContent(mc);
 
                 dataMap.put("_TOUSERS", beInvitedUserId);
-                try {
-                    sc.addSendMsg(nMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                sc.addSendMsg(nMsg);
             }
 
             m.put("ReturnType", "1001");
@@ -294,11 +290,7 @@ public class FriendService {
                     nMsg.setMsgContent(mc);
 
                     dataMap.put("_TOUSERS", inviteUserId);
-                    try {
-                        sc.addSendMsg(nMsg.toBytes());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    sc.addSendMsg(nMsg);
                 }
 
                 m.put("ReturnType", "1001");
@@ -356,11 +348,7 @@ public class FriendService {
                 nMsg.setMsgContent(mc);
 
                 dataMap.put("_TOUSERS", friendUserId);
-                try {
-                    sc.addSendMsg(nMsg.toBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                sc.addSendMsg(nMsg);
             }
         }
         return ret;
