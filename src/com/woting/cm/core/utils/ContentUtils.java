@@ -51,7 +51,10 @@ public abstract class ContentUtils {
         retM.put("ContentURIS", null);//P10-公共：其他播放地址列表，目前为空
         retM.put("ContentDescn", one.get("descn"));//P11-公共：说明
         
-        String ext = FileNameUtils.getExt(one.containsKey("maURL")?(one.get("maURL")+""):null);
+        String ext = FileNameUtils.getExt(one.containsKey("flowURI")?(one.get("flowURI")+""):null);
+        if (ext.contains("?")) {
+			ext = ext.replace(ext.substring(ext.indexOf("?"), ext.length()), ""); 
+		}
         if (ext!=null) {
 			retM.put("ContentPlayType", ext.contains("/flv")?"flv":ext.replace(".", ""));
 		} else {
@@ -103,6 +106,9 @@ public abstract class ContentUtils {
 //        retM.put("ContentSource", one.get("maSource"));//P09-公共：来源名称
 //        retM.put("ContentURIS", null);//P10-公共：其他播放地址列表，目前为空
         String ext = FileNameUtils.getExt(one.containsKey("maURL")?(one.get("maURL")+""):null);
+        if (ext.contains("?")) {
+			ext = ext.replace(ext.substring(ext.indexOf("?"), ext.length()), ""); 
+		}
         if (ext!=null) {
 			retM.put("ContentPlayType", ext.contains("/flv")?"flv":ext.replace(".", ""));
 		} else {
