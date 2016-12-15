@@ -42,6 +42,7 @@ public class FriendController {
     private UserService userService;
     @Resource(name="redisSessionService")
     private SessionService sessionService;
+
     /**
      * 得到陌生人列表
      */

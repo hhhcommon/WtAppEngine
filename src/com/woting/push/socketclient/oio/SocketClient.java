@@ -168,7 +168,7 @@ public class SocketClient {
             super.setName(name);
         }
         public void run() { //主线程监控连接
-            logger.debug("<"+(new Date()).toString()+">"+this.getName()+"线程启动");
+            logger.debug(this.getName()+"线程启动");
             try {
                 while (true) {//检查线程的健康状况
                     if (toBeStop) break;

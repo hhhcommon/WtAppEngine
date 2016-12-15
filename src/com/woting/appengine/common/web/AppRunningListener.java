@@ -52,6 +52,7 @@ public class AppRunningListener implements ServletContextListener {
 
     @SuppressWarnings("unchecked")
     private SocketClientConfig loadSocketConfig() {
+        System.out.println("读取配置文件==============================================");
         //生成默认
         SocketClientConfig scc=new SocketClientConfig();
         scc.setIp("localhost");
@@ -74,6 +75,7 @@ public class AppRunningListener implements ServletContextListener {
         try {
             String configFileName=(SystemCache.getCache(FConstants.APPOSPATH)==null?"":((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent());
             configFileName+="\\WEB-INF\\app.jconf";
+            System.out.println("读取配置文件=============================================="+configFileName);
             jc=new JsonConfig(configFileName);
             logger.info("配置文件信息={}", jc.getAllConfInfo());
         } catch(Exception e) {
