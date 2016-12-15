@@ -97,7 +97,7 @@ public class KaoLaSearch extends Thread {
 							F_host_name += "," + map.get("name").toString();
 						if (F_host_name.length() > 0)
 							F_host_name = F_host_name.substring(1);
-						festival.setHost(F_host_name);
+						festival.setPersonName(F_host_name);
 						festivals[j] = festival;
 					}
 					station.setFestival(festivals);
@@ -151,7 +151,7 @@ public class KaoLaSearch extends Thread {
 					host_name += "," + map2.get("name").toString();
 				if (host_name.length() > 0)
 					host_name = host_name.substring(1);
-				festival.setHost(host_name);
+				festival.setPersonName(host_name);
 				if (festival!=null) {
                     ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
                     if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {

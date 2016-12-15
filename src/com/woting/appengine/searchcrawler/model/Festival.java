@@ -24,7 +24,8 @@ public class Festival implements Serializable {
 	private String duration;	//音频时长
 	private String updateTime;	//发布时间
 	private String listenNum;	//听众人数
-	private String host;		//主播人
+	private String personName;  //上传者昵称
+	private String personId;    //上传者id
 	private String playnum;		//播放次数 
 	private String category;	//分类
 	
@@ -36,7 +37,7 @@ public class Festival implements Serializable {
 				+ ", audioName=" + audioName + ", audioPic=" + audioPic + ", audioDes=" + audioDes + ", albumName="
 				+ albumName + ", albumPic=" + albumPic + ", PlayUrl=" + PlayUrl + ", fileSize=" + fileSize
 				+ ", duration=" + duration + ", updateTime=" + updateTime + ", listenNum=" + listenNum + ", host="
-				+ host + ", playnum=" + playnum + ", category=" + category + "]";
+				+  ", playnum=" + playnum + ", category=" + category + "]";
 	}
 
 	public String getCategory() {
@@ -54,15 +55,22 @@ public class Festival implements Serializable {
 	public void setPlaynum(String playnum) {
 		this.playnum = playnum;
 	}
-	
-	public String getHost() {
-		return host;
+	public String getPersonName() {
+		return personName;
 	}
-	public void setHost(String host) {
-		if(!StringUtils.isNullOrEmptyOrSpace(host))
-		this.host = host.replaceAll("<em>|</em>", "");
+
+	public void setPersonName(String personName) {
+		this.personName = personName;
 	}
-	
+
+	public String getPersonId() {
+		return personId;
+	}
+
+	public void setPersonId(String personId) {
+		this.personId = personId;
+	}
+
 	public String getAudioDes() {
 		return audioDes==null?null:audioDes.replaceAll("\n", "").replaceAll("\r", "");
 	}

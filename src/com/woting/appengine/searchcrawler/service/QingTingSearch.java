@@ -69,7 +69,7 @@ public class QingTingSearch extends Thread {
 					station = stationS(href);
 					station.setId(href.replaceAll("http://www.qingting.fm/s/vchannels/", ""));
 					station.setName(title);
-					station.setContentPub("蜻蜓FM");
+					station.setContentPub("蜻蜓");
 					if(station!=null) {
                         ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
                         if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
@@ -94,6 +94,7 @@ public class QingTingSearch extends Thread {
 	 * @param url
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	private Festival festivalS(String url) {
 		Document doc = null;
 		Festival festival = new Festival();
@@ -106,9 +107,10 @@ public class QingTingSearch extends Thread {
 				festival.setAudioName(testmap.get("name").toString());
 				festival.setAudioId(testmap.get("id").toString());
 				festival.setMediaType("AUDIO");
-				festival.setContentPub("蜻蜓FM");
+				festival.setContentPub("蜻蜓");
 				festival.setAudioPic(testmap.get("thumb").toString());
 				festival.setDuration(testmap.get("duration") + "000");
+				
 				List<String> list_urls = (List<String>) testmap.get("urls");
 				String m4aurl = "http://od.qingting.fm" + list_urls.get(0).toString();
 				festival.setPlayUrl(m4aurl);
@@ -125,6 +127,7 @@ public class QingTingSearch extends Thread {
 	 * @param url
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	private Station stationS(String url) {
 		Document doc = null;
 		Station station = new Station();
@@ -141,12 +144,29 @@ public class QingTingSearch extends Thread {
 			festival.setAudioName(testmap.get("name").toString());
 			festival.setAudioId(testmap.get("id").toString());
 			festival.setMediaType("AUDIO");
-			festival.setContentPub("蜻蜓FM");
+			festival.setContentPub("蜻蜓");
 			festival.setAudioPic(testmap.get("thumb").toString());
 			festival.setDuration(testmap.get("duration") + "000");
 			List<String> list_urls = (List<String>) testmap.get("urls");
 			String m4aurl = "http://od.qingting.fm" + list_urls.get(0).toString();
 			festival.setPlayUrl(m4aurl);
+			try {
+				String seqId = getSeqId(url);
+				doc = Jsoup.connect("http://api2.qingting.fm/v6/media/channelondemands/"+seqId).ignoreContentType(true).post();
+				jsonstr = doc.body().html();
+				testmap = (Map<String, Object>) JsonUtils.jsonToObj(jsonstr, Map.class);
+				Map<String, Object> detail = (Map<String, Object>) testmap.get("detail");
+				if (detail.containsKey("podcasters")) {
+					List<Map<String, Object>> podcasters = (List<Map<String, Object>>) detail.get("podcasters");
+					if (podcasters!=null && podcasters.size()>0) {
+						testmap = podcasters.get(0);
+						festival.setPersonName(testmap.get("nickname")+"");
+						festival.setPersonId(testmap.get("user_system_id")+"");
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			festivals[0] = festival;
 			station.setFestival(festivals);
 		} catch (IOException e) {
@@ -172,5 +192,10 @@ public class QingTingSearch extends Thread {
             }
 		    System.out.println("蜻蜓结束搜索");
 		}
+	}
+	
+	private String getSeqId(String url) {
+		url = url.substring(url.indexOf("/vchannels/")+11, url.indexOf("/programs/"));
+		return url;
 	}
 }

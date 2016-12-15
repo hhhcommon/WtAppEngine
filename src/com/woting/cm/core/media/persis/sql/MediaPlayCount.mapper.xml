@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- 声音资产 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="A_MEDIAPLATCOUNT">
+  <!-- 单体节目 -->
+  <resultMap id="baseResultMap" type="mediaPlayCount">
+    <id      column="id"             property="id"             jdbcType="VARCHAR"/>
+    <result  column="resTableName"   property="resTableName"   jdbcType="VARCHAR"/>
+    <result  column="resId"          property="resId"          jdbcType="VARCHAR"/>
+    <result  column="playCount"      property="playCount"      jdbcType="VARCHAR"/>
+    <result  column="publisher"      property="publisher"      jdbcType="VARCHAR"/>
+    <result  column="cTime"          property="CTime"          jdbcType="TIMESTAMP"/>
+  </resultMap>
+  
+   <!-- 所有列 -->
+  <sql id="Base_Column_List">
+    id, resTableName, resId, playCount, publisher, cTime
+  </sql>
+  
+  <!-- 条件子句 -->
+  <sql id="WhereClauseByEntiey">
+    <where>
+      <trim prefix="(" suffix=")" prefixOverrides="and">
+        <if test="id!=null"> and id=#{id,jdbcType=VARCHAR}</if>
+        <if test="resTableName!=null"> and resTableName=#{resTableName,jdbcType=VARCHAR}</if>
+        <if test="resId!=null"> and resId=#{resId,jdbcType=VARCHAR}</if>
+        <if test="playCount!=null"> and playCount=#{playCount,jdbcType=VARCHAR}</if>
+        <if test="publisher!=null"> and publisher=#{publisher,jdbcType=VARCHAR}</if>
+      </trim>
+    </where>
+  </sql>
+  
+  <!-- 新增 单体节目 -->
+  <insert id="insert" parameterType="java.util.Map">
+    insert into wt_MediaPlayCount
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="resTableName!=null">resTableName,</if>
+      <if test="resId!=null">resId,</if>
+      <if test="playCount!=null">playCount,</if>
+      <if test="publisher!=null">publisher,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="resTableName!=null">#{resTableName,jdbcType=VARCHAR},</if>
+      <if test="resId!=null">#{resId,jdbcType=VARCHAR},</if>
+      <if test="playCount!=null">#{playCount,jdbcType=VARCHAR},</if>
+      <if test="publisher!=null">#{publisher,jdbcType=VARCHAR},</if>
+    </trim>
+  </insert>
+  
+  <!-- 获得列表 -->
+  <select id="getList" resultMap="baseResultMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_MediaPlayCount
+    <if test="_parameter!=null"> <include refid="WhereClauseByEntiey"/></if>
+    <if test="whereSql!=null"> and ${whereSql}</if>
+    <if test="sortByClause!=null">order by ${sortByClause}</if>
+  </select>
+  
+  <!-- 修改 根据主键-->
+  <update id="update" parameterType="java.util.Map">
+    update wt_MediaPlayCount
+    <set>
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="resTableName!=null">#{resTableName,jdbcType=VARCHAR},</if>
+      <if test="resId!=null">#{resId,jdbcType=VARCHAR},</if>
+      <if test="playCount!=null">#{playCount,jdbcType=VARCHAR},</if>
+      <if test="publisher!=null">#{publisher,jdbcType=VARCHAR},</if>
+    </set>
+    where id=#{id,jdbcType=VARCHAR}
+  </update>
+  
+  <delete id="deleteBy" parameterType="java.util.Map">
+    delete from plat_DictM <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </delete>
+  
+</mapper>

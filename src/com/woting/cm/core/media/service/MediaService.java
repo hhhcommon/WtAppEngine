@@ -21,6 +21,7 @@ import com.woting.cm.core.media.model.MediaAsset;
 import com.woting.cm.core.media.model.SeqMediaAsset;
 import com.woting.cm.core.media.persis.po.MaSourcePo;
 import com.woting.cm.core.media.persis.po.MediaAssetPo;
+import com.woting.cm.core.media.persis.po.MediaPlayCountPo;
 import com.woting.cm.core.media.persis.po.SeqMaRefPo;
 import com.woting.cm.core.media.persis.po.SeqMediaAssetPo;
 import com.woting.cm.core.utils.ContentUtils;
@@ -41,6 +42,8 @@ public class MediaService {
     private MybatisDAO<ChannelPo> channelDao;
     @Resource(name="defaultDAO")
     private MybatisDAO<DictRefResPo> dictRefDao;
+    @Resource(name="defaultDAO")
+    private MybatisDAO<MediaPlayCountPo> mediaPlayCountDao;
 
     @PostConstruct
     public void initParam() {
@@ -51,6 +54,7 @@ public class MediaService {
         channelAssetDao.setNamespace("A_CHANNELASSET");
         channelDao.setNamespace("A_CHANNEL");
         dictRefDao.setNamespace("A_DREFRES");
+        mediaPlayCountDao.setNamespace("A_MEDIAPLATCOUNT");
     }
     
     public MaSource getMasInfoByMasId(Map<String, Object> m) {
@@ -207,7 +211,6 @@ public class MediaService {
     }
     
     public void saveCha(ChannelAsset cha){
-    	System.out.println(JsonUtils.objToJson(cha.convert2Po()));
     	channelAssetDao.insert("insert", cha.convert2Po());
     }
     

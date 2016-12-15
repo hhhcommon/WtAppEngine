@@ -51,10 +51,9 @@
   <!-- 获得列表 -->
   <select id="getList" resultMap="baseResultMap" parameterType="java.util.Map">
     select <include refid="Base_Column_List"/> from plat_DictM
-    <if test="_parameter!=null">
-      <include refid="WhereClauseByEntiey"/>
-      <if test="sortByClause!=null">order by ${sortByClause}</if>
-    </if>
+    <if test="_parameter!=null"> <include refid="WhereClauseByEntiey"/></if>
+    <if test="whereSql!=null"> and ${whereSql}</if>
+    <if test="sortByClause!=null">order by ${sortByClause}</if>
   </select>
 
   <!-- 获得一条数据 -->
