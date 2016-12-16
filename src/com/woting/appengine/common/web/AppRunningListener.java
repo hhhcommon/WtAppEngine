@@ -78,6 +78,7 @@ public class AppRunningListener implements ServletContextListener {
             logger.info("配置文件信息={}", jc.getAllConfInfo());
         } catch(Exception e) {
             jc=null;
+            e.printStackTrace();
         }
         if (jc!=null) {
             FelEngine fel=new FelEngineImpl();
