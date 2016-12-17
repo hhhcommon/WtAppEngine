@@ -1,6 +1,6 @@
 {
   //socket客户端配置信息
-  "logPath":"C:/opt/logs",
+  "logPath":"/opt/logs/AppEngin/ServerSocketClient",
   "socketClient": {
     "ip":"localhost",                //服务端Ip
     "port":"16789",                  //服务端端口号
