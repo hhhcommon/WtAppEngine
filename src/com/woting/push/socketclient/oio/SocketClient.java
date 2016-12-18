@@ -56,7 +56,7 @@ public class SocketClient {
      * @param index 序号
      */
     public void setNextReConnIndex(int index) {
-        this.nextReConnIndex=index;
+        nextReConnIndex=index;
     }
     /**
      * 修改Beat的发送频率
@@ -83,16 +83,6 @@ public class SocketClient {
             logger.debug(StringUtils.getAllMessage(e));
         }
     }
-//以上对外接口：end
-    private boolean socketOk() {
-        return socket!=null&&socket.isBound()&&socket.isConnected()&&!socket.isClosed();
-    }
-
-    private HealthWatch healthWatch; //健康检查线程
-    private ReConn reConn; //重新连接线程
-    private SendBeat sendBeat; //发送心跳线程
-    private SendMsg sendMsg; //发送消息线程
-    private ReceiveMsg receiveMsg; //结束消息线程
 
     /**
      * 开始工作：
@@ -103,7 +93,6 @@ public class SocketClient {
         lastReceiveTime=System.currentTimeMillis(); //最后收到服务器消息时间
         //连接
         healthWatch=new HealthWatch("Socket客户端长连接监控");
-        healthWatch.setDaemon(true);
         healthWatch.start();
     }
 
@@ -119,28 +108,14 @@ public class SocketClient {
               &&(sendBeat!=null&&!sendBeat.isAlive())
               &&(sendMsg!=null&&!sendMsg.isAlive())
               &&(receiveMsg!=null&&!receiveMsg.isAlive())) break;
+            if (healthWatch==null&&reConn==null&&sendBeat==null&&sendMsg==null&&receiveMsg==null) break;
         }
 
-        if (healthWatch!=null&&healthWatch.isAlive()) {
-            healthWatch.interrupt();
-            healthWatch=null;
-        }
-        if (reConn!=null&&reConn.isAlive()) {
-            reConn.interrupt();
-            reConn=null;
-        }
-        if (sendBeat!=null&&sendBeat.isAlive()) {
-            sendBeat.interrupt();
-            sendBeat=null;
-        }
-        if (sendMsg!=null&&sendMsg.isAlive()) {
-            sendMsg.interrupt();
-            sendMsg=null;
-        }
-        if (receiveMsg!=null&&receiveMsg.isAlive()) {
-            receiveMsg.interrupt();
-            receiveMsg=null;
-        }
+        healthWatch=null;
+        reConn=null;
+        sendBeat=null;
+        sendMsg=null;
+        receiveMsg=null;
 
         try { socket.shutdownInput(); } catch (Exception e) {};
         try { socket.shutdownOutput(); } catch (Exception e) {};
@@ -152,6 +127,17 @@ public class SocketClient {
         socket=null;
         isRegister=false;
     }
+//以上对外接口：end
+
+    private boolean socketOk() {
+        return socket!=null&&socket.isBound()&&socket.isConnected()&&!socket.isClosed();
+    }
+
+    private HealthWatch healthWatch; //健康检查线程
+    private ReConn reConn; //重新连接线程
+    private SendBeat sendBeat; //发送心跳线程
+    private SendMsg sendMsg; //发送消息线程
+    private ReceiveMsg receiveMsg; //结束消息线程
 
     /*
      * 处理接收到的消息
@@ -170,11 +156,26 @@ public class SocketClient {
         public void run() { //主线程监控连接
             logger.debug(this.getName()+"线程启动");
             try {
-                while (true) {//检查线程的健康状况
-                    if (toBeStop) break;
-                    if (reConn==null||!reConn.isAlive()) {
-                        if (!socketOk()||(System.currentTimeMillis()-lastReceiveTime>scc.getExpireTime())) {//连接失败了
-                            workStop();
+                while (!toBeStop) {//检查线程的健康状况
+                    if (!socketOk()||(System.currentTimeMillis()-lastReceiveTime>scc.getExpireTime())) {//连接失败了
+                        if (reConn==null||!reConn.isAlive()) {
+                            long beginStopT=System.currentTimeMillis();
+                            while (System.currentTimeMillis()-beginStopT<scc.getStopDelay()) {
+                                if ((sendBeat!=null&&!sendBeat.isAlive())
+                                  &&(sendMsg!=null&&!sendMsg.isAlive())
+                                  &&(receiveMsg!=null&&!receiveMsg.isAlive())) break;
+                                if (sendBeat==null&&sendMsg==null&&receiveMsg==null) break;
+                            }
+                            sendBeat=null;
+                            sendMsg=null;
+                            receiveMsg=null;
+                            if (socket!=null) {
+                                try { socket.shutdownInput(); } catch (Exception e) {};
+                                try { socket.shutdownOutput(); } catch (Exception e) {};
+                                try { socket.close(); } catch (Exception e) {};
+                                socket=null;
+                            }
+
                             reConn=new ReConn("重连", nextReConnIndex);//此线程在健康监护线程中启动
                             reConn.setDaemon(true);
                             reConn.start();
@@ -329,34 +330,34 @@ public class SocketClient {
                             byte[] msg4Send=null;
                             if (!isRegister) {
                                 synchronized (socketSendLock) {
-                                    //构造注册消息
-                                    MsgNormal registerMsg=new MsgNormal();
-                                    registerMsg.setMsgType(0);
-                                    registerMsg.setAffirm(0);
-                                    registerMsg.setBizType(15);
-                                    registerMsg.setCmdType(0);
-                                    registerMsg.setCommand(0);
-                                    registerMsg.setFromType(1);
-                                    registerMsg.setToType(1);
-                                    registerMsg.setPCDType(3);
-                                    registerMsg.setUserId("AppEngin");
-                                    registerMsg.setIMEI("AppEngin001");
-                                    registerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                                    registerMsg.setSendTime(System.currentTimeMillis());
-
-                                    if (out==null) out=new BufferedOutputStream(socketOut);
-                                    msg4Send=registerMsg.toBytes();
-                                    out.write(msg4Send);
-                                    out.flush();
-                                    if (sendLogFile!=null) {
-                                        sendLogFile.write((DateUtils.convert2LongLocalStr(new Date())+"::>>").getBytes());
-                                        sendLogFile.write(msg4Send);
-                                        sendLogFile.write(13);
-                                        sendLogFile.write(10);
-                                        sendLogFile.flush();
-                                    }
+//                                    //构造注册消息
+//                                    MsgNormal registerMsg=new MsgNormal();
+//                                    registerMsg.setMsgType(0);
+//                                    registerMsg.setAffirm(0);
+//                                    registerMsg.setBizType(15);
+//                                    registerMsg.setCmdType(0);
+//                                    registerMsg.setCommand(0);
+//                                    registerMsg.setFromType(1);
+//                                    registerMsg.setToType(1);
+//                                    registerMsg.setPCDType(3);
+//                                    registerMsg.setUserId("AppEngin");
+//                                    registerMsg.setIMEI("AppEngin001");
+//                                    registerMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+//                                    registerMsg.setSendTime(System.currentTimeMillis());
+//
+//                                    if (out==null) out=new BufferedOutputStream(socketOut);
+//                                    msg4Send=registerMsg.toBytes();
+//                                    out.write(msg4Send);
+//                                    out.flush();
+//                                    if (sendLogFile!=null) {
+//                                        sendLogFile.write((DateUtils.convert2LongLocalStr(new Date())+"::>>").getBytes());
+//                                        sendLogFile.write(msg4Send);
+//                                        sendLogFile.write(13);
+//                                        sendLogFile.write(10);
+//                                        sendLogFile.flush();
+//                                    }
+                                    isRegister=true;
                                 }
-                                isRegister=true;
                             }
                             msg4Send=sendMsgQueue.poll();
                             if (msg4Send==null) continue;
@@ -404,7 +405,7 @@ public class SocketClient {
                 while(true) {
                     if (recvLogFile!=null) {
                         long cur=System.currentTimeMillis();
-                        sendLogFile.write((DateUtils.convert2LongLocalStr(new Date(cur))+"["+cur+"]::>>").getBytes());
+                        recvLogFile.write((DateUtils.convert2LongLocalStr(new Date(cur))+"["+cur+"]::>>").getBytes());
                     }
                     if (toBeStop) break;
                     if (in==null) in=new BufferedInputStream(socket.getInputStream());

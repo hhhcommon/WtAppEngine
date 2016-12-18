@@ -82,6 +82,7 @@ public abstract class ContentUtils {
      * @param pubChannelList 发布栏目信息，已审核通过的栏目信息
      * @param favoriteList 对应的喜欢信息列表
      * @return
+     * 
      */
     public static Map<String, Object> convert2Ma(Map<String, Object> one,
                                                   List<Map<String, Object>> personList,
@@ -125,7 +126,7 @@ public abstract class ContentUtils {
 //        }
         retM.put("ContentTimes", one.get("timeLong"));//S01-特有：播放时长
 
-        retM.put("CTime", one.get("CTime"));//A1-管控：节目创建时间，目前以此进行排序
+        retM.put("CTime", one.get("cTime"));//A1-管控：节目创建时间，目前以此进行排序
 
         return retM;
     }

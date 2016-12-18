@@ -1,5 +1,6 @@
 package com.woting.appengine.common.web;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,17 +31,17 @@ public class AppRunningListener implements ServletContextListener {
     //初始化
     public void contextInitialized(ServletContextEvent arg0) {
         try {
+            //启动Socket
+            SocketClient sc=new SocketClient(loadSocketConfig());
+            sc.workStart();
+            SystemCache.setCache(new CacheEle<SocketClient>(WtAppEngineConstants.SOCKET_OBJ, "模块", sc));//注册到内存
+
             //启动搜索词服务
             SearchWordListener.begin();
             //启动缓存刷新服务
             CacheRefreshListener.begin();
             //启动数据收集数据
             ApiGatherListener.begin();
-
-            //启动Socket
-            SocketClient sc=new SocketClient(loadSocketConfig());
-            sc.workStart();
-            SystemCache.setCache(new CacheEle<SocketClient>(WtAppEngineConstants.SOCKET_OBJ, "模块", sc));//注册到内存
         } catch(Exception e) {
             logger.error("Web运行时监听启动异常：",e);
         }
@@ -71,23 +72,23 @@ public class AppRunningListener implements ServletContextListener {
         scc.setLogPath(null);
 
         //读取配置文件
-        System.out.println("读取配置文件=============================================001=");
+        System.out.println("读取配置文件=============================================001");
         JsonConfig jc=null;
         try {
             String configFileName=(SystemCache.getCache(FConstants.APPOSPATH)==null?"":((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent());
-            //configFileName+="WEB-INF"+File.separator+"app.jconf";
-            configFileName+="WEB-INF\\app.jconf";
+            configFileName+="WEB-INF"+File.separator+"app.jconf";
+            //configFileName+="WEB-INF\\app.jconf";
             System.out.println("读取配置文件=============================================="+configFileName);
             jc=new JsonConfig(configFileName);
-            System.out.println("读取配置文件=============================================0021=");
-            logger.info("配置文件信息={}", jc.getAllConfInfo());
-            System.out.println("读取配置文件=============================================003=");
+            System.out.println("读取配置文件=============================================0021");
+            System.out.println("配置文件信息=<>=="+jc.getAllConfInfo());
+            System.out.println("读取配置文件==============================================003");
         } catch(Exception e) {
-            System.out.println("读取配置文件=============================================004=");
+            System.out.println("读取配置文件==============================================004");
             logger.info(StringUtils.getAllMessage(e));
             jc=null;
         }
-        System.out.println("读取配置文件=============================================0014=");
+        System.out.println("读取配置文件=============================================0014");
         if (jc!=null) {
             FelEngine fel=new FelEngineImpl();
             String tmpStr="";

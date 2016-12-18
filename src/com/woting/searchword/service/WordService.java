@@ -103,7 +103,11 @@ public class WordService {
                     ow=new OwnerWord(sysO, 5);
                     swm.putOwnerWord(ow);
                 }
-                ow.loadWord(new Word(_split[2], Integer.parseInt(_split[3])));
+                try {
+                    ow.loadWord(new Word(_split[2], Integer.parseInt(_split[3])));
+                } catch (Exception e) {
+                    System.out.println ("==================================="+_oneWord);
+                }
                 //再处理一次自己
                 if (!o.equals(sysO)) {
                     ow=swm.getOwnerWord(o);
