@@ -87,6 +87,7 @@ public class AppRunningListener implements ServletContextListener {
             System.out.println("读取配置文件==============================================004");
             logger.info(StringUtils.getAllMessage(e));
             jc=null;
+            e.printStackTrace();
         }
         System.out.println("读取配置文件=============================================0014");
         if (jc!=null) {

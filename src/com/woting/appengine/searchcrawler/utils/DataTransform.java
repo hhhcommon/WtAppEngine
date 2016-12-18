@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.JsonUtils;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
@@ -125,17 +127,27 @@ public abstract class DataTransform {
 		map.put("ContentImg", festival.getAudioPic());
 		map.put("ContentPlay", festival.getPlayUrl());
 		map.put("ContentImg", festival.getAudioPic());
-		map.put("ContentPersons", festival.getHost());
+		map.put("ContentPersons", festival.getPersonName());
 		map.put("ContentTimes", festival.getDuration());// 以ms为计量单位
 		map.put("ContentPubTime", festival.getUpdateTime());
 		map.put("ContentPub", festival.getContentPub());
 		map.put("ContentDescn", festival.getAudioDes());
-		map.put("CTime", null);
+		map.put("CTime", festival.getUpdateTime());
 		map.put("MediaType", festival.getMediaType());
 		map.put("ContentCatalogs", null);
 		map.put("ContentKeyWord", null);
 		map.put("ContentSubjectWord", null);
-		map.put("PlayCount", null);
+		map.put("PlayCount", "1234");
+		
+		String ext = FileNameUtils.getExt(map.containsKey("ContentPlay")?(map.get("ContentPlay")+""):null);
+        if (ext.contains("?")) {
+			ext = ext.replace(ext.substring(ext.indexOf("?"), ext.length()), ""); 
+		}
+        if (ext!=null) {
+        	map.put("ContentPlayType", ext.contains("/flv")?"flv":ext.replace(".", ""));
+		} else {
+			map.put("ContentPlayType", null);
+		}
 		return map;
 	}
 
@@ -162,7 +174,18 @@ public abstract class DataTransform {
 		map.put("ContentCatalogs", null);
 		map.put("ContentKeyWord", null);
 		map.put("ContentSubjectWord", null);
-		map.put("PlayCount", null);
+		map.put("PlayCount", "1234");
 		return map;
+	}
+	
+	public static int findInt(String str) {
+		char[] s = str.toCharArray();
+		String d = "";
+		for (int i = 0; i < s.length; i++) {
+			if (Character.isDigit(s[i])) {
+				d += s[i];
+			}
+		}
+		return Integer.valueOf(d);
 	}
 }

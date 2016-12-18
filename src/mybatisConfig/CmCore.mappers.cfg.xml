@@ -10,10 +10,13 @@
     <typeAlias alias="trackLog"      type="com.woting.cm.core.tracklog.persis.po.TrackLogPo"/>
     <typeAlias alias="mediaAsset"    type="com.woting.cm.core.media.persis.po.MediaAssetPo"/>
     <typeAlias alias="maSource"      type="com.woting.cm.core.media.persis.po.MaSourcePo"/>
+    <typeAlias alias="mediaPlayCount" type="com.woting.cm.core.media.persis.po.MediaPlayCountPo"/>
     <typeAlias alias="seqMediaAsset" type="com.woting.cm.core.media.persis.po.SeqMediaAssetPo"/>
     <typeAlias alias="seqMaRef"      type="com.woting.cm.core.media.persis.po.SeqMaRefPo"/>
     <typeAlias alias="channel"       type="com.woting.cm.core.channel.persis.po.ChannelPo"/>
     <typeAlias alias="channelAsset"  type="com.woting.cm.core.channel.persis.po.ChannelAssetPo"/>
+    <typeAlias alias="person"         type="com.woting.cm.core.person.persis.po.PersonPo"/>
+    <typeAlias alias="personref"      type="com.woting.cm.core.person.persis.po.PersonRefPo"/>
     <!-- 电台相关 -->
     <typeAlias alias="broadcast" type="com.woting.cm.core.broadcast.persis.po.BroadcastPo"/>
     <typeAlias alias="bcliveflow" type="com.woting.cm.core.broadcast.persis.po.BCLiveFlowPo"/>
@@ -26,8 +29,11 @@
     <mapper resource="com/woting/cm/core/dict/persis/sql/DictRefRes.mapper.xml"/>
     <mapper resource="com/woting/cm/core/tracklog/persis/sql/TrackLog.mapper.xml"/>
     <mapper resource="com/woting/cm/core/media/persis/sql/Media.mapper.xml"/>
+    <mapper resource="com/woting/cm/core/media/persis/sql/MediaPlayCount.mapper.xml"/>
     <mapper resource="com/woting/cm/core/channel/persis/sql/Channel.mapper.xml"/>
     <mapper resource="com/woting/cm/core/channel/persis/sql/ChannelAsset.mapper.xml"/>
+    <mapper resource="com/woting/cm/core/person/persis/sql/Person.mapper.xml"/>
+    <mapper resource="com/woting/cm/core/person/persis/sql/PersonRef.mapper.xml"/>
     <!-- 电台相关 -->
     <mapper resource="com/woting/cm/core/broadcast/persis/sql/Broadcast.mapper.xml"/>
     <mapper resource="com/woting/cm/core/broadcast/persis/sql/BCProgramme.mapper.xml"/>

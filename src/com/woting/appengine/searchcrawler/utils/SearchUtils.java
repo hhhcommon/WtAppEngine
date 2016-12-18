@@ -72,6 +72,7 @@ public abstract class SearchUtils {
 	 * @param strings 解析json数据各层的属性名，可多个，也可为空
 	 * @return 返回已解析好的json数据
 	 */
+	@SuppressWarnings("unchecked")
 	public static List<Map<String, Object>> jsonTOlist(String jsonstr, String... strings) {
 		if (strings.length == 0 || StringUtils.isNullOrEmptyOrSpace(jsonstr)) {
 			return null;
@@ -85,6 +86,7 @@ public abstract class SearchUtils {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public static Map<String, Object> jsonTOmap(String jsonstr, String... strings) {
 		if (StringUtils.isNullOrEmptyOrSpace(jsonstr)) {
 			return null;
