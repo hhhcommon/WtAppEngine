@@ -21,11 +21,8 @@ import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.searchcrawler.model.Festival;
 import com.woting.appengine.searchcrawler.model.Station;
-import com.woting.appengine.searchcrawler.service.BaiDuNewsSearch;
-import com.woting.appengine.searchcrawler.service.KaoLaSearch;
+import com.woting.appengine.searchcrawler.service.CrawlerSearch;
 import com.woting.appengine.searchcrawler.service.LocalSearch;
-import com.woting.appengine.searchcrawler.service.QingTingSearch;
-import com.woting.appengine.searchcrawler.service.XiMaLaYaSearch;
 import com.woting.passport.mobile.MobileUDKey;
 
 public abstract class SearchUtils {
@@ -287,6 +284,7 @@ public abstract class SearchUtils {
             value = JsonUtils.objToJson(T);
         if (!StringUtils.isNullOrEmptyOrSpace(value)&&!value.toLowerCase().equals("null")) {
             ros.rPush("Search_" + key + "_Data", value);
+            ros.pExpire("Search_" + key + "_Data", 6*60*60*1000);
         }
 		return true;
 	}
@@ -300,10 +298,11 @@ public abstract class SearchUtils {
 	public static boolean searchContent(String searchStr, MobileUDKey mUdk, RedisOperService ros) {
 		createSearchTime(searchStr, ros);
 		createBeginSearch(searchStr, ros);
-		new KaoLaSearch(searchStr).start();
-		new XiMaLaYaSearch(searchStr).start();
-		new QingTingSearch(searchStr).start();
-		new BaiDuNewsSearch(searchStr).start();
+//		new KaoLaSearch(searchStr).start();
+//		new XiMaLaYaSearch(searchStr).start();
+//		new QingTingSearch(searchStr).start();
+//		new BaiDuNewsSearch(searchStr).start();
+		new CrawlerSearch(searchStr, mUdk).start();
 		new LocalSearch(searchStr, mUdk).start();
 		return true;
 	}
@@ -326,7 +325,7 @@ public abstract class SearchUtils {
 	 */
 	public static boolean isOrNoSearchFinish(String key, RedisOperService ros) {
         if (ros.exist("Search_" + key + "_Finish")) {
-            if (ros.get("Search_" + key + "_Finish").equals("5")) { // 喜马拉雅，考拉，蜻蜓，百度新闻，服务器数据库
+            if (ros.get("Search_" + key + "_Finish").equals("4")) { // 喜马拉雅，考拉，蜻蜓，服务器数据库
                 System.out.println("key:已搜索完成 ");
                 return true;
             }

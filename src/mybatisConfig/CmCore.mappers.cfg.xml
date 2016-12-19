@@ -4,23 +4,24 @@
 <configuration>
   <!-- 别名设置 -->
   <typeAliases>
-    <typeAlias alias="dictMaster"    type="com.woting.cm.core.dict.persis.po.DictMasterPo"/>
-    <typeAlias alias="dictDetail"    type="com.woting.cm.core.dict.persis.po.DictDetailPo"/>
-    <typeAlias alias="dictRefRes"    type="com.woting.cm.core.dict.persis.po.DictRefResPo"/>
-    <typeAlias alias="trackLog"      type="com.woting.cm.core.tracklog.persis.po.TrackLogPo"/>
-    <typeAlias alias="mediaAsset"    type="com.woting.cm.core.media.persis.po.MediaAssetPo"/>
-    <typeAlias alias="maSource"      type="com.woting.cm.core.media.persis.po.MaSourcePo"/>
+    <typeAlias alias="dictMaster"     type="com.woting.cm.core.dict.persis.po.DictMasterPo"/>
+    <typeAlias alias="dictDetail"     type="com.woting.cm.core.dict.persis.po.DictDetailPo"/>
+    <typeAlias alias="dictRefRes"     type="com.woting.cm.core.dict.persis.po.DictRefResPo"/>
+    <typeAlias alias="trackLog"       type="com.woting.cm.core.tracklog.persis.po.TrackLogPo"/>
+    <typeAlias alias="mediaAsset"     type="com.woting.cm.core.media.persis.po.MediaAssetPo"/>
+    <typeAlias alias="maSource"       type="com.woting.cm.core.media.persis.po.MaSourcePo"/>
     <typeAlias alias="mediaPlayCount" type="com.woting.cm.core.media.persis.po.MediaPlayCountPo"/>
-    <typeAlias alias="seqMediaAsset" type="com.woting.cm.core.media.persis.po.SeqMediaAssetPo"/>
-    <typeAlias alias="seqMaRef"      type="com.woting.cm.core.media.persis.po.SeqMaRefPo"/>
-    <typeAlias alias="channel"       type="com.woting.cm.core.channel.persis.po.ChannelPo"/>
-    <typeAlias alias="channelAsset"  type="com.woting.cm.core.channel.persis.po.ChannelAssetPo"/>
+    <typeAlias alias="seqMediaAsset"  type="com.woting.cm.core.media.persis.po.SeqMediaAssetPo"/>
+    <typeAlias alias="seqMaRef"       type="com.woting.cm.core.media.persis.po.SeqMaRefPo"/>
+    <typeAlias alias="channel"        type="com.woting.cm.core.channel.persis.po.ChannelPo"/>
+    <typeAlias alias="channelAsset"   type="com.woting.cm.core.channel.persis.po.ChannelAssetPo"/>
     <typeAlias alias="person"         type="com.woting.cm.core.person.persis.po.PersonPo"/>
     <typeAlias alias="personref"      type="com.woting.cm.core.person.persis.po.PersonRefPo"/>
+    <typeAlias alias="searchword"     type="com.woting.cm.core.searchword.persis.po.SearchWordPo"/>
     <!-- 电台相关 -->
-    <typeAlias alias="broadcast" type="com.woting.cm.core.broadcast.persis.po.BroadcastPo"/>
-    <typeAlias alias="bcliveflow" type="com.woting.cm.core.broadcast.persis.po.BCLiveFlowPo"/>
-    <typeAlias alias="bcprogramme" type="com.woting.cm.core.broadcast.persis.po.BCProgrammePo"/>
+    <typeAlias alias="broadcast"      type="com.woting.cm.core.broadcast.persis.po.BroadcastPo"/>
+    <typeAlias alias="bcliveflow"     type="com.woting.cm.core.broadcast.persis.po.BCLiveFlowPo"/>
+    <typeAlias alias="bcprogramme"    type="com.woting.cm.core.broadcast.persis.po.BCProgrammePo"/>
   </typeAliases>
   <!-- SQL文件设置 -->
   <mappers>
@@ -34,6 +35,7 @@
     <mapper resource="com/woting/cm/core/channel/persis/sql/ChannelAsset.mapper.xml"/>
     <mapper resource="com/woting/cm/core/person/persis/sql/Person.mapper.xml"/>
     <mapper resource="com/woting/cm/core/person/persis/sql/PersonRef.mapper.xml"/>
+    <mapper resource="com/woting/cm/core/searchword/persis/sql/SearchWord.mapper.xml"/>
     <!-- 电台相关 -->
     <mapper resource="com/woting/cm/core/broadcast/persis/sql/Broadcast.mapper.xml"/>
     <mapper resource="com/woting/cm/core/broadcast/persis/sql/BCProgramme.mapper.xml"/>

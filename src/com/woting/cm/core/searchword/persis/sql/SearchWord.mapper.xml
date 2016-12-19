@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- Etl与资源对应关系 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="A_SEARCHWORD">
+  <!-- 对应关系 -->
+  <resultMap id="BaseResultMap" type="searchword">
+    <id      column="id"             property="id"             jdbcType="VARCHAR"/>
+    <result  column="word"           property="word"           jdbcType="VARCHAR"/>
+    <result  column="deviceId"       property="deviceId"       jdbcType="VARCHAR"/>
+    <result  column="userId"         property="userId"         jdbcType="VARCHAR"/>
+    <result  column="pcdType"        property="pcdType"        jdbcType="VARCHAR"/>
+    <result  column="cTime"          property="cTime"          jdbcType="TIMESTAMP"/>
+  </resultMap>
+
+  <!-- 所有列 -->
+  <sql id="Base_Column_List">
+    id, word, deviceId, userId, pcdType, cTime
+  </sql>
+  
+  <!-- 条件子句 -->
+  <sql id="WhereClauseByEntiey">
+    <where>
+      <trim prefix="(" suffix=")" prefixOverrides="and">
+        <if test="id!=null">and id=#{id,jdbcType=VARCHAR}</if>
+        <if test="word!=null">and word=#{word,jdbcType=VARCHAR}</if>
+        <if test="deviceId!=null">and deviceId=#{deviceId,jdbcType=VARCHAR}</if>
+        <if test="userId!=null">and userId=#{userId,jdbcType=VARCHAR}</if>
+        <if test="pcdType!=null">and pcdType=#{pcdType,jdbcType=VARCHAR}</if>
+      </trim>
+    </where>
+  </sql>
+  
+   <!-- 新增数据 -->
+  <insert id="insert" parameterType="java.util.Map">
+    insert into wt_SearchWord
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="word!=null">word,</if>
+      <if test="deviceId!=null">deviceId,</if>
+      <if test="userId!=null">userId,</if>
+      <if test="pcdType!=null">pcdType,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="word!=null">#{word,jdbcType=VARCHAR},</if>
+      <if test="deviceId!=null">#{deviceId,jdbcType=VARCHAR},</if>
+      <if test="userId!=null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="pcdType!=null">#{pcdType,jdbcType=VARCHAR},</if>
+    </trim>
+  </insert>
+</mapper>

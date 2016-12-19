@@ -202,8 +202,7 @@ public class XiMaLaYaSearch extends Thread {
 		} catch (Exception e) {
 			System.out.println("喜马拉雅搜索异常");
 		} finally {
-			ServletContext sc = (SystemCache.getCache(FConstants.SERVLET_CONTEXT) == null ? null
-					: (ServletContext) SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+			ServletContext sc = (SystemCache.getCache(FConstants.SERVLET_CONTEXT) == null ? null : (ServletContext) SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
 			if (WebApplicationContextUtils.getWebApplicationContext(sc) != null) {
 				JedisConnectionFactory conn = (JedisConnectionFactory) WebApplicationContextUtils
 						.getWebApplicationContext(sc).getBean("connectionFactory");

@@ -125,7 +125,10 @@ public abstract class ContentUtils {
 //        }
         retM.put("ContentTimes", one.get("timeLong"));//S01-特有：播放时长
 
-        retM.put("CTime", one.get("CTime"));//A1-管控：节目创建时间，目前以此进行排序
+        retM.put("CTime", one.get("cTime"));//A1-管控：节目创建时间，目前以此进行排序
+        if (retM.get("ContentPubTime")==null || retM.get("ContentPubTime").equals("null")) {
+			retM.put("ContentPubTime", one.get("cTime"));
+		}
 
         return retM;
     }
@@ -166,8 +169,12 @@ public abstract class ContentUtils {
 
         retM.put("ContentSubCount", one.get("count"));//S01-特有：下级节目的个数
 
-        retM.put("CTime", one.get("CTime"));//A1-管控：节目创建时间，目前以此进行排序
-
+        retM.put("CTime", one.get("cTime"));//A1-管控：节目创建时间，目前以此进行排序
+        if (retM.get("ContentPubTime")==null || retM.get("ContentPubTime").equals("null")) {
+			retM.put("ContentPubTime", one.get("cTime"));
+		}
+        
+        
         return retM;
     }
 
