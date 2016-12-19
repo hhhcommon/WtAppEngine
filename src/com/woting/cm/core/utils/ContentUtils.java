@@ -82,6 +82,7 @@ public abstract class ContentUtils {
      * @param pubChannelList 发布栏目信息，已审核通过的栏目信息
      * @param favoriteList 对应的喜欢信息列表
      * @return
+     * 
      */
     public static Map<String, Object> convert2Ma(Map<String, Object> one,
                                                   List<Map<String, Object>> personList,

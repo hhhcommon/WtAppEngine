@@ -119,7 +119,7 @@ CREATE TABLE ld_API (
   objType      varchar(100)                          COMMENT '主对象类型，是数据库模型中主对象的编号',
   objId        varchar(32)                           COMMENT '访问实体的ID',
   dealFlag     int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '处理过程0正在处理1处理成功2处理失败',
-  returnData   text                                  COMMENT '返回数据，以JSON形式',
+  returnData   longtext                              COMMENT '返回数据，以JSON形式',
   beginTime    timestamp                             COMMENT '开始处理时间',
   endTime      timestamp                             COMMENT '结束处理时间',
   PRIMARY KEY (id)
