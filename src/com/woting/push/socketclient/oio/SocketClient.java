@@ -228,14 +228,14 @@ public class SocketClient {
                         if (!StringUtils.isNullOrEmptyOrSpace(scc.getLogPath())) {//处理日志
                             File dir=new File(scc.getLogPath());
                             if (!dir.isDirectory()) dir.mkdirs();
-                            File f=new File(scc.getLogPath()+"\\c_"+socket.hashCode()+"_send.log");
+                            File f=new File(scc.getLogPath()+File.separator+"c_"+socket.hashCode()+"_send.log");
                             try {
                                 if (!f.exists()) f.createNewFile();
                                 sendLogFile=new FileOutputStream(f, true);
                             } catch (IOException e1) {
                                 e1.printStackTrace();
                             }
-                            f=new File(scc.getLogPath()+"\\c_"+socket.hashCode()+"_recv.log");
+                            f=new File(scc.getLogPath()+File.separator+"c_"+socket.hashCode()+"_recv.log");
                             try {
                                 if (!f.exists()) f.createNewFile();
                                 recvLogFile=new FileOutputStream(f, true);
