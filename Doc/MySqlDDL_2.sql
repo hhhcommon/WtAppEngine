@@ -138,7 +138,7 @@ CREATE TABLE wt_KeyWord (
   nPy            varchar(800)     NOT NULL             COMMENT '名称拼音',
   sort           int(5) unsigned  NOT NULL  DEFAULT 0  COMMENT '标签排序,从大到小排序，越大越靠前',
   isValidate     int(1) unsigned  NOT NULL  DEFAULT 1  COMMENT '是否生效(1-生效,2-无效)',
-  descn          varchar(500)     NOT NULL             COMMENT '描述',
+  descn          varchar(500)                          COMMENT '描述',
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY (id)
 )
@@ -168,3 +168,17 @@ CREATE TABLE wt_ChannelAssetDatePub_Res (
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='内容定时发布关系表';
+
+/**== 待搜索词表 =============================================*/
+/** WT_SEARCHWORD(待搜索词表)*/
+DROP TABLE IF EXISTS wt_SearchWord;
+CREATE TABLE wt_SearchWord (
+  id            varchar(32)      NOT NULL                COMMENT 'uuid(用户id)',
+  word          varchar(100)     NOT NULL                COMMENT '搜索词',
+  deviceId      varchar(100)                             COMMENT 'IMEI',
+  userId        varchar(100)                             COMMENT '用户Id',
+  pcdType       varchar(100)                             COMMENT '设备分类：1=手机；2=设备；3=PC，默认1',
+  cTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
+  PRIMARY KEY(id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='待搜索词表';
