@@ -136,7 +136,7 @@ public class FriendService {
                 } else {//你的邀请对方还没有处理
                     //如果邀请时间小于重复邀请间隔，且邀请内容相同，则视为重复邀请
                     if (System.currentTimeMillis()-ifPo.getInviteTime().getTime()<=INVITE_INTERVAL_TIME
-                            &&inviteMsg.equals(ifPo.getInviteMessage())) {
+                            &&((inviteMsg!=null&&inviteMsg.equals(ifPo.getInviteMessage()))||(inviteMsg==null&&ifPo.getInviteMessage()==null))) {
                         m.put("ReturnType", "1007");
                         m.put("Message", "您已邀请，无需重复邀请");
                         canContinue=false;

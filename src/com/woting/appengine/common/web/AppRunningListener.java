@@ -36,12 +36,12 @@ public class AppRunningListener implements ServletContextListener {
             sc.workStart();
             SystemCache.setCache(new CacheEle<SocketClient>(WtAppEngineConstants.SOCKET_OBJ, "模块", sc));//注册到内存
 
-            //启动搜索词服务
-            SearchWordListener.begin();
-            //启动缓存刷新服务
-            CacheRefreshListener.begin();
-            //启动数据收集数据
-            ApiGatherListener.begin();
+//            //启动搜索词服务
+//            SearchWordListener.begin();
+//            //启动缓存刷新服务
+//            CacheRefreshListener.begin();
+//            //启动数据收集数据
+//            ApiGatherListener.begin();
         } catch(Exception e) {
             logger.error("Web运行时监听启动异常：",e);
         }
@@ -81,7 +81,11 @@ public class AppRunningListener implements ServletContextListener {
             System.out.println("读取配置文件=============================================="+configFileName);
             jc=new JsonConfig(configFileName);
             System.out.println("读取配置文件=============================================0021");
-            System.out.println("配置文件信息=<>=="+jc.getAllConfInfo());
+            try {
+                System.out.println("配置文件信息=<>=="+jc.getAllConfInfo());
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
             System.out.println("读取配置文件==============================================003");
         } catch(Exception e) {
             System.out.println("读取配置文件==============================================004");
@@ -89,7 +93,6 @@ public class AppRunningListener implements ServletContextListener {
             jc=null;
             e.printStackTrace();
         }
-        System.out.println("读取配置文件=============================================0014");
         if (jc!=null) {
             FelEngine fel=new FelEngineImpl();
             String tmpStr="";
