@@ -19,8 +19,6 @@ import org.jsoup.nodes.Document;
 import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.searchcrawler.model.Festival;
-import com.woting.appengine.searchcrawler.model.Station;
 import com.woting.appengine.searchcrawler.service.CrawlerSearch;
 import com.woting.appengine.searchcrawler.service.LocalSearch;
 import com.woting.passport.mobile.MobileUDKey;
@@ -276,15 +274,10 @@ public abstract class SearchUtils {
 	public static <T> boolean addListInfo(String key, T T, RedisOperService ros) {
 		String value = "";
         String classname = T.getClass().getSimpleName();
-        if (classname.equals("Festival"))
-            value = JsonUtils.objToJson(DataTransform.festival2Audio((Festival) T));
-        else if (classname.equals("Station"))
-            value = JsonUtils.objToJson(DataTransform.datas2Sequ_Audio((Station) T));
-        else if (classname.equals("HashMap"))
+        if (classname.equals("HashMap"))
             value = JsonUtils.objToJson(T);
         if (!StringUtils.isNullOrEmptyOrSpace(value)&&!value.toLowerCase().equals("null")) {
             ros.rPush("Search_" + key + "_Data", value);
-            ros.pExpire("Search_" + key + "_Data", 6*60*60*1000);
         }
 		return true;
 	}
@@ -297,11 +290,7 @@ public abstract class SearchUtils {
 	 */
 	public static boolean searchContent(String searchStr, MobileUDKey mUdk, RedisOperService ros) {
 		createSearchTime(searchStr, ros);
-		createBeginSearch(searchStr, ros);
-//		new KaoLaSearch(searchStr).start();
-//		new XiMaLaYaSearch(searchStr).start();
-//		new QingTingSearch(searchStr).start();
-//		new BaiDuNewsSearch(searchStr).start();
+		createBeginSearch(searchStr, ros);;
 		new CrawlerSearch(searchStr, mUdk).start();
 		new LocalSearch(searchStr, mUdk).start();
 		return true;
@@ -325,7 +314,7 @@ public abstract class SearchUtils {
 	 */
 	public static boolean isOrNoSearchFinish(String key, RedisOperService ros) {
         if (ros.exist("Search_" + key + "_Finish")) {
-            if (ros.get("Search_" + key + "_Finish").equals("4")) { // 喜马拉雅，考拉，蜻蜓，服务器数据库
+            if (ros.get("Search_" + key + "_Finish").equals("3")) { // 喜马拉雅，考拉，蜻蜓，服务器数据库
                 System.out.println("key:已搜索完成 ");
                 return true;
             }
@@ -333,15 +322,6 @@ public abstract class SearchUtils {
 		return false;
 	}
 	
-//	private static void recordMD5Tag(String key,String str){
-//		Jedis jedis = jedisPool.getResource();
-//		String md5str = jedis.get("Search_"+key+"_MD5")+","+DigestUtils.md5Hex(str);
-//		if (md5str.indexOf(",")==0) md5str.substring(1);
-//		jedis.set("Search_"+key+"_MD5", md5str);
-//	}
-//	
-	
-
 	/**
 	 * 放入缓存开始搜索标志
 	 * 
