@@ -294,4 +294,12 @@ public class ChannelService {
             return "1";
         }
     }
+    
+    public List<ChannelAssetPo> getChannelAssetListBy(Map<String, Object> m) {
+    	List<ChannelAssetPo> chas = channelAssetDao.queryForList("getListByWhere", m);
+    	if (chas!=null && chas.size()>0) {
+			return chas;
+		}
+		return null;
+    }
 }

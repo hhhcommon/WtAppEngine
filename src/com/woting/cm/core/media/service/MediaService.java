@@ -7,7 +7,6 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
-import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.cm.core.channel.model.Channel;
@@ -109,6 +108,14 @@ public class MediaService {
     	sma.buildFromPo(smapo);
     	return sma;
 	}
+    
+    public List<MediaAssetPo> getMaListBy(Map<String, Object> m) {
+    	List<MediaAssetPo> mas = mediaAssetDao.queryForList("getMaListBy", m);
+    	if (mas!=null) {
+			return mas;
+		}
+		return null;
+    }
     
     public List<MediaAssetPo> getMaListBySmaId(String smaid) {
     	return mediaAssetDao.queryForList("getMaInfoBySmaId", smaid);

@@ -12,7 +12,7 @@ import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.woting.cm.core.person.persis.po.PersonPo;
 import com.woting.cm.core.person.persis.po.PersonRefPo;
 
-public class PersonService {
+public class PersonBaseService {
 	@Resource(name = "defaultDAO")
 	private MybatisDAO<PersonPo> personDao;
 	@Resource(name = "defaultDAO")
@@ -22,6 +22,27 @@ public class PersonService {
 	public void initParam() {
 	    personDao.setNamespace("A_PERSON");
 	    personRefDao.setNamespace("A_PERSONREF");
+	}
+	
+	public PersonPo getPersonPo(String personId) {
+		Map<String, Object> m = new HashMap<>();
+		m.put("id", personId);
+		List<PersonPo> pos = personDao.queryForList("getList", m);
+		if (pos!=null && pos.size()>0) {
+			return pos.get(0);
+		}
+		return null;
+	}
+	
+	public List<PersonRefPo> getPersonRefs(String personId, String resTableName) {
+		Map<String, Object> m = new HashMap<>();
+		m.put("personId", personId);
+		m.put("resTableName", resTableName);
+		List<PersonRefPo> personRefPos = personRefDao.queryForList("getListBy", m);
+		if (personRefPos!=null && personRefPos.size()>0) {
+			return personRefPos;
+		}
+		return null;
 	}
 
 	public PersonRefPo getPersonRefBy(String resTableName, String resId) {
