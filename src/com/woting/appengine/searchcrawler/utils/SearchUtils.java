@@ -314,7 +314,7 @@ public abstract class SearchUtils {
 	 */
 	public static boolean isOrNoSearchFinish(String key, RedisOperService ros) {
         if (ros.exist("Search_" + key + "_Finish")) {
-            if (ros.get("Search_" + key + "_Finish").equals("3")) { // 喜马拉雅，考拉，蜻蜓，服务器数据库
+            if (ros.get("Search_" + key + "_Finish").equals("3")) { // 喜马拉雅，蜻蜓，服务器数据库
                 System.out.println("key:已搜索完成 ");
                 return true;
             }
@@ -338,6 +338,7 @@ public abstract class SearchUtils {
 	 */
 	public static void updateSearchFinish(String key, RedisOperService ros) {
 		if (ros.exist("Search_" + key + "_Finish")) {
+			System.out.println("加载完成进度");
 			String finishnum = ros.get("Search_" + key + "_Finish");
 			finishnum = String.valueOf(Integer.valueOf(finishnum) + 1);
 			ros.set("Search_" + key + "_Finish", finishnum);
