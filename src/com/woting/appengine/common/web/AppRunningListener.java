@@ -72,24 +72,17 @@ public class AppRunningListener implements ServletContextListener {
         scc.setLogPath(null);
 
         //读取配置文件
-        System.out.println("读取配置文件=============================================001");
         JsonConfig jc=null;
         try {
             String configFileName=(SystemCache.getCache(FConstants.APPOSPATH)==null?"":((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent());
             configFileName+="WEB-INF"+File.separator+"app.jconf";
-            //configFileName+="WEB-INF\\app.jconf";
-            System.out.println("读取配置文件=============================================="+configFileName);
             jc=new JsonConfig(configFileName);
-            System.out.println("读取配置文件=============================================0021");
-            System.out.println("配置文件信息=<>=="+jc.getAllConfInfo());
-            System.out.println("读取配置文件==============================================003");
+            logger.info("配置文件信息={}", jc.getAllConfInfo());
         } catch(Exception e) {
-            System.out.println("读取配置文件==============================================004");
             logger.info(StringUtils.getAllMessage(e));
             jc=null;
             e.printStackTrace();
         }
-        System.out.println("读取配置文件=============================================0014");
         if (jc!=null) {
             FelEngine fel=new FelEngineImpl();
             String tmpStr="";
