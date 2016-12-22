@@ -314,7 +314,7 @@ public abstract class SearchUtils {
 	 */
 	public static boolean isOrNoSearchFinish(String key, RedisOperService ros) {
         if (ros.exist("Search_" + key + "_Finish")) {
-            if (ros.get("Search_" + key + "_Finish").equals("2")) { // 喜马拉雅，蜻蜓，服务器数据库
+            if (ros.get("Search_" + key + "_Finish").equals("3")) { // 喜马拉雅，蜻蜓，服务器数据库
                 System.out.println("key:已搜索完成 ");
                 return true;
             }
