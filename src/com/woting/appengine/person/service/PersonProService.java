@@ -121,7 +121,7 @@ public class PersonProService {
 					m.put("assetType", "wt_SeqMediaAsset");
 					m.put("flowFlag", "2");
 					m.put("isValidate", "1");
-					m.put("whereByClause", " assetId in ("+smaIds+")");
+					m.put("whereByClause", " assetId in ("+smaIds+") GROUP BY assetId");
 					if (orderBy.equals("1")) {
 						m.put("sortByClause", " pubTime Desc limit "+(Integer.valueOf(page)-1)*(Integer.valueOf(pageSize))+","+pageSize);
 					} else {
@@ -166,7 +166,7 @@ public class PersonProService {
 						m.put("assetType", "wt_MediaAsset");
 						m.put("flowFlag", "2");
 						m.put("isValidate", "1");
-						m.put("whereByClause", " assetId in ("+maIds+")");
+						m.put("whereByClause", " assetId in ("+maIds+") GROUP BY assetId");
 						if (orderBy.equals("1")) {
 							m.put("sortByClause", " pubTime Desc limit "+(Integer.valueOf(page)-1)*(Integer.valueOf(pageSize))+","+pageSize);
 						} else {
