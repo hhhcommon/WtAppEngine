@@ -26,7 +26,6 @@ import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.util.DateUtils;
-import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
@@ -60,6 +59,7 @@ public class ContentService {
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
 
+    @SuppressWarnings("unchecked")
     @PostConstruct
     public void initParam() {
         groupDao.setNamespace("WT_GROUP");
@@ -628,6 +628,7 @@ public class ContentService {
         return retInfo;
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, Object> getContents(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId, int pageType,
                                             MobileUDKey mUdk, Map<String, Object> filterData) {
         //1-得到喜欢列表
