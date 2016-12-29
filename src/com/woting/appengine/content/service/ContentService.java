@@ -948,6 +948,12 @@ public class ContentService {
                             oneData.put("cTime", rs.getTimestamp("cTime"));
 
                             Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, null, cataList, pubChannelList, fList);
+                            Map<String, Object> pm = getBCIsPlayingProgramme(oneData.get("id")+"", System.currentTimeMillis());
+                            if (pm!=null && pm.size()>0) {
+                            	oneMedia.put("IsPlaying", pm.get(oneData.get("id")+""));
+							} else {
+								oneMedia.put("IsPlaying", null);
+							}
                             int i=0;
                             for (; i<sortIdList.size(); i++) {
                                 if (sortIdList.get(i).equals("wt_Broadcast::"+oneMedia.get("ContentId"))) break;
@@ -1032,23 +1038,6 @@ public class ContentService {
                     for (int i=_ret.size()-1; i>=0; i--) {
                         if (_ret.get(i)==null) _ret.remove(i);
                     }
-                    if (mediaType.equals("RADIO")) {
-						if (_ret!=null && _ret.size()>0) {
-							String bcIds = "";
-							for (Map<String, Object> map : _ret) {
-								bcIds += ","+map.get("ContentId")+"";
-							}
-							bcIds = bcIds.substring(1);
-							Map<String, Object> pm = getBCIsPlayingProgramme(bcIds, System.currentTimeMillis());
-							for (Map<String, Object> map : _ret) {
-								if (pm.containsKey(map.get("ContentId"))) {
-									map.put("IsPlaying", pm.get(map.get("ContentId")));
-								} else {
-									map.put("IsPlaying", null);
-								}
-							}
-						}
-					}
                     ret.put("ResultType", resultType);
                     ret.put("AllCount", count);
                     ret.put("Page", page);
@@ -1241,6 +1230,12 @@ public class ContentService {
                                     oneData.put("flowURI", rs.getString("flowURI"));
                                     oneData.put("CTime", rs.getTimestamp("cTime"));
                                     Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, null, cataList, pubChannelList, fList);
+                                    Map<String, Object> pm = getBCIsPlayingProgramme(oneData.get("id")+"", System.currentTimeMillis());
+                                    if (pm!=null && pm.size()>0) {
+                                    	oneMedia.put("IsPlaying", pm.get(oneData.get("id")+""));
+        							} else {
+        								oneMedia.put("IsPlaying", null);
+        							}
                                     int i=0;
                                     for (; i<sortIdList.size(); i++) {
                                         if (sortIdList.get(i).equals("wt_Broadcast::"+oneMedia.get("ContentId"))) break;
@@ -1317,7 +1312,8 @@ public class ContentService {
 
                                 for (i=0; i<_ret.size(); i++) {//第一次循环，把符合过滤条件的先找出来插入
                                     oneMedia=_ret.get(i);
-                                    List<Map<String,Object>> catalogs=(List<Map<String, Object>>)oneMedia.get("ContentCatalogs");
+                                    @SuppressWarnings("unchecked")
+									List<Map<String,Object>> catalogs=(List<Map<String, Object>>)oneMedia.get("ContentCatalogs");
                                     if (catalogs!=null&&catalogs.size()>0) {
                                         for (j=0; j<catalogs.size(); j++) {
                                             oneCatalog=catalogs.get(j);
@@ -1376,23 +1372,6 @@ public class ContentService {
                     }
                 }
                 if (pageCount<pageSize) beginCatalogId="ENDEND";
-                if (mediaType.equals("RADIO")) {
-					if (retCataList!=null && retCataList.size()>0) {
-						String bcIds = "";
-						for (Map<String, Object> map : retCataList) {
-							bcIds += ","+map.get("ContentId")+"";
-						}
-						bcIds = bcIds.substring(1);
-						Map<String, Object> pm = getBCIsPlayingProgramme(bcIds, System.currentTimeMillis());
-						for (Map<String, Object> map : retCataList) {
-							if (pm.containsKey(map.get("ContentId"))) {
-								map.put("IsPlaying", pm.get(map.get("ContentId")));
-							} else {
-								map.put("IsPlaying", null);
-							}
-						}
-					}
-				}
                 ret.put("BeginCatalogId", beginCatalogId);
                 ret.put("ResultType", resultType);
                 ret.put("Page", page);
