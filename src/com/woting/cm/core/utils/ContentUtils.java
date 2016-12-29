@@ -233,8 +233,9 @@ public abstract class ContentUtils {
         for (Map<String, Object> _p: personList) {
             if ((_p.get("resTableName")+"").equals(resTableName)&&(_p.get("resId")+"").equals(resId)) {
                 onePerson=new HashMap<String, Object>();
-                onePerson.put("RefName", _p.get("cName"));//关系名称
+                onePerson.put("RefName", _p.get("refName"));//关系名称
                 onePerson.put("PerName", _p.get("pName"));//人员名称
+                onePerson.put("PerId", _p.get("id"));//人员ID
                 ret.add(onePerson);
             }
         }

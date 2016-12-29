@@ -327,7 +327,7 @@
     select * from wt_ResDict_Ref where resTableName=#{resTableName,jdbcType=VARCHAR} and resId in (${ids})
   </select>
   <select id="getPersonListByTypeAndIds" resultType="java.util.HashMap" parameterType="java.util.Map">
-    select * from wt_User_Ref a, wt_Person b
+    select * from wt_Person_Ref a, wt_Person b
     where a.personId=b.id and a.resTableName=#{resTableName,jdbcType=VARCHAR} and a.resId in (${ids})
   </select>
   <!-- ======================================================================================================= -->
