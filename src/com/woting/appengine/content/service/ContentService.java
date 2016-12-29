@@ -3,7 +3,9 @@ package com.woting.appengine.content.service;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -24,6 +26,7 @@ import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.util.DateUtils;
+import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
@@ -1028,7 +1031,23 @@ public class ContentService {
                     for (int i=_ret.size()-1; i>=0; i--) {
                         if (_ret.get(i)==null) _ret.remove(i);
                     }
-
+                    if (mediaType.equals("RADIO")) {
+						if (_ret!=null && _ret.size()>0) {
+							String bcIds = "";
+							for (Map<String, Object> map : _ret) {
+								bcIds += ","+map.get("ContentId")+"";
+							}
+							bcIds = bcIds.substring(1);
+							Map<String, Object> pm = getBCIsPlayingProgramme(bcIds, System.currentTimeMillis());
+							for (Map<String, Object> map : _ret) {
+								if (pm.containsKey(map.get("ContentId"))) {
+									map.put("IsPlaying", pm.get(map.get("ContentId")));
+								} else {
+									map.put("IsPlaying", null);
+								}
+							}
+						}
+					}
                     ret.put("ResultType", resultType);
                     ret.put("AllCount", count);
                     ret.put("Page", page);
@@ -1182,7 +1201,6 @@ public class ContentService {
                         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
                         //播放地址
                         //List<Map<String, Object>> playUriList=null;
-
                         if (sortIdList!=null&&!sortIdList.isEmpty()) {
                             Map<String, Object> paraM=new HashMap<String, Object>();
                             if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {
@@ -1357,6 +1375,23 @@ public class ContentService {
                     }
                 }
                 if (pageCount<pageSize) beginCatalogId="ENDEND";
+                if (mediaType.equals("RADIO")) {
+					if (retCataList!=null && retCataList.size()>0) {
+						String bcIds = "";
+						for (Map<String, Object> map : retCataList) {
+							bcIds += ","+map.get("ContentId")+"";
+						}
+						bcIds = bcIds.substring(1);
+						Map<String, Object> pm = getBCIsPlayingProgramme(bcIds, System.currentTimeMillis());
+						for (Map<String, Object> map : retCataList) {
+							if (pm.containsKey(map.get("ContentId"))) {
+								map.put("IsPlaying", pm.get(map.get("ContentId")));
+							} else {
+								map.put("IsPlaying", null);
+							}
+						}
+					}
+				}
                 ret.put("BeginCatalogId", beginCatalogId);
                 ret.put("ResultType", resultType);
                 ret.put("Page", page);
@@ -1435,6 +1470,27 @@ public class ContentService {
 			if (l!=null && l.size()>0) {
 				return l;
 			}
+		}
+		return null;
+	}
+	
+	public Map<String, Object> getBCIsPlayingProgramme(String BcIds, long time) {
+		Calendar cal = Calendar.getInstance();
+		Date date = new Date(time);
+		cal.setTime(date);
+		int week = cal.get(Calendar.DAY_OF_WEEK);
+		DateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+		String timestr = sdf.format(date);
+		String[] ids = BcIds.split(",");
+		if (BcIds!=null && BcIds.length()>0) {
+			Map<String, Object> m = new HashMap<>();
+			for (String id : ids) {
+				String pr = bcProgrammeService.getBcIsPlaying(id, week, timestr, time);
+				if (pr!=null) {
+					m.put(id, pr);
+				}
+			}
+			return m;
 		}
 		return null;
 	}
