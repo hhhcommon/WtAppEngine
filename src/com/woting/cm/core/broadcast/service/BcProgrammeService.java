@@ -48,6 +48,21 @@ public class BcProgrammeService {
 		return null;
 	}
 	
+	public String getBcIsPlaying(String bcId, int weekDay, String timestr, long time) {
+		Map<String, Object> m = new HashMap<>();
+		m.put("bcId", bcId);
+		m.put("weekDay", weekDay);
+		m.put("sort", 0);
+		m.put("wheresql", "'"+timestr + "' BETWEEN beginTime and endTime");
+		m.put("orderByClause", " validTime desc");
+		m.put("limitNum", "1");
+		BCProgrammePo bcPo = bcProDao.getInfoObject("getList", m);
+		if (bcPo!=null) {
+			return bcPo.getTitle();
+		}
+		return null;
+	}
+	
 	public void insertBCProgrammeList(List<BCProgrammePo> bcProlist) {
 		bcProDao.insert("insertList", bcProlist);
 	}

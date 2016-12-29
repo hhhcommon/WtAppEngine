@@ -58,6 +58,8 @@ public class LocalSearch extends Thread {
                 JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
                 RedisOperService roService=new RedisOperService(conn);
                 SearchUtils.updateSearchFinish(searchStr, roService);
+            } else {
+            	System.out.println("本地搜索完成结束异常");
             }
 			System.out.println("本地搜索完成");
 		}
