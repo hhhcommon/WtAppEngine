@@ -320,18 +320,23 @@ public class GroupService {
      * @return 更新用户成功返回1，否则返回0
      */
     public void updateGroup(Map<String, Object> newInfo, String userId, GroupPo g) {
+        boolean changed=false;
         if (g.getAdminUserIds().equals(userId)) { //修改组本身信息
             if (newInfo.get("groupDescn")!=null) g.setDescn(newInfo.get("groupDescn")+"");
             if (newInfo.get("groupName")!=null) g.setGroupName(newInfo.get("groupName")+"");
             if (newInfo.get("groupSignature")!=null) g.setGroupSignature(newInfo.get("groupSignature")+"");
             this.updateGroup(g);
+            changed=true;
         }
-        if (newInfo.get("groupName")!=null) newInfo.put("groupAlias", newInfo.get("groupName"));
 
-        if (newInfo.get("groupAlias")==null&&newInfo.get("groupDescn")==null) return;
-        newInfo.put("groupId", g.getGroupId());
-        newInfo.put("userId", userId);
-        groupDao.update("updateGroupUserByUserIdGroupId", newInfo);
+//        if (newInfo.get("groupName")!=null) newInfo.put("groupAlias", newInfo.get("groupName"));//用户名修改了不修改别名
+
+        if (newInfo.get("groupAlias")!=null||newInfo.get("groupDescn")!=null) {
+            newInfo.put("groupId", g.getGroupId());
+            newInfo.put("userId", userId);
+            groupDao.update("updateGroupUserByUserIdGroupId", newInfo);
+        }
+        if (!changed) return ;
 
         @SuppressWarnings("unchecked")
         SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
