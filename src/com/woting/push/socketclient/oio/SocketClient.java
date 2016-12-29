@@ -73,7 +73,7 @@ public class SocketClient {
     public void addSendMsg(Message msg) {
         try {
             if (msg instanceof MsgNormal) {
-                ((MsgNormal)msg).setPCDType(3);
+                ((MsgNormal)msg).setPCDType(0);
                 ((MsgNormal)msg).setUserId("AppEngin0001");
                 ((MsgNormal)msg).setIMEI("AppEnginServer000000000000000001");//获得本机信息（CPU号）
             }
@@ -335,7 +335,7 @@ public class SocketClient {
                             registerMsg.setCommand(0);
                             registerMsg.setFromType(1);
                             registerMsg.setToType(1);
-                            registerMsg.setPCDType(3);
+                            registerMsg.setPCDType(0);
                             registerMsg.setUserId("AppEngin0001");
                             registerMsg.setIMEI("AppEnginServer000000000000000001");
                             registerMsg.setSendTime(System.currentTimeMillis());
