@@ -112,7 +112,6 @@ public abstract class MessageUtils {
         return null;
     }
 
-
     /**
      * 根据原始媒体消息生成应答消息
      * @param orgMsg 一般消息
