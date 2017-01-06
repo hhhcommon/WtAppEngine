@@ -30,13 +30,15 @@ public abstract class ContentUtils {
      * @param cataList 对应的字典分类信息列表
      * @param pubChannelList 发布栏目信息，已审核通过的栏目信息
      * @param favoriteList 对应的喜欢信息列表
+     * @param playingList 当前正在播放的节目列表
      * @return
      */
     public static Map<String, Object> convert2Bc(Map<String, Object> one,
                                                   List<Map<String, Object>> personList,
                                                   List<Map<String, Object>> cataList,
                                                   List<Map<String, Object>> pubChannelList,
-                                                  List<Map<String, Object>> favoriteList) {
+                                                  List<Map<String, Object>> favoriteList,
+                                                  List<Map<String, Object>> playingList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
         retM.put("MediaType", "RADIO");
@@ -62,6 +64,7 @@ public abstract class ContentUtils {
 		}
 
         fillExtInfo(retM, "RADIO", personList, cataList, pubChannelList, favoriteList);//填充扩展信息
+        fillExtInfoPlaying(retM, playingList);
 
         retM.put("ContentFreq", one.get(""));//S01-特有：主频率，目前为空
         retM.put("ContentFreqs", one.get(""));//S02-特有：频率列表，目前为空
@@ -206,6 +209,28 @@ public abstract class ContentUtils {
         //P16-公共：播放次数
         one.put("PlayCount", "1234");
     }
+
+    /*
+     * 填充扩展信息——专为电台的当前播放节目而处理
+     * @param playingList 当前播放信息的List
+     */
+    private static void fillExtInfoPlaying(Map<String, Object> one, List<Map<String, Object>> playingList) {
+        //P12-公共：相关人员列表
+        Object temp=fetchPersons(personList, getResTableName(mediaType), one.get("ContentId")+"");
+        if (temp!=null) one.put("ContentPersons", temp);
+        //P13-公共：所有分类列表
+        temp=fetchCatas(cataList, getResTableName(mediaType), one.get("ContentId")+"");
+        if (temp!=null) one.put("ContentCatalogs", temp);
+        //P14-公共：发布情况
+        Object cnls=fetchChannels(pubChannelList, getResTableName(mediaType), one.get("ContentId")+"");
+        if (cnls!=null) one.put("ContentPubChannels", cnls);
+        //P15-公共：是否喜欢
+        temp=fetchFavorite(favoriteList, getResTableName(mediaType), one.get("ContentId")+"");
+        one.put("ContentFavorite", (temp==null?0:(((Integer)temp)==1?(cnls==null?"您喜欢的内容已经下架":1):0))+"");
+        //P16-公共：播放次数
+        one.put("PlayCount", "1234");
+    }
+
     //P08-公共：主播放Url，这个应该从其他地方来，现在先这样//TODO
     private static void fillPlayUrl(Map<String, Object> one, List<Map<String, Object>> playList) {
         if (playList==null||playList.size()==0) return;
