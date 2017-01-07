@@ -133,25 +133,42 @@ public class ContentService {
         for (int i=0; i<cataList.size(); i++) {
             Map<String, Object> one=cataList.get(i);
             String resTableName=one.get("resTableName")+"";
-            if (resTableName.equals("1")) resTableName="wt_Broadcast";
-            if (typeMap.get(resTableName)==null) typeMap.put(resTableName, new ArrayList<String>());
-            typeMap.get(resTableName).add(one.get("resId")+"");
+            List<String> idl=typeMap.get(resTableName);
+            if (idl==null) {
+                idl=new ArrayList<String>();
+                typeMap.put(resTableName, idl);
+            }
+            boolean find=false;
+            for (String id: idl) {
+                find=id.equals(one.get("resId"));
+                if (find) break;
+            }
+            if (!find) idl.add(one.get("resId")+"");
         }
         //0.2-查找节目-查人员
         List<Map<String, Object>> personList=groupDao.queryForListAutoTranform("searchPerson", _s);
         for (int i=0; i<personList.size(); i++) {
             Map<String, Object> one=personList.get(i);
             String resTableName=one.get("resTableName")+"";
-            if (typeMap.get(resTableName)==null) typeMap.put(resTableName, new ArrayList<String>());
-            typeMap.get(resTableName).add(one.get("resId")+"");
+            List<String> idl=typeMap.get(resTableName);
+            if (idl==null) {
+                idl=new ArrayList<String>();
+                typeMap.put(resTableName, idl);
+            }
+            boolean find=false;
+            for (String id: idl) {
+                find=id.equals(one.get("resId"));
+                if (find) break;
+            }
+            if (!find) idl.add(one.get("resId")+"");
         }
 
         List<Map<String, Object>> tempList=null;
         List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
         //1-查找电台
         paraM.put("searchArray", _s);
-        String tempStr=getIds(typeMap.get("wt_Broadcast"));
-        if (tempStr!=null) paraM.put("inIds", tempStr);
+        String tempStr=getIds(typeMap, "wt_Broadcast", "c.id");
+        if (tempStr!=null) paraM.put("orIds", tempStr);
         tempList=groupDao.queryForListAutoTranform("searchBc", paraM);
         for (int i=0; i<tempList.size(); i++) {
             add(ret1, tempList.get(i));
@@ -176,7 +193,7 @@ public class ContentService {
             }
         }
         //2-查找单体节目
-        tempStr=getIds(typeMap.get("wt_MediaAsset"));
+        tempStr=getIds(typeMap, "wt_MediaAsset", "c.id");
         sql="select a.* from wt_MediaAsset a where ";
         likeSql="";
         for (int k=0; k<_s.length; k++) {
@@ -184,7 +201,7 @@ public class ContentService {
             likeSql+="(CONCAT(IFNULL(a.maTitle,''),'#S#',IFNULL(a.maPublisher,''),'#S#',IFNULL(a.subjectWords,''),'#S#',IFNULL(a.keyWords,''),'#S#',IFNULL(a.descn,'')) like '%"+_s[k]+"%')";
         }
         sql+=(likeSql.length()>0?"("+likeSql+")":"")+" limit 0, 20";
-        if (tempStr!=null) sql+=" union select c.* from wt_MediaAsset c where c.id in ("+tempStr+") limit 0, 10";
+        if (tempStr!=null) sql+=" union select c.* from wt_MediaAsset c where ("+tempStr+") limit 0, 10";
         try {
             conn=dataSource.getConnection();
             ps=conn.prepareStatement(sql);
@@ -236,7 +253,7 @@ public class ContentService {
             if (conn!=null) try {conn.close();conn=null;} catch(Exception e) {conn=null;} finally {conn=null;};
         }
         //3-查找系列节目
-        tempStr=getIds(typeMap.get("wt_SeqMediaAsset"));
+        tempStr=getIds(typeMap, "wt_SeqMediaAsset", "c.id");
         sql="select a.*, case when b.count is null then 0 else b.count end as count from wt_SeqMediaAsset a left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) b on a.id=b.sid where ";
         likeSql="";
         for (int k=0; k<_s.length; k++) {
@@ -244,8 +261,8 @@ public class ContentService {
             likeSql+="(CONCAT(IFNULL(a.smaTitle,''),'#S#',IFNULL(a.smaPublisher,''),'#S#',IFNULL(a.subjectWords,''),'#S#',IFNULL(a.keyWords,''),'#S#',IFNULL(a.descn,'')) like '%"+_s[k]+"%')";
         }
         sql+=(likeSql.length()>0?"("+likeSql+")":"")+" and b.count>0 limit 0,10";
-        if (tempStr!=null) sql+=" union select c.*, case when d.count is null then 0 else d.count end as count from wt_SeqMediaAsset c left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) d on c.id=d.sid where c.id in ("+
-                tempStr+")limit 0, 10";
+        if (tempStr!=null) sql+=" union select c.*, case when d.count is null then 0 else d.count end as count from wt_SeqMediaAsset c left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) d on c.id=d.sid "
+                +"where ("+tempStr+") limit 0, 10";
         try {
             conn=dataSource.getConnection();
             ps=conn.prepareStatement(sql);
@@ -363,9 +380,9 @@ public class ContentService {
 
         //重构人员及分类列表
         paraM.clear();
-        if (reBuildMap.get("wt_Broadcast")!=null&&reBuildMap.get("wt_Broadcast").size()>0) paraM.put("bcIds", getIds(reBuildMap.get("wt_Broadcast")));
-        if (reBuildMap.get("wt_MediaAsset")!=null&&reBuildMap.get("wt_MediaAsset").size()>0) paraM.put("maIds", getIds(reBuildMap.get("wt_MediaAsset")));
-        if (reBuildMap.get("wt_SeqMediaAsset")!=null&&reBuildMap.get("wt_SeqMediaAsset").size()>0) paraM.put("smaIds", getIds(reBuildMap.get("wt_SeqMediaAsset")));
+        if (reBuildMap.get("wt_Broadcast")!=null&&reBuildMap.get("wt_Broadcast").size()>0) paraM.put("bcIds", getIds(reBuildMap, "wt_Broadcast", "a.resId"));
+        if (reBuildMap.get("wt_MediaAsset")!=null&&reBuildMap.get("wt_MediaAsset").size()>0) paraM.put("maIds", getIds(reBuildMap, "wt_MediaAsset", "a.resId"));
+        if (reBuildMap.get("wt_SeqMediaAsset")!=null&&reBuildMap.get("wt_SeqMediaAsset").size()>0) paraM.put("smaIds", getIds(reBuildMap, "wt_SeqMediaAsset", "a.resId"));
 
         //重构人员
         personList=groupDao.queryForListAutoTranform("refPersonById", paraM);
@@ -375,7 +392,25 @@ public class ContentService {
         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
         //获得播放地址列表
         //List<Map<String, Object>> playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
+        //得到点击量
+        List<Map<String, Object>> playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
+        //当前播放列表
+        List<Map<String, Object>> playingList=null;
+        if (ret1!=null&&ret1.size()>0) {
+            Calendar cal = Calendar.getInstance();
+            Date date = new Date();
+            cal.setTime(date);
+            int week = cal.get(Calendar.DAY_OF_WEEK);
+            DateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+            String timestr = sdf.format(date);
+            paraM.clear();
+            paraM.put("weekDay", week);
+            paraM.put("sort", 0);
+            paraM.put("timestr", timestr);
+            playingList=groupDao.queryForListAutoTranform("playingBc", paraM);
+        }
 
+        //组装结果信息
         Map<String, Object> ret=new HashMap<String, Object>();
         ret.put("ResultType", resultType);
         Map<String, Object> oneMedia;
@@ -384,17 +419,17 @@ public class ContentService {
             List<Map<String, Object>> allList=new ArrayList<Map<String, Object>>();
             if (ret1!=null||ret1.size()>0) {
                 for (; i<ret1.size(); i++) {
-                    oneMedia=ContentUtils.convert2Bc(ret1.get(i), personList, cataList, pubChannelList, fList);
+                    oneMedia=ContentUtils.convert2Bc(ret1.get(i), personList, cataList, pubChannelList, fList, playCountList, playingList);
                     add(allList, oneMedia);
                 }
             }
             if (ret2!=null||ret2.size()>0) {
                 for (i=0; i<ret2.size(); i++) {
-                    oneMedia=ContentUtils.convert2Ma(ret2.get(i), personList, cataList, pubChannelList, fList);
+                    oneMedia=ContentUtils.convert2Ma(ret2.get(i), personList, cataList, pubChannelList, fList, playCountList);
                     if (pageType==0&&ret2.get(i).get("sId")!=null) {
                         for (int j=0; j<ret3.size(); j++) {
                             if (ret3.get(j).get("id").equals(ret2.get(i).get("sId"))) {
-                                Map<String, Object> _oneMedia=ContentUtils.convert2Sma(ret3.get(j), personList, cataList, pubChannelList, fList);
+                                Map<String, Object> _oneMedia=ContentUtils.convert2Sma(ret3.get(j), personList, cataList, pubChannelList, fList, playCountList);
                                 oneMedia.put("SeqInfo", _oneMedia);
                             }
                         }
@@ -404,10 +439,10 @@ public class ContentService {
             }
             if (pageType==0&&ret4!=null) {
                 for (i=0; i<ret4.size(); i++) {
-                    oneMedia=ContentUtils.convert2Ma(ret4.get(i), personList, cataList, pubChannelList, fList);
+                    oneMedia=ContentUtils.convert2Ma(ret4.get(i), personList, cataList, pubChannelList, fList, playCountList);
                     for (int j=0; j<ret3.size(); j++) {
                         if (ret3.get(j).get("id").equals(ret4.get(i).get("sId"))) {
-                            Map<String, Object> _oneMedia=ContentUtils.convert2Sma(ret3.get(j), personList, cataList, pubChannelList, fList);
+                            Map<String, Object> _oneMedia=ContentUtils.convert2Sma(ret3.get(j), personList, cataList, pubChannelList, fList, playCountList);
                             oneMedia.put("SeqInfo", _oneMedia);
                         }
                     }
@@ -416,7 +451,7 @@ public class ContentService {
             } else {
                 if (ret3!=null||ret3.size()>0) {//系列节目
                     for (i=0; i<ret3.size(); i++) {
-                        oneMedia=ContentUtils.convert2Sma(ret3.get(i), personList, cataList, pubChannelList, fList);
+                        oneMedia=ContentUtils.convert2Sma(ret3.get(i), personList, cataList, pubChannelList, fList, playCountList);
                         add(allList, oneMedia);
                     }
                 }
@@ -428,7 +463,7 @@ public class ContentService {
             if (ret1!=null||ret1.size()>0) {
                 List<Map<String, Object>> resultList1=new ArrayList<Map<String, Object>>();
                 for (i=0; i<ret1.size(); i++) {
-                    oneMedia=ContentUtils.convert2Bc(ret1.get(i), personList, cataList , pubChannelList, fList);
+                    oneMedia=ContentUtils.convert2Bc(ret1.get(i), personList, cataList , pubChannelList, fList, playCountList, playingList);
                     resultList1.add(oneMedia);
                 }
                 Map<String, Object> bcResult=new HashMap<String, Object>();
@@ -439,7 +474,7 @@ public class ContentService {
             if (ret2!=null||ret2.size()>0) {
                 List<Map<String, Object>> resultList2=new ArrayList<Map<String, Object>>();
                 for (i=0; i<ret2.size(); i++) {
-                    oneMedia=ContentUtils.convert2Ma(ret2.get(i), personList, cataList , pubChannelList, fList);
+                    oneMedia=ContentUtils.convert2Ma(ret2.get(i), personList, cataList , pubChannelList, fList, playCountList);
                     resultList2.add(oneMedia);
                 }
                 Map<String, Object> mResult=new HashMap<String, Object>();
@@ -455,8 +490,8 @@ public class ContentService {
                             if (pageType==0&&ret2.get(i).get("sId")!=null) {
                                 for (int j=0; j<ret3.size(); j++) {
                                     if (ret3.get(j).get("id").equals(ret2.get(i).get("sId"))) {
-                                        oneMedia=ContentUtils.convert2Ma(ret2.get(i) ,personList, cataList, pubChannelList, fList);
-                                        Map<String, Object> _oneMedia=ContentUtils.convert2Sma(ret3.get(j) ,personList, cataList, pubChannelList, fList);
+                                        oneMedia=ContentUtils.convert2Ma(ret2.get(i) ,personList, cataList, pubChannelList, fList, playCountList);
+                                        Map<String, Object> _oneMedia=ContentUtils.convert2Sma(ret3.get(j) ,personList, cataList, pubChannelList, fList, playCountList);
                                         oneMedia.put("SeqInfo", _oneMedia);
                                         resultList3.add(oneMedia);
                                     }
@@ -466,10 +501,10 @@ public class ContentService {
                     }
                     if (ret4!=null||ret4.size()>0) {
                         for (i=0; i<ret4.size(); i++) {
-                            oneMedia=ContentUtils.convert2Ma(ret4.get(i) ,personList, cataList, pubChannelList, fList);
+                            oneMedia=ContentUtils.convert2Ma(ret4.get(i) ,personList, cataList, pubChannelList, fList, playCountList);
                             for (int j=0; j<ret3.size(); j++) {
                                 if (ret3.get(j).get("id").equals(ret4.get(i).get("sId"))) {
-                                    Map<String, Object> _oneMedia=ContentUtils.convert2Sma(ret3.get(i) ,personList, cataList, pubChannelList, fList);
+                                    Map<String, Object> _oneMedia=ContentUtils.convert2Sma(ret3.get(i) ,personList, cataList, pubChannelList, fList, playCountList);
                                     oneMedia.put("SeqInfo", _oneMedia);
                                 }
                             }
@@ -478,7 +513,7 @@ public class ContentService {
                     }
                 } else {
                     for (i=0; i<ret3.size(); i++) {
-                        oneMedia=ContentUtils.convert2Sma(ret3.get(i) ,personList, cataList, pubChannelList, fList);
+                        oneMedia=ContentUtils.convert2Sma(ret3.get(i) ,personList, cataList, pubChannelList, fList, playCountList);
                         resultList3.add(oneMedia);
                     }
                 }
@@ -489,7 +524,6 @@ public class ContentService {
             }
         }
         //对返回信息中的专辑进行处理
-        
         return ret;
     }
 
@@ -526,7 +560,7 @@ public class ContentService {
         Map<String, Object> tempMap=groupDao.queryForObjectAutoTranform("getSmById", contentId);
         if (tempMap==null||tempMap.size()==0) return null;
         paraM.put("resTableName", "wt_SeqMediaAsset");
-        paraM.put("ids", "'"+contentId+"'");
+        paraM.put("ids", " a.resId='"+contentId+"'");
         cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
         personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
         //2、得到明细内容
@@ -534,6 +568,7 @@ public class ContentService {
         //3、得到发布情况
         List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
         if (tempList!=null&&tempList.size()>0) {
+            
             for (Map<String, Object> one: tempList) {
                 Map<String, Object> oneAsset=new HashMap<String, Object>();
                 oneAsset.put("resId", one.get("id"));
@@ -546,26 +581,26 @@ public class ContentService {
         oneAsset.put("resTableName", "wt_SeqMediaAsset");
         assetList.add(oneAsset);
         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
-//        List<Map<String, Object>> playUriList=null;
-//        if (!StringUtils.isNullOrEmptyOrSpace(subMedisIds)) {
-//            paraM.put("maIds", subMedisIds.substring(1));
-//            playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
-//        }
+        //4、得到点击量
+        paraM.put("smaIds", "(a.resTableName='wt_SeqMediaAsset' and a.resId='"+contentId+"'");
+        List<Map<String, Object>> playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
         
-        //4、组装内容
-        Map<String, Object> retInfo=ContentUtils.convert2Sma(tempMap, personList, cataList, pubChannelList, fList);
+        //5、组装内容
+        Map<String, Object> retInfo=ContentUtils.convert2Sma(tempMap, personList, cataList, pubChannelList, fList, playCountList);
 
         if (tempList!=null&&tempList.size()>0) {
             String ids="";
             for (Map<String, Object> one: tempList) {
-                if (one.get("id")!=null) ids+=",'"+one.get("id")+"'"; 
+                if (one.get("id")!=null) ids+=" or a.resId='"+one.get("id")+"'"; 
             }
-            ids=ids.substring(1);
+            ids=ids.substring(4);
             paraM.clear();
             paraM.put("resTableName", "wt_MediaAsset");
             paraM.put("ids", ids);
             cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
             personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+            paraM.put("maIds", "(a.resTableName='wt_MediaAsset' and ("+ids+")");
+            playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
 
             List<Map<String, Object>> subList=new ArrayList<Map<String, Object>>();
             //计算页数
@@ -576,7 +611,7 @@ public class ContentService {
                 if (end>tempList.size()) end=tempList.size();
             }
             for (int i=begin; i<end; i++) {
-                subList.add(ContentUtils.convert2Ma(tempList.get(i), personList, cataList, pubChannelList, fList));
+                subList.add(ContentUtils.convert2Ma(tempList.get(i), personList, cataList, pubChannelList, fList, playCountList));
             }
             retInfo.put("SubList", subList);
             retInfo.put("PageSize", subList.size());
@@ -586,7 +621,7 @@ public class ContentService {
         return retInfo;
     }
     /**
-     * 获得专辑信息
+     * 获得单体信息
      * @param contentId 专辑内容Id
      * @param mk 用户标识，可以是登录用户，也可以是手机设备
      * @return
@@ -594,6 +629,7 @@ public class ContentService {
     public Map<String, Object> getMaInfo(String contentId, MobileUDKey mUdk) {
         List<Map<String, Object>> cataList=null;//分类
         List<Map<String, Object>> personList=null;//人员
+        List<Map<String, Object>> playCountList=null;//播放次数
         Map<String, Object> paraM=new HashMap<String, Object>();
 
         //0、得到喜欢列表
@@ -612,6 +648,9 @@ public class ContentService {
         paraM.put("ids", "'"+contentId+"'");
         cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
         personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+        paraM.clear();
+        paraM.put("maIds", "(a.resTableName='wt_MediaAsset' and a.resId='"+contentId+"'");
+        playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
 //        List<Map<String, Object>> playUriList=null;
 //        paraM.put("maIds", "'"+contentId+"'");
 //        playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
@@ -622,8 +661,9 @@ public class ContentService {
         oneAsset.put("resTableName", "wt_SeqMediaAsset");
         assetList.add(oneAsset);
         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
+
         //3、组装内容
-        Map<String, Object> retInfo=ContentUtils.convert2Ma(tempMap, personList, cataList, pubChannelList, fList);
+        Map<String, Object> retInfo=ContentUtils.convert2Ma(tempMap, personList, cataList, pubChannelList, fList, playCountList);
 
         return retInfo;
     }
@@ -925,6 +965,8 @@ public class ContentService {
 
                     //重构人员及分类列表：目前不处理人员
                     List<Map<String, Object>> cataList=groupDao.queryForListAutoTranform("refCataById", paraM);
+                    List<Map<String, Object>> playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);; //播放次数
+                    List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", paraM); //电台播放节目
 
                     List<Map<String, Object>> _ret=new ArrayList<Map<String, Object>>();
                     for (int j=0; j<sortIdList.size(); j++) _ret.add(null);
@@ -947,7 +989,7 @@ public class ContentService {
                             oneData.put("flowURI", rs.getString("flowURI"));
                             oneData.put("cTime", rs.getTimestamp("cTime"));
 
-                            Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, null, cataList, pubChannelList, fList);
+                            Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, null, cataList, pubChannelList, fList, playCountList, playingList);
                             Map<String, Object> pm = getBCIsPlayingProgramme(oneData.get("id")+"", System.currentTimeMillis());
                             if (pm!=null && pm.size()>0) {
                             	oneMedia.put("IsPlaying", pm.get(oneData.get("id")+""));
@@ -983,7 +1025,7 @@ public class ContentService {
                             oneData.put("pubCount", rs.getInt("pubCount"));
                             oneData.put("cTime", rs.getTimestamp("cTime"));
 
-                            Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, null, cataList, pubChannelList, fList);
+                            Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, null, cataList, pubChannelList, fList, playCountList);
                             int i=0;
                             for (; i<sortIdList.size(); i++) {
                                 if (sortIdList.get(i).equals("wt_MediaAsset::"+oneMedia.get("ContentId"))) break;
@@ -1013,7 +1055,7 @@ public class ContentService {
                             oneData.put("pubCount", rs.getInt("pubCount"));
                             oneData.put("cTime", rs.getTimestamp("cTime"));
 
-                            Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, null, cataList, pubChannelList, fList);
+                            Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, null, cataList, pubChannelList, fList, playCountList);
                             int i=0;
                             for (; i<sortIdList.size(); i++) {
                                 if (sortIdList.get(i).equals("wt_SeqMediaAsset::"+oneMedia.get("ContentId"))) break;
@@ -1022,7 +1064,7 @@ public class ContentService {
                             if (pageType==0&&samExtractHas) {
                                 for (Map<String, Object> _o: ret4) {
                                     if ((""+oneMedia.get("ContentId")).equals(""+_o.get("sId"))) {
-                                        Map<String, Object> newOne=ContentUtils.convert2Ma(_o, null, cataList, pubChannelList, fList);
+                                        Map<String, Object> newOne=ContentUtils.convert2Ma(_o, null, cataList, pubChannelList, fList, playCountList);
                                         newOne.put("SeqInfo", oneMedia);
                                         _ret.set(i, newOne);
                                         hasAdd=true;
@@ -1189,6 +1231,8 @@ public class ContentService {
 
                         //得到发布列表
                         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
+                        List<Map<String, Object>> playCountList=groupDao.queryForListAutoTranform("refPlayCountById", null);; //播放次数
+                        List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", null); //电台播放节目
                         //播放地址
                         //List<Map<String, Object>> playUriList=null;
                         if (sortIdList!=null&&!sortIdList.isEmpty()) {
@@ -1229,7 +1273,7 @@ public class ContentService {
                                     oneData.put("bcSource", rs.getString("bcSource"));
                                     oneData.put("flowURI", rs.getString("flowURI"));
                                     oneData.put("CTime", rs.getTimestamp("cTime"));
-                                    Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, null, cataList, pubChannelList, fList);
+                                    Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, null, cataList, pubChannelList, fList, playCountList, playingList);
                                     Map<String, Object> pm = getBCIsPlayingProgramme(oneData.get("id")+"", System.currentTimeMillis());
                                     if (pm!=null && pm.size()>0) {
                                     	oneMedia.put("IsPlaying", pm.get(oneData.get("id")+""));
@@ -1263,7 +1307,7 @@ public class ContentService {
                                     oneData.put("pubCount", rs.getInt("pubCount"));
                                     oneData.put("cTime", rs.getTimestamp("cTime"));
 
-                                    Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, null, cataList, pubChannelList, fList);
+                                    Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, null, cataList, pubChannelList, fList, playCountList);
                                     int i=0;
                                     for (; i<sortIdList.size(); i++) {
                                         if (sortIdList.get(i).equals("wt_MediaAsset::"+oneMedia.get("ContentId"))) break;
@@ -1291,7 +1335,7 @@ public class ContentService {
                                     oneData.put("pubCount", rs.getInt("pubCount"));
                                     oneData.put("cTime", rs.getTimestamp("cTime"));
 
-                                    Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, null, cataList, pubChannelList, fList);
+                                    Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, null, cataList, pubChannelList, fList, playCountList);
                                     int i=0;
                                     for (; i<sortIdList.size(); i++) {
                                         if (sortIdList.get(i).equals("wt_SeqMediaAsset::"+oneMedia.get("ContentId"))) break;
@@ -1312,7 +1356,6 @@ public class ContentService {
 
                                 for (i=0; i<_ret.size(); i++) {//第一次循环，把符合过滤条件的先找出来插入
                                     oneMedia=_ret.get(i);
-                                    @SuppressWarnings("unchecked")
 									List<Map<String,Object>> catalogs=(List<Map<String, Object>>)oneMedia.get("ContentCatalogs");
                                     if (catalogs!=null&&catalogs.size()>0) {
                                         for (j=0; j<catalogs.size(); j++) {
@@ -1394,11 +1437,12 @@ public class ContentService {
     }
 
     //私有方法
-    private String getIds(List<String> l) {
+    private String getIds(Map<String, List<String>> m, String typeStr, String schemaColumnName) {
+        List<String> l=m.get(typeStr);
         if (l==null||l.size()==0) return null;
         String ret="";
-        for (String sKey: l) ret+=",'"+sKey+"'";
-        return ret.substring(1);
+        for (String sKey: l) ret+=" or "+schemaColumnName+"='"+sKey+"'";
+        return "("+ret.substring(4)+")";
     }
     private void add(List<Map<String, Object>> ret, Map<String, Object> oneM) {
         int insertIndex=-1;

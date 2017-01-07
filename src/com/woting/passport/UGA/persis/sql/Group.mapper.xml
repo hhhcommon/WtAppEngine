@@ -232,16 +232,16 @@
     union 
     select c.*, d.bcSource, d.flowURI from wt_Broadcast c
     left join wt_BCLiveFlow d on c.id=d.bcId and d.isMain=1
-    where c.id in (${inIds})
+    where ${orIds}
     </if>
   </select>
   <select id="getBcList" resultType="java.util.HashMap" parameterType="java.util.Map">
     select c.*, d.bcSource, d.flowURI from wt_Broadcast c
     left join wt_BCLiveFlow d on c.id=d.bcId and d.isMain=1
-    where c.id in (${inIds})
+    where ${orIds}
   </select>
   <select id="searchPerson" resultType="java.util.HashMap" parameterType="java.util.Map">
-    select * from wt_User_Ref a, wt_Person b
+    select * from wt_Person_Ref a, wt_Person b
     where a.personId=b.id and (
     <foreach collection="array" index="index" item="tag" open="" separator="or" close="">
     pName like '%${tag}%'
@@ -249,7 +249,7 @@
     )
   </select>
 
-  <select id="searchMa" resultType="java.util.HashMap" parameterType="java.util.Map">
+  <select id="searchMa" resultType="java.util.HashMap" parameterType="java.util.Map"><!-- 可能无用 -->
     select a.*, b.smType, b.maSource, b.playURI from wt_MediaAsset a
     left join wt_MaSource b on a.id=b.maId and b.isMain=1
     where
@@ -260,16 +260,15 @@
     union 
     select c.*, d.smType, d.maSource, d.playURI from wt_MediaAsset c
     left join wt_MaSource d on c.id=d.maId and d.isMain=1
-    where c.id in (${inIds})
+    where (${inIds})
     </if>
   </select>
   <select id="getMaList" resultType="java.util.HashMap" parameterType="java.util.Map">
     select c.*, d.smType, d.maSource, d.playURI from wt_MediaAsset c
     left join wt_MaSource d on c.id=d.maId and d.isMain=1
-    where c.id in (${inIds})
+    where (${orIds})
   </select>
-
-  <select id="searchSeqMa" resultType="java.util.HashMap" parameterType="java.util.Map">
+  <select id="searchSeqMa" resultType="java.util.HashMap" parameterType="java.util.Map"><!-- 可能无用 -->
     select a.*, case when b.count is null then 0 else b.count end as count from wt_SeqMediaAsset a
     left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) b on a.id=b.sid
     <where>
@@ -281,34 +280,53 @@
     union 
     select c.*, case when d.count is null then 0 else d.count end as count from wt_SeqMediaAsset c
     left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) d on c.id=d.sid
-    where c.id in (${inIds})
+    where (${orIds})
     </if>
   </select>
   <select id="getSeqMaList" parameterType="java.util.Map" resultType="java.util.HashMap">
     select c.*, case when d.count is null then 0 else d.count end as count from wt_SeqMediaAsset c
     left join (select sid, count(*) count from wt_SeqMA_Ref group by sid) d on c.id=d.sid
-    where c.id in (${inIds})
+    where (${orIds})
   </select>
 
   <!-- 重构 -->
   <select id="refPersonById" parameterType="java.util.Map" resultType="java.util.HashMap">
-    select * from wt_User_Ref a, wt_Person b
+    select * from wt_Person_Ref a, wt_Person b
     where a.personId=b.id
     <trim prefix="and (" suffix=")" prefixOverrides="or">
-    <if test="bcIds!=null">or (a.resTableName='wt_Broadcast' and a.resId in (${bcIds}))</if>
-    <if test="maIds!=null">or (a.resTableName='wt_MediaAsset' and a.resId in (${maIds}))</if>
-    <if test="smaIds!=null">or (a.resTableName='wt_SeqMediaAsset' and a.resId in (${smaIds}))</if>
+    <if test="bcIds!=null">or (${bcIds})</if>
+    <if test="maIds!=null">or (${maIds})</if>
+    <if test="smaIds!=null">or (${smaIds})</if>
     </trim>
+  </select>
+  <select id="refPlayCountById" parameterType="java.util.Map" resultType="java.util.HashMap">
+    select * from wt_MediaPlayCount a
+    <where><trim prefix="" suffix="" prefixOverrides="or">
+    <trim prefix="and (" suffix=")" prefixOverrides="or">
+    <if test="bcIds!=null">or (${bcIds})</if>
+    <if test="maIds!=null">or (${maIds})</if>
+    <if test="smaIds!=null">or (${smaIds})</if>
+    </trim></where>
+  </select>
+  <select id="playingBc" parameterType="java.util.Map" resultType="java.util.HashMap">
+    select * from wt_BCProgramme a
+    <where>
+    <trim prefix="and (" suffix=")" prefixOverrides="and">
+    <if test="bcIds!=null">and (${bcIds})</if>
+    <if test="weekDay!=null and weekDay!=0"> and weekDay=#{weekDay,jdbcType=INTEGER}</if>
+    <if test="sort!=null"> and sort=#{sort,jdbcType=INTEGER}</if>
+    <if test="timeStr"> and #{timeStr,jdbcType=VARCHAR} BETWEEN beginTime and endTime</if>
+    </trim></where>
   </select>
   <select id="refCataById" parameterType="java.util.Map" resultType="java.util.HashMap">
     select * from wt_ResDict_Ref
     <where><trim prefix="" suffix="" prefixOverrides="or">
-    <if test="bcIds!=null">or (resTableName='wt_Broadcast' and resId in (${bcIds}))</if>
-    <if test="maIds!=null">or (resTableName='wt_MediaAsset' and resId in (${maIds}))</if>
-    <if test="smaIds!=null">or (resTableName='wt_SeqMediaAsset' and resId in (${smaIds}))</if>
+    <if test="bcIds!=null">or (${bcIds})</if>
+    <if test="maIds!=null">or (${maIds})</if>
+    <if test="smaIds!=null">or (${smaIds})</if>
     </trim></where>
   </select>
-  <select id="getPlayListByIds" parameterType="java.util.Map" resultType="java.util.HashMap">
+  <select id="getPlayListByIds" parameterType="java.util.Map" resultType="java.util.HashMap"><!-- 可能无用 -->
     select * from wt_MaSource where maId in (${maIds})
   </select>
 
@@ -324,11 +342,11 @@
     order by b.columnNum desc
   </select>
   <select id="getCataListByTypeAndIds" resultType="java.util.HashMap" parameterType="java.util.Map">
-    select * from wt_ResDict_Ref where resTableName=#{resTableName,jdbcType=VARCHAR} and resId in (${ids})
+    select * from wt_ResDict_Ref a where a.resTableName=#{resTableName,jdbcType=VARCHAR} and (${ids})
   </select>
   <select id="getPersonListByTypeAndIds" resultType="java.util.HashMap" parameterType="java.util.Map">
     select *, b.id perId from wt_Person_Ref a, wt_Person b
-    where a.personId=b.id and a.resTableName=#{resTableName,jdbcType=VARCHAR} and a.resId in (${ids})
+    where a.personId=b.id and a.resTableName=#{resTableName,jdbcType=VARCHAR} and (${ids})
   </select>
   <!-- ======================================================================================================= -->
 </mapper>

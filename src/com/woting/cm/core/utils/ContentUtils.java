@@ -9,7 +9,6 @@ import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.util.FileNameUtils;
-import com.spiritdata.framework.util.StringUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictDetail;
@@ -38,6 +37,7 @@ public abstract class ContentUtils {
                                                   List<Map<String, Object>> cataList,
                                                   List<Map<String, Object>> pubChannelList,
                                                   List<Map<String, Object>> favoriteList,
+                                                  List<Map<String, Object>> playCountList,
                                                   List<Map<String, Object>> playingList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
@@ -63,7 +63,7 @@ public abstract class ContentUtils {
 			retM.put("ContentPlayType", null);
 		}
 
-        fillExtInfo(retM, "RADIO", personList, cataList, pubChannelList, favoriteList);//填充扩展信息
+        fillExtInfo(retM, "RADIO", personList, cataList, pubChannelList, favoriteList, playCountList);//填充扩展信息
         fillExtInfoPlaying(retM, playingList);
 
         retM.put("ContentFreq", one.get(""));//S01-特有：主频率，目前为空
@@ -89,8 +89,8 @@ public abstract class ContentUtils {
                                                   List<Map<String, Object>> personList,
                                                   List<Map<String, Object>> cataList,
                                                   List<Map<String, Object>> pubChannelList,
-                                                  List<Map<String, Object>> favoriteList) {
-//                                                  ,List<Map<String, Object>> playUriList) 
+                                                  List<Map<String, Object>> favoriteList,
+                                                  List<Map<String, Object>> playCountList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
         retM.put("MediaType", "AUDIO");
@@ -120,7 +120,7 @@ public abstract class ContentUtils {
         retM.put("ContentDescn", one.get("descn"));//P11-公共：说明
         retM.put("ContentStatus", one.get("maStatus"));
 
-        fillExtInfo(retM, "AUDIO", personList, cataList, pubChannelList, favoriteList);//填充扩展信息
+        fillExtInfo(retM, "AUDIO", personList, cataList, pubChannelList, favoriteList, playCountList);//填充扩展信息
 //        fillPlayUrl(retM, playUriList);
 //        if (StringUtils.isNullOrEmptyOrSpace(retM.get("ContentPlay")+"")) {
 //            retM.put("ContentPlay", one.get("maURL"));
@@ -150,7 +150,8 @@ public abstract class ContentUtils {
                                                    List<Map<String, Object>> personList,
                                                    List<Map<String, Object>> cataList,
                                                    List<Map<String, Object>> pubChannelList,
-                                                   List<Map<String, Object>> favoriteList) {
+                                                   List<Map<String, Object>> favoriteList,
+                                                   List<Map<String, Object>> playingList) {
         Map<String, Object> retM=new HashMap<String, Object>();
 
         retM.put("MediaType", "SEQU");
@@ -167,7 +168,7 @@ public abstract class ContentUtils {
         retM.put("ContentDescn", one.get("descn"));//P11-公共：说明
         retM.put("ContentStatus", one.get("smaStatus"));
 
-        fillExtInfo(retM, "SEQU", personList, cataList, pubChannelList, favoriteList);//填充扩展信息
+        fillExtInfo(retM, "SEQU", personList, cataList, pubChannelList, favoriteList, playingList);//填充扩展信息
 
         retM.put("ContentSubCount", one.get("count"));//S01-特有：下级节目的个数
 
@@ -193,7 +194,8 @@ public abstract class ContentUtils {
                                       List<Map<String, Object>> personList,
                                       List<Map<String, Object>> cataList,
                                       List<Map<String, Object>> pubChannelList,
-                                      List<Map<String, Object>> favoriteList) {
+                                      List<Map<String, Object>> favoriteList, 
+                                      List<Map<String, Object>> playCountList) {
         //P12-公共：相关人员列表
         Object temp=fetchPersons(personList, getResTableName(mediaType), one.get("ContentId")+"");
         if (temp!=null) one.put("ContentPersons", temp);
@@ -207,7 +209,8 @@ public abstract class ContentUtils {
         temp=fetchFavorite(favoriteList, getResTableName(mediaType), one.get("ContentId")+"");
         one.put("ContentFavorite", (temp==null?0:(((Integer)temp)==1?(cnls==null?"您喜欢的内容已经下架":1):0))+"");
         //P16-公共：播放次数
-        one.put("PlayCount", "1234");
+        temp=fetchPlayCount(playCountList, getResTableName(mediaType), one.get("ContentId")+"");
+        one.put("PlayCount", temp);
     }
 
     /*
@@ -215,39 +218,38 @@ public abstract class ContentUtils {
      * @param playingList 当前播放信息的List
      */
     private static void fillExtInfoPlaying(Map<String, Object> one, List<Map<String, Object>> playingList) {
-        //P12-公共：相关人员列表
-        Object temp=fetchPersons(personList, getResTableName(mediaType), one.get("ContentId")+"");
-        if (temp!=null) one.put("ContentPersons", temp);
-        //P13-公共：所有分类列表
-        temp=fetchCatas(cataList, getResTableName(mediaType), one.get("ContentId")+"");
-        if (temp!=null) one.put("ContentCatalogs", temp);
-        //P14-公共：发布情况
-        Object cnls=fetchChannels(pubChannelList, getResTableName(mediaType), one.get("ContentId")+"");
-        if (cnls!=null) one.put("ContentPubChannels", cnls);
-        //P15-公共：是否喜欢
-        temp=fetchFavorite(favoriteList, getResTableName(mediaType), one.get("ContentId")+"");
-        one.put("ContentFavorite", (temp==null?0:(((Integer)temp)==1?(cnls==null?"您喜欢的内容已经下架":1):0))+"");
-        //P16-公共：播放次数
-        one.put("PlayCount", "1234");
-    }
-
-    //P08-公共：主播放Url，这个应该从其他地方来，现在先这样//TODO
-    private static void fillPlayUrl(Map<String, Object> one, List<Map<String, Object>> playList) {
-        if (playList==null||playList.size()==0) return;
-        String id=one.get("ContentId")+"";
-        String playUrl="";
-        for (Map<String, Object> _p: playList) {
-            if ((_p.get("maId")+"").equals(id)) {
-                playUrl=_p.get("playURI")+"";
-                if ((_p.get("isMain")+"").equals("1")&&_p.get("playURI")!=null) {
-                    one.put("ContentPlay", _p.get("playURI")+"");
+        one.put("IsPlaying", null);
+        if (playingList!=null&&playingList.size()>0) {
+            for (Map<String, Object> _f: playingList) {
+                if ((_f.get("bcId")+"").equals(one.get("ContentId")+"")) {
+                    try {
+                        one.put("IsPlaying", Long.parseLong(""+_f.get("title")));
+                    } catch(Exception e) {
+                        one.put("IsPlaying", null);
+                    }
+                    break;
                 }
             }
         }
-        if (one.get("ContentPlay")==null&&StringUtils.isNullOrEmptyOrSpace(playUrl)) {
-            one.put("ContentPlay", playUrl);
-        }
     }
+
+    //P08-公共：主播放Url，这个应该从其他地方来，现在先这样//TODO
+//    private static void fillPlayUrl(Map<String, Object> one, List<Map<String, Object>> playList) {
+//        if (playList==null||playList.size()==0) return;
+//        String id=one.get("ContentId")+"";
+//        String playUrl="";
+//        for (Map<String, Object> _p: playList) {
+//            if ((_p.get("maId")+"").equals(id)) {
+//                playUrl=_p.get("playURI")+"";
+//                if ((_p.get("isMain")+"").equals("1")&&_p.get("playURI")!=null) {
+//                    one.put("ContentPlay", _p.get("playURI")+"");
+//                }
+//            }
+//        }
+//        if (one.get("ContentPlay")==null&&StringUtils.isNullOrEmptyOrSpace(playUrl)) {
+//            one.put("ContentPlay", playUrl);
+//        }
+//    }
 
     private static List<Map<String, Object>> fetchPersons(List<Map<String, Object>> personList, String resTableName, String resId) {//人员处理
         if (personList==null||personList.size()==0) return null;
@@ -264,6 +266,7 @@ public abstract class ContentUtils {
         }
         return ret.size()>0?ret:null;
     }
+    @SuppressWarnings("unchecked")
     private static List<Map<String, Object>> fetchCatas(List<Map<String, Object>> cataList, String resTableName, String resId) {//字典信息处理
         if (cataList==null||cataList.size()==0) return null;
 
@@ -277,7 +280,7 @@ public abstract class ContentUtils {
                 DictModel dm=cd.getDictModelById(_c.get("dictMid")+"");
                 TreeNode<DictDetail> tdd=null;
                 if (dm!=null) tdd=(TreeNode<DictDetail>)dm.dictTree.findNode(_c.get("dictDid")+"");
-                
+
                 oneCata.put("CataMName", dm==null?"":dm.getDmName());//大分类名称，树结构名称
                 oneCata.put("CataMId", _c.get("dictMid"));//大分类Id
                 oneCata.put("CataTitle", tdd==null?"":tdd.getTreePathName());//分类名称
@@ -309,6 +312,19 @@ public abstract class ContentUtils {
         for (Map<String, Object> _f: favoriteList) {
             if ((_f.get("resTableName")+"").equals(resTableName)&&(_f.get("resId")+"").equals(resId)) {
                 ret=1;
+                break;
+            }
+        }
+        return ret;
+    }
+    private static long fetchPlayCount(List<Map<String, Object>> playCountList, String resTableName, String resId) {//播放次数
+        if (playCountList==null||playCountList.size()==0) return 0;
+        long ret=0;
+        for (Map<String, Object> _f: playCountList) {
+            if ((_f.get("resTableName")+"").equals(resTableName)&&(_f.get("resId")+"").equals(resId)) {
+                try {
+                    ret=Long.parseLong(""+_f.get("playCount"));
+                } catch(Exception e) {}
                 break;
             }
         }

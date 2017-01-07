@@ -91,7 +91,7 @@ public class MediaService {
         	for (MediaAssetPo mediaAssetPo : listpo) {
         	    MediaAsset ma=new MediaAsset();
 			    ma.buildFromPo(mediaAssetPo);
-			    Map<String, Object> m = ContentUtils.convert2Ma(ma.toHashMap(), null, null, null, null);
+			    Map<String, Object> m = ContentUtils.convert2Ma(ma.toHashMap(), null, null, null, null, null);
 			    SeqMaRefPo seqMaRefPo = seqMaRefDao.getInfoObject("getS2MRefInfoByMId", mediaAssetPo.getId());
 			    m.put("ContentSeqId", seqMaRefPo==null?null:seqMaRefPo.getSId());
 			    list.add(m);

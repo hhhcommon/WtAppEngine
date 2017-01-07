@@ -1,6 +1,10 @@
 package com.woting.discuss.service;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +31,7 @@ import com.woting.cm.core.utils.ContentUtils;
 import com.woting.discuss.model.Discuss;
 import com.woting.discuss.persis.po.DiscussPo;
 import com.woting.favorite.persis.po.UserFavoritePo;
+import com.woting.passport.UGA.persis.pojo.GroupPo;
 
 public class DiscussService {
     @Resource(name="defaultDAO")
@@ -37,6 +42,8 @@ public class DiscussService {
     private MybatisDAO<UserFavoritePo> favoriteDao;
     @Resource(name="defaultDAO")
     private MybatisDAO<DictRefResPo> dictRefDao;
+    @Resource(name="defaultDAO")
+    private MybatisDAO<GroupPo> groupDao;
     @Resource
     private MediaService mediaService;
     @Resource
@@ -48,6 +55,7 @@ public class DiscussService {
         channelAssetDao.setNamespace("A_CHANNELASSET");
         favoriteDao.setNamespace("DA_USERFAVORITE");
         dictRefDao.setNamespace("A_DREFRES");
+        groupDao.setNamespace("WT_GROUP");
     }
 
     /**
@@ -193,12 +201,10 @@ public class DiscussService {
 
         if (page==0) page=1;
         if (pageSize<0) pageSize=10;
-
         try {
             Map<String, Object> param=new HashMap<String, Object>();
             List<DiscussPo> dl=null;
             long allCount=0;
-
             if (rType==1||(ml==null||ml.isEmpty())) { //按一个列表进行返回
                 param.put("userId", userId);
                 if (isPub==1) { //发布的内容
@@ -206,14 +212,14 @@ public class DiscussService {
                     if (page>=0) { //分页
                         if (page==0) page=1;
                         if (pageSize<0) pageSize=10;
-                        Page<DiscussPo> p=this.discussDao.pageQuery("getPubList", param, page, pageSize);
+                        Page<DiscussPo> p=discussDao.pageQuery("getPubList", param, page, pageSize);
                         if (!p.getResult().isEmpty()) {
                             dl=new ArrayList<DiscussPo>();
                             dl.addAll(p.getResult());
                         }
                         allCount=p.getDataCount();
                     } else { //获得所有
-                        dl=this.discussDao.queryForList("getPubList", param);
+                        dl=discussDao.queryForList("getPubList", param);
                         allCount=dl.size();
                     }
                 } else {
@@ -221,18 +227,19 @@ public class DiscussService {
                     if (page>=0) { //分页
                         if (page==0) page=1;
                         if (pageSize<0) pageSize=10;
-                        Page<DiscussPo> p=this.discussDao.pageQuery(param, page, pageSize);
+                        Page<DiscussPo> p=discussDao.pageQuery(param, page, pageSize);
                         if (!p.getResult().isEmpty()) {
                             dl=new ArrayList<DiscussPo>();
                             dl.addAll(p.getResult());
                         }
                         allCount=p.getDataCount();
                     } else { //获得所有
-                        dl=this.discussDao.queryForList(param);
+                        dl=discussDao.queryForList(param);
                         allCount=dl.size();
                     }
                 }
                 if (dl==null||dl.isEmpty()) return null;
+
                 //处理内容
                 String s="", f="";
                 String maIds="", seqMaIds="", bcIds="";
@@ -283,15 +290,30 @@ public class DiscussService {
                     }
                 }
                 if (fml.isEmpty()) fml=null;
+                //获得播放次数
+                param.clear();
+                if (StringUtils.isNullOrEmptyOrSpace(bcIds)) {
+                    bcIds=bcIds.substring(4);
+                    param.put("bcIds", "a.resTableName='wt_Broadcast' or ("+bcIds+")");
+                }
+                if (StringUtils.isNullOrEmptyOrSpace(maIds)) {
+                    maIds=maIds.substring(4);
+                    param.put("maIds", "a.resTableName='wt_MediaAsset' or ("+maIds+")");
+                }
+                if (StringUtils.isNullOrEmptyOrSpace(seqMaIds)) {
+                    seqMaIds=seqMaIds.substring(4);
+                    param.put("seqMaIds", "a.resTableName='wt_SeqMediaAsset' or ("+seqMaIds+")");
+                }
+                List<Map<String, Object>> pcml=groupDao.queryForListAutoTranform("refPlayCountById", param);
 
                 //组织返回值
                 int i=0;
                 Map<String, Object>[] rl=new Map[dl.size()];
                 //单体
                 if (!StringUtils.isNullOrEmpty(maIds)) {
-                    List<Map<String, Object>> mas=mediaService.getMaListByWhereStr(maIds.substring(4));
+                    List<Map<String, Object>> mas=mediaService.getMaListByWhereStr(maIds);
                     for (Map<String, Object> ma : mas) {
-                        Map<String, Object> mam=ContentUtils.convert2Ma(ma, null, cataml, chaml, fml);
+                        Map<String, Object> mam=ContentUtils.convert2Ma(ma, null, cataml, chaml, fml, pcml);
                         for (i=0; i<dl.size(); i++) {
                             DiscussPo dPo=dl.get(i);
                             if (dPo.getResTableName().equals(MediaType.AUDIO.getTabName())&&dPo.getResId().equals(ma.get("id"))) {
@@ -302,9 +324,9 @@ public class DiscussService {
                 }
                 //专辑
                 if (!StringUtils.isNullOrEmpty(seqMaIds)) {
-                    List<Map<String, Object>> smas=mediaService.getSeqMaListByWhereStr(seqMaIds.substring(4));
+                    List<Map<String, Object>> smas=mediaService.getSeqMaListByWhereStr(seqMaIds);
                     for (Map<String, Object> sma : smas) {
-                        Map<String, Object> seqMam=ContentUtils.convert2Sma(sma, null, cataml, chaml, fml);
+                        Map<String, Object> seqMam=ContentUtils.convert2Sma(sma, null, cataml, chaml, fml, pcml);
                         for (i=0; i<dl.size(); i++) {
                             DiscussPo dPo=dl.get(i);
                             if (dPo.getResTableName().equals(MediaType.SEQU.getTabName())&&dPo.getResId().equals(sma.get("id"))) {
@@ -315,9 +337,23 @@ public class DiscussService {
                 }
                 //电台
                 if (!StringUtils.isNullOrEmpty(bcIds)) {
-                    List<Map<String, Object>> bcs=bcService.getListByWhereStr(bcIds.substring(4));
+                    List<Map<String, Object>> bcs=bcService.getListByWhereStr(bcIds);
+
+                    //获得当前的播放列表
+                    Calendar cal=Calendar.getInstance();
+                    Date date=new Date();
+                    cal.setTime(date);
+                    int week=cal.get(Calendar.DAY_OF_WEEK);
+                    DateFormat sdf=new SimpleDateFormat("HH:mm:ss");
+                    String timestr=sdf.format(date);
+                    param.put("bcIds", bcIds);
+                    param.put("weekDay", week);
+                    param.put("sort", 0);
+                    param.put("timestr", timestr);
+                    List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", param);
+
                     for (Map<String, Object> bc : bcs) {
-                        Map<String, Object> bcm=ContentUtils.convert2Bc(bc, null, cataml, chaml, fml);
+                        Map<String, Object> bcm=ContentUtils.convert2Bc(bc, null, cataml, chaml, fml, pcml, playingList);
                         for (i=0; i<dl.size(); i++) {
                             DiscussPo dPo=dl.get(i);
                             if (dPo.getResTableName().equals(MediaType.RADIO.getTabName())&&dPo.getResId().equals(bc.get("id"))) {
@@ -430,15 +466,30 @@ public class DiscussService {
                             }
                         }
                         if (fml.isEmpty()) fml=null;
+                        //获得播放次数
+                        param.clear();
+                        if (StringUtils.isNullOrEmptyOrSpace(bcIds)) {
+                            bcIds=bcIds.substring(4);
+                            param.put("bcIds", "a.resTableName='wt_Broadcast' or ("+bcIds+")");
+                        }
+                        if (StringUtils.isNullOrEmptyOrSpace(maIds)) {
+                            maIds=maIds.substring(4);
+                            param.put("maIds", "a.resTableName='wt_MediaAsset' or ("+maIds+")");
+                        }
+                        if (StringUtils.isNullOrEmptyOrSpace(seqMaIds)) {
+                            seqMaIds=seqMaIds.substring(4);
+                            param.put("seqMaIds", "a.resTableName='wt_SeqMediaAsset' or ("+seqMaIds+")");
+                        }
+                        List<Map<String, Object>> pcml=groupDao.queryForListAutoTranform("refPlayCountById", param);
 
                         //组织返回值
                         int i=0;
                         Map<String, Object>[] typel=new Map[dl.size()];
                         //单体
                         if (!StringUtils.isNullOrEmpty(maIds)) {
-                            List<Map<String, Object>> mas=mediaService.getMaListByWhereStr(maIds.substring(4));
+                            List<Map<String, Object>> mas=mediaService.getMaListByWhereStr(maIds);
                             for (Map<String, Object> ma : mas) {
-                                Map<String, Object> mam=ContentUtils.convert2Ma(ma, null, cataml, chaml, fml);
+                                Map<String, Object> mam=ContentUtils.convert2Ma(ma, null, cataml, chaml, fml, pcml);
                                 for (i=0; i<dl.size(); i++) {
                                     DiscussPo dPo=dl.get(i);
                                     if (dPo.getResTableName().equals(MediaType.AUDIO.getTabName())&&dPo.getResId().equals(ma.get("id"))) {
@@ -449,9 +500,9 @@ public class DiscussService {
                         }
                         //专辑
                         if (!StringUtils.isNullOrEmpty(seqMaIds)) {
-                            List<Map<String, Object>> smas=mediaService.getSeqMaListByWhereStr(seqMaIds.substring(4));
+                            List<Map<String, Object>> smas=mediaService.getSeqMaListByWhereStr(seqMaIds);
                             for (Map<String, Object> sma : smas) {
-                                Map<String, Object> seqMam=ContentUtils.convert2Sma(sma, null, cataml, chaml, fml);
+                                Map<String, Object> seqMam=ContentUtils.convert2Sma(sma, null, cataml, chaml, fml, pcml);
                                 for (i=0; i<dl.size(); i++) {
                                     DiscussPo dPo=dl.get(i);
                                     if (dPo.getResTableName().equals(MediaType.SEQU.getTabName())&&dPo.getResId().equals(sma.get("id"))) {
@@ -462,9 +513,23 @@ public class DiscussService {
                         }
                         //电台
                         if (!StringUtils.isNullOrEmpty(bcIds)) {
-                            List<Map<String, Object>> bcs=bcService.getListByWhereStr(bcIds.substring(4));
+                            List<Map<String, Object>> bcs=bcService.getListByWhereStr(bcIds);
+
+                            //获得当前的播放列表
+                            Calendar cal=Calendar.getInstance();
+                            Date date=new Date();
+                            cal.setTime(date);
+                            int week=cal.get(Calendar.DAY_OF_WEEK);
+                            DateFormat sdf=new SimpleDateFormat("HH:mm:ss");
+                            String timestr=sdf.format(date);
+                            param.put("bcIds", bcIds);
+                            param.put("weekDay", week);
+                            param.put("sort", 0);
+                            param.put("timestr", timestr);
+                            List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", param);
+
                             for (Map<String, Object> bc : bcs) {
-                                Map<String, Object> bcm=ContentUtils.convert2Bc(bc, null, cataml, chaml, fml);
+                                Map<String, Object> bcm=ContentUtils.convert2Bc(bc, null, cataml, chaml, fml, pcml, playingList);
                                 for (i=0; i<dl.size(); i++) {
                                     DiscussPo dPo=dl.get(i);
                                     if (dPo.getResTableName().equals(MediaType.RADIO.getTabName())&&dPo.getResId().equals(bc.get("id"))) {
