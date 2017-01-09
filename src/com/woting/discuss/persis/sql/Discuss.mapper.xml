@@ -62,6 +62,37 @@
     </trim>
     <if test="sortByClause!=null">order by ${sortByClause}</if>
   </select>
+  <!-- 获得发布文章的列表 -->
+  <select id="getPubArticleList" resultType="java.util.Map" parameterType="java.util.Map">
+    select distinct a.resTableName, a.resId from wt_Discuss a, wt_ChannelAsset b
+    where a.resTableName=b.assetType and a.resId=b.assetId and flowFlag=2
+    <trim prefix="and (" suffix=")" prefixOverrides="and">
+      <if test="id!=null"> and a.id=#{id,jdbcType=VARCHAR}</if>
+      <if test="userId!=null"> and a.userId=#{userId,jdbcType=VARCHAR}</if>
+      <if test="resTableName!=null"> and a.resTableName=#{resTableName,jdbcType=VARCHAR}</if>
+      <if test="resId!=null"> and a.resId=#{resId,jdbcType=VARCHAR}</if>
+      <if test="discuss!=null"> and a.discuss=#{discuss,jdbcType=VARCHAR}</if>
+      <if test="CTime!=null"> and a.cTime=#{CTime,jdbcType=TIMESTAMP}</if>
+      <if test="whereClause!=null"> and (${whereClause})</if>
+    </trim>
+    <if test="sortByClause!=null">order by ${sortByClause}</if>
+  </select>
+  <!-- 获得文章的列表 -->
+  <select id="getArticleList" resultType="java.util.Map" parameterType="java.util.Map">
+    select distinct a.resTableName, a.resId from wt_Discuss a
+    <where>
+    <trim prefix="(" suffix=")" prefixOverrides="and">
+      <if test="id!=null"> and a.id=#{id,jdbcType=VARCHAR}</if>
+      <if test="userId!=null"> and a.userId=#{userId,jdbcType=VARCHAR}</if>
+      <if test="resTableName!=null"> and a.resTableName=#{resTableName,jdbcType=VARCHAR}</if>
+      <if test="resId!=null"> and a.resId=#{resId,jdbcType=VARCHAR}</if>
+      <if test="discuss!=null"> and a.discuss=#{discuss,jdbcType=VARCHAR}</if>
+      <if test="CTime!=null"> and a.cTime=#{CTime,jdbcType=TIMESTAMP}</if>
+      <if test="whereClause!=null"> and (${whereClause})</if>
+    </trim>
+    </where>
+    <if test="sortByClause!=null">order by ${sortByClause}</if>
+  </select>
   <!-- 获得重复列表 -->
   <select id="getDuplicates" resultMap="discussMap" parameterType="java.util.Map">
     select <include refid="Base_Column_List"/> from wt_Discuss

@@ -5,7 +5,7 @@ package com.woting.cm.core.media;
  * @author wanghui
  */
 public enum MediaType {
-    RADIO("RADIO", "wt_BroadCast"), AUDIO("AUDIO", "wt_MediaAsset"), SEQU("SEQU", "wt_SeqMediaAsset"), TEXT("TEXT", "wt_Article"), ERR("ERR", "err");
+    RADIO("RADIO", "wt_Broadcast"), AUDIO("AUDIO", "wt_MediaAsset"), SEQU("SEQU", "wt_SeqMediaAsset"), TEXT("TEXT", "wt_Article"), ERR("ERR", "err");
 
     private String _typeName;
     private String _tabName;
@@ -20,7 +20,7 @@ public enum MediaType {
      * @return 对应的美剧值
      */
     public static MediaType buildByTabName(String tabName) {
-        if (tabName.toUpperCase().equals("_BroadCast".toUpperCase())) return RADIO;
+        if (tabName.toUpperCase().equals("wt_Broadcast".toUpperCase())) return RADIO;
         else if (tabName.toUpperCase().equals("wt_MediaAsset".toUpperCase())) return AUDIO;
         else if (tabName.toUpperCase().equals("wt_SeqMediaAsset".toUpperCase())) return SEQU;
         else if (tabName.toUpperCase().equals("wt_Article".toUpperCase())) return TEXT;

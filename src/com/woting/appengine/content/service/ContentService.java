@@ -170,8 +170,10 @@ public class ContentService {
         String tempStr=getIds(typeMap, "wt_Broadcast", "c.id");
         if (tempStr!=null) paraM.put("orIds", tempStr);
         tempList=groupDao.queryForListAutoTranform("searchBc", paraM);
+        String bcPlayOrIds="";
         for (int i=0; i<tempList.size(); i++) {
             add(ret1, tempList.get(i));
+            bcPlayOrIds+=" or bcId='"+tempList.get(i).get("id")+"'";
             //为重构做数据准备
             if (reBuildMap.get("wt_Broadcast")==null) reBuildMap.put("wt_Broadcast", new ArrayList<String>());
             reBuildMap.get("wt_Broadcast").add(tempList.get(i).get("id")+"");
@@ -404,9 +406,10 @@ public class ContentService {
             DateFormat sdf = new SimpleDateFormat("HH:mm:ss");
             String timestr = sdf.format(date);
             paraM.clear();
+            paraM.put("bcIds", bcPlayOrIds.substring(4));
             paraM.put("weekDay", week);
             paraM.put("sort", 0);
-            paraM.put("timestr", timestr);
+            paraM.put("timeStr", timestr);
             playingList=groupDao.queryForListAutoTranform("playingBc", paraM);
         }
 
@@ -568,7 +571,6 @@ public class ContentService {
         //3、得到发布情况
         List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
         if (tempList!=null&&tempList.size()>0) {
-            
             for (Map<String, Object> one: tempList) {
                 Map<String, Object> oneAsset=new HashMap<String, Object>();
                 oneAsset.put("resId", one.get("id"));
@@ -582,7 +584,7 @@ public class ContentService {
         assetList.add(oneAsset);
         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
         //4、得到点击量
-        paraM.put("smaIds", "(a.resTableName='wt_SeqMediaAsset' and a.resId='"+contentId+"'");
+        paraM.put("smaIds", "a.resTableName='wt_SeqMediaAsset' and a.resId='"+contentId+"'");
         List<Map<String, Object>> playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
         
         //5、组装内容
@@ -599,7 +601,7 @@ public class ContentService {
             paraM.put("ids", ids);
             cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
             personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
-            paraM.put("maIds", "(a.resTableName='wt_MediaAsset' and ("+ids+")");
+            paraM.put("maIds", "a.resTableName='wt_MediaAsset' and ("+ids+")");
             playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
 
             List<Map<String, Object>> subList=new ArrayList<Map<String, Object>>();
@@ -645,11 +647,11 @@ public class ContentService {
         Map<String, Object> tempMap=groupDao.queryForObjectAutoTranform("getMediaById", contentId);
         if (tempMap==null||tempMap.size()==0) return null;
         paraM.put("resTableName", "wt_MediaAsset");
-        paraM.put("ids", "'"+contentId+"'");
+        paraM.put("ids", "a.resId='"+contentId+"'");
         cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
         personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
         paraM.clear();
-        paraM.put("maIds", "(a.resTableName='wt_MediaAsset' and a.resId='"+contentId+"'");
+        paraM.put("maIds", "a.resTableName='wt_MediaAsset' and a.resId='"+contentId+"'");
         playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
 //        List<Map<String, Object>> playUriList=null;
 //        paraM.put("maIds", "'"+contentId+"'");
@@ -658,12 +660,72 @@ public class ContentService {
         List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
         Map<String, Object> oneAsset=new HashMap<String, Object>();
         oneAsset.put("resId", contentId);
-        oneAsset.put("resTableName", "wt_SeqMediaAsset");
+        oneAsset.put("resTableName", "wt_MediaAsset");
         assetList.add(oneAsset);
         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
 
         //3、组装内容
         Map<String, Object> retInfo=ContentUtils.convert2Ma(tempMap, personList, cataList, pubChannelList, fList, playCountList);
+
+        return retInfo;
+    }
+    /**
+     * 获得电台信息
+     * @param contentId 专辑内容Id
+     * @param mk 用户标识，可以是登录用户，也可以是手机设备
+     * @return
+     */
+    public Map<String, Object> getBcInfo(String contentId, MobileUDKey mUdk) {
+        List<Map<String, Object>> cataList=null;//分类
+        List<Map<String, Object>> personList=null;//人员
+        List<Map<String, Object>> playCountList=null;//播放次数
+        Map<String, Object> paraM=new HashMap<String, Object>();
+
+        //0、得到喜欢列表
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
+        List<Map<String, Object>> fList=null;
+        if (_fList!=null&&!_fList.isEmpty()) {
+            fList=new ArrayList<Map<String, Object>>();
+            for (UserFavoritePo ufPo: _fList) {
+                fList.add(ufPo.toHashMapAsBean());
+            }
+        }
+        //1、得主内容
+        Map<String, Object> tempMap=groupDao.queryForObjectAutoTranform("getBcById", contentId);
+        if (tempMap==null||tempMap.size()==0) return null;
+        paraM.put("resTableName", "wt_Broadcast");
+        paraM.put("ids", "a.resId='"+contentId+"'");
+        cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
+        personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+        paraM.clear();
+        paraM.put("maIds", "a.resTableName='wt_Broadcast' and a.resId='"+contentId+"'");
+        playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
+//        List<Map<String, Object>> playUriList=null;
+//        paraM.put("maIds", "'"+contentId+"'");
+//        playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
+        //2、得到发布情况
+        List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
+        Map<String, Object> oneAsset=new HashMap<String, Object>();
+        oneAsset.put("resId", contentId);
+        oneAsset.put("resTableName", "wt_Broadcast");
+        assetList.add(oneAsset);
+        List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
+        //3、得到当前节目列表
+        Calendar cal = Calendar.getInstance();
+        Date date = new Date();
+        cal.setTime(date);
+        int week = cal.get(Calendar.DAY_OF_WEEK);
+        DateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        String timestr = sdf.format(date);
+        paraM.clear();
+        paraM.put("bcIds", "bcId='"+contentId+"'");
+        paraM.put("weekDay", week);
+        paraM.put("sort", 0);
+        paraM.put("timeStr", timestr);
+        List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", paraM);
+        
+        //4、组装内容
+        Map<String, Object> retInfo=ContentUtils.convert2Bc(tempMap, personList, cataList, pubChannelList, fList, playCountList, playingList);
 
         return retInfo;
     }
@@ -872,18 +934,20 @@ public class ContentService {
                 String sma2msInSql="";
                 String bcSqlSign="", maSqlSign="", smaSqlSign="";   //为找到内容设置
                 String bcSqlSign1="", maSqlSign1="", smaSqlSign1="";//为查询相关信息设置
+                String bcPlayOrId="";
                 List<Map<String, Object>> pubChannelList=new ArrayList<Map<String, Object>>();
                 while (rs!=null&&rs.next()) {
                     sortIdList.add(rs.getString(typeCName)+"::"+rs.getString(resIdCName));
                     if (rs.getString(typeCName).equals("wt_Broadcast")) {
                         bcSqlSign+=" or a.id='"+rs.getString(resIdCName)+"'";
-                        bcSqlSign1+=",'"+rs.getString(resIdCName)+"'";
+                        bcSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
+                        bcPlayOrId+=" or bcId='"+rs.getString(resIdCName)+"'";
                     } else if (rs.getString(typeCName).equals("wt_MediaAsset")) {
                         maSqlSign+=" or id='"+rs.getString(resIdCName)+"'";
-                        maSqlSign1+=",'"+rs.getString(resIdCName)+"'";
+                        maSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
                     } else if (rs.getString(typeCName).equals("wt_SeqMediaAsset")) {
                         smaSqlSign+=" or id='"+rs.getString(resIdCName)+"'";
-                        smaSqlSign1+=",'"+rs.getString(resIdCName)+"'";
+                        smaSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
                         if (pageType==0) sma2msInSql+=" or sma.sId='"+rs.getString(resIdCName)+"'";
                     }
                     Map<String, Object> oneAsset=new HashMap<String, Object>();
@@ -946,27 +1010,44 @@ public class ContentService {
                         samExtractHas=!ret4.isEmpty();
                     }
 
-                    //List<Map<String, Object>> playUriList=null; //播放地址
-                    //以下为控制指标参数
+                    //重构人员及分类列表
                     Map<String, Object> paraM=new HashMap<String, Object>();
                     if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {
                         bcSqlSign=bcSqlSign.substring(4);
-                        paraM.put("bcIds", bcSqlSign1.substring(1));
+                        paraM.put("bcIds", "a.resTableName='wt_Broadcast' and ("+bcSqlSign1.substring(4)+")");
                     }
                     if (!StringUtils.isNullOrEmptyOrSpace(maSqlSign)) {
                         maSqlSign=maSqlSign.substring(4);
-                        paraM.put("maIds", maSqlSign1.substring(1));
+                        paraM.put("maIds", "a.resTableName='wt_MediaAsset' and ("+maSqlSign1.substring(4)+")");
                         //playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
                     }
                     if (!StringUtils.isNullOrEmptyOrSpace(smaSqlSign)) {//专辑处理
                         smaSqlSign=smaSqlSign.substring(4);
-                        paraM.put("smaIds", smaSqlSign1.substring(1));
+                        paraM.put("smaIds", "a.resTableName='wt_SeqMediaAsset' and ("+smaSqlSign1.substring(4)+")");
                     }
-
-                    //重构人员及分类列表：目前不处理人员
-                    List<Map<String, Object>> cataList=groupDao.queryForListAutoTranform("refCataById", paraM);
-                    List<Map<String, Object>> playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);; //播放次数
-                    List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", paraM); //电台播放节目
+                    List<Map<String, Object>> cataList=null;
+                    List<Map<String, Object>> personList=null;
+                    List<Map<String, Object>> playCountList=null; //播放次数
+                    List<Map<String, Object>> playingList=null; //电台播放节目
+                    if (!paraM.isEmpty()) {
+                        cataList=groupDao.queryForListAutoTranform("refCataById", paraM);
+                        playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);; //播放次数
+                        personList=groupDao.queryForListAutoTranform("refPersonById", paraM); //人员
+                        if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {
+                            Calendar cal = Calendar.getInstance();
+                            Date date = new Date();
+                            cal.setTime(date);
+                            int week = cal.get(Calendar.DAY_OF_WEEK);
+                            DateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+                            String timestr = sdf.format(date);
+                            paraM.clear();
+                            paraM.put("bcIds", bcPlayOrId.substring(4));
+                            paraM.put("weekDay", week);
+                            paraM.put("sort", 0);
+                            paraM.put("timeStr", timestr);
+                            playingList=groupDao.queryForListAutoTranform("playingBc", paraM); //电台播放节目
+                        }
+                    }
 
                     List<Map<String, Object>> _ret=new ArrayList<Map<String, Object>>();
                     for (int j=0; j<sortIdList.size(); j++) _ret.add(null);
@@ -989,7 +1070,7 @@ public class ContentService {
                             oneData.put("flowURI", rs.getString("flowURI"));
                             oneData.put("cTime", rs.getTimestamp("cTime"));
 
-                            Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, null, cataList, pubChannelList, fList, playCountList, playingList);
+                            Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, personList, cataList, pubChannelList, fList, playCountList, playingList);
                             Map<String, Object> pm = getBCIsPlayingProgramme(oneData.get("id")+"", System.currentTimeMillis());
                             if (pm!=null && pm.size()>0) {
                             	oneMedia.put("IsPlaying", pm.get(oneData.get("id")+""));
@@ -1025,7 +1106,7 @@ public class ContentService {
                             oneData.put("pubCount", rs.getInt("pubCount"));
                             oneData.put("cTime", rs.getTimestamp("cTime"));
 
-                            Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, null, cataList, pubChannelList, fList, playCountList);
+                            Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, personList, cataList, pubChannelList, fList, playCountList);
                             int i=0;
                             for (; i<sortIdList.size(); i++) {
                                 if (sortIdList.get(i).equals("wt_MediaAsset::"+oneMedia.get("ContentId"))) break;
@@ -1055,7 +1136,7 @@ public class ContentService {
                             oneData.put("pubCount", rs.getInt("pubCount"));
                             oneData.put("cTime", rs.getTimestamp("cTime"));
 
-                            Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, null, cataList, pubChannelList, fList, playCountList);
+                            Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, personList, cataList, pubChannelList, fList, playCountList);
                             int i=0;
                             for (; i<sortIdList.size(); i++) {
                                 if (sortIdList.get(i).equals("wt_SeqMediaAsset::"+oneMedia.get("ContentId"))) break;
@@ -1191,6 +1272,7 @@ public class ContentService {
                     if (!getBeginCatalogId) {
                         String bcSqlSign="", maSqlSign="", smaSqlSign="";
                         String bcSqlSign1="", maSqlSign1="", smaSqlSign1="";
+                        String bcPlayOrId="";
                         //开始循环处理
                         String tempStr="a."+idCName+"='"+_stn.getId()+"'";
                         List<TreeNode<? extends TreeNodeBean>> subAllTn=TreeUtils.getDeepList(_stn);
@@ -1214,13 +1296,14 @@ public class ContentService {
                             sortIdList.add(rs.getString(typeCName)+"::"+rs.getString(resIdCName));
                             if (rs.getString(typeCName).equals("wt_Broadcast")) {
                                 bcSqlSign+=" or a.id='"+rs.getString(resIdCName)+"'";
-                                bcSqlSign1+=",'"+rs.getString(resIdCName)+"'";
+                                bcSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
+                                bcPlayOrId+=" or bcId='"+rs.getString(resIdCName)+"'";
                             } else if (rs.getString(typeCName).equals("wt_MediaAsset")) {
                                 maSqlSign+=" or id='"+rs.getString(resIdCName)+"'";
-                                maSqlSign1+=",'"+rs.getString(resIdCName)+"'";
+                                maSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
                             } else if (rs.getString(typeCName).equals("wt_SeqMediaAsset")) {
                                 smaSqlSign+=" or id='"+rs.getString(resIdCName)+"'";
-                                smaSqlSign1+=",'"+rs.getString(resIdCName)+"'";
+                                smaSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
                             }
                             Map<String, Object> oneAsset=new HashMap<String, Object>();
                             oneAsset.put("resId", rs.getString(resIdCName));
@@ -1231,27 +1314,48 @@ public class ContentService {
 
                         //得到发布列表
                         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
-                        List<Map<String, Object>> playCountList=groupDao.queryForListAutoTranform("refPlayCountById", null);; //播放次数
-                        List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", null); //电台播放节目
+
                         //播放地址
                         //List<Map<String, Object>> playUriList=null;
                         if (sortIdList!=null&&!sortIdList.isEmpty()) {
+                            //重构人员及分类列表
                             Map<String, Object> paraM=new HashMap<String, Object>();
                             if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {
                                 bcSqlSign=bcSqlSign.substring(4);
-                                paraM.put("bcIds", bcSqlSign1.substring(1));
+                                paraM.put("bcIds", "a.resTableName='wt_Broadcast' and ("+bcSqlSign1.substring(4)+")");
                             }
                             if (!StringUtils.isNullOrEmptyOrSpace(maSqlSign)) {
                                 maSqlSign=maSqlSign.substring(4);
-                                paraM.put("maIds", maSqlSign1.substring(1));
+                                paraM.put("maIds", "a.resTableName='wt_MediaAsset' and ("+maSqlSign1.substring(4)+")");
                                 //playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
                             }
-                            if (!StringUtils.isNullOrEmptyOrSpace(smaSqlSign)) {
+                            if (!StringUtils.isNullOrEmptyOrSpace(smaSqlSign)) {//专辑处理
                                 smaSqlSign=smaSqlSign.substring(4);
-                                paraM.put("smaIds", smaSqlSign1.substring(1));
+                                paraM.put("smaIds", "a.resTableName='wt_SeqMediaAsset' and ("+smaSqlSign1.substring(4)+")");
                             }
-                            //重构人员及分类列表
-                            List<Map<String, Object>> cataList=groupDao.queryForListAutoTranform("refCataById", paraM);
+                            List<Map<String, Object>> cataList=null;
+                            List<Map<String, Object>> personList=null;
+                            List<Map<String, Object>> playCountList=null; //播放次数
+                            List<Map<String, Object>> playingList=null; //电台播放节目
+                            if (!paraM.isEmpty()) {
+                                cataList=groupDao.queryForListAutoTranform("refCataById", paraM);
+                                playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);; //播放次数
+                                personList=groupDao.queryForListAutoTranform("refPersonById", paraM); //人员
+                                if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {
+                                    Calendar cal = Calendar.getInstance();
+                                    Date date = new Date();
+                                    cal.setTime(date);
+                                    int week = cal.get(Calendar.DAY_OF_WEEK);
+                                    DateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+                                    String timestr = sdf.format(date);
+                                    paraM.clear();
+                                    paraM.put("bcIds", bcPlayOrId.substring(4));
+                                    paraM.put("weekDay", week);
+                                    paraM.put("sort", 0);
+                                    paraM.put("timeStr", timestr);
+                                    playingList=groupDao.queryForListAutoTranform("playingBc", paraM); //电台播放节目
+                                }
+                            }
 
                             List<Map<String, Object>> _ret=new ArrayList<Map<String, Object>>();
                             for (int j=0; j<sortIdList.size(); j++) {
@@ -1273,7 +1377,7 @@ public class ContentService {
                                     oneData.put("bcSource", rs.getString("bcSource"));
                                     oneData.put("flowURI", rs.getString("flowURI"));
                                     oneData.put("CTime", rs.getTimestamp("cTime"));
-                                    Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, null, cataList, pubChannelList, fList, playCountList, playingList);
+                                    Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, personList, cataList, pubChannelList, fList, playCountList, playingList);
                                     Map<String, Object> pm = getBCIsPlayingProgramme(oneData.get("id")+"", System.currentTimeMillis());
                                     if (pm!=null && pm.size()>0) {
                                     	oneMedia.put("IsPlaying", pm.get(oneData.get("id")+""));
@@ -1307,7 +1411,7 @@ public class ContentService {
                                     oneData.put("pubCount", rs.getInt("pubCount"));
                                     oneData.put("cTime", rs.getTimestamp("cTime"));
 
-                                    Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, null, cataList, pubChannelList, fList, playCountList);
+                                    Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, personList, cataList, pubChannelList, fList, playCountList);
                                     int i=0;
                                     for (; i<sortIdList.size(); i++) {
                                         if (sortIdList.get(i).equals("wt_MediaAsset::"+oneMedia.get("ContentId"))) break;
@@ -1335,7 +1439,7 @@ public class ContentService {
                                     oneData.put("pubCount", rs.getInt("pubCount"));
                                     oneData.put("cTime", rs.getTimestamp("cTime"));
 
-                                    Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, null, cataList, pubChannelList, fList, playCountList);
+                                    Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, personList, cataList, pubChannelList, fList, playCountList);
                                     int i=0;
                                     for (; i<sortIdList.size(); i++) {
                                         if (sortIdList.get(i).equals("wt_SeqMediaAsset::"+oneMedia.get("ContentId"))) break;
@@ -1497,7 +1601,7 @@ public class ContentService {
 		}
 		return null;
 	}
-	
+
 	public Map<String, Object> getBCIsPlayingProgramme(String BcIds, long time) {
 		Calendar cal = Calendar.getInstance();
 		Date date = new Date(time);

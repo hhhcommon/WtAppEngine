@@ -163,22 +163,24 @@ public class FavoriteService {
         if (fList==null||fList.isEmpty()) return null;
 
         //二、得到关联数据
-        String bcIds="", maIds="", smaIds="", bcOrIds="", maOrIds="", smaOrIds="";
+        String bcIds="", maIds="", smaIds="", bcOrIds="", bcPlayOrIds="", maOrIds="", smaOrIds="", tempId="";
         for (Map<String, Object> oneF: fList) {
             if (oneF.get("resTableName")!=null&&oneF.get("resId")!=null) {
-                if ((oneF.get("resTableName")+"").equals("wt_Broadcast")) {bcIds+=" or a.resId='"+oneF.get("resId")+"'";bcOrIds+=" or c.id='"+oneF.get("resId")+"'";}
+                tempId=oneF.get("resId")+"";
+                if ((oneF.get("resTableName")+"").equals("wt_Broadcast")) {bcIds+=" or a.resId='"+tempId+"'";bcOrIds+=" or c.id='"+tempId+"'";bcPlayOrIds+=" or bcId='"+tempId+"'";}
                 else
-                if ((oneF.get("resTableName")+"").equals("wt_MediaAsset")) {maIds+=" or a.resId='"+oneF.get("resId")+"'";maOrIds+=" or c.id='"+oneF.get("resId")+"'";}
+                if ((oneF.get("resTableName")+"").equals("wt_MediaAsset")) {maIds+=" or a.resId='"+tempId+"'";maOrIds+=" or c.id='"+tempId+"'";}
                 else
-                if ((oneF.get("resTableName")+"").equals("wt_SeqMediaAsset")) {smaIds+=" or a.resId='"+oneF.get("resId")+"'";smaOrIds+=" or c.id='"+oneF.get("resId")+"'";}
+                if ((oneF.get("resTableName")+"").equals("wt_SeqMediaAsset")) {smaIds+=" or a.resId='"+tempId+"'";smaOrIds+=" or c.id='"+tempId+"'";}
             }
         }
-        if (bcIds.length()>0) bcIds="(a.resTableName='wt_Broadcast' and ("+bcIds.substring(4)+")";
-        if (maIds.length()>0) maIds="(a.resTableName='wt_MediaAsset' and ("+maIds.substring(4)+")";
-        if (smaIds.length()>0) smaIds="(a.resTableName='wt_SeqMediaAsset' and ("+smaIds.substring(4)+")";
-        if (bcOrIds.length()>0) bcOrIds=smaIds.substring(4);
-        if (maOrIds.length()>0) maOrIds=smaIds.substring(4);
-        if (smaOrIds.length()>0) smaOrIds=smaIds.substring(4);
+        if (bcIds.length()>0) bcIds="a.resTableName='wt_Broadcast' and ("+bcIds.substring(4)+")";
+        if (maIds.length()>0) maIds="a.resTableName='wt_MediaAsset' and ("+maIds.substring(4)+")";
+        if (smaIds.length()>0) smaIds="a.resTableName='wt_SeqMediaAsset' and ("+smaIds.substring(4)+")";
+        if (bcOrIds.length()>0) bcOrIds=bcOrIds.substring(4);
+        if (maOrIds.length()>0) maOrIds=maOrIds.substring(4);
+        if (smaOrIds.length()>0) smaOrIds=smaOrIds.substring(4);
+        if (bcPlayOrIds.length()>0) bcPlayOrIds=bcPlayOrIds.substring(4);
 
         Map<String, Object> reParam=new HashMap<String, Object>();
         List<Map<String, Object>> personList=null;//人员
@@ -220,10 +222,10 @@ public class FavoriteService {
             DateFormat sdf = new SimpleDateFormat("HH:mm:ss");
             String timestr = sdf.format(date);
             reParam.clear();
-            reParam.put("bcIds", bcIds);
+            reParam.put("bcIds", bcPlayOrIds);
             reParam.put("weekDay", week);
             reParam.put("sort", 0);
-            reParam.put("timestr", timestr);
+            reParam.put("timeStr", timestr);
             List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", reParam);
             if (tempList!=null&&!tempList.isEmpty()) {
                 for (Map<String, Object> oneCntt: tempList) {

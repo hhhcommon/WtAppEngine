@@ -223,7 +223,7 @@ public abstract class ContentUtils {
             for (Map<String, Object> _f: playingList) {
                 if ((_f.get("bcId")+"").equals(one.get("ContentId")+"")) {
                     try {
-                        one.put("IsPlaying", Long.parseLong(""+_f.get("title")));
+                        one.put("IsPlaying", _f.get("title"));
                     } catch(Exception e) {
                         one.put("IsPlaying", null);
                     }

@@ -302,24 +302,23 @@
   <select id="refPlayCountById" parameterType="java.util.Map" resultType="java.util.HashMap">
     select * from wt_MediaPlayCount a
     <where><trim prefix="" suffix="" prefixOverrides="or">
-    <trim prefix="and (" suffix=")" prefixOverrides="or">
     <if test="bcIds!=null">or (${bcIds})</if>
     <if test="maIds!=null">or (${maIds})</if>
     <if test="smaIds!=null">or (${smaIds})</if>
     </trim></where>
   </select>
   <select id="playingBc" parameterType="java.util.Map" resultType="java.util.HashMap">
-    select * from wt_BCProgramme a
-    <where>
-    <trim prefix="and (" suffix=")" prefixOverrides="and">
+    select * from wt_BCProgramme
+    <where><trim prefix="and (" suffix=")" prefixOverrides="and">
     <if test="bcIds!=null">and (${bcIds})</if>
     <if test="weekDay!=null and weekDay!=0"> and weekDay=#{weekDay,jdbcType=INTEGER}</if>
     <if test="sort!=null"> and sort=#{sort,jdbcType=INTEGER}</if>
     <if test="timeStr"> and #{timeStr,jdbcType=VARCHAR} BETWEEN beginTime and endTime</if>
     </trim></where>
+    order by bcId, validTime desc
   </select>
   <select id="refCataById" parameterType="java.util.Map" resultType="java.util.HashMap">
-    select * from wt_ResDict_Ref
+    select * from wt_ResDict_Ref a
     <where><trim prefix="" suffix="" prefixOverrides="or">
     <if test="bcIds!=null">or (${bcIds})</if>
     <if test="maIds!=null">or (${maIds})</if>
@@ -331,6 +330,9 @@
   </select>
 
   <!-- 下面是系列内容的获得 -->
+  <select id="getBcById" parameterType="java.lang.String" resultType="java.util.HashMap">
+    select * from wt_Broadcast where id=#{value,jdbcType=VARCHAR}
+  </select>
   <select id="getMediaById" parameterType="java.lang.String" resultType="java.util.HashMap">
     select * from wt_MediaAsset where id=#{value,jdbcType=VARCHAR}
   </select>

@@ -203,38 +203,46 @@ public class DiscussService {
         if (pageSize<0) pageSize=10;
         try {
             Map<String, Object> param=new HashMap<String, Object>();
-            List<DiscussPo> dl=null;
+            List<Map<String, Object>> dl=null;
             long allCount=0;
             if (rType==1||(ml==null||ml.isEmpty())) { //按一个列表进行返回
+                if (ml!=null&&!ml.isEmpty()) {
+                    String resTablesSql="";
+                    for (MediaType mt: ml) {
+                        resTablesSql+=" or a.resTableName='"+mt.getTabName()+"'";
+                    }
+                    resTablesSql=resTablesSql.substring(4);
+                    param.put("whereClause", resTablesSql);
+                }
                 param.put("userId", userId);
                 if (isPub==1) { //发布的内容
                     param.put("sortByClause", " a.cTime desc");
                     if (page>=0) { //分页
                         if (page==0) page=1;
                         if (pageSize<0) pageSize=10;
-                        Page<DiscussPo> p=discussDao.pageQuery("getPubList", param, page, pageSize);
+                        Page<Map<String, Object>> p=discussDao.pageQueryAutoTranform(null, "getPubArticleList", param, page, pageSize);
                         if (!p.getResult().isEmpty()) {
-                            dl=new ArrayList<DiscussPo>();
+                            dl=new ArrayList<Map<String, Object>>();
                             dl.addAll(p.getResult());
                         }
                         allCount=p.getDataCount();
                     } else { //获得所有
-                        dl=discussDao.queryForList("getPubList", param);
+                        dl=discussDao.queryForListAutoTranform("getPubArticleList", param);
                         allCount=dl.size();
                     }
                 } else {
-                    param.put("sortByClause", " cTime desc");
+                    param.put("sortByClause", " a.cTime desc");
                     if (page>=0) { //分页
                         if (page==0) page=1;
                         if (pageSize<0) pageSize=10;
-                        Page<DiscussPo> p=discussDao.pageQuery(param, page, pageSize);
+                        Page<Map<String, Object>> p=discussDao.pageQueryAutoTranform(null, "getArticleList", param, page, pageSize);
                         if (!p.getResult().isEmpty()) {
-                            dl=new ArrayList<DiscussPo>();
+                            dl=new ArrayList<Map<String, Object>>();
                             dl.addAll(p.getResult());
                         }
                         allCount=p.getDataCount();
                     } else { //获得所有
-                        dl=discussDao.queryForList(param);
+                        dl=discussDao.queryForListAutoTranform("getArticleList", param);
                         allCount=dl.size();
                     }
                 }
@@ -242,14 +250,15 @@ public class DiscussService {
 
                 //处理内容
                 String s="", f="";
-                String maIds="", seqMaIds="", bcIds="";
-                for (DiscussPo dPo: dl) {
-                    s+=" or (assetType='"+dPo.getResTableName()+"' and assetId='"+dPo.getResId()+"')";
-                    f+=" or (resTableName='"+dPo.getResTableName()+"' and resId='"+dPo.getResId()+"')";
-                    switch (MediaType.buildByTabName(dPo.getResTableName())) {
-                        case RADIO: bcIds+=" or a.id='"+dPo.getResId()+"'";break;
-                        case AUDIO: maIds+=" or a.id='"+dPo.getResId()+"'";break;
-                        case SEQU: seqMaIds+=" or a.id='"+dPo.getResId()+"'";break;
+                String maIds="", seqMaIds="", bcIds="", bcPlayOrIds="", tempId="";
+                for (Map<String, Object> dPo: dl) {
+                    tempId=dPo.get("resId")+"";
+                    s+=" or (assetType='"+dPo.get("resTableName")+"' and assetId='"+tempId+"')";
+                    f+=" or (resTableName='"+dPo.get("resTableName")+"' and resId='"+tempId+"')";
+                    switch (MediaType.buildByTabName(dPo.get("resTableName")+"")) {
+                        case RADIO: bcIds+=" or a.id='"+tempId+"'"; bcPlayOrIds+=" or bcId='"+tempId+"'"; break;
+                        case AUDIO: maIds+=" or a.id='"+tempId+"'";break;
+                        case SEQU: seqMaIds+=" or a.id='"+tempId+"'";break;
                         default: ;
                     }
                 }
@@ -290,21 +299,27 @@ public class DiscussService {
                     }
                 }
                 if (fml.isEmpty()) fml=null;
-                //获得播放次数
+                //获得播放次数及人员
                 param.clear();
-                if (StringUtils.isNullOrEmptyOrSpace(bcIds)) {
+                if (!StringUtils.isNullOrEmptyOrSpace(bcIds)) {
                     bcIds=bcIds.substring(4);
-                    param.put("bcIds", "a.resTableName='wt_Broadcast' or ("+bcIds+")");
+                    bcPlayOrIds=bcPlayOrIds.substring(4);
+                    param.put("bcIds", "a.resTableName='wt_Broadcast' and ("+bcIds+")");
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(maIds)) {
+                if (!StringUtils.isNullOrEmptyOrSpace(maIds)) {
                     maIds=maIds.substring(4);
-                    param.put("maIds", "a.resTableName='wt_MediaAsset' or ("+maIds+")");
+                    param.put("maIds", "a.resTableName='wt_MediaAsset' and ("+maIds+")");
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(seqMaIds)) {
+                if (!StringUtils.isNullOrEmptyOrSpace(seqMaIds)) {
                     seqMaIds=seqMaIds.substring(4);
-                    param.put("seqMaIds", "a.resTableName='wt_SeqMediaAsset' or ("+seqMaIds+")");
+                    param.put("seqMaIds", "a.resTableName='wt_SeqMediaAsset' and ("+seqMaIds+")");
                 }
-                List<Map<String, Object>> pcml=groupDao.queryForListAutoTranform("refPlayCountById", param);
+                List<Map<String, Object>> pcml=null;
+                List<Map<String, Object>> personList=null;
+                if (!param.isEmpty()) {
+                    pcml=groupDao.queryForListAutoTranform("refPlayCountById", param);
+                    personList=groupDao.queryForListAutoTranform("refPersonById", param);
+                }
 
                 //组织返回值
                 int i=0;
@@ -313,10 +328,10 @@ public class DiscussService {
                 if (!StringUtils.isNullOrEmpty(maIds)) {
                     List<Map<String, Object>> mas=mediaService.getMaListByWhereStr(maIds);
                     for (Map<String, Object> ma : mas) {
-                        Map<String, Object> mam=ContentUtils.convert2Ma(ma, null, cataml, chaml, fml, pcml);
+                        Map<String, Object> mam=ContentUtils.convert2Ma(ma, personList, cataml, chaml, fml, pcml);
                         for (i=0; i<dl.size(); i++) {
-                            DiscussPo dPo=dl.get(i);
-                            if (dPo.getResTableName().equals(MediaType.AUDIO.getTabName())&&dPo.getResId().equals(ma.get("id"))) {
+                            Map<String, Object> dPo=dl.get(i);
+                            if (dPo.get("resTableName").equals(MediaType.AUDIO.getTabName())&&dPo.get("resId").equals(ma.get("id"))) {
                                 rl[i]=mam;
                             }
                         }
@@ -326,10 +341,10 @@ public class DiscussService {
                 if (!StringUtils.isNullOrEmpty(seqMaIds)) {
                     List<Map<String, Object>> smas=mediaService.getSeqMaListByWhereStr(seqMaIds);
                     for (Map<String, Object> sma : smas) {
-                        Map<String, Object> seqMam=ContentUtils.convert2Sma(sma, null, cataml, chaml, fml, pcml);
+                        Map<String, Object> seqMam=ContentUtils.convert2Sma(sma, personList, cataml, chaml, fml, pcml);
                         for (i=0; i<dl.size(); i++) {
-                            DiscussPo dPo=dl.get(i);
-                            if (dPo.getResTableName().equals(MediaType.SEQU.getTabName())&&dPo.getResId().equals(sma.get("id"))) {
+                            Map<String, Object> dPo=dl.get(i);
+                            if (dPo.get("resTableName").equals(MediaType.SEQU.getTabName())&&dPo.get("resId").equals(sma.get("id"))) {
                                 rl[i]=seqMam;
                             }
                         }
@@ -346,17 +361,17 @@ public class DiscussService {
                     int week=cal.get(Calendar.DAY_OF_WEEK);
                     DateFormat sdf=new SimpleDateFormat("HH:mm:ss");
                     String timestr=sdf.format(date);
-                    param.put("bcIds", bcIds);
+                    param.put("bcIds", bcPlayOrIds);
                     param.put("weekDay", week);
                     param.put("sort", 0);
-                    param.put("timestr", timestr);
+                    param.put("timeStr", timestr);
                     List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", param);
 
                     for (Map<String, Object> bc : bcs) {
-                        Map<String, Object> bcm=ContentUtils.convert2Bc(bc, null, cataml, chaml, fml, pcml, playingList);
+                        Map<String, Object> bcm=ContentUtils.convert2Bc(bc, personList, cataml, chaml, fml, pcml, playingList);
                         for (i=0; i<dl.size(); i++) {
-                            DiscussPo dPo=dl.get(i);
-                            if (dPo.getResTableName().equals(MediaType.RADIO.getTabName())&&dPo.getResId().equals(bc.get("id"))) {
+                            Map<String, Object> dPo=dl.get(i);
+                            if (dPo.get("resTableName").equals(MediaType.RADIO.getTabName())&&dPo.get("resId").equals(bc.get("id"))) {
                                 rl[i]=bcm;
                             }
                         }
@@ -371,9 +386,9 @@ public class DiscussService {
                 //得到总数
                 param.put("userId", userId);
                 if (isPub==1) { //发布的内容
-                    dl=this.discussDao.queryForList("getPubList", param);
+                    dl=this.discussDao.queryForListAutoTranform("getPubArticleList", param);
                 } else {
-                    dl=this.discussDao.queryForList(param);
+                    dl=this.discussDao.queryForListAutoTranform("getArticleList", param);
                 }
                 if (dl==null) return null;
                 allCount=dl.size();
@@ -389,43 +404,44 @@ public class DiscussService {
                         if (page>=0) { //分页
                             if (page==0) page=1;
                             if (pageSize<0) pageSize=10;
-                            Page<DiscussPo> p=this.discussDao.pageQuery("getPubList", param, page, pageSize);
+                            Page<Map<String, Object>> p=discussDao.pageQueryAutoTranform(null, "getPubArticleList", param, page, pageSize);
                             if (!p.getResult().isEmpty()) {
-                                dl=new ArrayList<DiscussPo>();
+                                dl=new ArrayList<Map<String, Object>>();
                                 dl.addAll(p.getResult());
                             }
                             typeCount=p.getDataCount();
                         } else { //获得所有
-                            dl=this.discussDao.queryForList("getPubList", param);
+                            dl=discussDao.queryForListAutoTranform("getPubArticleList", param);
                             typeCount=dl.size();
                         }
                     } else {
-                        param.put("sortByClause", " cTime desc");
+                        param.put("sortByClause", " a.cTime desc");
                         if (page>=0) { //分页
                             if (page==0) page=1;
                             if (pageSize<0) pageSize=10;
-                            Page<DiscussPo> p=this.discussDao.pageQuery(param, page, pageSize);
+                            Page<Map<String, Object>> p=discussDao.pageQueryAutoTranform(null, "getArticleList", param, page, pageSize);
                             if (!p.getResult().isEmpty()) {
-                                dl=new ArrayList<DiscussPo>();
+                                dl=new ArrayList<Map<String, Object>>();
                                 dl.addAll(p.getResult());
                             }
                             typeCount=p.getDataCount();
                         } else { //获得所有
-                            dl=this.discussDao.queryForList(param);
+                            dl=discussDao.queryForListAutoTranform("getArticleList", param);
                             typeCount=dl.size();
                         }
                     }
                     if (typeCount>0) {
                         //处理参数
                         String s="", f="";
-                        String maIds="", seqMaIds="", bcIds="";
-                        for (DiscussPo dPo: dl) {
-                            s+=" or (assetType='"+dPo.getResTableName()+"' and assetId='"+dPo.getResId()+"')";
-                            f+=" or (resTableName='"+dPo.getResTableName()+"' and resId='"+dPo.getResId()+"')";
-                            switch (MediaType.buildByTabName(dPo.getResTableName())) {
-                                case RADIO: bcIds+=" or a.id='"+dPo.getResId()+"'";break;
-                                case AUDIO: maIds+=" or a.id='"+dPo.getResId()+"'";break;
-                                case SEQU: seqMaIds+=" or a.id='"+dPo.getResId()+"'";break;
+                        String maIds="", seqMaIds="", bcIds="", bcPlayOrIds="", tempId="";
+                        for (Map<String, Object> dPo: dl) {
+                            tempId=dPo.get("resId")+"";
+                            s+=" or (assetType='"+dPo.get("resTableName")+"' and assetId='"+tempId+"')";
+                            f+=" or (resTableName='"+dPo.get("resTableName")+"' and resId='"+tempId+"')";
+                            switch (MediaType.buildByTabName(dPo.get("resTableName")+"")) {
+                                case RADIO: bcIds+=" or a.id='"+tempId+"'"; bcPlayOrIds+=" or bcId='"+tempId+"'"; break;
+                                case AUDIO: maIds+=" or a.id='"+tempId+"'";break;
+                                case SEQU: seqMaIds+=" or a.id='"+tempId+"'";break;
                                 default: ;
                             }
                         }
@@ -468,19 +484,25 @@ public class DiscussService {
                         if (fml.isEmpty()) fml=null;
                         //获得播放次数
                         param.clear();
-                        if (StringUtils.isNullOrEmptyOrSpace(bcIds)) {
+                        if (!StringUtils.isNullOrEmptyOrSpace(bcIds)) {
                             bcIds=bcIds.substring(4);
-                            param.put("bcIds", "a.resTableName='wt_Broadcast' or ("+bcIds+")");
+                            bcPlayOrIds=bcPlayOrIds.substring(4);
+                            param.put("bcIds", "a.resTableName='wt_Broadcast' and ("+bcIds+")");
                         }
-                        if (StringUtils.isNullOrEmptyOrSpace(maIds)) {
+                        if (!StringUtils.isNullOrEmptyOrSpace(maIds)) {
                             maIds=maIds.substring(4);
-                            param.put("maIds", "a.resTableName='wt_MediaAsset' or ("+maIds+")");
+                            param.put("maIds", "a.resTableName='wt_MediaAsset' and ("+maIds+")");
                         }
-                        if (StringUtils.isNullOrEmptyOrSpace(seqMaIds)) {
+                        if (!StringUtils.isNullOrEmptyOrSpace(seqMaIds)) {
                             seqMaIds=seqMaIds.substring(4);
-                            param.put("seqMaIds", "a.resTableName='wt_SeqMediaAsset' or ("+seqMaIds+")");
+                            param.put("seqMaIds", "a.resTableName='wt_SeqMediaAsset' and ("+seqMaIds+")");
                         }
-                        List<Map<String, Object>> pcml=groupDao.queryForListAutoTranform("refPlayCountById", param);
+                        List<Map<String, Object>> pcml=null;
+                        List<Map<String, Object>> personList=null;
+                        if (!param.isEmpty()) {
+                            pcml=groupDao.queryForListAutoTranform("refPlayCountById", param);
+                            personList=groupDao.queryForListAutoTranform("refPersonById", param);
+                        }
 
                         //组织返回值
                         int i=0;
@@ -489,10 +511,10 @@ public class DiscussService {
                         if (!StringUtils.isNullOrEmpty(maIds)) {
                             List<Map<String, Object>> mas=mediaService.getMaListByWhereStr(maIds);
                             for (Map<String, Object> ma : mas) {
-                                Map<String, Object> mam=ContentUtils.convert2Ma(ma, null, cataml, chaml, fml, pcml);
+                                Map<String, Object> mam=ContentUtils.convert2Ma(ma, personList, cataml, chaml, fml, pcml);
                                 for (i=0; i<dl.size(); i++) {
-                                    DiscussPo dPo=dl.get(i);
-                                    if (dPo.getResTableName().equals(MediaType.AUDIO.getTabName())&&dPo.getResId().equals(ma.get("id"))) {
+                                    Map<String, Object> dPo=dl.get(i);
+                                    if (dPo.get("resTableName").equals(MediaType.AUDIO.getTabName())&&dPo.get("resId").equals(ma.get("id"))) {
                                         typel[i]=mam;
                                     }
                                 }
@@ -502,10 +524,10 @@ public class DiscussService {
                         if (!StringUtils.isNullOrEmpty(seqMaIds)) {
                             List<Map<String, Object>> smas=mediaService.getSeqMaListByWhereStr(seqMaIds);
                             for (Map<String, Object> sma : smas) {
-                                Map<String, Object> seqMam=ContentUtils.convert2Sma(sma, null, cataml, chaml, fml, pcml);
+                                Map<String, Object> seqMam=ContentUtils.convert2Sma(sma, personList, cataml, chaml, fml, pcml);
                                 for (i=0; i<dl.size(); i++) {
-                                    DiscussPo dPo=dl.get(i);
-                                    if (dPo.getResTableName().equals(MediaType.SEQU.getTabName())&&dPo.getResId().equals(sma.get("id"))) {
+                                    Map<String, Object> dPo=dl.get(i);
+                                    if (dPo.get("resTableName").equals(MediaType.SEQU.getTabName())&&dPo.get("resId").equals(sma.get("id"))) {
                                         typel[i]=seqMam;
                                     }
                                 }
@@ -522,17 +544,17 @@ public class DiscussService {
                             int week=cal.get(Calendar.DAY_OF_WEEK);
                             DateFormat sdf=new SimpleDateFormat("HH:mm:ss");
                             String timestr=sdf.format(date);
-                            param.put("bcIds", bcIds);
+                            param.put("bcIds", bcPlayOrIds);
                             param.put("weekDay", week);
                             param.put("sort", 0);
-                            param.put("timestr", timestr);
+                            param.put("timeStr", timestr);
                             List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", param);
 
                             for (Map<String, Object> bc : bcs) {
-                                Map<String, Object> bcm=ContentUtils.convert2Bc(bc, null, cataml, chaml, fml, pcml, playingList);
+                                Map<String, Object> bcm=ContentUtils.convert2Bc(bc, personList, cataml, chaml, fml, pcml, playingList);
                                 for (i=0; i<dl.size(); i++) {
-                                    DiscussPo dPo=dl.get(i);
-                                    if (dPo.getResTableName().equals(MediaType.RADIO.getTabName())&&dPo.getResId().equals(bc.get("id"))) {
+                                    Map<String, Object> dPo=dl.get(i);
+                                    if (dPo.get("resTableName").equals(MediaType.RADIO.getTabName())&&dPo.get("resId").equals(bc.get("id"))) {
                                         typel[i]=bcm;
                                     }
                                 }

@@ -365,6 +365,7 @@ public class ContentController {
                     contentInfo=SearchUtils.getNewsInfo(contentId, roService);
                 }
             } else if (mediaType.equals("AUDIO"))  contentInfo=contentService.getMaInfo(contentId, mUdk);
+            else if (mediaType.equals("RADIO"))  contentInfo=contentService.getBcInfo(contentId, mUdk);
 
             if (contentInfo!=null&&contentInfo.size()>0) {
                 map.put("ResultInfo", contentInfo);
