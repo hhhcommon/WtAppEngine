@@ -120,8 +120,14 @@
   </select>
   <select id="getListByWhere" parameterType="java.util.Map" resultMap="channelAssetMap">
     select <include refid="Base_Column_List"/>from wt_ChannelAsset 
-    <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/>
-    <if test="whereByClause!=null"> and ${whereByClause}</if>
+    <if test="_parameter!=null">
+      <include refid="WhereClauseByEntiey"/>
+      <if test="WhereClauseByEntiey!=null">
+        <if test="whereByClause!=null"> and ${whereByClause}</if>
+      </if>
+      <if test="WhereClauseByEntiey==null">
+        <if test="whereByClause!=null"> where ${whereByClause}</if>
+      </if>
     </if> 
     <if test="sortByClause!=null">order by ${sortByClause}</if>
   </select>

@@ -3,7 +3,11 @@ package com.woting.favorite.service;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -159,19 +163,24 @@ public class FavoriteService {
         if (fList==null||fList.isEmpty()) return null;
 
         //二、得到关联数据
-        String bcIds="", maIds="", smaIds="";
+        String bcIds="", maIds="", smaIds="", bcOrIds="", bcPlayOrIds="", maOrIds="", smaOrIds="", tempId="";
         for (Map<String, Object> oneF: fList) {
             if (oneF.get("resTableName")!=null&&oneF.get("resId")!=null) {
-                if ((oneF.get("resTableName")+"").equals("wt_Broadcast")) bcIds+=",'"+oneF.get("resId")+"'";
+                tempId=oneF.get("resId")+"";
+                if ((oneF.get("resTableName")+"").equals("wt_Broadcast")) {bcIds+=" or a.resId='"+tempId+"'";bcOrIds+=" or c.id='"+tempId+"'";bcPlayOrIds+=" or bcId='"+tempId+"'";}
                 else
-                if ((oneF.get("resTableName")+"").equals("wt_MediaAsset")) maIds+=",'"+oneF.get("resId")+"'";
+                if ((oneF.get("resTableName")+"").equals("wt_MediaAsset")) {maIds+=" or a.resId='"+tempId+"'";maOrIds+=" or c.id='"+tempId+"'";}
                 else
-                if ((oneF.get("resTableName")+"").equals("wt_SeqMediaAsset")) smaIds+=",'"+oneF.get("resId")+"'";
+                if ((oneF.get("resTableName")+"").equals("wt_SeqMediaAsset")) {smaIds+=" or a.resId='"+tempId+"'";smaOrIds+=" or c.id='"+tempId+"'";}
             }
         }
-        if (bcIds.length()>0) bcIds=bcIds.substring(1);
-        if (maIds.length()>0) maIds=maIds.substring(1);
-        if (smaIds.length()>0) smaIds=smaIds.substring(1);
+        if (bcIds.length()>0) bcIds="a.resTableName='wt_Broadcast' and ("+bcIds.substring(4)+")";
+        if (maIds.length()>0) maIds="a.resTableName='wt_MediaAsset' and ("+maIds.substring(4)+")";
+        if (smaIds.length()>0) smaIds="a.resTableName='wt_SeqMediaAsset' and ("+smaIds.substring(4)+")";
+        if (bcOrIds.length()>0) bcOrIds=bcOrIds.substring(4);
+        if (maOrIds.length()>0) maOrIds=maOrIds.substring(4);
+        if (smaOrIds.length()>0) smaOrIds=smaOrIds.substring(4);
+        if (bcPlayOrIds.length()>0) bcPlayOrIds=bcPlayOrIds.substring(4);
 
         Map<String, Object> reParam=new HashMap<String, Object>();
         List<Map<String, Object>> personList=null;//人员
@@ -192,7 +201,8 @@ public class FavoriteService {
             oneAsset.put("resId", oneF.get("resId"));
             assetList.add(oneAsset);
         }
-        List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
+        List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList); //发布
+        List<Map<String, Object>> playCountList=groupDao.queryForListAutoTranform("refPlayCountById", reParam);; //播放次数
 
         //三、组装大列表
         Map<String, Object>[] favoriteArray=new Map[fList.size()];
@@ -201,29 +211,43 @@ public class FavoriteService {
         List<Map<String, Object>> tempList;
         if (bcIds.length()>0) {
             reParam.clear();
-            reParam.put("inIds", bcIds);
+            reParam.put("orIds", bcOrIds);
             tempList=groupDao.queryForListAutoTranform("getBcList", reParam);
+            //电台播放节目
+            reParam.clear();
+            Calendar cal = Calendar.getInstance();
+            Date date = new Date();
+            cal.setTime(date);
+            int week = cal.get(Calendar.DAY_OF_WEEK);
+            DateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+            String timestr = sdf.format(date);
+            reParam.clear();
+            reParam.put("bcIds", bcPlayOrIds);
+            reParam.put("weekDay", week);
+            reParam.put("sort", 0);
+            reParam.put("timeStr", timestr);
+            List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", reParam);
             if (tempList!=null&&!tempList.isEmpty()) {
                 for (Map<String, Object> oneCntt: tempList) {
-                    oneContent=ContentUtils.convert2Bc(oneCntt, personList, cataList, pubChannelList, fList);
+                    oneContent=ContentUtils.convert2Bc(oneCntt, personList, cataList, pubChannelList, fList, playCountList, playingList);
                     add2FavoretList(favoriteArray, oneContent, fList);
                 }
             }
         }
         if (maIds.length()>0) {
             reParam.clear();
-            reParam.put("inIds", maIds);
+            reParam.put("orIds", maOrIds);
             tempList=groupDao.queryForListAutoTranform("getMaList", reParam);
             if (tempList!=null&&!tempList.isEmpty()) {
                 for (Map<String, Object> oneCntt: tempList) {
-                    oneContent=ContentUtils.convert2Ma(oneCntt, personList, cataList, pubChannelList, fList);
+                    oneContent=ContentUtils.convert2Ma(oneCntt, personList, cataList, pubChannelList, fList, playCountList);
                     add2FavoretList(favoriteArray, oneContent, fList);
                 }
             }
         }
         if (smaIds.length()>0) {
             reParam.clear();
-            reParam.put("inIds", smaIds);
+            reParam.put("orIds", smaOrIds);
             tempList=groupDao.queryForListAutoTranform("getSeqMaList", reParam);
             if (tempList!=null&&!tempList.isEmpty()) {
                 if (pageType==0) {//提取可听内容，//TODO 注意：这里有一个问题：提取单体后，可能和已有的单体重复，这个目前无法处理（特别是在分页的情况下），除非采用分布式处理；现在不处理，重复就重复吧
@@ -231,7 +255,7 @@ public class FavoriteService {
                     String _orSql="";
                     //处理专辑
                     for (Map<String, Object> oneCntt: tempList) {
-                        oneContent=ContentUtils.convert2Sma(oneCntt, personList, cataList, pubChannelList, fList);
+                        oneContent=ContentUtils.convert2Sma(oneCntt, personList, cataList, pubChannelList, fList, playCountList);
                         seqMaMap.put(oneContent.get("ContentId")+"", oneContent);
                         _orSql+=" or sma.sId='"+oneContent.get("ContentId")+"'";
                     }
@@ -303,7 +327,7 @@ public class FavoriteService {
                     Map<String, Object> maData, smaData;
                     for (Map<String, Object> oneSeqMa: tempList) {
                         maData=(Map<String, Object>)maMap.get(oneSeqMa.get("id")+"");
-                        smaData=ContentUtils.convert2Ma(maData, personList, cataList, pubChannelList, _fList);
+                        smaData=ContentUtils.convert2Ma(maData, personList, cataList, pubChannelList, _fList, playCountList);
                         if (maData!=null) {
                             maData.put("SeqInfo", smaData);
                             add2FavoretList4Extract(favoriteArray, maData, fList);
@@ -313,12 +337,13 @@ public class FavoriteService {
                     }
                 } else {
                     for (Map<String, Object> oneCntt: tempList) {
-                        oneContent=ContentUtils.convert2Sma(oneCntt, personList, cataList, pubChannelList, fList);
+                        oneContent=ContentUtils.convert2Sma(oneCntt, personList, cataList, pubChannelList, fList, playCountList);
                         add2FavoretList(favoriteArray, oneContent, fList);
                     }
                 }
             }
         }
+
         List<Map<String, Object>> favoriteList=new ArrayList<Map<String, Object>>();
         for (int i=0; i<favoriteArray.length; i++) {
             if (favoriteArray[i]!=null) favoriteList.add(favoriteArray[i]);
