@@ -15,16 +15,21 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.servlet.ServletContext;
 import javax.sql.DataSource;
 
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
+import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
@@ -767,6 +772,7 @@ public class ContentService {
         List<TreeNode<? extends TreeNodeBean>> allTn=null;
         String filterSql_inwhere="";
         String f_catalogType="", f_catalogId="";
+        String f_orderBySql="";
         if (filterData!=null) {//若有过滤，类别过滤
             f_catalogType=filterData.get("CatalogType")==null?"-1":(filterData.get("CatalogType")+"");
             f_catalogId=filterData.get("CatalogId")==null?null:(filterData.get("CatalogId")+"");
@@ -786,12 +792,57 @@ public class ContentService {
                 String _idCName=f_catalogType.equals("-1")?"channelId":"dictDid";
                 if (!f_catalogType.equals("-1"))  filterSql_inwhere="b.dictMid='"+f_catalogType+"' and (";
                 filterSql_inwhere+="b."+_idCName+"='"+_root.getId()+"'";
+                f_orderBySql+=",'"+_root.getId()+"'";
                 allTn=TreeUtils.getDeepList(_root);
                 if (allTn!=null&&!allTn.isEmpty()) {
                     for (TreeNode<? extends TreeNodeBean> tn: allTn) {
                         filterSql_inwhere+=" or b."+_idCName+"='"+tn.getId()+"'";
-                    }
+                    }//TODO
                 }
+                if (mediaType!=null && mediaType.equals("RADIO") && catalogType.equals("1")) {
+                	ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+                    if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                        JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+                        RedisOperService ros=new RedisOperService(conn, 5);
+                        if (ros.exist("LINSHENG_ID_"+f_catalogId)) {
+                        	TreeNode<? extends TreeNodeBean> roots=null;
+                        	DictModel dm=_cd.getDictModelById(f_catalogType);
+                            if (dm!=null&&dm.dictTree!=null) roots=dm.dictTree;
+    						String lscataids = ros.get("LINSHENG_ID_"+f_catalogId);
+    						String[] lsids = lscataids.split(",");
+    						for (String str : lsids) {
+    							if (str.equals("dtfl2001_1")) {
+    								dm = _cd.getDictModelById("9");
+    								if (dm!=null&&dm.dictTree!=null) roots=dm.dictTree;
+    								roots = roots.findNode(str);
+    								filterSql_inwhere+=" or b."+idCName+"='"+roots.getId()+"'";
+    								f_orderBySql+=",'"+roots.getId()+"'";
+    								allTn=TreeUtils.getDeepList(roots);
+    								if (allTn!=null&&!allTn.isEmpty()) {
+    					                for (TreeNode<? extends TreeNodeBean> tn: allTn) {
+    					                	filterSql_inwhere+=" or b."+idCName+"='"+tn.getId()+"'";
+    					                    f_orderBySql+=",'"+roots.getId()+"'";
+    					                }
+    					            }
+    							} else {
+    								dm=_cd.getDictModelById(f_catalogType);
+    		                        if (dm!=null&&dm.dictTree!=null) roots=dm.dictTree;
+    								roots = roots.findNode(str);
+    								TreeUtils.cutLevel(roots, 1);
+    								filterSql_inwhere+=" or b."+idCName+"='"+roots.getId()+"'";
+    								f_orderBySql+=",'"+roots.getId()+"'";
+    								allTn=TreeUtils.getDeepList(roots);
+    								if (allTn!=null&&!allTn.isEmpty()) {
+    					                for (TreeNode<? extends TreeNodeBean> tn: allTn) {
+    					                	filterSql_inwhere+=" or b."+idCName+"='"+tn.getId()+"'";
+    					                	f_orderBySql+=",'"+roots.getId()+"'";
+    					                }
+    					            }//TODO
+    							}
+    						}
+						}
+                    }
+				}
                 if (!f_catalogType.equals("-1")) filterSql_inwhere+=")";
                 filterSql_inwhere="("+filterSql_inwhere+")";
             }
@@ -819,12 +870,59 @@ public class ContentService {
             allTn=TreeUtils.getDeepList(root);
             //得到分类id的语句
             String orSql="";
+            String orderBySql = "";
             orSql+=" or a."+idCName+"='"+root.getId()+"'";
+            orderBySql += "'"+root.getId()+"'";
             if (allTn!=null&&!allTn.isEmpty()) {
                 for (TreeNode<? extends TreeNodeBean> tn: allTn) {
                     orSql+=" or a."+idCName+"='"+tn.getId()+"'";
+                    orderBySql += ",'"+tn.getId()+"'";
                 }
             }
+            if ((mediaType!=null && mediaType.equals("RADIO")) || catalogType.equals("2")) {
+            	ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+                if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                    JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+                    RedisOperService ros=new RedisOperService(conn, 5);
+                    if (ros.exist("LINSHENG_ID_"+catalogId)) {
+                    	TreeNode<? extends TreeNodeBean> roots=null;
+                    	DictModel dm=_cd.getDictModelById(catalogType);
+                        if (dm!=null&&dm.dictTree!=null) roots=dm.dictTree;
+						String lscataids = ros.get("LINSHENG_ID_"+catalogId);
+						String[] lsids = lscataids.split(",");
+						for (String str : lsids) {
+							if (str.equals("dtfl2001_1")) {
+								dm = _cd.getDictModelById("9");
+								if (dm!=null&&dm.dictTree!=null) roots=dm.dictTree;
+								roots = roots.findNode(str);
+								orSql+=" or a."+idCName+"='"+roots.getId()+"'";
+								orderBySql += ",'"+roots.getId()+"'";
+								allTn=TreeUtils.getDeepList(roots);
+								if (allTn!=null&&!allTn.isEmpty()) {
+					                for (TreeNode<? extends TreeNodeBean> tn: allTn) {
+					                    orSql+=" or a."+idCName+"='"+tn.getId()+"'";
+					                    orderBySql += ",'"+tn.getId()+"'";
+					                }
+					            }
+							} else {
+								dm=_cd.getDictModelById(catalogType);
+		                        if (dm!=null&&dm.dictTree!=null) roots=dm.dictTree;
+								roots = roots.findNode(str);
+								TreeUtils.cutLevel(roots, 1);
+								orSql+=" or a."+idCName+"='"+roots.getId()+"'";
+								orderBySql += ",'"+roots.getId()+"'";
+								allTn=TreeUtils.getDeepList(roots);
+								if (allTn!=null&&!allTn.isEmpty()) {
+					                for (TreeNode<? extends TreeNodeBean> tn: allTn) {
+					                    orSql+=" or a."+idCName+"='"+tn.getId()+"'";
+					                    orderBySql += ",'"+tn.getId()+"'";
+					                }
+					            }//TODO
+							}
+						}
+					}
+                }
+			}
             if (orSql.length()>0) orSql=orSql.substring(4);
 
             //得到获得数据条数的Sql
@@ -832,7 +930,12 @@ public class ContentService {
             if (catalogType.equals("-1")) {//按发布栏目
                 sqlCount="select count(distinct a.assetType,a.assetId) from wt_ChannelAsset a where a.isValidate=1 and a.flowFlag=2";
             } else {//按分类
-                sqlCount="select count(distinct a.resTableName,a.resId) from wt_ResDict_Ref a where a.dictMid='"+catalogType+"'";
+                sqlCount="select count(distinct a.resTableName,a.resId) from wt_ResDict_Ref a where ( a.dictMid='"+catalogType+"'";
+                if (catalogType.equals("2")) {
+                	sqlCount+=" or a.dictMid='9' )";
+				} else {
+					sqlCount+=")";
+				}
             }
             if (orSql.length()>0) sqlCount+=" and ("+orSql+")";
             if (mediaFilterSql.length()>0) sqlCount+=" and ("+mediaFilterSql+")";
@@ -843,12 +946,17 @@ public class ContentService {
                 if (catalogType.equals("-1")) {//按发布栏目
                     sql="select a.assetType,a.assetId, max(a.pubTime) pubTime, max(a.sort) sort, a.flowFlag from wt_ChannelAsset a where a.isValidate=1 and a.flowFlag=2";
                 } else {//按分类
-                    sql="select distinct a.resTableName,a.resId from wt_ResDict_Ref a where a.dictMid='"+catalogType+"'";
+                    sql="select distinct a.resTableName,a.resId from wt_ResDict_Ref a where ( a.dictMid='"+catalogType+"'";
+                    if (catalogType.equals("2")) {
+    					sql+=" or a.dictMid='9' )";
+    				} else {
+    					sql+=")";
+    				}
                 }
                 if (orSql.length()>0) sql+=" and ("+orSql+")";
                 if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
                 if (catalogType.equals("-1")) sql+=" group by a.assetType,a.assetId,a.flowFlag order by a.sort desc, a.pubTime desc";//栏目
-                else sql+=" order by a.cTime desc";//分类
+                else sql+="  order by field(a.dictDid,"+orderBySql+") ,cTime desc";//分类
             } else {
                 if (catalogType.equals("-1")&&f_catalogType.equals("-1")) {//按发布栏目,用发布栏目过滤
                     sql="select * from ((select a.assetType,a.assetId, max(a.pubTime) pubTime, max(a.sort) sort, a.flowFlag from wt_ChannelAsset a, wt_ChannelAsset b "
@@ -901,11 +1009,11 @@ public class ContentService {
                     sql+=" order by a.cTime desc) union (";
                     sql+="select  distinct a.resTableName,a.resId from wt_ResDict_Ref a ";
                     sql+="left join wt_ResDict_Ref b on a.resTableName=b.resTableName and a.resId=b.resId";
-                    sql+=" and "+filterSql_inwhere;
+                    sql+=" and "+filterSql_inwhere;//TODO
                     sql+=" where a.dictMid='"+catalogType+"'";
                     if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
                     if (orSql.length()>0) sql+=" and ("+orSql+")";
-                    sql+=" and b.id is null order by a.cTime desc)) as ul";
+                    sql+=" and b.id is null order by field(b.id,"+f_orderBySql.substring(1)+") a.cTime desc)) as ul";
                 }
             }
             sql+=" limit "+(((page<=0?1:page)-1)*pageSize)+","+pageSize; //分页
@@ -927,14 +1035,16 @@ public class ContentService {
                 }
                 rs.close(); rs=null;
                 ps.close(); ps=null;
+                
                 //获得记录
                 ps=conn.prepareStatement(sql);
                 rs=ps.executeQuery();
-
+                
                 String sma2msInSql="";
                 String bcSqlSign="", maSqlSign="", smaSqlSign="";   //为找到内容设置
                 String bcSqlSign1="", maSqlSign1="", smaSqlSign1="";//为查询相关信息设置
                 String bcPlayOrId="";
+                orderBySql = "";
                 List<Map<String, Object>> pubChannelList=new ArrayList<Map<String, Object>>();
                 while (rs!=null&&rs.next()) {
                     sortIdList.add(rs.getString(typeCName)+"::"+rs.getString(resIdCName));
@@ -942,6 +1052,7 @@ public class ContentService {
                         bcSqlSign+=" or a.id='"+rs.getString(resIdCName)+"'";
                         bcSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
                         bcPlayOrId+=" or bcId='"+rs.getString(resIdCName)+"'";
+                        orderBySql+=",'"+rs.getString(resIdCName)+"'";
                     } else if (rs.getString(typeCName).equals("wt_MediaAsset")) {
                         maSqlSign+=" or id='"+rs.getString(resIdCName)+"'";
                         maSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
@@ -1053,7 +1164,8 @@ public class ContentService {
                     for (int j=0; j<sortIdList.size(); j++) _ret.add(null);
 
                     if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {//电台处理
-                        ps=conn.prepareStatement("select a.*, b.bcSource, b.flowURI from wt_Broadcast a left join wt_BCLiveFlow b on a.id=b.bcId and b.isMain=1 where "+bcSqlSign);
+                    	String bcSql = "select a.*, b.bcSource, b.flowURI from wt_Broadcast a left join wt_BCLiveFlow b on a.id=b.bcId and b.isMain=1 where "+bcSqlSign+" order by field(a.id,"+orderBySql.substring(1)+")";
+                        ps=conn.prepareStatement(bcSql);
                         rs=ps.executeQuery();
                         while (rs!=null&&rs.next()) {
                             Map<String, Object> oneData=new HashMap<String, Object>();

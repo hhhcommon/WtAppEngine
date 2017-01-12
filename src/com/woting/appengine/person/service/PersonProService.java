@@ -93,6 +93,7 @@ public class PersonProService {
 						} else {
 							ret.put("ContentTime", "123400");
 						}
+						ret.put("ContentPlay", ma.getMaURL());
 						ret.put("ContentPubTime", cha.getPubTime());
 						ret.put("PlayCount", "1234");
 						mas.add(ret);
@@ -189,6 +190,7 @@ public class PersonProService {
 								} else {
 									ret.put("ContentTime", "123400");
 								}
+								ret.put("ContentPlay", ma.getMaURL());
 								ret.put("ContentPubTime", cha.getPubTime());
 								ret.put("PlayCount", "1234");
 								mas.add(ret);
