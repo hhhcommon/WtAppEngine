@@ -746,7 +746,7 @@ public class ContentService {
             for (UserFavoritePo ufPo: _fList) {
                 fList.add(ufPo.toHashMapAsBean());
             }
-        } 
+        }
 
         Map<String, Object> ret=new HashMap<String, Object>();
         //2-根据参数获得范围
@@ -1738,6 +1738,3 @@ public class ContentService {
 		return null;
 	}
 }
-//测试的消息{"IMEI":"12356","UserId":"107fc906ae0f","ResultType":"0","SearchStr":"罗,电影,安徽"}=
-//http://localhost:808/wt/searchByVoice.do
-//http://localhost:808/wt/content/getSeqMaInfo.do
