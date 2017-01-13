@@ -746,7 +746,7 @@ public class ContentService {
             for (UserFavoritePo ufPo: _fList) {
                 fList.add(ufPo.toHashMapAsBean());
             }
-        }
+        } 
 
         Map<String, Object> ret=new HashMap<String, Object>();
         //2-根据参数获得范围
@@ -790,14 +790,21 @@ public class ContentService {
             }
             if (_root!=null) {
                 String _idCName=f_catalogType.equals("-1")?"channelId":"dictDid";
-                if (!f_catalogType.equals("-1"))  filterSql_inwhere="b.dictMid='"+f_catalogType+"' and (";
+                if (!f_catalogType.equals("-1")) {
+                	if (!f_catalogType.equals("2")) {
+						filterSql_inwhere="b.dictMid='"+f_catalogType+"' and (";
+					} else {
+						filterSql_inwhere="(b.dictMid='"+f_catalogType+"' or b.dictMid='9') and (";
+					}
+                } 
                 filterSql_inwhere+="b."+_idCName+"='"+_root.getId()+"'";
-                f_orderBySql+=",'"+_root.getId()+"'";
+                f_orderBySql+="'"+_root.getId()+"'";
                 allTn=TreeUtils.getDeepList(_root);
                 if (allTn!=null&&!allTn.isEmpty()) {
                     for (TreeNode<? extends TreeNodeBean> tn: allTn) {
                         filterSql_inwhere+=" or b."+_idCName+"='"+tn.getId()+"'";
-                    }//TODO
+                        f_orderBySql+=",'"+tn.getId()+"'";
+                    }
                 }
                 if (mediaType!=null && mediaType.equals("RADIO") && catalogType.equals("1")) {
                 	ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
@@ -821,7 +828,7 @@ public class ContentService {
     								if (allTn!=null&&!allTn.isEmpty()) {
     					                for (TreeNode<? extends TreeNodeBean> tn: allTn) {
     					                	filterSql_inwhere+=" or b."+idCName+"='"+tn.getId()+"'";
-    					                    f_orderBySql+=",'"+roots.getId()+"'";
+    					                    f_orderBySql+=",'"+tn.getId()+"'";
     					                }
     					            }
     							} else {
@@ -835,9 +842,9 @@ public class ContentService {
     								if (allTn!=null&&!allTn.isEmpty()) {
     					                for (TreeNode<? extends TreeNodeBean> tn: allTn) {
     					                	filterSql_inwhere+=" or b."+idCName+"='"+tn.getId()+"'";
-    					                	f_orderBySql+=",'"+roots.getId()+"'";
+    					                	f_orderBySql+=",'"+tn.getId()+"'";
     					                }
-    					            }//TODO
+    					            }
     							}
     						}
 						}
@@ -917,7 +924,7 @@ public class ContentService {
 					                    orSql+=" or a."+idCName+"='"+tn.getId()+"'";
 					                    orderBySql += ",'"+tn.getId()+"'";
 					                }
-					            }//TODO
+					            }
 							}
 						}
 					}
@@ -931,7 +938,7 @@ public class ContentService {
                 sqlCount="select count(distinct a.assetType,a.assetId) from wt_ChannelAsset a where a.isValidate=1 and a.flowFlag=2";
             } else {//按分类
                 sqlCount="select count(distinct a.resTableName,a.resId) from wt_ResDict_Ref a where ( a.dictMid='"+catalogType+"'";
-                if (catalogType.equals("2")) {
+                if (catalogType.equals("1") || catalogType.equals("2")) {
                 	sqlCount+=" or a.dictMid='9' )";
 				} else {
 					sqlCount+=")";
@@ -947,7 +954,7 @@ public class ContentService {
                     sql="select a.assetType,a.assetId, max(a.pubTime) pubTime, max(a.sort) sort, a.flowFlag from wt_ChannelAsset a where a.isValidate=1 and a.flowFlag=2";
                 } else {//按分类
                     sql="select distinct a.resTableName,a.resId from wt_ResDict_Ref a where ( a.dictMid='"+catalogType+"'";
-                    if (catalogType.equals("2")) {
+                    if (catalogType.equals("1") || catalogType.equals("2")) {
     					sql+=" or a.dictMid='9' )";
     				} else {
     					sql+=")";
@@ -1001,25 +1008,19 @@ public class ContentService {
                     if (orSql.length()>0) sql+=" and ("+orSql+")";
                     sql+=" and b.id is null order by a.cTime desc)) as ul";
                 } else {//按字典分类,用字典分类过滤
-                    sql="select * from ((select distinct a.resTableName,a.resId from wt_ResDict_Ref a, wt_ResDict_Ref b where a.dictMid='"+catalogType+"'";
+                    sql="select * from ((select distinct a.resTableName,a.resId,b.dictDid from wt_ResDict_Ref a, wt_ResDict_Ref b where a.dictMid='"+catalogType+"'";
                     if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
                     if (orSql.length()>0) sql+=" and ("+orSql+")";
                     sql+=" and "+filterSql_inwhere;
                     sql+=" and a.resTableName=b.resTableName and a.resId=b.resId";
-                    sql+=" order by a.cTime desc) union (";
-                    sql+="select  distinct a.resTableName,a.resId from wt_ResDict_Ref a ";
-                    sql+="left join wt_ResDict_Ref b on a.resTableName=b.resTableName and a.resId=b.resId";
-                    sql+=" and "+filterSql_inwhere;//TODO
-                    sql+=" where a.dictMid='"+catalogType+"'";
-                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
-                    if (orSql.length()>0) sql+=" and ("+orSql+")";
-                    sql+=" and b.id is null order by field(b.id,"+f_orderBySql.substring(1)+") a.cTime desc)) as ul";
+                    sql+=" order by a.cTime desc)) as ul";
+                    sql+=" order by field(ul.dictDid,"+f_orderBySql+")";
                 }
             }
             sql+=" limit "+(((page<=0?1:page)-1)*pageSize)+","+pageSize; //分页
             //执行得到具体内容Id的SQL
             List<String> sortIdList=new ArrayList<String>();
-
+            
             Connection conn=null;
             PreparedStatement ps=null;//获得所需的记录的id
             PreparedStatement ps1=null;//如果需要提取专辑中的第一条记录，按此处理
@@ -1353,17 +1354,19 @@ public class ContentService {
                     if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
                     sql+=" and (SQL)  and b.id is null order by a.cTime desc)) as ul";
                 } else {//按字典分类,用字典分类过滤
-                    sql="select * from ((select distinct a.resTableName,a.resId from wt_ResDict_Ref a, wt_ResDict_Ref b where a.dictMid='"+catalogType+"'";
+                    sql="select * from ((select distinct a.resTableName,a.resId,b.dictDid from wt_ResDict_Ref a, wt_ResDict_Ref b where a.dictMid='"+catalogType+"'";
                     if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
                     sql+=" and (SQL)  and "+filterSql_inwhere;
                     sql+=" and a.resTableName=b.resTableName and a.resId=b.resId";
-                    sql+=" order by a.cTime desc limit 0,"+perSize+") union (";
-                    sql+="select distinct a.resTableName,a.resId from wt_ResDict_Ref a ";
-                    sql+="left join wt_ResDict_Ref b on a.resTableName=b.resTableName and a.resId=b.resId";
-                    sql+=" and "+filterSql_inwhere;
-                    sql+=" where a.dictMid='"+catalogType+"'";
-                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
-                    sql+=" and (SQL) and b.id is null order by a.cTime desc)) as ul";
+                    sql+=" )) as ul";
+                    sql+=" order by field(ul.dictDid,"+f_orderBySql+")";
+//                    sql+=" order by a.cTime desc limit 0,"+perSize+") union (";
+//                    sql+="select distinct a.resTableName,a.resId from wt_ResDict_Ref a ";
+//                    sql+="left join wt_ResDict_Ref b on a.resTableName=b.resTableName and a.resId=b.resId";
+//                    sql+=" and "+filterSql_inwhere;
+//                    sql+=" where a.dictMid='"+catalogType+"'";
+//                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
+//                    sql+=" and (SQL) and b.id is null order by a.cTime desc)) as ul"; //TODO
                 }
             }
             if (StringUtils.isNullOrEmptyOrSpace(filterStr)) sql+=" limit "+perSize;
