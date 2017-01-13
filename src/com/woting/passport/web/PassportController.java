@@ -86,13 +86,20 @@ public class PassportController {
         Map<String,Object> map=new HashMap<String, Object>();
         try {
             //0-获取参数
+            MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
             alPo.setReqParam(JsonUtils.objToJson(m));
-            MobileParam mp=MobileParam.build(m);
-            if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
-                mp.setImei(request.getSession().getId());
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+                return map;
+            } else {
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
+                }
+                mUdk=mp.getUserDeviceKey();
             }
-            MobileUDKey mUdk=mp.getUserDeviceKey();
             //数据收集处理==2
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
                 alPo.setOwnerId(map.get("UserId")+"");
@@ -181,6 +188,8 @@ public class PassportController {
                             um.put("Sex", drr.getDd().getNodeName());
                         } else
                         if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
+                            System.out.println("^^^^^^^^^^^^^^^^"+drr.getRefName()+":"+drr.getResTableName()+":"+drr.getResId()+":"+drr.getDm().getDmName()+":"+drr.getDm().getId());
+                            System.out.println("^^^^^^^^^^^^^^^^"+drr.getDd());
                             um.put("Region", drr.getDd().getTreePathName());
                         }
                     }
