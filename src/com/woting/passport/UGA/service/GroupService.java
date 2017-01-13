@@ -917,9 +917,11 @@ public class GroupService {
                 //判断是否已是用户，若已是，则不必插入了
                 if (existUserInGroup(groupId, userId)==0) {
                     //插入用户组表
-                    insertGroupUser(gp, userDao.getInfoObject("getUserById", userId), 0, false);
+                    insertGroupUser(gp, userDao.getInfoObject("getUserById", userId), 0, true);
+                    m.put("Message", "成功加入组");
                     m.put("ReturnType", "1001");
                 } else {
+                    m.put("Message", "已经加入组");
                     m.put("ReturnType", "10011");
                 }
             } else { //是拒绝
