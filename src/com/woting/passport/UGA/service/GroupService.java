@@ -129,7 +129,7 @@ public class GroupService {
                     sMsg.setMsgType(0);
                     sMsg.setAffirm(1);
                     sMsg.setBizType(0x08);
-                    sMsg.setCmdType(1);//组
+                    sMsg.setCmdType(2);//组
                     sMsg.setCommand(4);//加入成员
                     Map<String, Object> dataMap=new HashMap<String, Object>();
                     dataMap.put("GroupId", g.getGroupId());
@@ -349,7 +349,7 @@ public class GroupService {
             sMsg.setMsgType(0);
             sMsg.setAffirm(1);
             sMsg.setBizType(0x08);
-            sMsg.setCmdType(1);//组
+            sMsg.setCmdType(2);//组
             sMsg.setCommand(2);//更改
             Map<String, Object> dataMap1=new HashMap<String, Object>();
             dataMap1.put("GroupId", g.getGroupId());
@@ -458,7 +458,7 @@ public class GroupService {
                 sMsg.setMsgType(0);
                 sMsg.setAffirm(1);
                 sMsg.setBizType(0x08);
-                sMsg.setCmdType(1);//组
+                sMsg.setCmdType(2);//组
                 sMsg.setCommand(5);//删除组内用户
                 Map<String, Object> dataMap=new HashMap<String, Object>();
                 dataMap.put("GroupId", gp.getGroupId());
@@ -495,7 +495,7 @@ public class GroupService {
                 sMsg.setMsgType(0);
                 sMsg.setAffirm(1);
                 sMsg.setBizType(0x08);
-                sMsg.setCmdType(1);//组
+                sMsg.setCmdType(2);//组
                 sMsg.setCommand(2);//更改
                 Map<String, Object> dataMap=new HashMap<String, Object>();
                 dataMap.put("GroupId", gp.getGroupId());
@@ -531,7 +531,7 @@ public class GroupService {
                 sMsg.setMsgType(0);
                 sMsg.setAffirm(1);
                 sMsg.setBizType(0x08);
-                sMsg.setCmdType(1);//组
+                sMsg.setCmdType(2);//组
                 sMsg.setCommand(3);//删除
                 Map<String, Object> dataMap=new HashMap<String, Object>();
                 dataMap.put("GroupId", gp.getGroupId());
@@ -1174,7 +1174,7 @@ public class GroupService {
             sMsg.setMsgType(0);
             sMsg.setAffirm(1);
             sMsg.setBizType(0x08);
-            sMsg.setCmdType(1);//组
+            sMsg.setCmdType(2);//组
             sMsg.setCommand(5);//删除组内用户
             Map<String, Object> dataMap1=new HashMap<String, Object>();
             dataMap1.put("GroupId", gp.getGroupId());
@@ -1196,7 +1196,7 @@ public class GroupService {
             sMsg.setMsgType(0);
             sMsg.setAffirm(1);
             sMsg.setBizType(0x08);
-            sMsg.setCmdType(1);//组
+            sMsg.setCmdType(2);//组
             sMsg.setCommand(3);//删除
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("GroupId", gp.getGroupId());
@@ -1281,7 +1281,7 @@ public class GroupService {
             sMsg.setMsgType(0);
             sMsg.setAffirm(1);
             sMsg.setBizType(0x08);
-            sMsg.setCmdType(1);//组
+            sMsg.setCmdType(2);//组
             sMsg.setCommand(3);//删除组
             Map<String, Object> dataMap1=new HashMap<String, Object>();
             dataMap1.put("GroupId", gp.getGroupId());
