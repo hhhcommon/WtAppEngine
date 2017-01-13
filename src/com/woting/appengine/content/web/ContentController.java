@@ -23,6 +23,7 @@ import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.RequestUtils;
 import com.woting.appengine.content.service.ContentService;
+import com.woting.appengine.content.utils.ContentRedisUtils;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 import com.woting.dataanal.gather.API.ApiGatherUtils;
 import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
@@ -353,20 +354,36 @@ public class ContentController {
             //4-得到当前页数
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
-
+            
+            
             Map<String, Object> contentInfo=null;
-            if (mediaType.equals("SEQU")) contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page, mUdk);
-            else
-            if (mediaType.equals("TTS")) {
-                ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
-                if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-                    JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
-                    RedisOperService roService=new RedisOperService(conn);
-                    contentInfo=SearchUtils.getNewsInfo(contentId, roService);
-                }
-            } else if (mediaType.equals("AUDIO"))  contentInfo=contentService.getMaInfo(contentId, mUdk);
-            else if (mediaType.equals("RADIO"))  contentInfo=contentService.getBcInfo(contentId, mUdk);
-
+            //检测内容是否存在redis里
+            map = ContentRedisUtils.isOrNoToLocal(mediaType, contentId);
+            if (map!=null) {
+				int isnum = (int) map.get("IsOrNoLocal");
+				Object info = map.get("Info");
+				if (isnum == 0) {
+					contentInfo = (Map<String, Object>) info;
+				} else if (isnum == 1) {
+					contentId = (String) info;
+				}
+			}
+            
+            if (contentInfo==null) {
+				if (mediaType.equals("SEQU")) contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page, mUdk);
+	            else
+	            if (mediaType.equals("TTS")) {
+	                ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+	                if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+	                    JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+	                    RedisOperService roService=new RedisOperService(conn);
+	                    contentInfo=SearchUtils.getNewsInfo(contentId, roService);
+	                }
+	            } else if (mediaType.equals("AUDIO"))  contentInfo=contentService.getMaInfo(contentId, mUdk);
+	            else if (mediaType.equals("RADIO"))  contentInfo=contentService.getBcInfo(contentId, mUdk);
+			}
+            
+            map.clear();
             if (contentInfo!=null&&contentInfo.size()>0) {
                 map.put("ResultInfo", contentInfo);
                 map.put("ReturnType", "1001");
