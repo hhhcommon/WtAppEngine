@@ -9,12 +9,15 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
 
+import com.spiritdata.framework.component.module.pojo.Module;
 import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
+import com.spiritdata.framework.ui.tree.EasyUiTree;
+import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
@@ -236,6 +239,8 @@ public class DictService {
                 DictModel dm=cd.dictModelMap.get(drrPo.getDictMid());
                 drr.setDm(dm);
                 if (dm.dictTree!=null&&dm.dictTree.getChildren()!=null&&!dm.dictTree.getChildren().isEmpty()) {
+                    EasyUiTree<? extends TreeNodeBean> met = new EasyUiTree<Module>(dm.dictTree);
+                    System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"+JsonUtils.objToJson(met));
                     TreeNode<DictDetail> dd=(TreeNode<DictDetail>)dm.dictTree.findNode(drrPo.getDictDid());
                     if (dd!=null) drr.setDd(dd);
                 }
