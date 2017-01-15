@@ -355,10 +355,9 @@ public class ContentController {
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
             
-            
             Map<String, Object> contentInfo=null;
             //检测内容是否存在redis里
-            map = ContentRedisUtils.isOrNoToLocal(mediaType, contentId);
+            map = ContentRedisUtils.isOrNoToLocal(m, 1);
             if (map!=null) {
 				int isnum = (int) map.get("IsOrNoLocal");
 				Object info = map.get("Info");
@@ -368,6 +367,7 @@ public class ContentController {
 					contentId = (String) info;
 				}
 			}
+            map.clear();
             
             if (contentInfo==null) {
 				if (mediaType.equals("SEQU")) contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page, mUdk);
@@ -383,7 +383,7 @@ public class ContentController {
 	            else if (mediaType.equals("RADIO"))  contentInfo=contentService.getBcInfo(contentId, mUdk);
 			}
             
-            map.clear();
+            
             if (contentInfo!=null&&contentInfo.size()>0) {
                 map.put("ResultInfo", contentInfo);
                 map.put("ReturnType", "1001");
@@ -496,7 +496,25 @@ public class ContentController {
             try {flag=Integer.parseInt(m.get("Flag")+"");} catch(Exception e) {};
             map.put("Flag", flag+"");
 
-            flag=favoriteService.favorite(mediaType, contentId, flag, mUdk);
+            m.put("MUDK", mUdk);
+            boolean isok = false;
+            map = ContentRedisUtils.isOrNoToLocal(m, 3);
+            if (map!=null) {
+				int isnum = (int) map.get("IsOrNoLocal");
+				Object info = map.get("Info");
+				if (isnum == 0) { //未入库
+					isok = false;
+				} else if (isnum == 1) { //已入库
+					contentId = (String) info;
+					isok = true;
+				} else if (isnum == 2) {
+					isok = false;
+				}
+			}
+            map.clear();
+            if (isok) {
+				flag=favoriteService.favorite(mediaType, contentId, flag, mUdk);
+			}
             
             if (flag==1) {
                 map.put("ReturnType", "1001");

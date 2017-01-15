@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.StringUtils;
+import com.woting.appengine.content.utils.ContentRedisUtils;
 import com.woting.cm.core.media.MediaType;
 import com.woting.dataanal.gather.API.ApiGatherUtils;
 import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
@@ -140,21 +141,41 @@ public class DiscussController {
                 map.put("Message", "无法获取内容Id");
                 return map;
             }
+            boolean isok = false;
+            map = ContentRedisUtils.isOrNoToLocal(m, 2);
+            if (map!=null) {
+				int isnum = (int) map.get("IsOrNoLocal");
+				Object info = map.get("Info");
+				if (isnum == 0) { //未入库
+					isok = false;
+				} else if (isnum == 1) { //已入库
+					contentId = (String) info;
+					isok = true;
+				} else if (isnum == 2) {
+					isok = false;
+				}
+			}
+            map.clear();
+            
             //4-存储意见
             try {
-                Discuss discuss=new Discuss();
-                discuss.setUserId(userId);
-                discuss.setDiscuss(discu);
-                discuss.setResTableName((MediaType.buildByTypeName(mediaType)).getTabName());
-                discuss.setResId(contentId);
-                //是否重复提交意见
-                List<Discuss> duplicates=discussService.getDuplicates(discuss);
-                if (duplicates!=null&&duplicates.size()>0) {
-                    map.put("ReturnType", "1006");
-                    map.put("Message", "该评论已经提交");
-                    return map;
-                };
-                int r=discussService.insertDiscuss(discuss);
+            	int r = 1;
+            	if (isok) {
+					Discuss discuss=new Discuss();
+	                discuss.setUserId(userId);
+	                discuss.setDiscuss(discu);
+	                discuss.setResTableName((MediaType.buildByTypeName(mediaType)).getTabName());
+	                discuss.setResId(contentId);
+	                //是否重复提交意见
+	                List<Discuss> duplicates=discussService.getDuplicates(discuss);
+	                if (duplicates!=null&&duplicates.size()>0) {
+	                    map.put("ReturnType", "1006");
+	                    map.put("Message", "该评论已经提交");
+	                    return map;
+	                };
+	                r=discussService.insertDiscuss(discuss);
+				}
+                
                 if (r!=1) {
                     map.put("ReturnType", "1007");
                     map.put("Message", "加入失败");
