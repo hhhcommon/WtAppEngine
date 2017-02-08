@@ -97,7 +97,7 @@
   </update>
   <!-- 调整用户登录情况 -->
   <update id="adjustByIMEI" parameterType="java.util.Map">
-    update wt_MobileUsed set status=2 where imei!=#{imei,jdbcType=VARCHAR} and pcdType=#{PCDType,jdbcType=INTEGER} and userId=#{userId,jdbcType=VARCHAR}
+    update wt_MobileUsed set status=3 where imei!=#{imei,jdbcType=VARCHAR} and pcdType=#{PCDType,jdbcType=INTEGER} and userId=#{userId,jdbcType=VARCHAR} and status=1
   </update>
 
   <!-- 删除数据 -->

@@ -2228,10 +2228,13 @@ public class GroupController {
                     List<UserPo> ul=_g.getUserList();
                     if (ul!=null&&!ul.isEmpty()) {
                         String userNames="";
+                        String userIds="";
                         for (int j=0;j<ul.size(); j++) {
                             userNames+=","+ul.get(j).getLoginName();
+                            userIds+=","+ul.get(j).getUserId();
                         }
                         oneGroup.put("UserNames", userNames.substring(1));
+                        oneGroup.put("UserIds", userIds.substring(1));
                     }
                     groupList.add(oneGroup);
                 }

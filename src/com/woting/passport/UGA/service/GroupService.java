@@ -406,7 +406,7 @@ public class GroupService {
                 if (up.getUserId().equals(u.getUserId())) break;
             }
         }
-        if (i==-1) return 0;
+        if (i==-1||i==ul.size()) return 0;
  
         ul.remove(i);
         //删除组内用户
@@ -546,7 +546,7 @@ public class GroupService {
                         toUser+=","+ul.get(i).getUserId();
                     }
                 }
-                if (StringUtils.isNullOrEmptyOrSpace(toUser)) {
+                if (!StringUtils.isNullOrEmptyOrSpace(toUser)) {
                     MsgNormal nMsg=new MsgNormal();
                     nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
                     nMsg.setFromType(1);
@@ -800,7 +800,6 @@ public class GroupService {
     public List<Group> searchGroup(String searchStr) {
         List<Group> ret=new ArrayList<Group>();
         Map<String, List<Group>> _tempM=new HashMap<String, List<Group>>();
-        //从内存中查找
         int max=0, min=0;
         List<Group> gl=getAllGroup();
         for (Group g: gl) {
