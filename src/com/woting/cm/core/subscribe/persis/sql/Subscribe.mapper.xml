@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- Etl与资源对应关系 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="A_SUBSCRIBE">
+  <!-- 对应关系 -->
+  <resultMap id="BaseResultMap" type="subscribe">
+    <id      column="id"             property="id"             jdbcType="VARCHAR"/>
+    <result  column="ownerType"      property="ownerType"      jdbcType="VARCHAR"/>
+    <result  column="ownerId"        property="ownerId"        jdbcType="VARCHAR"/>
+    <result  column="sId"            property="sId"            jdbcType="VARCHAR"/>
+    <result  column="cTime"          property="cTime"          jdbcType="TIMESTAMP"/>
+  </resultMap>
+
+  <!-- 所有列 -->
+  <sql id="Base_Column_List">
+    id, ownerType, ownerId, sId, cTime
+  </sql>
+  
+  <!-- 条件子句 -->
+  <sql id="WhereClauseByEntiey">
+    <where>
+      <trim prefix="(" suffix=")" prefixOverrides="and">
+        <if test="id!=null">and id=#{id,jdbcType=VARCHAR}</if>
+        <if test="ownerType!=null">and ownerType=#{ownerType,jdbcType=VARCHAR}</if>
+        <if test="ownerId!=null">and ownerId=#{ownerId,jdbcType=VARCHAR}</if>
+        <if test="sId!=null">and sId=#{sId,jdbcType=VARCHAR}</if>
+      </trim>
+    </where>
+  </sql>
+  
+   <!-- 新增数据 -->
+  <insert id="insert" parameterType="java.util.Map">
+    insert into wt_UserSubscribe
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="ownerType!=null">ownerType,</if>
+      <if test="ownerId!=null">ownerId,</if>
+      <if test="sId!=null">sId,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="ownerType!=null">#{ownerType,jdbcType=VARCHAR},</if>
+      <if test="ownerId!=null">#{ownerId,jdbcType=VARCHAR},</if>
+      <if test="sId!=null">#{sId,jdbcType=VARCHAR},</if>
+    </trim>
+  </insert>
+  
+  <!-- 获得记录条数-->
+  <select id="getCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select count(*) from wt_UserSubscribe <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </select>
+  
+  <!-- 删除数据 -->
+  <delete id="delete" parameterType="java.util.Map">
+    delete from wt_UserSubscribe <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+    <if test="whereByClause!=null"> and ${whereByClause}</if>
+  </delete>
+</mapper>

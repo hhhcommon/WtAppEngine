@@ -34,7 +34,7 @@ public class PersonController {
     public Map<String,Object> getPersonInfo(HttpServletRequest request) {
         //数据收集处理==1
         ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
-        alPo.setApiName("4.5.1-person/getPersonInfo.do");
+        alPo.setApiName("4.6.1-person/getPersonInfo.do");
         alPo.setObjType("001");//内容对象
         alPo.setDealFlag(1);//处理成功
         alPo.setOwnerType(201);
@@ -131,8 +131,8 @@ public class PersonController {
     public Map<String,Object> getPersonContents(HttpServletRequest request) {
         //数据收集处理==1
         ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
-        alPo.setApiName("4.5.1-person/getPersonInfo.do");
-        alPo.setObjType("001");//内容对象
+        alPo.setApiName("4.6.2-person/getPersonContents.do");
+        alPo.setObjType("002");//内容对象
         alPo.setDealFlag(1);//处理成功
         alPo.setOwnerType(201);
         alPo.setOwnerId("--");

@@ -182,3 +182,15 @@ CREATE TABLE wt_SearchWord (
   PRIMARY KEY(id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='待搜索词表';
+
+/**036 五 用户专辑订阅记录表[WT_USERSUBSCRIBE]*/
+DROP TABLE IF EXISTS wt_UserSubscribe;
+CREATE TABLE wt_UserSubscribe (
+  Id          varchar(32)   NOT NULL             COMMENT '用户喜欢Id',
+  ownerType   int unsigned  NOT NULL             COMMENT '所有者类型',
+  ownerId     varchar(32)   NOT NULL             COMMENT '所有者Id',
+  sId         varchar(32)   NOT NULL             COMMENT '专辑Id',
+  cTime       timestamp  NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户专辑订阅记录表';

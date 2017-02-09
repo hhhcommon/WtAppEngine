@@ -23,7 +23,7 @@ public abstract class ContentRedisUtils {
 	 * @param mediaType
 	 * @param ContentId
 	 * @param MethodNum
-	 *            1:getContentInfo 2:discuss/add 3:clickFavorite
+	 *            1:getContentInfo 2:discuss/add 3:clickFavorite/clickSubscribe
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
