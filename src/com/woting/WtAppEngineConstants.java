@@ -9,8 +9,6 @@ public abstract class WtAppEngineConstants {
     public final static String CACHE_CHANNEL="CacheChannel";
     //版本配置信息
     public static final String APP_VERSIONCONFIG="AppVersionConfig";
-    //socket客户端连接配置
-    public static final String SOCKET_CLIENTCONF="SocketClientConfig";
     //socket客户端连接对象
     public static final String SOCKET_OBJ="SocketClientObj";
 }
