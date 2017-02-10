@@ -18,6 +18,7 @@
     <typeAlias alias="person"         type="com.woting.cm.core.person.persis.po.PersonPo"/>
     <typeAlias alias="personref"      type="com.woting.cm.core.person.persis.po.PersonRefPo"/>
     <typeAlias alias="searchword"     type="com.woting.cm.core.searchword.persis.po.SearchWordPo"/>
+    <typeAlias alias="subscribe"      type="com.woting.cm.core.subscribe.persis.po.SubscribePo"/>
     <!-- 电台相关 -->
     <typeAlias alias="broadcast"      type="com.woting.cm.core.broadcast.persis.po.BroadcastPo"/>
     <typeAlias alias="bcliveflow"     type="com.woting.cm.core.broadcast.persis.po.BCLiveFlowPo"/>
@@ -36,6 +37,7 @@
     <mapper resource="com/woting/cm/core/person/persis/sql/Person.mapper.xml"/>
     <mapper resource="com/woting/cm/core/person/persis/sql/PersonRef.mapper.xml"/>
     <mapper resource="com/woting/cm/core/searchword/persis/sql/SearchWord.mapper.xml"/>
+    <mapper resource="com/woting/cm/core/subscribe/persis/sql/Subscribe.mapper.xml"/>
     <!-- 电台相关 -->
     <mapper resource="com/woting/cm/core/broadcast/persis/sql/Broadcast.mapper.xml"/>
     <mapper resource="com/woting/cm/core/broadcast/persis/sql/BCProgramme.mapper.xml"/>

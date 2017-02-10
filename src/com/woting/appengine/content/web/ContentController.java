@@ -25,6 +25,7 @@ import com.spiritdata.framework.util.RequestUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.content.utils.ContentRedisUtils;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
+import com.woting.cm.core.subscribe.service.SubscribeService;
 import com.woting.dataanal.gather.API.ApiGatherUtils;
 import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
 import com.woting.dataanal.gather.API.persis.pojo.ApiLogPo;
@@ -41,6 +42,8 @@ public class ContentController {
     private ContentService contentService;
     @Resource
     private FavoriteService favoriteService;
+    @Resource
+    private SubscribeService subscribeService;
     @Resource(name="redisSessionService")
     private SessionService sessionService;
 
@@ -355,10 +358,9 @@ public class ContentController {
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
             
-            
             Map<String, Object> contentInfo=null;
             //检测内容是否存在redis里
-            map = ContentRedisUtils.isOrNoToLocal(mediaType, contentId);
+            map = ContentRedisUtils.isOrNoToLocal(m, 1);
             if (map!=null) {
 				int isnum = (int) map.get("IsOrNoLocal");
 				Object info = map.get("Info");
@@ -368,6 +370,7 @@ public class ContentController {
 					contentId = (String) info;
 				}
 			}
+            map.clear();
             
             if (contentInfo==null) {
 				if (mediaType.equals("SEQU")) contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page, mUdk);
@@ -383,7 +386,7 @@ public class ContentController {
 	            else if (mediaType.equals("RADIO"))  contentInfo=contentService.getBcInfo(contentId, mUdk);
 			}
             
-            map.clear();
+            
             if (contentInfo!=null&&contentInfo.size()>0) {
                 map.put("ResultInfo", contentInfo);
                 map.put("ReturnType", "1001");
@@ -496,7 +499,25 @@ public class ContentController {
             try {flag=Integer.parseInt(m.get("Flag")+"");} catch(Exception e) {};
             map.put("Flag", flag+"");
 
-            flag=favoriteService.favorite(mediaType, contentId, flag, mUdk);
+            m.put("MUDK", mUdk);
+            boolean isok = false;
+            map = ContentRedisUtils.isOrNoToLocal(m, 3);
+            if (map!=null) {
+				int isnum = (int) map.get("IsOrNoLocal");
+				Object info = map.get("Info");
+				if (isnum == 0) { //未入库
+					isok = false;
+				} else if (isnum == 1) { //已入库
+					contentId = (String) info;
+					isok = true;
+				} else if (isnum == 2) { //redis不存在内容
+					isok = true;
+				}
+			}
+            map.clear();
+            if (isok) {
+				flag=favoriteService.favorite(mediaType, contentId, flag, mUdk);
+			}
             
             if (flag==1) {
                 map.put("ReturnType", "1001");
@@ -978,6 +999,238 @@ public class ContentController {
             } else {
                 map.put("ReturnType", "1011");
                 map.put("Message", "暂无节目单");
+            }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
+            return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
+        }
+    }
+    
+    @RequestMapping(value="clickSubscribe.do")
+    @ResponseBody
+    public Map<String,Object> clickSubscribe(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("4.5.1-content/clickFavorite");
+        alPo.setObjType("SUB001");//用户订阅对象
+        alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
+
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
+            MobileUDKey mUdk=null;
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
+                }
+                mUdk=mp.getUserDeviceKey();
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "content/");
+                    if ((retM.get("ReturnType")+"").equals("2003")) {
+                        map.put("ReturnType", "200");
+                        map.put("Message", "需要登录");
+                    } else {
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
+                    }
+                } else {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
+                }
+            }
+            //数据收集处理==2
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
+            }
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //1-得到用户Id
+            String ownerId=(m.get("UserId")==null?null:m.get("UserId")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(ownerId)) {
+                map.put("ReturnType", "1002");
+                map.put("Message", "无法获得用户Id");
+                return map;
+            }
+            //2-得到系列内容的Id
+            String contentId=(m.get("ContentId")==null?null:m.get("ContentId")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(contentId)) {
+                map.put("ReturnType", "1003");
+                map.put("Message", "无法获得内容Id");
+                return map;
+            }
+            //3-得到订阅状态：=1订阅；=0取消订阅
+            int flag=1;
+            try {flag=Integer.parseInt(m.get("Flag")+"");} catch(Exception e) {};
+            map.put("Flag", flag+"");
+
+            m.put("MUDK", mUdk);
+            m.put("MediaType","SEQU");
+            boolean isok = false;
+            map = ContentRedisUtils.isOrNoToLocal(m, 3);
+            if (map!=null) {
+				int isnum = (int) map.get("IsOrNoLocal");
+				Object info = map.get("Info");
+				if (isnum == 0) { //未入库
+					isok = false;
+				} else if (isnum == 1) { //已入库
+					contentId = (String) info;
+					isok = true;
+				} else if (isnum == 2) {
+					isok = true;
+				}
+			}
+            map = new HashMap<>();
+            if (isok) {
+				flag=subscribeService.Subscribe(contentId, flag, mUdk);
+			}
+            
+            if (flag==1) {
+                map.put("ReturnType", "1001");
+                map.put("FavoriteCount", flag+"");
+            } else if (flag==0) {//在订阅时
+                map.put("ReturnType", "1003");
+                map.put("Message", "所指定的专辑不存在");
+            } else if (flag==2) {//在订阅时
+                map.put("ReturnType", "1004");
+                map.put("Message", "已经喜欢了此内容");
+            } else if (flag==-1) {//在取消订阅时
+                map.put("ReturnType", "1006");
+                map.put("Message", "还未订阅此内容");
+            }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
+            return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
+        }
+    }
+    
+    @RequestMapping(value="getSubscribeList.do")
+    @ResponseBody
+    public Map<String,Object> getSubscribeList(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("4.5.2-content/getFavoriteList");
+        alPo.setObjType("SUB002");//用户订阅对象
+        alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
+
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
+            MobileUDKey mUdk=null;
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
+                }
+                mUdk=mp.getUserDeviceKey();
+                map.putAll(mUdk.toHashMapAsBean());
+            }
+            //数据收集处理==2
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
+            }
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //1-得到每页记录数，默认每页10条记录
+            int pageSize=10;
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+            //2-得到当前页数
+            int page=1;
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            //3-得到每分类条目数
+            int sortType=1;
+            try {sortType=Integer.parseInt(m.get("SortType")+"");} catch(Exception e) {}
+
+            List<Map<String, Object>> result=subscribeService.getSubscribeList(pageSize, page, sortType, mUdk);
+            
+            if (result!=null&&result.size()>0) {
+            	map.put("ReturnType", "1001");
+                map.put("ResultList", result);
+            } else {
+                map.put("ReturnType", "1011");
+                map.put("Message", "无数据");
             }
             return map;
         } catch(Exception e) {
