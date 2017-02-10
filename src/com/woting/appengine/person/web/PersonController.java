@@ -28,7 +28,7 @@ import com.woting.passport.session.DeviceType;
 public class PersonController {
 	@Resource
 	private PersonProService personProService;
-	
+
 	@RequestMapping(value="getPersonInfo.do")
     @ResponseBody
     public Map<String,Object> getPersonInfo(HttpServletRequest request) {

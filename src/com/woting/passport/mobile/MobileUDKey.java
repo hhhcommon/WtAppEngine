@@ -71,7 +71,7 @@ public class MobileUDKey extends UserDeviceKey implements Serializable {
         MsgNormal _m=(MsgNormal)msg;
         ret.setUserId(_m.getUserId());
         ret.setPCDType(_m.getPCDType());
-        ret.setDeviceId(_m.getIMEI());
+        ret.setDeviceId(_m.getDeviceId());
         return ret;
     }
 
