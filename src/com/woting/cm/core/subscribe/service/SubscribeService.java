@@ -14,7 +14,6 @@ import javax.annotation.Resource;
 import javax.sql.DataSource;
 
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
-import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.cm.core.subscribe.persis.po.SubscribePo;
@@ -134,9 +133,10 @@ public class SubscribeService {
 			else if (sortType == 2) sql += " res.pubTime  ASC";
 			else if (sortType == 3) sql += " res.cTime DESC";
 			else if (sortType == 4) sql += " res.cTime ASC"; 
-			else if (sortType>4) {
-				sql += " res.pubTime  DESC, res.cTime DESC";
-			}
+			else if (sortType == 5) sql += " res.pubTime  DESC, res.cTime DESC";
+			else if (sortType == 6) sql += " res.pubTime  ASC, res.cTime ASC";
+			
+			sql += " limit "+(page-1)*pageSize+","+pageSize;
 			conn = DataSource.getConnection();
 			ps = conn.prepareStatement(sql);
 			rs = ps.executeQuery();
@@ -167,6 +167,7 @@ public class SubscribeService {
 						+ " GROUP BY sub.id";
 				if (sortType==5) sql += " ORDER BY num desc"; 
 				else if (sortType==6) sql += " ORDER BY num asc";
+				sql += " limit "+(page-1)*pageSize+","+pageSize;
 				ps = conn.prepareStatement(sql);
 				rs = ps.executeQuery();
 				if (sortType>=1 && sortType <=4) {
