@@ -19,6 +19,7 @@ import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.cm.core.subscribe.persis.po.SubscribePo;
 import com.woting.passport.mobile.MobileUDKey;
 
+
 public class SubscribeService {
 	@Resource(name = "dataSource")
 	private DataSource DataSource;
@@ -148,6 +149,7 @@ public class SubscribeService {
 				m1.put("ContentMediaName", rs.getString("maTitle"));
 				m1.put("ContentMediaId", rs.getString("maId"));
 				m1.put("ContentSeqImg", rs.getString("smaImg"));
+				m1.put("ContentPubTime", rs.getString("cTime"));
 				m1.put("UpdateCount", 0);
 				smaids += " or reqParam LIKE '%"+rs.getString("id")+"%'";
 				ls.add(m1);
@@ -205,7 +207,6 @@ public class SubscribeService {
 				}
 				if (rs!=null) try {rs.close();rs=null;} catch(Exception e) {rs=null;} finally {rs=null;};
 	            if (ps!=null) try {ps.close();ps=null;} catch(Exception e) {ps=null;} finally {ps=null;};
-	            
 			}
             
 		} catch (Exception e) {
@@ -215,7 +216,6 @@ public class SubscribeService {
             if (ps!=null) try {ps.close();ps=null;} catch(Exception e) {ps=null;} finally {ps=null;};
             if (conn!=null) try {conn.close();conn=null;} catch(Exception e) {conn=null;} finally {conn=null;};
 		}
-		
 		return retLs;
 	}
 }

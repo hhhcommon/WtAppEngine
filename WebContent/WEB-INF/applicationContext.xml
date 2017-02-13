@@ -113,9 +113,9 @@
 
   <!-- 以下为jsonConf配置信息 -->
   <!--Uga缓存：平台 -->
-  <bean id="loadJsonConfig" class="com.woting.appengine.LoadJsonConfig" scope="prototype" init-method="loadConfig">
-    <property name="configFilePath" value="app.conf"/>
-  </bean>
+<!--   <bean id="loadJsonConfig" class="com.woting.appengine.LoadJsonConfig" scope="prototype" init-method="loadConfig"> -->
+<!--     <property name="configFilePath" value="app.conf"/> -->
+<!--   </bean> -->
 
   <context:annotation-config/>
   

@@ -167,7 +167,8 @@ public abstract class ContentUtils {
         retM.put("ContentShareURL", getShareUrl_ZJ(preAddr, one.get("id")+""));//分享地址
         retM.put("ContentDescn", one.get("descn"));//P11-公共：说明
         retM.put("ContentStatus", one.get("smaStatus"));
-
+        retM.put("ContentSubscribe", one.get("subscribe"));
+        
         fillExtInfo(retM, "SEQU", personList, cataList, pubChannelList, favoriteList, playingList);//填充扩展信息
 
         retM.put("ContentSubCount", one.get("count"));//S01-特有：下级节目的个数
