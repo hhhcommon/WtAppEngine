@@ -341,7 +341,12 @@
   </select>
   <select id="getSmSubMedias" parameterType="java.lang.String" resultType="java.util.HashMap">
     select a.* from wt_MediaAsset a, wt_SeqMA_Ref b where a.id=b.mId and b.sId=#{value,jdbcType=VARCHAR}
-    order by b.columnNum desc
+    order by b.columnNum desc, a.cTime desc
+  </select>
+  <select id="getSmSubMediaList" parameterType="java.util.Map" resultType="java.util.HashMap">
+    select a.* from wt_MediaAsset a, wt_SeqMA_Ref b where a.id=b.mId and b.sId=#{sId,jdbcType=VARCHAR}
+    <if test="orderByClause!=null"> ${orderByClause}</if>
+    <if test="limitByClause!=null"> limit ${limitByClause}</if>
   </select>
   <select id="getCataListByTypeAndIds" resultType="java.util.HashMap" parameterType="java.util.Map">
     select * from wt_ResDict_Ref a where a.resTableName=#{resTableName,jdbcType=VARCHAR} and (${ids})

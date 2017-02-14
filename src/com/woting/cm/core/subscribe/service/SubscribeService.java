@@ -14,11 +14,11 @@ import javax.annotation.Resource;
 import javax.sql.DataSource;
 
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
-import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.cm.core.subscribe.persis.po.SubscribePo;
 import com.woting.passport.mobile.MobileUDKey;
+
 
 public class SubscribeService {
 	@Resource(name = "dataSource")
@@ -134,9 +134,10 @@ public class SubscribeService {
 			else if (sortType == 2) sql += " res.pubTime  ASC";
 			else if (sortType == 3) sql += " res.cTime DESC";
 			else if (sortType == 4) sql += " res.cTime ASC"; 
-			else if (sortType>4) {
-				sql += " res.pubTime  DESC, res.cTime DESC";
-			}
+			else if (sortType == 5) sql += " res.pubTime  DESC, res.cTime DESC";
+			else if (sortType == 6) sql += " res.pubTime  ASC, res.cTime ASC";
+			
+			sql += " limit "+(page-1)*pageSize+","+pageSize;
 			conn = DataSource.getConnection();
 			ps = conn.prepareStatement(sql);
 			rs = ps.executeQuery();
@@ -148,6 +149,7 @@ public class SubscribeService {
 				m1.put("ContentMediaName", rs.getString("maTitle"));
 				m1.put("ContentMediaId", rs.getString("maId"));
 				m1.put("ContentSeqImg", rs.getString("smaImg"));
+				m1.put("ContentPubTime", rs.getString("cTime"));
 				m1.put("UpdateCount", 0);
 				smaids += " or reqParam LIKE '%"+rs.getString("id")+"%'";
 				ls.add(m1);
@@ -167,6 +169,7 @@ public class SubscribeService {
 						+ " GROUP BY sub.id";
 				if (sortType==5) sql += " ORDER BY num desc"; 
 				else if (sortType==6) sql += " ORDER BY num asc";
+				sql += " limit "+(page-1)*pageSize+","+pageSize;
 				ps = conn.prepareStatement(sql);
 				rs = ps.executeQuery();
 				if (sortType>=1 && sortType <=4) {
@@ -204,7 +207,6 @@ public class SubscribeService {
 				}
 				if (rs!=null) try {rs.close();rs=null;} catch(Exception e) {rs=null;} finally {rs=null;};
 	            if (ps!=null) try {ps.close();ps=null;} catch(Exception e) {ps=null;} finally {ps=null;};
-	            
 			}
             
 		} catch (Exception e) {
@@ -214,7 +216,6 @@ public class SubscribeService {
             if (ps!=null) try {ps.close();ps=null;} catch(Exception e) {ps=null;} finally {ps=null;};
             if (conn!=null) try {conn.close();conn=null;} catch(Exception e) {conn=null;} finally {conn=null;};
 		}
-		
 		return retLs;
 	}
 }
