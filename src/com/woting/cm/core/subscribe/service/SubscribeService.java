@@ -149,7 +149,7 @@ public class SubscribeService {
 				m1.put("ContentMediaName", rs.getString("maTitle"));
 				m1.put("ContentMediaId", rs.getString("maId"));
 				m1.put("ContentSeqImg", rs.getString("smaImg"));
-				m1.put("ContentPubTime", rs.getString("cTime"));
+				m1.put("ContentPubTime", rs.getTimestamp("cTime").getTime());
 				m1.put("UpdateCount", 0);
 				smaids += " or reqParam LIKE '%"+rs.getString("id")+"%'";
 				ls.add(m1);
