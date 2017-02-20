@@ -158,7 +158,18 @@ public class SocketClient {
      * @param msg 消息内容
      */
     private void setReceiver(Message msg) {
-        //TODO 
+        if (msg instanceof MsgNormal) {
+            MsgNormal mn=(MsgNormal)msg;
+            if (mn.getBizType()==15&&mn.isAck()&&mn.getReturnType()==0) {
+                try {
+                    this.workStop();
+                    logger.debug("已有相同Id的服务器登录，关闭此服务器与消息中心的连接");
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     //以下子进程=====================================================================================
@@ -496,11 +507,11 @@ public class SocketClient {
                             Message ms=null;
                             try {
                                 ms=MessageUtils.buildMsgByBytes(mba);
+                                logger.debug("收到:"+JsonUtils.objToJson(ms));
                                 setReceiver(ms);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                            logger.debug("收到:"+JsonUtils.objToJson(ms));
                         } catch(Exception e) {
                             e.printStackTrace();
                         }
