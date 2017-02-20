@@ -85,12 +85,13 @@ public class GroupService {
                 nMsg.setCmdType(2);
                 nMsg.setCommand(10);//组创建通知
                 Map<String, Object> dataMap=new HashMap<String, Object>();
-                dataMap.putAll(group.toHashMap());
+                dataMap.put("GroupInfo", group.toHashMap());
                 MapContent mc=new MapContent(dataMap);
                 nMsg.setMsgContent(mc);
 
                 dataMap.put("_TOGROUPS", group.getGroupId());
                 dataMap.put("_NOUSERS", group.getCreateUserId());
+                dataMap.put("_AFFIRMTYPE", "3");
                 sc.addSendMsg(nMsg);
             }
             i=1;
@@ -156,6 +157,7 @@ public class GroupService {
 
                     dataMap1.put("_TOGROUPS", g.getGroupId());
                     dataMap1.put("_NOUSERS", u.getUserId());
+                    dataMap.put("_AFFIRMTYPE", "3");
                     sc.addSendMsg(nMsg);
                 }
             }
@@ -368,22 +370,23 @@ public class GroupService {
             nMsg.setCmdType(2);
             nMsg.setCommand(9);
             Map<String, Object> dataMap=new HashMap<String, Object>();
-            Map<String, Object> gMap=new HashMap<String, Object>();
-            gMap.put("GroupId", g.getGroupId());
-            gMap.put("GroupNum", g.getGroupNum());
-            gMap.put("GroupType", g.getGroupType());
-            if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupSignature())) gMap.put("GroupSignature", g.getGroupSignature());
-            if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupImg())) gMap.put("GroupImg", g.getGroupImg());
-            gMap.put("GroupName", g.getGroupName());
-            if (!StringUtils.isNullOrEmptyOrSpace(g.getCreateUserId())) gMap.put("GroupCreator", g.getCreateUserId());
-            if (!StringUtils.isNullOrEmptyOrSpace((String)g.getAdminUserIds())) gMap.put("GroupManager", g.getAdminUserIds());
-            gMap.put("GroupCount", g.getGroupCount());
-            if (!StringUtils.isNullOrEmptyOrSpace((String)g.getDescn())) gMap.put("GroupOriDescn", g.getDescn());
-            dataMap.put("GroupInfo", gMap);
+//            Map<String, Object> gMap=new HashMap<String, Object>();
+//            gMap.put("GroupId", g.getGroupId());
+//            gMap.put("GroupNum", g.getGroupNum());
+//            gMap.put("GroupType", g.getGroupType());
+//            if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupSignature())) gMap.put("GroupSignature", g.getGroupSignature());
+//            if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupImg())) gMap.put("GroupImg", g.getGroupImg());
+//            gMap.put("GroupName", g.getGroupName());
+//            if (!StringUtils.isNullOrEmptyOrSpace(g.getCreateUserId())) gMap.put("GroupCreator", g.getCreateUserId());
+//            if (!StringUtils.isNullOrEmptyOrSpace((String)g.getAdminUserIds())) gMap.put("GroupManager", g.getAdminUserIds());
+//            gMap.put("GroupCount", g.getGroupCount());
+//            if (!StringUtils.isNullOrEmptyOrSpace((String)g.getDescn())) gMap.put("GroupOriDescn", g.getDescn());
+            dataMap.put("GroupInfo", g.toHashMapAsBean());
             MapContent mc=new MapContent(dataMap);
             nMsg.setMsgContent(mc);
 
             dataMap.put("_TOGROUPS", g.getGroupId());
+            dataMap.put("_AFFIRMTYPE", "0");//不需要任何回复
             sc.addSendMsg(nMsg);
         }
     }
@@ -484,6 +487,7 @@ public class GroupService {
                 nMsg.setMsgContent(mc1);
 
                 dataMap1.put("_TOGROUPS", gp.getGroupId());
+                dataMap.put("_AFFIRMTYPE", "3");
                 sc.addSendMsg(nMsg);
             }
             if (r==3) {//更改用户
@@ -520,6 +524,7 @@ public class GroupService {
 
                 dataMap1.put("_TOGROUPS", gp.getGroupId());
                 dataMap1.put("_NOUSERS", u.getUserId());
+                dataMap.put("_AFFIRMTYPE", "0");//不需要任何回复
                 sc.addSendMsg(nMsg);
             }
             if (r==2) {//删除用户组
@@ -558,11 +563,12 @@ public class GroupService {
                     nMsg.setCommand(6);//删除组，或解散组
                     Map<String, Object> dataMap1=new HashMap<String, Object>();
                     dataMap1.put("GroupId", gp.getGroupId());
-                    dataMap1.put("Del", "2");//=2因为退组而删除组;=1直接删除组
+                    dataMap1.put("DelReason", "2");//=2因为退组而删除组;=1直接删除组
                     MapContent mc1=new MapContent(dataMap1);
                     nMsg.setMsgContent(mc1);
 
                     dataMap1.put("_TOUSERS", toUser.substring(1));
+                    dataMap.put("_AFFIRMTYPE", "3");
                     sc.addSendMsg(nMsg);
                 }
             }
@@ -683,6 +689,7 @@ public class GroupService {
                             nMsg.setMsgContent(mc);
 
                             dataMap.put("_TOUSERS", _beInvitedUserId);
+                            dataMap.put("_AFFIRMTYPE", "3");
                             sc.addSendMsg(nMsg);
                         }
                     }
@@ -786,6 +793,7 @@ public class GroupService {
                 nMsg.setMsgContent(mc);
 
                 dataMap.put("_TOUSERS", adminId);
+                dataMap.put("_AFFIRMTYPE", "3");
                 sc.addSendMsg(nMsg);
             }
         }
@@ -967,6 +975,7 @@ public class GroupService {
                 } else if (type==2) {
                     dataMap.put("_TOUSERS", userId);
                 }
+                dataMap.put("_AFFIRMTYPE", "3");
                 sc.addSendMsg(nMsg);
             }
         }
@@ -1067,6 +1076,7 @@ public class GroupService {
                 nMsg.setMsgContent(mc);
 
                 dataMap.put("_TOUSERS", inviteUserId);
+                dataMap.put("_AFFIRMTYPE", "0");//不需要任何回复
                 sc.addSendMsg(nMsg);
             }
         }
@@ -1165,6 +1175,7 @@ public class GroupService {
             MapContent mc=new MapContent(dataMap);
             nMsg.setMsgContent(mc);
             dataMap.put("_TOGROUPS", gp.getGroupId());
+            dataMap.put("_AFFIRMTYPE", "3");
             sc.addSendMsg(nMsg);
 
             //同步消息：删除组用户
@@ -1224,10 +1235,11 @@ public class GroupService {
                 nMsg.setCommand(6);//删除组，或解散组
                 Map<String, Object> dataMap1=new HashMap<String, Object>();
                 dataMap1.put("GroupId", gp.getGroupId());
-                dataMap1.put("Del", "2");//=2因为退组而删除组;=1直接删除组
+                dataMap1.put("DelReason", "2");//=2因为退组而删除组;=1直接删除组
                 MapContent mc1=new MapContent(dataMap1);
                 nMsg.setMsgContent(mc1);
                 dataMap1.put("_TOUSERS", toUser.substring(1));
+                dataMap.put("_AFFIRMTYPE", "3");
                 sc.addSendMsg(nMsg);
             }
         }
@@ -1268,13 +1280,14 @@ public class GroupService {
             nMsg.setCommand(6);//删除组，或解散组
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("GroupId", gp.getGroupId());
-            dataMap.put("Del", "1");//==1直接删除组;2因为退组而删除组
+            dataMap.put("DelReason", "1");//==1直接删除组;2因为退组而删除组
             MapContent mc=new MapContent(dataMap);
             nMsg.setMsgContent(mc);
             dataMap.put("_TOGROUPS", gp.getGroupId());
+            dataMap.put("_AFFIRMTYPE", "3");
             sc.addSendMsg(nMsg);
 
-            //同步消息：加入组内成员
+            //同步消息：删除组内成员
             MsgNormal sMsg=new MsgNormal();
             sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
             sMsg.setFromType(1);
@@ -1337,11 +1350,11 @@ public class GroupService {
                 nMsg.setCmdType(2);
                 nMsg.setCommand(7);
                 Map<String, Object> dataMap=new HashMap<String, Object>();
-                Map<String, Object> gMap=new HashMap<String, Object>();
-                gMap.put("GroupId", gp.getGroupId());
-                gMap.put("GroupName", gp.getGroupName());
-                gMap.put("GroupDescn", gp.getDescn());
-                dataMap.put("GroupInfo", gMap);
+//                Map<String, Object> gMap=new HashMap<String, Object>();
+//                gMap.put("GroupId", gp.getGroupId());
+//                gMap.put("GroupName", gp.getGroupName());
+//                gMap.put("GroupDescn", gp.getDescn());
+                dataMap.put("GroupId", gp.getGroupId());
                 UserPo u=userDao.getInfoObject("getUserById", toUserId);
                 Map<String, Object> um=u.toHashMap4Mobile();
                 um.remove("PhoneNum");
@@ -1350,6 +1363,7 @@ public class GroupService {
                 MapContent mc=new MapContent(dataMap);
                 nMsg.setMsgContent(mc);
                 dataMap.put("_TOGROUPS", gp.getGroupId());
+                dataMap.put("_AFFIRMTYPE", "0");//不需要任何回复
                 sc.addSendMsg(nMsg);
             }
         }

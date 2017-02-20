@@ -189,6 +189,7 @@ public class FriendService {
                 nMsg.setMsgContent(mc);
 
                 dataMap.put("_TOUSERS", beInvitedUserId);
+                dataMap.put("_AFFIRMTYPE", "3");
                 sc.addSendMsg(nMsg);
             }
 
@@ -290,6 +291,7 @@ public class FriendService {
                     nMsg.setMsgContent(mc);
 
                     dataMap.put("_TOUSERS", inviteUserId);
+                    dataMap.put("_AFFIRMTYPE", "3");
                     sc.addSendMsg(nMsg);
                 }
 
@@ -348,6 +350,7 @@ public class FriendService {
                 nMsg.setMsgContent(mc);
 
                 dataMap.put("_TOUSERS", friendUserId);
+                dataMap.put("_AFFIRMTYPE", "3");
                 sc.addSendMsg(nMsg);
             }
         }
