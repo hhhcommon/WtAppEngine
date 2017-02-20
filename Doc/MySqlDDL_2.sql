@@ -194,3 +194,19 @@ CREATE TABLE wt_UserSubscribe (
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户专辑订阅记录表';
+
+/** 内容发布进程表[WT_CHANNELASSETPROGRESS]*/
+DROP TABLE IF EXISTS wt_ChannelAssetProgress;
+CREATE TABLE wt_ChannelAssetProgress (
+  id             varchar(32)      NOT NULL             COMMENT 'UUID',
+  chaId          varchar(32)      NOT NULL             COMMENT '栏目发布表Id',
+  checkerId      varchar(32)                           COMMENT '审核者Id，可以为空，若为1，则审核者为系统',
+  applyFlowFlag  int(1) unsigned  NOT NULL  DEFAULT 1  COMMENT '流程状态：1待审核；2待撤回',
+  reFlowFlag     int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '流程状态：0待处理；1通过；2未通过',
+  applyDescn     varchar(500)                          COMMENT '请求意见',
+  reDescn        varchar(500)                          COMMENT '返回意见',
+  cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  modifyTime     timestamp                             COMMENT '操作时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='内容发布进程表';

@@ -61,8 +61,8 @@ public class DictService {
         try {
             //字典组列表
             Map<String, Object> param=new HashMap<String, Object>();
-//            param.put("ownerType", "100");
-//            param.put("sortByClause", "id");
+            param.put("ownerType", "100");
+            param.put("sortByClause", "id");
             List<DictMasterPo> dmpol=dictMDao.queryForList(param);
             if (dmpol==null||dmpol.size()==0) return null;
             List<DictMaster> dml=new ArrayList<DictMaster>();
