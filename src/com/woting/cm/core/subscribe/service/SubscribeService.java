@@ -163,7 +163,7 @@ public class SubscribeService {
 				sql = "SELECT sub.id,COUNT(*) num FROM"
 						+ " (SELECT ld.*,smaf.mId,smaf.cTime,cha.pubTime FROM (SELECT res.* FROM (SELECT (CASE locate('ContentId', lda.reqParam) WHEN 0 THEN '' ELSE SUBSTR(lda.reqParam, locate('ContentId', lda.reqParam)+12,32) END) id,"
 						+ " lda.apiName,lda.ownerId,lda.beginTime FROM ld_API lda where lda.apiName = '4.2.2-content/getContentInfo' and reqParam LIKE '%SEQU%' AND( "
-						+ smaids+" ) and lda.ownerId = '123' ORDER BY lda.beginTime DESC) res GROUP BY res.id) ld, wt_SeqMA_Ref smaf  LEFT JOIN wt_ChannelAsset cha ON cha.assetType = 'wt_MediaAsset' and cha.flowFlag = 2 and smaf.mId = cha.assetId"
+						+ smaids+" ) and lda.ownerId = '"+mUdk.getUserId()+"' ORDER BY lda.beginTime DESC) res GROUP BY res.id) ld, wt_SeqMA_Ref smaf  LEFT JOIN wt_ChannelAsset cha ON cha.assetType = 'wt_MediaAsset' and cha.flowFlag = 2 and smaf.mId = cha.assetId"
 						+ " where ld.id = smaf.sid and ld.beginTime < smaf.cTime"
 						+ " GROUP BY smaf.mId) sub"
 						+ " GROUP BY sub.id";
