@@ -582,6 +582,8 @@ public class CommonController {
                 m.put("CatalogType", catalogType);
                 m.put("CatalogId", _t.getId());
                 m.put("CatalogName", _t.getNodeName());
+                if (_t.getAttributes().get("aliasName")!=null) m.put("CatalogAliasName", _t.getAttributes().get("aliasName"));
+                if (_t.getAttributes().get("bCode")!=null) m.put("CatalogBCode", _t.getAttributes().get("bCode"));
                 ret.add(m);
                 List<Map<String, Object>> _r=getDeepList(_t, catalogType);
                 if (_r!=null) ret.addAll(_r);
@@ -599,6 +601,8 @@ public class CommonController {
                     m.put("CatalogType", catalogType);
                     m.put("CatalogId", _t.getId());
                     m.put("CatalogName", _t.getNodeName());
+                    if (_t.getAttributes().get("aliasName")!=null) m.put("CatalogAliasName", _t.getAttributes().get("aliasName"));
+                    if (_t.getAttributes().get("bCode")!=null) m.put("CatalogBCode", _t.getAttributes().get("bCode"));
                     ret.add(m);
                 } else {
                     List<Map<String, Object>> _r=getLevelNodeList(_t, level-1, catalogType);
