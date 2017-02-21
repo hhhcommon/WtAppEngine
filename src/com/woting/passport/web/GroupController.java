@@ -170,7 +170,6 @@ public class GroupController {
                 }
                 memNames=memNames.substring(1);
             }
-
             //判断是否突破限制
             int c=groupService.getCreateGroupCount(userId);
             if (c>50) {
@@ -183,6 +182,16 @@ public class GroupController {
                 map.put("ReturnType", "1009");
                 map.put("Message", "20分钟内创建组不能超过5个");
                 return map;
+            }
+            //判断频率是否
+            String groupFreq=(m.get("GroupFreq")==null?null:m.get("GroupFreq")+"");
+            if (!StringUtils.isNullOrEmptyOrSpace(groupFreq)) {
+                //检查模拟对讲频率是否合法
+                if (!checkFreqArr(groupFreq)) {
+                    map.put("ReturnType", "1010");
+                    map.put("Message", "模拟频率信息不合法");
+                    return map;
+                }
             }
             //获得随机数，作为组号
             int newGroupNum=getNewGroupNumber();
@@ -220,6 +229,7 @@ public class GroupController {
             g.setUserList(ml);
             if (!StringUtils.isNullOrEmptyOrSpace(groupDescn)) g.setDescn(groupDescn);
             if (!StringUtils.isNullOrEmptyOrSpace(groupSignature)) g.setGroupSignature(groupSignature);
+            if (!StringUtils.isNullOrEmptyOrSpace(groupFreq)) g.setDefaultFreq(groupFreq);
 
             groupService.insertGroup(g);
             //组织返回值
@@ -227,14 +237,15 @@ public class GroupController {
             Map<String, String> groupMap=new HashMap<String, String>();
             groupMap.put("GroupId", g.getGroupId());
             groupMap.put("GroupNum", g.getGroupNum());
+            if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupSignature())) groupMap.put("GroupSignature", g.getGroupSignature());
             groupMap.put("GroupType", g.getGroupType()+"");
             groupMap.put("GroupName", g.getGroupName());
+            if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupImg())) groupMap.put("GroupImg", g.getGroupImg());
             if (!StringUtils.isNullOrEmptyOrSpace(g.getCreateUserId())) groupMap.put("GroupCreator", g.getCreateUserId());
             if (!StringUtils.isNullOrEmptyOrSpace(g.getAdminUserIds())) groupMap.put("GroupManager", g.getAdminUserIds());
-            groupMap.put("GroupCount", ml.size()+"");
+            if (!StringUtils.isNullOrEmptyOrSpace(g.getDefaultFreq())) groupMap.put("GroupFreq", g.getDefaultFreq());
             if (!StringUtils.isNullOrEmptyOrSpace(g.getDescn())) groupMap.put("GroupDescn", g.getDescn());
-            if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupSignature())) groupMap.put("GroupSignature", g.getGroupSignature());
-            if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupImg())) groupMap.put("GroupImg", g.getGroupImg());
+            groupMap.put("GroupCount", ml.size()+"");
             groupMap.put("CreateTime", System.currentTimeMillis()+"");
             map.put("GroupInfo", groupMap);
             return map;
@@ -337,10 +348,10 @@ public class GroupController {
                     gm=new HashMap<String, Object>();
                     gm.put("GroupId", g.get("id"));
                     gm.put("GroupNum", g.get("groupNum"));
-                    gm.put("GroupType", g.get("groupType"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupSignature"))) gm.put("GroupSignature", g.get("groupSignature"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupImg"))) gm.put("GroupImg", g.get("groupImg"));
+                    gm.put("GroupType", g.get("groupType"));
                     gm.put("GroupName", g.get("groupName"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupImg"))) gm.put("GroupImg", g.get("groupImg"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
                     gm.put("GroupCount", g.get("groupCount"));
@@ -1613,12 +1624,13 @@ public class GroupController {
             gm.put("GroupNum", gp.getGroupNum());
             if (!StringUtils.isNullOrEmptyOrSpace(gp.getGroupSignature())) gm.put("GroupSignature", gp.getGroupSignature());
             gm.put("GroupType", gp.getGroupType()+"");
-            if (!StringUtils.isNullOrEmptyOrSpace(gp.getGroupImg())) gm.put("GroupImg", gp.getGroupImg());
             gm.put("GroupName", gp.getGroupName());
+            if (!StringUtils.isNullOrEmptyOrSpace(gp.getGroupImg())) gm.put("GroupImg", gp.getGroupImg());
             if (!StringUtils.isNullOrEmptyOrSpace(gp.getCreateUserId())) gm.put("GroupCreator", gp.getCreateUserId());
             if (!StringUtils.isNullOrEmptyOrSpace(gp.getAdminUserIds())) gm.put("GroupManager", gp.getAdminUserIds());
-            gm.put("CreateTime", gp.getCTime().getTime()+"");
+            if (!StringUtils.isNullOrEmptyOrSpace(gp.getDefaultFreq())) gm.put("GroupFreq", gp.getDefaultFreq());
             if (!StringUtils.isNullOrEmptyOrSpace(gp.getDescn())) gm.put("GroupDescn", gp.getDescn());
+            gm.put("CreateTime", gp.getCTime().getTime()+"");
 
             //组成员
             List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
@@ -2356,7 +2368,8 @@ public class GroupController {
             String groupName=(m.get("GroupName")==null?null:m.get("GroupName")+"");
             String groupDescn=(m.get("Descn")==null?null:m.get("Descn")+"");
             String groupSignature=(m.get("GroupSignature")==null?null:m.get("GroupSignature")+"");
-            if (StringUtils.isNullOrEmptyOrSpace(groupName)&&StringUtils.isNullOrEmptyOrSpace(groupDescn)&&StringUtils.isNullOrEmptyOrSpace(groupSignature)) {
+            String groupFreq=(m.get("GroupFreq")==null?null:m.get("GroupFreq")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(groupName)&&StringUtils.isNullOrEmptyOrSpace(groupDescn)&&StringUtils.isNullOrEmptyOrSpace(groupSignature)&&StringUtils.isNullOrEmptyOrSpace(groupFreq)) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "无法获得修改所需的新信息");
                 return map;
@@ -2366,6 +2379,15 @@ public class GroupController {
             if (!StringUtils.isNullOrEmptyOrSpace(groupName)) param.put("groupName", groupName);
             if (!StringUtils.isNullOrEmptyOrSpace(groupDescn)) param.put("groupDescn", groupDescn);
             if (!StringUtils.isNullOrEmptyOrSpace(groupSignature)&&isManager==1) param.put("groupSignature", groupSignature);//只有管理员才能修改用户组的签名
+            if (!StringUtils.isNullOrEmptyOrSpace(groupFreq)) {
+                //检查模拟对讲频率是否合法
+                if (checkFreqArr(groupFreq)) param.put("groupFreq", groupFreq);//只有管理员才能修改用户组的签名
+                else {
+                    map.put("ReturnType", "1005");
+                    map.put("Message", "模拟频率信息不合法");
+                    return map;
+                }
+            }
             groupService.updateGroup(param, userId, gp);
             map.put("ReturnType", "1001");
             return map;
@@ -2953,5 +2975,38 @@ public class GroupController {
      */
     private int getNewGroupNumber() {
         return SpiritRandom.getRandom(new Random(), 0, 999999);
+    }
+
+    private boolean checkFreqArr(String freqs) {
+        if (StringUtils.isNullOrEmptyOrSpace(freqs)) return true;
+        String s[]=freqs.split(",");
+        if (s.length==0) return true;
+
+        for (String o: s) {
+            String ss[]=o.split("-");
+            if (ss.length==0) {
+                if (o.indexOf(".")==-1) return false;
+                try {
+                   Float.parseFloat(o);
+                } catch(Exception e) {
+                    return false;
+                }
+            } else if (ss.length==2){
+                if (ss[0].indexOf(".")==-1||ss[1].indexOf(".")==-1) return false;
+                Float f1, f2;
+                try {
+                    f1=Float.parseFloat(ss[0]);
+                } catch(Exception e) {
+                    return false;
+                }
+                try {
+                    f2=Float.parseFloat(ss[1]);
+                } catch(Exception e) {
+                    return false;
+                }
+                if (f1>=f2) return false;
+            } else return false;
+        }
+        return true;
     }
 }

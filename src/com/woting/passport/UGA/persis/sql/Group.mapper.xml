@@ -15,7 +15,8 @@
     <result  column="pId"             property="PId"             jdbcType="VARCHAR"/>
     <result  column="sort"            property="sort"            jdbcType="INTEGER"/>
     <result  column="createUserId"    property="createUserId"    jdbcType="VARCHAR"/>
-    <result  column="adminUserIds"    property="adminUserIds"    jdbcType="INTEGER"/>
+    <result  column="adminUserIds"    property="adminUserIds"    jdbcType="VARCHAR"/>
+    <result  column="defaultFreq"     property="defaultFreq"     jdbcType="VARCHAR"/>
     <result  column="descn"           property="descn"           jdbcType="VARCHAR"/>
     <result  column="cTime"           property="CTime"           jdbcType="TIMESTAMP"/>
     <result  column="lmTime"          property="lmTime"          jdbcType="TIMESTAMP"/>
@@ -35,7 +36,7 @@
 
   <!-- 所有列 -->
   <sql id="Base_Column_List">
-    id, groupNum, groupName, groupSignature, groupPwd, groupImg, groupType, pId, sort, createUserId, adminUserIds, descn, cTime, lmTime
+    id, groupNum, groupName, groupSignature, groupPwd, groupImg, groupType, pId, sort, createUserId, adminUserIds, defaultFreq, descn, cTime, lmTime
   </sql>
 
   <!-- 条件子句 -->
@@ -54,6 +55,7 @@
         <if test="createUserId!=null"> and createUserId=#{createUserId,jdbcType=VARCHAR}</if>
         <if test="adminUserIds!=null"> and adminUserIds=#{adminUserIds,jdbcType=VARCHAR}</if>
         <if test="descn!=null"> and descn=#{descn,jdbcType=VARCHAR}</if>
+        <if test="defaultFreq!=null"> and defaultFreq=#{defaultFreq,jdbcType=VARCHAR}</if>
         <if test="CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
         <if test="lmTime!=null"> and lmTime=#{lmTime,jdbcType=TIMESTAMP}</if>
       </trim>
@@ -128,6 +130,7 @@
       <if test="sort!=null and sort!=0">sort,</if>
       <if test="createUserId!=null">createUserId,</if>
       <if test="adminUserIds!=null">adminUserIds,</if>
+      <if test="adminUserIds!=null">defaultFreq,</if>
       <if test="descn!=null">descn,</if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
@@ -142,6 +145,7 @@
       <if test="sort!=null and sort!=0">#{sort,jdbcType=INTEGER},</if>
       <if test="createUserId!=null">#{createUserId,jdbcType=VARCHAR},</if>
       <if test="adminUserIds!=null">#{adminUserIds,jdbcType=VARCHAR},</if>
+      <if test="defaultFreq!=null">#{defaultFreq,jdbcType=VARCHAR},</if>
       <if test="descn!=null">#{descn,jdbcType=VARCHAR},</if>
     </trim>
   </insert>
@@ -161,6 +165,7 @@
       <if test="sort!=null and sort!=0">sort=#{sort,jdbcType=INTEGER},</if>
       <if test="createUserId!=null">createUserId=#{createUserId,jdbcType=VARCHAR},</if>
       <if test="adminUserIds!=null">adminUserIds=#{adminUserIds,jdbcType=VARCHAR},</if>
+      <if test="defaultFreq!=null">defaultFreq=#{defaultFreq,jdbcType=VARCHAR},</if>
       <if test="descn!=null">descn=#{descn,jdbcType=VARCHAR},</if>
       <if test="CTime!=null">cTime=#{CTime,jdbcType=TIMESTAMP},</if>
     </set>
