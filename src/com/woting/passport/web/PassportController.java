@@ -134,13 +134,8 @@ public class PassportController {
 
             String ln=(m.get("UserName")==null?null:m.get("UserName")+"");
             String pwd=(m.get("Password")==null?null:m.get("Password")+"");
-            String phonenum=m.get("MainPhoneNum")==null?null:m.get("MainPhoneNum")+"";
             String errMsg="";
-            if (StringUtils.isNullOrEmptyOrSpace(ln)&&StringUtils.isNullOrEmptyOrSpace(phonenum)) {
-                if (StringUtils.isNullOrEmptyOrSpace(ln)) errMsg+=",手机号不能为空";
-                else errMsg+=",手机号和用户名不能同时为空";
-                    
-            }
+            if (StringUtils.isNullOrEmptyOrSpace(ln)) errMsg+="账号不能为空";
             if (StringUtils.isNullOrEmptyOrSpace(pwd)) errMsg+=",密码为空";
             if (!StringUtils.isNullOrEmptyOrSpace(errMsg)) {
                 errMsg=errMsg.substring(1);
