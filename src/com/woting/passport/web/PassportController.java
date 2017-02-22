@@ -134,8 +134,13 @@ public class PassportController {
 
             String ln=(m.get("UserName")==null?null:m.get("UserName")+"");
             String pwd=(m.get("Password")==null?null:m.get("Password")+"");
+            String phonenum=m.get("MainPhoneNum")==null?null:m.get("MainPhoneNum")+"";
             String errMsg="";
-            if (StringUtils.isNullOrEmptyOrSpace(ln)) errMsg+=",用户名为空";
+            if (StringUtils.isNullOrEmptyOrSpace(ln)&&StringUtils.isNullOrEmptyOrSpace(phonenum)) {
+                if (StringUtils.isNullOrEmptyOrSpace(ln)) errMsg+=",手机号不能为空";
+                else errMsg+=",手机号和用户名不能同时为空";
+                    
+            }
             if (StringUtils.isNullOrEmptyOrSpace(pwd)) errMsg+=",密码为空";
             if (!StringUtils.isNullOrEmptyOrSpace(errMsg)) {
                 errMsg=errMsg.substring(1);
@@ -283,11 +288,12 @@ public class PassportController {
 
             String ln=(m.get("UserName")==null?null:m.get("UserName")+"");
             String pwd=(m.get("Password")==null?null:m.get("Password")+"");
-            String phonenum=m.get("MainPhoneNum")==null?null:m.get("Password")+"";
+            String phonenum=m.get("MainPhoneNum")==null?null:m.get("MainPhoneNum")+"";
             String usePhone=(m.get("UsePhone")==null?null:m.get("UsePhone")+"");
+            String nickName=(m.get("NickName")==null?null:m.get("NickName")+"");
             String errMsg="";
 
-            if (StringUtils.isNullOrEmptyOrSpace(ln)) errMsg+=",用户名为空";
+//            if (StringUtils.isNullOrEmptyOrSpace(ln)) errMsg+=",用户名为空";
             if (ln!=null) {
                 char[] c=ln.toCharArray();
                 if (c[0]>='0' && c[0]<='9') errMsg+=",登录名第一个字符不能是数字";
@@ -303,25 +309,30 @@ public class PassportController {
                 return map;
             }
             UserPo nu=new UserPo();
-            nu.setLoginName(ln);
-            nu.setPassword(pwd);
             //1-判断是否有重复的用户
-            UserPo oldUser=userService.getUserByLoginName(ln);
-            if (oldUser!=null) { //重复
-                map.put("ReturnType", "1003");
-                map.put("Message", "登录名重复,无法注册.");
-                return map;
-            }
             if (usePhone!=null&&usePhone.equals("1")) {
-//                //1.5-手机号码注册
-//                String getValue=roService.get(redisUdk.getKey_UserPhoneCheck());
-//                String info=getValue==null?"":new String(getValue);
+                UserPo oldUser=userService.getUserByPhoneNum(phonenum);
+                if (oldUser!=null) { //重复
+                    map.put("ReturnType", "10031");
+                    map.put("Message", "手机号重复,无法注册.");
+                    return map;
+                }
                 nu.setMainPhoneNum(phonenum);
+            } else {
+                UserPo oldUser=userService.getUserByLoginName(ln);
+                if (oldUser!=null) { //重复
+                    map.put("ReturnType", "10032");
+                    map.put("Message", "登录名重复,无法注册.");
+                    return map;
+                }
+                nu.setLoginName(ln);
             }
+            nu.setPassword(pwd);
             //2-保存用户
             nu.setCTime(new Timestamp(System.currentTimeMillis()));
             nu.setUserType(1);
             nu.setUserId(SequenceUUID.getUUIDSubSegment(4));
+            nu.setNickName(nickName);
             int rflag=userService.insertUser(nu);
             if (rflag!=1) {
                 map.put("ReturnType", "1004");
