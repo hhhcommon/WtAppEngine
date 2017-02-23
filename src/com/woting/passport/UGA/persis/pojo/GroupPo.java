@@ -19,6 +19,7 @@ public class GroupPo extends BaseObject {
     private String adminUserIds;  //管理者id，可以有多个管理者，第一个为主管理者
     private String descn; //用户描述
     private Timestamp CTime; //记录创建时间
+    private String defaultFreq; //用户组默认频率如：“456.3477-457.3455, 466.222-469.223, 488.22, 456.dssdf”,注意每一项用逗号隔开，每一项可以是单频也可以是双频，若是双频，用短线隔开，且前面的频率要小于后面的频率
     private Timestamp lmTime; //最后修改时间:last modify time
     private int groupCount; //组用户个数
 
@@ -87,6 +88,12 @@ public class GroupPo extends BaseObject {
     }
     public void setAdminUserIds(String adminUserIds) {
         this.adminUserIds = adminUserIds;
+    }
+    public String getDefaultFreq() {
+        return defaultFreq;
+    }
+    public void setDefaultFreq(String defaultFreq) {
+        this.defaultFreq = defaultFreq;
     }
     public String getDescn() {
         return descn;

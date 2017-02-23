@@ -115,6 +115,7 @@ CREATE TABLE plat_Group (
   sort           int(5) unsigned  NOT NULL  DEFAULT 0     COMMENT '排序,只在本级排序有意义,从大到小排序，越大越靠前',
   createUserId   varchar(32)      NOT NULL                COMMENT '用户组创建者',
   adminUserIds   varchar(32)                              COMMENT '用户组管理者，非一人',
+  defaultFreq    varchar(300)                             COMMENT '用户组默认频率如：“456.3477-457.3455, 466.222-469.223, 488.22, 456.dssdf”,注意每一项用逗号隔开，每一项可以是单频也可以是双频，若是双频，用短线隔开，且前面的频率要小于后面的频率',
   descn          varchar(2000)              DEFAULT NULL  COMMENT '备注',
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
   lmTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改：每次更新的时间',

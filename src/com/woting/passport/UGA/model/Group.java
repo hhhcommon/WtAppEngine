@@ -18,14 +18,6 @@ public class Group extends GroupPo implements  ModelSwapPo {
     private static final long serialVersionUID = 7365795273402631290L;
 
     private String innerPhoneNum;  //内部电话号吗
-    private String defaultFreqNum;  //默认频段
-
-    public String getDefaultFreqNum() {
-        return defaultFreqNum;
-    }
-    public void setDefaultFreqNum(String defaultFreqNum) {
-        this.defaultFreqNum = defaultFreqNum;
-    }
     public String getInnerPhoneNum() {
         if (StringUtils.isNullOrEmptyOrSpace(this.innerPhoneNum)) return "3000";
         return innerPhoneNum;
@@ -50,6 +42,7 @@ public class Group extends GroupPo implements  ModelSwapPo {
         this.setSort(_po.getSort());
         this.setCreateUserId(_po.getCreateUserId());
         this.setAdminUserIds(_po.getAdminUserIds());
+        this.setDefaultFreq(_po.getDefaultFreq());
         this.setDescn(_po.getDescn());
         this.setCTime(_po.getCTime());
         this.setLmTime(_po.getLmTime());
@@ -69,6 +62,7 @@ public class Group extends GroupPo implements  ModelSwapPo {
         ret.setSort(this.getSort());
         ret.setCreateUserId(this.getCreateUserId());
         ret.setAdminUserIds(this.getAdminUserIds());
+        ret.setDefaultFreq(this.getDefaultFreq());
         ret.setDescn(this.getDescn());
         ret.setCTime(this.getCTime());
         ret.setLmTime(this.getLmTime());

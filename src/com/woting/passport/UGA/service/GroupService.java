@@ -327,6 +327,7 @@ public class GroupService {
             if (newInfo.get("groupDescn")!=null) g.setDescn(newInfo.get("groupDescn")+"");
             if (newInfo.get("groupName")!=null) g.setGroupName(newInfo.get("groupName")+"");
             if (newInfo.get("groupSignature")!=null) g.setGroupSignature(newInfo.get("groupSignature")+"");
+            if (newInfo.get("groupFreq")!=null) g.setDefaultFreq(newInfo.get("groupFreq")+"");
             this.updateGroup(g);
             changed=true;
         }
