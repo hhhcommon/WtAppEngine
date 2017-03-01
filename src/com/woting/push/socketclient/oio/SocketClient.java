@@ -45,9 +45,10 @@ public class SocketClient {
     private volatile Object socketSendLock=new Object();//发送锁
 
 //以下对外接口：begin
-    public SocketClient(SocketClientConfig scc) {
+    public SocketClient(SocketClientConfig scc) throws Exception {
         nextReConnIndex=0;
         this.scc=scc;
+        if (StringUtils.isNullOrEmptyOrSpace(scc.getServerType())||StringUtils.isNullOrEmptyOrSpace(scc.getServerType())) throw new Exception("未能获得服务器标识");
         sendMsgQueue=new ConcurrentLinkedQueue<byte[]>();//初始化传送队列
     }
     /**
@@ -74,8 +75,8 @@ public class SocketClient {
         try {
             if (msg instanceof MsgNormal) {
                 ((MsgNormal)msg).setPCDType(0);
-                ((MsgNormal)msg).setUserId("AppEngin0001");
-                ((MsgNormal)msg).setDeviceId("AppEnginServer000000000000000001");//获得本机信息（CPU号）
+                ((MsgNormal)msg).setUserId(scc.getServerType());
+                ((MsgNormal)msg).setDeviceId(scc.getServerName());//获得本机信息（CPU号）
             }
             msg.setSendTime(System.currentTimeMillis());
             sendMsgQueue.offer(msg.toBytes());
@@ -298,7 +299,7 @@ public class SocketClient {
                 try {
                     synchronized (socketSendLock) {
                         if (socketOut!=null&&!socket.isOutputShutdown()) {
-                            socketOut.write("b^^".getBytes());
+                            //socketOut.write("b^^".getBytes());
                             socketOut.flush();
                         }
                         logger.debug("Socket["+socket.hashCode()+"]发心跳:b");
@@ -347,8 +348,8 @@ public class SocketClient {
                             registerMsg.setFromType(1);
                             registerMsg.setToType(1);
                             registerMsg.setPCDType(0);
-                            registerMsg.setUserId("AppEngin0001");
-                            registerMsg.setDeviceId("AppEnginServer000000000000000001");
+                            registerMsg.setUserId(scc.getServerType());
+                            registerMsg.setDeviceId(scc.getServerName());
                             registerMsg.setSendTime(System.currentTimeMillis());
 
                             msg4Send=registerMsg.toBytes();
@@ -408,6 +409,7 @@ public class SocketClient {
             int isAck=-1;
             int isRegist=0;
             int msgType=-1;//消息类型
+            int isCtlAck=0, tempFlag=0, fieldFlag=0, countFlag=0;
             byte[] endMsgFlag={0x00,0x00,0x00};
             while(!toBeStop&&socketOk()&&!isClose) {
                 try {
@@ -447,33 +449,54 @@ public class SocketClient {
                             if (msgType==-1) msgType=MessageUtils.decideMsg(ba);
                             if (msgType==0) {//0=控制消息(一般消息)
                                 if (isAck==-1&&i==12) {
-                                    if (((ba[2]&0x80)==0x80)&&((ba[2]&0x00)==0x00)&&(((ba[i-1]&0xF0)==0x00)||((ba[i-1]&0xF0)==0xF0))) isAck=1; else isAck=0;
-                                    if ((ba[i-1]&0xF0)==0xF0) isRegist=1;
-                                } else  if (isAck==1) {//是回复消息
-                                    if (isRegist==1) { //是注册消息
-                                        if (i==48&&endMsgFlag[2]==0) _dataLen=80; else _dataLen=91;
-                                        if (_dataLen>=0&&i==_dataLen) break;
-                                    } else { //非注册消息
-                                        if (_dataLen<0) _dataLen=45;
-                                        if (_dataLen>=0&&i==_dataLen) break;
-                                    }
-                                } else  if (isAck==0) {//是一般消息
-                                    if (isRegist==1) {//是注册消息
-                                        if (((ba[2]&0x80)==0x80)&&((ba[2]&0x00)==0x00)) {
-                                            if (i==48&&endMsgFlag[2]==0) _dataLen=80; else _dataLen=91;
-                                        } else {
-                                            if (i==47&&endMsgFlag[2]==0) _dataLen=79; else _dataLen=90;
+                                    tempFlag=i;
+                                    if ((ba[2]&0x80)==0x80) isAck=1; else isAck=0;
+                                    if (isAck==1) countFlag=1; else countFlag=0;
+
+                                    if (((ba[i-1]>>4)&0x0F)==0x0F) isRegist=1;
+                                    else
+                                    if (((ba[i-1]>>4)|0x00)==0x00) isCtlAck=1;
+                                }
+                                if (isAck!=-1) {
+                                    if (isCtlAck==1) {
+                                        if (fieldFlag==0&&((endMsgFlag[1]=='|'&&endMsgFlag[2]=='|')||(i-tempFlag-countFlag)==32)) {
+                                            countFlag=1;
+                                            tempFlag=i;
+                                            fieldFlag=1;
+                                        } else
+                                        if (fieldFlag==1&&(i-tempFlag)>countFlag&&(ba[i-countFlag]==0||(endMsgFlag[1]=='|'&&endMsgFlag[2]=='|')||(i-tempFlag-countFlag)==12)) {
+                                            countFlag=0;
+                                            tempFlag=i;
+                                            fieldFlag=2;
+                                        } else
+                                        if (fieldFlag==2&&((endMsgFlag[1]=='|'&&endMsgFlag[2]=='|')||(i-tempFlag-countFlag)==32)) {
+                                            break;//通用回复消息读取完毕
                                         }
-                                        if (_dataLen>=0&&i==_dataLen) break;
-                                    } else {//非注册消息
-                                        if (_dataLen==-3&&endMsgFlag[1]=='^'&&endMsgFlag[2]=='^') _dataLen++;
-                                        else if (_dataLen>-3&&_dataLen<-1) _dataLen++;
-                                        else if (_dataLen==-1) {
+                                    } else if (isRegist==1) {
+                                        if (fieldFlag==0&&(i-tempFlag)>countFlag&&((endMsgFlag[1]=='|'&&endMsgFlag[2]=='|')||(i-tempFlag-countFlag)==32)) {
+                                            countFlag=1;
+                                            tempFlag=i;
+                                            fieldFlag=1;
+                                        } else
+                                        if (fieldFlag==1&&(i-tempFlag)>countFlag&&((ba[i-countFlag]==0||(endMsgFlag[1]=='|'&&endMsgFlag[2]=='|')||(i-tempFlag-countFlag)==12))) {
+                                            countFlag=0;
+                                            tempFlag=i;
+                                            fieldFlag=2;
+                                        } else
+                                        if (fieldFlag==2&&((endMsgFlag[1]=='|'&&endMsgFlag[2]=='|')||(i-tempFlag-countFlag)==32)) {
+                                            break;//注册消息完成
+                                        }
+                                    } else { //一般消息
+                                        if (fieldFlag==0&&endMsgFlag[1]=='^'&&endMsgFlag[2]=='^') {
+                                            fieldFlag=1;
+                                            tempFlag=0;
+                                        } else
+                                        if (fieldFlag==1&&(++tempFlag)==2) {
                                             _dataLen=(short)(((endMsgFlag[2]<<8)|endMsgFlag[1]&0xff));
-                                            if (_dataLen==0) break;
-                                        } else if (_dataLen>=0) {
-                                            if (--_dataLen==0) break;
-                                        }
+                                            tempFlag=0;
+                                            fieldFlag=2;
+                                        } else
+                                        if (fieldFlag==2&&(++tempFlag)==_dataLen) break;
                                     }
                                 }
                             } else if (msgType==1) {//1=媒体消息
@@ -525,6 +548,7 @@ public class SocketClient {
                     isAck=-1;
                     isRegist=0;
                     msgType=-1;
+                    isCtlAck=0;tempFlag=0;fieldFlag=0;countFlag=0;
                 } catch(Exception e) {
                     logger.debug(this.getName()+":"+StringUtils.getAllMessage(e));
                     if (e instanceof SocketException) {

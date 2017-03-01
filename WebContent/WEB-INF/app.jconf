@@ -1,5 +1,9 @@
 {
   //socket客户端配置信息
+  "serverIdentify":{
+    "serverType":"AppEngin", //不能大于12个字符
+    "serverName":"MainServer"
+  },
   "logPath":"c:/opt/logs",
   "socketClient": {
     "ip":"localhost",            //服务端Ip
