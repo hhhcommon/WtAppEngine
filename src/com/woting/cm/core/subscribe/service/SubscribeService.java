@@ -114,8 +114,7 @@ public class SubscribeService {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			String sql = "SELECT res.* FROM"
-					+ " (SELECT ss.*,cha.pubTime from (SELECT s.* from (SELECT sma.id,sma.smaTitle,sma.smaImg,ma.id maId,ma.maTitle,sub.cTime from wt_UserSubscribe sub"
+			String sql = "SELECT ss.* from (SELECT s.*,cha.pubTime from (SELECT sma.id,sma.smaTitle,sma.smaImg,ma.id maId,ma.maTitle,sub.cTime from wt_UserSubscribe sub"
 					+ " LEFT JOIN wt_SeqMediaAsset sma ON sub.sId = sma.id LEFT JOIN wt_SeqMA_Ref smaf ON smaf.sId = sma.id LEFT JOIN wt_MediaAsset ma ON ma.id = smaf.mId"
 					+ " where ";
 			if (mUdk.isUser()) {
@@ -123,19 +122,16 @@ public class SubscribeService {
 	        } else {
 	        	sql += " ownerType = '202' and ownerId = '"+mUdk.getDeviceId()+"' ";
 	        }
-			sql += "  ORDER BY smaf.columnNum DESC,smaf.cTime DESC,ma.maTitle DESC) s"
-					+ " GROUP BY s.id) ss,"
-					+ " wt_ChannelAsset cha"
-					+ " where ((cha.assetType = 'wt_SeqMediaAsset' and cha.assetId = ss.id) OR (cha.assetType = 'wt_MediaAsset' and cha.assetId = ss.maid)) AND cha.flowFlag = 2"
-					+ " ORDER BY cha.pubTime ASC) res"
-					+ " GROUP BY res.id "
+			sql += "  ORDER BY smaf.columnNum DESC,smaf.cTime DESC,ma.maTitle DESC) s, wt_ChannelAsset cha"
+					+ " where cha.assetType = 'wt_MediaAsset' and cha.assetId = s.maid AND cha.flowFlag = 2"
+					+ " GROUP BY s.id) ss"
 					+ " ORDER BY ";
-			if (sortType == 1) sql += " res.pubTime  DESC";
-			else if (sortType == 2) sql += " res.pubTime  ASC";
-			else if (sortType == 3) sql += " res.cTime DESC";
-			else if (sortType == 4) sql += " res.cTime ASC"; 
-			else if (sortType == 5) sql += " res.pubTime  DESC, res.cTime DESC";
-			else if (sortType == 6) sql += " res.pubTime  ASC, res.cTime ASC";
+			if (sortType == 1) sql += " ss.pubTime  DESC";
+			else if (sortType == 2) sql += " ss.pubTime  ASC";
+			else if (sortType == 3) sql += " ss.cTime DESC";
+			else if (sortType == 4) sql += " ss.cTime ASC"; 
+			else if (sortType == 5) sql += " ss.pubTime  DESC, ss.cTime DESC";
+			else if (sortType == 6) sql += " ss.pubTime  ASC, ss.cTime ASC";
 			
 			sql += " limit "+(page-1)*pageSize+","+pageSize;
 			conn = DataSource.getConnection();
@@ -163,8 +159,8 @@ public class SubscribeService {
 				sql = "SELECT sub.id,COUNT(*) num FROM"
 						+ " (SELECT ld.*,smaf.mId,smaf.cTime,cha.pubTime FROM (SELECT res.* FROM (SELECT (CASE locate('ContentId', lda.reqParam) WHEN 0 THEN '' ELSE SUBSTR(lda.reqParam, locate('ContentId', lda.reqParam)+12,32) END) id,"
 						+ " lda.apiName,lda.ownerId,lda.beginTime FROM ld_API lda where lda.apiName = '4.2.2-content/getContentInfo' and reqParam LIKE '%SEQU%' AND( "
-						+ smaids+" ) and lda.ownerId = '"+mUdk.getUserId()+"' ORDER BY lda.beginTime DESC) res GROUP BY res.id) ld, wt_SeqMA_Ref smaf  LEFT JOIN wt_ChannelAsset cha ON cha.assetType = 'wt_MediaAsset' and cha.flowFlag = 2 and smaf.mId = cha.assetId"
-						+ " where ld.id = smaf.sid and ld.beginTime < smaf.cTime"
+						+ smaids+" ) and lda.ownerId = '"+mUdk.getUserId()+"' ORDER BY lda.beginTime DESC) res GROUP BY res.id) ld, wt_SeqMA_Ref smaf ,wt_ChannelAsset cha "
+						+ " where cha.assetType = 'wt_MediaAsset' and cha.flowFlag = 2 and smaf.mId = cha.assetId and ld.id = smaf.sid and ld.beginTime < smaf.cTime"
 						+ " GROUP BY smaf.mId) sub"
 						+ " GROUP BY sub.id";
 				if (sortType==5) sql += " ORDER BY num desc"; 
