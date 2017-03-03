@@ -299,7 +299,7 @@ public class SocketClient {
                 try {
                     synchronized (socketSendLock) {
                         if (socketOut!=null&&!socket.isOutputShutdown()) {
-                            //socketOut.write("b^^".getBytes());
+                            socketOut.write("b^^".getBytes());
                             socketOut.flush();
                         }
                         logger.debug("Socket["+socket.hashCode()+"]发心跳:b");

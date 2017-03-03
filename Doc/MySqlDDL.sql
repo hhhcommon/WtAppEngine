@@ -250,7 +250,7 @@ CREATE TABLE wt_Broadcast (
   bcPublisher   varchar(100)                          COMMENT '电台所属集团',
   bcImg         varchar(100)                          COMMENT '电台图标',
   bcURL         varchar(100)                          COMMENT '电台网址',
-  descn         varchar(4000)                         COMMENT '电台说明',
+  descn         longtext                              COMMENT '电台说明',
   pubCount      int unsigned     NOT NULL  DEFAULT 0  COMMENT '电台发布状态：0未发布;>0被发布到多少个栏目中',
   cTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
@@ -266,9 +266,9 @@ CREATE TABLE wt_BCLiveFlow (
   bcSrcId           varchar(32)                           COMMENT '来源Id，当bcScrType=1',
   bcSource          varchar(100)     NOT NULL             COMMENT '来源，名称',
   flowURI           varchar(300)     NOT NULL             COMMENT '直播流URL',
-  bcSrcChannelId	  varchar(32)			                      COMMENT '外抓平台电台对外Id',
+  bcSrcChannelId	varchar(32)			                  COMMENT '外抓平台电台对外Id',
   isMain            int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '是否是主直播流；1是主直播流',
-  descn             varchar(4000)                         COMMENT '直播流描述',
+  descn             longtext                              COMMENT '直播流描述',
   cTime             timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
@@ -320,7 +320,7 @@ CREATE TABLE wt_MediaAsset (
   langDid        varchar(32)                           COMMENT '语言字典项Id',
   language       varchar(32)                           COMMENT '语言名称',
   timeLong       long                                  COMMENT '时长，毫秒数',
-  descn          varchar(4000)                         COMMENT '说明',
+  descn          longtext                              COMMENT '说明',
   pubCount       int unsigned     NOT NULL  DEFAULT 0  COMMENT '发布状态：0未发布;>0被发布到多少个栏目中（系列节目的发布，这里的单曲也要被加1）',
   maStatus       int unsigned     NOT NULL  DEFAULT 0  COMMENT '资源状态：0草稿;1提交（包括发布和未发布）',
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
@@ -339,7 +339,7 @@ CREATE TABLE wt_MaSource (
   smType     int unsigned  NOT NULL             COMMENT '来源媒体分类:1-文件;2-直播流',
   playURI    varchar(300)  NOT NULL             COMMENT '直播流URL',
   isMain     integer(1)    NOT NULL  DEFAULT 0  COMMENT '是否主播放地址；1是主播放',
-  descn      varchar(4000)                      COMMENT '来源说明',
+  descn      longtext                           COMMENT '来源说明',
   cTime      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
@@ -374,7 +374,7 @@ CREATE TABLE wt_SeqMediaAsset (
   keyWords        varchar(400)                          COMMENT '关键词',
   langDid         varchar(32)                           COMMENT '语言字典项Id',
   language        varchar(32)                           COMMENT '语言名称',
-  descn           varchar(4000)                         COMMENT '说明',
+  descn           longtext                              COMMENT '说明',
   pubCount        int unsigned     NOT NULL  DEFAULT 0  COMMENT '发布状态：0未发布;>0被发布到多少个栏目中，小于0是未生效',
   smaStatus       int unsigned     NOT NULL  DEFAULT 0  COMMENT '资源状态：0草稿;1提交（包括发布和未发布）',
   cTime           timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
@@ -389,7 +389,7 @@ CREATE TABLE wt_SeqMA_Ref (
   sId         varchar(32)    NOT NULL  COMMENT '系列Id,主表Id',
   mId         varchar(32)    NOT NULL  COMMENT '媒体Id',
   columnNum   int  unsigned  NOT NULL  COMMENT '卷集号，也是排序号',
-  descn       varchar(4000)            COMMENT '关联说明',
+  descn       longtext                 COMMENT '关联说明',
   cTime       timestamp      NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
@@ -411,7 +411,7 @@ CREATE TABLE wt_Person (
   age           varchar(15)                              COMMENT '年龄',
   birthday      varchar(30)                DEFAULT NULL  COMMENT '生日',
   sex           varchar(100)                             COMMENT '性别',
-  descn         varchar(4000)              DEFAULT NULL  COMMENT '人员描述',
+  descn         longtext                   DEFAULT NULL  COMMENT '人员描述',
   phoneNum      varchar(100)               DEFAULT NULL  COMMENT '人员手机',
   email         varchar(100)               DEFAULT NULL  COMMENT 'eMail',
   homepage      varchar(100)                             COMMENT '个人主页',
