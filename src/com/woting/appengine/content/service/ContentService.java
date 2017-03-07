@@ -31,6 +31,7 @@ import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.DateUtils;
+import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
@@ -41,6 +42,7 @@ import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
+import com.woting.cm.core.media.MediaType;
 import com.woting.cm.core.subscribe.service.SubscribeService;
 import com.woting.favorite.persis.po.UserFavoritePo;
 import com.woting.favorite.service.FavoriteService;
@@ -50,6 +52,8 @@ import com.woting.passport.mobile.MobileUDKey;
 @Lazy(true)
 @Service
 public class ContentService {
+    @Resource
+    JedisConnectionFactory redisConn;
     //先用Group代替！！
     @Resource(name="defaultDAO")
     private MybatisDAO<GroupPo> groupDao;
@@ -75,6 +79,60 @@ public class ContentService {
         _cc=(SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)==null?null:((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)).getContent());
     }
 
+    /**
+     * 得到某分类下的轮播图
+     * @param catalogType 分类类型(目前只支持栏目-1)
+     * @param catalogId 分类Id
+     * @param size 得到轮播图的尺寸
+     * @return 轮播图
+     */
+    public Map<String, Object> getLoopImgs(String catalogType, String catalogId, int size) {
+        Map<String, Object> map=new HashMap<String, Object>();
+
+        if (catalogType==null||!"-1".equals(catalogType.trim())) {
+            map.put("ReturnType", "1003");
+            map.put("Message", "不是有效参数");
+            return map;
+        }
+
+        //2.1-根据分类获得根
+        TreeNode<? extends TreeNodeBean> root=null;
+        if (catalogType.equals("-1")) {
+            root=_cc.channelTree;
+        }
+        //2.2-获得相应的结点，通过查找
+        if (root!=null&&catalogId!=null) root=root.findNode(catalogId);
+        if (root==null) {
+            map.put("ReturnType", "1004");
+            map.put("Message", "没有对应栏目");
+            return map;
+        }
+        List<Map<String, Object>> imgList=channelService.getLoopImgs(catalogId);
+        if (imgList!=null&&imgList.size()>0) {
+            map.put("ReturnType", "1001");
+            map.put("CatalogType", catalogType);
+            map.put("CatalogId", catalogId);
+            map.put("CatalogName", root.getNodeName());
+            List<Map<String, Object>> retImgList=new ArrayList<Map<String, Object>>();
+            int i=0;
+            for (Map<String, Object> m: imgList) {
+                if (++i>size) break;
+                Map<String, Object> oneImg=new HashMap<String, Object>();
+                String temp=(String)m.get("assetType");
+                MediaType mt=MediaType.buildByTabName(temp);
+                if (mt!=MediaType.ERR) {
+                    oneImg.put("MediaType", mt.getTypeName());
+                    oneImg.put("ContentId", m.get("assetId"));
+                    oneImg.put("LoopImg", m.get("loopImg"));
+                }
+                retImgList.add(oneImg);
+            }
+            map.put("LoopImgs", retImgList);
+        } else {
+            map.put("ReturnType", "1011");
+        }
+        return map;//
+    }
     /**
      * 查找内容，此内容无排序，按照创建时间的先后顺序排序，最新的在最前面
      * @param searchStr 查找串
@@ -744,8 +802,40 @@ public class ContentService {
     }
 
     @SuppressWarnings("unchecked")
-    public Map<String, Object> getContents(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId, int pageType,
-                                            MobileUDKey mUdk, Map<String, Object> filterData) {
+    public Map<String, Object> getContents(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId,
+                                            int pageType, MobileUDKey mUdk, Map<String, Object> filterData) {
+        Map<String, Object> rt=null;
+        //1-得到喜欢列表
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
+        List<Map<String, Object>> fList=null;
+        if (_fList!=null&&!_fList.isEmpty()) {
+            fList=new ArrayList<Map<String, Object>>();
+            for (UserFavoritePo ufPo: _fList) {
+                fList.add(ufPo.toHashMapAsBean());
+            }
+        }
+
+        String key="getContents::"+catalogType+"_"+catalogId+"_"+resultType+"_"+mediaType+"_"+perSize+"_"+pageSize+"_"+page+"_"+catalogId+"_"+beginCatalogId+"_"+pageType+mUdk.getUserId();
+        RedisOperService roService=new RedisOperService(redisConn, 14);
+        try {
+            String _result=roService.get(key);
+            if (_result==null) {
+                rt=getContents1(catalogType, catalogId, resultType, mediaType, perSize, pageSize, page, beginCatalogId, pageType, mUdk, filterData);
+                if (rt!=null) {
+                    roService.set(key, JsonUtils.objToJson(rt), 60*1000*60);
+                }
+            } else {
+                rt=(Map)JsonUtils.jsonToObj(_result, Map.class);
+            }
+        } finally {
+            if (roService!=null) roService.close();
+            roService=null;
+        }
+        return rt;
+    }
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getContents1(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId,
+                                            int pageType, MobileUDKey mUdk, Map<String, Object> filterData) {
         //1-得到喜欢列表
         List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
         List<Map<String, Object>> fList=null;
@@ -1122,7 +1212,7 @@ public class ContentService {
                                 int pos=maSqlSign.indexOf(""+rs.getString("id"));
                                 maSqlSign=maSqlSign.substring(0, pos-8)+maSqlSign.substring(pos+(""+rs.getString("id")).length()+1);
                             } else {
-                                maSqlSign1+=",'"+rs.getString("id")+"'";
+                                maSqlSign1+=" or a.resId='"+rs.getString("id")+"'";
                             }
                         }
                         rs.close(); rs=null;
@@ -1150,8 +1240,8 @@ public class ContentService {
                     List<Map<String, Object>> playCountList=null; //播放次数
                     List<Map<String, Object>> playingList=null; //电台播放节目
                     if (!paraM.isEmpty()) {
-                        cataList=groupDao.queryForListAutoTranform("refCataById", paraM);
                         playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);; //播放次数
+                        cataList=groupDao.queryForListAutoTranform("refCataById", paraM);
                         personList=groupDao.queryForListAutoTranform("refPersonById", paraM); //人员
                         if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {
                             Calendar cal = Calendar.getInstance();

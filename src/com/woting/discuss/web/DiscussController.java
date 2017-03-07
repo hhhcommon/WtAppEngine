@@ -155,7 +155,7 @@ public class DiscussController {
 					isok = false;
 				}
 			}
-            map.clear();
+            map=new HashMap<>();
             
             //4-存储意见
             try {

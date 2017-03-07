@@ -35,6 +35,7 @@ public class ApiLogService {
      */
     public void Save2DB(ApiLogPo alp) {
         if (StringUtils.isNullOrEmptyOrSpace(alp.getId())) alp.setId(SequenceUUID.getPureUUID());
+        alp.setReturnData(null);
         apiLogDao.insert(alp);
     }
 }

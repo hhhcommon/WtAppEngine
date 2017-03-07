@@ -22,6 +22,8 @@ import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
+import com.woting.cm.core.channel.mem._CacheChannel;
+import com.woting.cm.core.channel.model.Channel;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictDetail;
 import com.woting.cm.core.dict.model.DictMaster;
@@ -233,16 +235,27 @@ public class DictService {
 
             CacheEle<_CacheDictionary> cache=((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT));
             _CacheDictionary cd=cache.getContent();
+            CacheEle<_CacheChannel> cacheC=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL));
+            _CacheChannel cc=cacheC.getContent();
             for (DictRefResPo drrPo: l) {
                 DictRefRes drr=new DictRefRes();
                 drr.buildFromPo(drrPo);
-                DictModel dm=cd.dictModelMap.get(drrPo.getDictMid());
-                drr.setDm(dm);
-                if (dm.dictTree!=null&&dm.dictTree.getChildren()!=null&&!dm.dictTree.getChildren().isEmpty()) {
-                    EasyUiTree<? extends TreeNodeBean> met = new EasyUiTree<Module>(dm.dictTree);
-                    System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"+JsonUtils.objToJson(met));
-                    TreeNode<DictDetail> dd=(TreeNode<DictDetail>)dm.dictTree.findNode(drrPo.getDictDid());
-                    if (dd!=null) drr.setDd(dd);
+                if (drrPo.getDictMid().equals("-1")) {
+                    DictModel dm=new DictModel();
+                    dm.setId("-1");
+                    dm.setDmName("栏目");
+                    drr.setDm(dm);
+                    if (cc!=null) {
+                        TreeNode<TreeNodeBean> dd=(TreeNode<TreeNodeBean>)cc.channelTree.findNode(drrPo.getDictDid());
+                        if (dd!=null) drr.setDd(dd);
+                    }
+                } else {
+                    DictModel dm=cd.dictModelMap.get(drrPo.getDictMid());
+                    drr.setDm(dm);
+                    if (dm.dictTree!=null&&dm.dictTree.getChildren()!=null&&!dm.dictTree.getChildren().isEmpty()) {
+                        TreeNode<TreeNodeBean> dd=(TreeNode<TreeNodeBean>)dm.dictTree.findNode(drrPo.getDictDid());
+                        if (dd!=null) drr.setDd(dd);
+                    }
                 }
                 ret.add(drr);
             }
@@ -267,14 +280,27 @@ public class DictService {
 
             CacheEle<_CacheDictionary> cache=((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT));
             _CacheDictionary cd=cache.getContent();
+            CacheEle<_CacheChannel> cacheC=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL));
+            _CacheChannel cc=cacheC.getContent();
             for (DictRefResPo drrPo: l) {
                 DictRefRes drr=new DictRefRes();
                 drr.buildFromPo(drrPo);
-                DictModel dm=cd.dictModelMap.get(drrPo.getDictMid());
-                drr.setDm(dm);
-                if (dm.dictTree!=null&&dm.dictTree.getChildren()!=null&&!dm.dictTree.getChildren().isEmpty()) {
-                    TreeNode<DictDetail> dd=(TreeNode<DictDetail>)dm.dictTree.findNode(drrPo.getDictDid());
-                    if (dd!=null) drr.setDd(dd);
+                if (drrPo.getDictMid().equals("-1")) {
+                    DictModel dm=new DictModel();
+                    dm.setId("-1");
+                    dm.setDmName("栏目");
+                    drr.setDm(dm);
+                    if (cc!=null) {
+                        TreeNode<TreeNodeBean> dd=(TreeNode<TreeNodeBean>)cc.channelTree.findNode(drrPo.getDictDid());
+                        if (dd!=null) drr.setDd(dd);
+                    }
+                } else {
+                    DictModel dm=cd.dictModelMap.get(drrPo.getDictMid());
+                    drr.setDm(dm);
+                    if (dm.dictTree!=null&&dm.dictTree.getChildren()!=null&&!dm.dictTree.getChildren().isEmpty()) {
+                        TreeNode<TreeNodeBean> dd=(TreeNode<TreeNodeBean>)dm.dictTree.findNode(drrPo.getDictDid());
+                        if (dd!=null) drr.setDd(dd);
+                    }
                 }
                 ret.add(drr);
             }
