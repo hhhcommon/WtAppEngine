@@ -125,11 +125,11 @@
       <if test="WhereClauseByEntiey!=null">
         <if test="whereByClause!=null"> and ${whereByClause}</if>
       </if>
-      <if test="WhereClauseByEntiey==null">
+      <if test="WhereClauseByEntiey=null">
         <if test="whereByClause!=null"> where ${whereByClause}</if>
       </if>
     </if> 
-    <if test="sortByClause!=null">order by ${sortByClause}</if>
+    <if test="sortByClause!=null"> order by ${sortByClause}</if>
   </select>
 
   <select id="getListByFlowFlag" resultMap="channelAssetMap" parameterType="java.util.Map">
