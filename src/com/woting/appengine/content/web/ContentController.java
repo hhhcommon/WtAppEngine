@@ -1,7 +1,6 @@
 package com.woting.appengine.content.web;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +24,7 @@ import com.spiritdata.framework.util.RequestUtils;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.content.utils.ContentRedisUtils;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
+import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.cm.core.subscribe.service.SubscribeService;
 import com.woting.dataanal.gather.API.ApiGatherUtils;
 import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
@@ -44,6 +44,8 @@ public class ContentController {
     private FavoriteService favoriteService;
     @Resource
     private SubscribeService subscribeService;
+    @Resource
+    private ChannelService channelService;;
     @Resource(name="redisSessionService")
     private SessionService sessionService;
 
@@ -106,44 +108,21 @@ public class ContentController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            //1-获取列表
-            List<Map<String, Object>> sl=null;
-            Map<String, Object> bcClass=null, bcItem=null;
-            bcClass=new HashMap<String, Object>();//一个分类
-            bcClass.put("CatalogType", "001");
-            bcClass.put("CatalogId", "002");
-            bcClass.put("CatalogName", "娱乐");
-            bcClass.put("CatalogImg", "a.jpg");
-            bcClass.put("PageSize", "3");//当前列表元素个数
-            bcClass.put("AllListSize", "3");//本分类列表元素个数
-            //------------------
-            sl=new ArrayList<Map<String, Object>>();
-            bcItem=new HashMap<String, Object>();
-            bcItem.put("ImgUrl", "asset/contents/imgs/1280115949992.jpg");
-            bcItem.put("ImgIdx", "0");
-            bcItem.put("ImgDescn", "北京怀旧金曲");
-            bcItem.put("ImgContentUrl", "abc/content.do?contentId=1");
-            sl.add(bcItem);
-            bcItem.put("ImgUrl", "asset/contents/imgs/1303967876491.jpg");
-            bcItem.put("ImgIdx", "1");
-            bcItem.put("ImgDescn", "故事新编");
-            bcItem.put("ImgContentUrl", "abc/content.do?contentId=2");
-            sl.add(bcItem);
-            bcItem.put("ImgUrl", "asset/contents/imgs/m_1303967844788.jpg");
-            bcItem.put("ImgIdx", "2");
-            bcItem.put("ImgDescn", "新闻纵览");
-            bcItem.put("ImgContentUrl", "abc/content.do?contentId=3");
-            sl.add(bcItem);
-            bcItem.put("ImgUrl", "asset/contents/imgs/m_1303967870670.jpg");
-            bcItem.put("ImgIdx", "3");
-            bcItem.put("ImgDescn", "体坛风云");
-            bcItem.put("ImgContentUrl", "abc/content.do?contentId=3");
-            sl.add(bcItem);
-           bcClass.put("SubList", sl);
-            //------------------
-            map.put("ReturnType", "1001");
-            map.put("ResultList", bcClass);
-            return map;
+            //1-类别Id
+            String catalogType=(m.get("CatalogType")==null?null:m.get("CatalogType")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(catalogType)) catalogType="-1";
+            //2-结点Id
+            String catalogId=(m.get("CatalogId")==null?null:m.get("CatalogId")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(catalogId)) catalogId=null;
+            //3-个数
+            int size=4;
+            try {size=Integer.parseInt(m.get("Size")+"");} catch(Exception e) {}
+            if (StringUtils.isNullOrEmptyOrSpace(catalogType)||StringUtils.isNullOrEmptyOrSpace(catalogId)) {
+                map.put("ReturnType", "1003");
+                map.put("Message", "分类或栏目参数得不到");
+                return map;
+            }
+            return contentService.getLoopImgs(catalogType, catalogId, size);
         } catch(Exception e) {
             e.printStackTrace();
             map.put("ReturnType", "T");
@@ -166,6 +145,7 @@ public class ContentController {
      * @param request
      * @return 所获得的内容，包括分页
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @RequestMapping(value="getContents.do")
     @ResponseBody
     public Map<String,Object> getContents(HttpServletRequest request) {
@@ -281,6 +261,7 @@ public class ContentController {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @RequestMapping(value="getContentInfo.do")
     @ResponseBody
     public Map<String,Object> getContentInfo(HttpServletRequest request) {
@@ -412,6 +393,7 @@ public class ContentController {
         }
     }
     
+    @SuppressWarnings("unchecked")
     @RequestMapping(value="getSmSubMedias.do")
     @ResponseBody
     public Map<String,Object> getSmSubMediaList(HttpServletRequest request) {
@@ -632,7 +614,8 @@ public class ContentController {
 					isok = true;
 				}
 			}
-            map.clear();
+            map=new HashMap<>();
+
             if (isok) {
 				flag=favoriteService.favorite(mediaType, contentId, flag, mUdk);
 			}

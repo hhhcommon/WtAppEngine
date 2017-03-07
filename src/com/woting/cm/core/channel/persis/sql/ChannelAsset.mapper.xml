@@ -233,4 +233,18 @@
   <delete id="delByChannels" parameterType="java.lang.String">
     delete from wt_ChannelAsset where ${value}
   </delete>
+
+  <select id="getLoopImg"  resultType="java.util.HashMap" parameterType="java.lang.String">
+select * from (
+select a.channelId, a.assetType, a.assetId, a.loopSort,
+(CASE a.assetType WHEN 'wt_MediaAsset' then b.loopImg when 'wt_SeqMediaAsset' then c.loopImg when 'wt_BroadCast' then d.loopImg end) loopImg
+from 
+  (select * from wt_ChannelAsset where channelId=#{catalogId,jdbcType=VARCHAR} and loopSort>0 limit 100) as a
+  LEFT JOIN wt_MediaAsset b on (a.assetType='wt_MediaAsset' and a.assetId=b.id)
+  LEFT JOIN wt_SeqMediaAsset c on (a.assetType='wt_SeqMediaAsset' and a.assetId=c.id)
+  LEFT JOIN wt_Broadcast d on (a.assetType='wt_SeqMediaAsset' and a.assetId=d.id)
+) lm
+where lm.loopImg is not null
+order by lm.loopSort desc
+  </select>
 </mapper>

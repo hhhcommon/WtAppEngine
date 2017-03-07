@@ -6,7 +6,7 @@
   },
   "logPath":"c:/opt/logs",
   "socketClient": {
-    "ip":"localhost",            //服务端Ip
+    "ip":"localhost",                //服务端Ip
     "port":"16789",                  //服务端端口号
     "intervalBeat":"23*1000",        //发送心跳信号的间隔
     "intervalCheckSocket":"19*1000", //检查Socket健康情况的时间间隔

@@ -9,6 +9,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.slf4j.Logger;
@@ -64,6 +66,8 @@ public class SocketClient {
      */
     public void changeBeatCycle(long intervalTime) {
         scc.setIntervalBeat(intervalTime);
+        sendBeat.cancel();
+        sendBeat.scheduleAtFixedRate(new SendBeat(), 0, scc.getIntervalBeat());
     }
 
     /**
@@ -91,9 +95,8 @@ public class SocketClient {
      */
     public void workStart() {
         lastReceiveTime=System.currentTimeMillis(); //最后收到服务器消息时间
-        //连接
-        healthWatch=new HealthWatch("Socket客户端长连接监控");
-        healthWatch.start();
+        healthWatch=new Timer("Socket客户端长连接监控", true);
+        healthWatch.scheduleAtFixedRate(new HealthWatch(), 0, scc.getIntervalCheckSocket());
     }
 
     /**
@@ -104,10 +107,13 @@ public class SocketClient {
         toBeStop=true;
         long beginStopT=System.currentTimeMillis();
         while (System.currentTimeMillis()-beginStopT<scc.getStopDelay()) {
-            if ((healthWatch!=null&&!healthWatch.isAlive())
-              &&(reConn!=null&&!reConn.isAlive())) break;
+            if ((reConn!=null&&!reConn.isAlive())) break;
         }
-        if (healthWatch!=null) try { healthWatch.interrupt(); } catch (Exception e) {} finally{ healthWatch=null; };
+        if (this.healthWatch!=null) {
+            this.healthWatch.cancel();
+            this.healthWatch=null;
+        }
+
         if (reConn!=null) try { reConn.interrupt(); } catch (Exception e) {} finally{ reConn=null; };
         closeSocketAll();
     }
@@ -118,15 +124,21 @@ public class SocketClient {
 
         long beginStopT=System.currentTimeMillis();
         while (System.currentTimeMillis()-beginStopT<scc.getStopDelay()) {
-            if ((sendBeat!=null&&!sendBeat.isAlive())
-              &&(sendMsg!=null&&!sendMsg.isAlive())
+            if ((sendMsg!=null&&!sendMsg.isAlive())
               &&(receiveMsg!=null&&!receiveMsg.isAlive())) break;
             if (sendBeat==null&&sendMsg==null&&receiveMsg==null) break;
         }
 
         if (receiveMsg!=null) try { receiveMsg.interrupt(); } catch (Exception e) {} finally{ receiveMsg=null; };
-        if (sendBeat!=null) try { sendBeat.interrupt(); } catch (Exception e) {} finally{ sendBeat=null; };
         if (sendMsg!=null) try { sendMsg.interrupt(); } catch (Exception e) {} finally{ sendMsg=null; };
+        if (this.sendBeat!=null) {
+            this.sendBeat.cancel();
+            this.sendBeat=null;
+        }
+        if (this.healthWatch!=null) {
+            this.healthWatch.cancel();
+            this.healthWatch=null;
+        }
 
         if (sendLogFile!=null) try { sendLogFile.close(); } catch (Exception e) {} finally{ sendLogFile=null; };
         if (recvLogFile!=null) try { recvLogFile.close(); } catch (Exception e) {} finally{ recvLogFile=null; };
@@ -148,9 +160,9 @@ public class SocketClient {
         return socket!=null&&socket.isBound()&&socket.isConnected()&&!socket.isClosed();
     }
 
-    private HealthWatch healthWatch; //健康检查线程
+    private Timer healthWatch; //健康检查线程
     private ReConn reConn; //重新连接线程
-    private SendBeat sendBeat; //发送心跳线程
+    private Timer sendBeat; //发送心跳线程
     private SendMsg sendMsg; //发送消息线程
     private ReceiveMsg receiveMsg; //结束消息线程
 
@@ -175,12 +187,8 @@ public class SocketClient {
 
     //以下子进程=====================================================================================
     //健康监控线程
-    private class HealthWatch extends Thread {
-        protected HealthWatch(String name) {
-            super.setName(name);
-        }
+    private class HealthWatch extends TimerTask {
         public void run() { //主线程监控连接
-            logger.debug(this.getName()+"线程启动");
             while (!toBeStop) {//检查线程的健康状况
                 try {
                     if (!socketOk()||(System.currentTimeMillis()-lastReceiveTime>scc.getExpireTime())) {//连接失败了
@@ -191,7 +199,6 @@ public class SocketClient {
                             reConn.start();
                         }
                     }
-                    try { sleep(scc.getIntervalCheckSocket()); } catch (InterruptedException e) {}
                 } catch(Exception e) {
                     e.printStackTrace();
                 }
@@ -213,7 +220,7 @@ public class SocketClient {
         }
         public void run() {
             logger.debug(this.getName()+"线程启动");
-            if (sendBeat!=null) try {sendBeat.interrupt();} catch(Exception e) {}
+            if (sendBeat!=null) sendBeat.cancel();
             if (sendMsg!=null) try {sendMsg.interrupt();} catch(Exception e) {}
             if (receiveMsg!=null) try {receiveMsg.interrupt();} catch(Exception e) {}
             try {sleep(100);} catch(Exception e) {}
@@ -264,9 +271,9 @@ public class SocketClient {
                         receiveMsg.setDaemon(true);
                         receiveMsg.start();
 
-                        sendBeat=new SendBeat("发送心跳");
-                        sendBeat.setDaemon(true);
-                        sendBeat.start();
+                        //发送心跳
+                        sendBeat=new Timer("发送心跳", true);
+                        sendBeat.scheduleAtFixedRate(new SendBeat(), 0, scc.getIntervalBeat());
 
                         sendMsg=new SendMsg("发消息");
                         sendMsg.setDaemon(true);
@@ -289,13 +296,9 @@ public class SocketClient {
     }
 
     //发送心跳
-    private class SendBeat extends Thread {
-        protected SendBeat(String name) {
-            super.setName(name);
-        }
+    private class SendBeat extends TimerTask {
         public void run() {
-            logger.debug(this.getName()+"线程启动");
-            while (!toBeStop&&socketOk()&&!isClose) {
+            if (!toBeStop&&socketOk()&&!isClose) {
                 try {
                     synchronized (socketSendLock) {
                         if (socketOut!=null&&!socket.isOutputShutdown()) {
@@ -310,14 +313,12 @@ public class SocketClient {
                             sendLogFile.flush();
                         }
                     }
-                    try { sleep(scc.getIntervalBeat()); } catch (InterruptedException e) {}
                 } catch(Exception e) {
-                    logger.debug(this.getName()+":"+StringUtils.getAllMessage(e));
+                    logger.debug("心跳监控:"+StringUtils.getAllMessage(e));
                     if (e instanceof SocketException) {
                         try {
                             closeSocketAll();
                         } catch (IOException e1) {
-                            break;
                         }
                     }
                 }

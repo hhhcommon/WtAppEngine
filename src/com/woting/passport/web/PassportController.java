@@ -188,8 +188,6 @@ public class PassportController {
                             um.put("Sex", drr.getDd().getNodeName());
                         } else
                         if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
-                            System.out.println("^^^^^^^^^^^^^^^^"+drr.getRefName()+":"+drr.getResTableName()+":"+drr.getResId()+":"+drr.getDm().getDmName()+":"+drr.getDm().getId());
-                            System.out.println("^^^^^^^^^^^^^^^^"+drr.getDd());
                             um.put("Region", drr.getDd().getTreePathName());
                         }
                     }
@@ -1653,6 +1651,7 @@ public class PassportController {
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
                     gm.put("GroupCount", g.get("groupCount"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("defaultFreq"))) gm.put("GroupFreq", g.get("defaultFreq"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDescn", g.get("descn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDescn", g.get("groupDescn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));

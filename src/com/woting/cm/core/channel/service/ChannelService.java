@@ -302,4 +302,16 @@ public class ChannelService {
 		}
 		return null;
     }
+
+    /**
+     * 获得栏目轮播图
+     * @param catalogId
+     * @param size
+     * @return
+     */
+    public List<Map<String, Object>> getLoopImgs(String catalogId) {
+        Map<String, Object> param=new HashMap<String, Object>();
+        param.put("catalogId", catalogId);
+        return channelAssetDao.queryForListAutoTranform("getLoopImg", param);
+    }
 }

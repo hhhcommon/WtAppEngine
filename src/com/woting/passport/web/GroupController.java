@@ -355,6 +355,7 @@ public class GroupController {
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
                     gm.put("GroupCount", g.get("groupCount"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("defaultFreq"))) gm.put("GroupFreq", g.get("defaultFreq"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDescn", g.get("descn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDescn", g.get("groupDescn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));
@@ -474,6 +475,7 @@ public class GroupController {
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
                     gm.put("GroupCount", g.get("groupCount"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("defaultFreq"))) gm.put("GroupFreq", g.get("defaultFreq"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDescn", g.get("descn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDescn", g.get("groupDescn"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));
@@ -2381,7 +2383,7 @@ public class GroupController {
             if (!StringUtils.isNullOrEmptyOrSpace(groupSignature)&&isManager==1) param.put("groupSignature", groupSignature);//只有管理员才能修改用户组的签名
             if (!StringUtils.isNullOrEmptyOrSpace(groupFreq)) {
                 //检查模拟对讲频率是否合法
-                if (checkFreqArr(groupFreq)) param.put("groupFreq", groupFreq);//只有管理员才能修改用户组的签名
+                if (checkFreqArr(groupFreq)) param.put("groupFreq", groupFreq);
                 else {
                     map.put("ReturnType", "1005");
                     map.put("Message", "模拟频率信息不合法");
@@ -2984,7 +2986,7 @@ public class GroupController {
 
         for (String o: s) {
             String ss[]=o.split("-");
-            if (ss.length==0) {
+            if (ss.length==1) {
                 if (o.indexOf(".")==-1) return false;
                 try {
                    Float.parseFloat(o);

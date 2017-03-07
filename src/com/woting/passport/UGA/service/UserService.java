@@ -12,6 +12,7 @@ import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.tree.TreeNode;
+import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
@@ -166,7 +167,7 @@ public class UserService implements UgaUserService {
                 DictModel sexDm=cd.getDictModelById("8");
                 drr.setDm(sexDm);
                 @SuppressWarnings("unchecked")
-                TreeNode<DictDetail> sexNode=(TreeNode<DictDetail>)sexDm.dictTree.findNode(userInfo.get("sex")+"");
+                TreeNode<TreeNodeBean> sexNode=(TreeNode<TreeNodeBean>)sexDm.dictTree.findNode(userInfo.get("sex")+"");
                 if (sexNode==null) {
                     noMap.put("Sex", "用户性别编码错误");
                 } else {
@@ -185,7 +186,7 @@ public class UserService implements UgaUserService {
                 DictModel regionDm=cd.getDictModelById("2");
                 drr.setDm(regionDm);
                 @SuppressWarnings("unchecked")
-                TreeNode<DictDetail> regionNode=(TreeNode<DictDetail>)regionDm.dictTree.findNode(userInfo.get("region")+"");
+                TreeNode<TreeNodeBean> regionNode=(TreeNode<TreeNodeBean>)regionDm.dictTree.findNode(userInfo.get("region")+"");
                 if (regionNode==null) {
                     noMap.put("Region", "地区编码错误");
                 } else {

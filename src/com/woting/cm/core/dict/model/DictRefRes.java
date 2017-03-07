@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 import com.spiritdata.framework.core.model.BaseObject;
 import com.spiritdata.framework.core.model.ModelSwapPo;
 import com.spiritdata.framework.core.model.tree.TreeNode;
+import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.exceptionC.Plat0006CException;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
@@ -19,7 +20,7 @@ public class DictRefRes extends BaseObject implements Serializable, ModelSwapPo 
     private String resTableName; //资源类型Id：1电台；2单体媒体资源；3专辑资源
     private String resId; //资源Id
     private DictModel dm;
-    private TreeNode<DictDetail> dd;
+    private TreeNode<TreeNodeBean> dd;
     private Timestamp CTime; //创建时间
 
     public String getId() {
@@ -50,19 +51,25 @@ public class DictRefRes extends BaseObject implements Serializable, ModelSwapPo 
         return dm;
     }
     public void setDm(DictModel dm) {
-        if (dd!=null&&!dd.getTnEntity().getMId().equals(dm.getId())) return;
+        if (dd!=null&&dd.getTnEntity() instanceof DictDetail) {
+            if (!((DictDetail)dd.getTnEntity()).getMId().equals(dm.getId())) return;
+        }
         this.dm=dm;
     }
-    public TreeNode<DictDetail> getDd() {
+    public TreeNode<TreeNodeBean> getDd() {
         return dd;
     }
-    public void setDd(TreeNode<DictDetail> dd) {
-        if (dm!=null&&!dm.getId().equals(dd.getTnEntity().getMId())) return;
+    public void setDd(TreeNode<TreeNodeBean> dd) {
+        if (dd.getTnEntity() instanceof DictDetail) {
+            if (dm!=null&&!dm.getId().equals(((DictDetail)dd.getTnEntity()).getMId())) return;
+        }
         this.dd=dd;
     }
-    public void setDd(DictDetail dd) {
-        if (dm!=null&&!dm.getId().equals(dd.getMId())) return;
-        TreeNode<DictDetail> tn=new TreeNode<DictDetail>();
+    public void setDd(TreeNodeBean dd) {
+        if (dd instanceof DictDetail) {
+            if (dm!=null&&!dm.getId().equals(((DictDetail)dd).getMId())) return;
+        }
+        TreeNode<TreeNodeBean> tn=new TreeNode<TreeNodeBean>();
         tn.setTnEntity(dd);
         this.dd=tn;
     }
