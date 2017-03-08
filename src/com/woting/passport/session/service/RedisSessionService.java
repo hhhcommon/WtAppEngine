@@ -10,9 +10,9 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.stereotype.Service;
 
 import com.spiritdata.framework.UGA.UgaUser;
-import com.spiritdata.framework.core.lock.BlockLockConfig;
-import com.spiritdata.framework.core.lock.ExpirableBlockKey;
-import com.spiritdata.framework.ext.redis.lock.RedisBlockLock;
+//import com.spiritdata.framework.core.lock.BlockLockConfig;
+//import com.spiritdata.framework.core.lock.ExpirableBlockKey;
+//import com.spiritdata.framework.ext.redis.lock.RedisBlockLock;
 import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
@@ -63,7 +63,7 @@ public class RedisSessionService implements SessionService {
 
         RedisUserDeviceKey rUdk=new RedisUserDeviceKey(udk);
         RedisOperService roService=new RedisOperService(redisConn, 4);
-        ExpirableBlockKey rLock=RedisBlockLock.lock(rUdk.getKey_Lock(), roService, new BlockLockConfig(5, 2, 0, 50));
+//        ExpirableBlockKey rLock=RedisBlockLock.lock(rUdk.getKey_Lock(), roService, new BlockLockConfig(5, 2, 0, 50));
         try {
             //从Redis中获得对应额UserId
             String _value=roService.get(rUdk.getKey_DeviceType_UserId());
@@ -175,7 +175,7 @@ public class RedisSessionService implements SessionService {
                 }
             }
         } finally {
-            rLock.unlock();
+//            rLock.unlock();
             if (roService!=null) roService.close();
             roService=null;
         }

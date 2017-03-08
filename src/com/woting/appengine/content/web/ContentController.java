@@ -539,7 +539,7 @@ public class ContentController {
                 }
                 mUdk=mp.getUserDeviceKey();
                 if (mUdk!=null) {
-                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "content/");
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "content/clickFavorite");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
                         map.put("Message", "需要登录");
@@ -1124,7 +1124,7 @@ public class ContentController {
     public Map<String,Object> clickSubscribe(HttpServletRequest request) {
         //数据收集处理==1
         ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
-        alPo.setApiName("4.5.1-content/clickFavorite");
+        alPo.setApiName("4.5.1-content/clickSubscribe");
         alPo.setObjType("SUB001");//用户订阅对象
         alPo.setDealFlag(1);//处理成功
         alPo.setOwnerType(201);
@@ -1146,7 +1146,7 @@ public class ContentController {
                 }
                 mUdk=mp.getUserDeviceKey();
                 if (mUdk!=null) {
-                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "content/");
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "content/clickSubscribe");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
                         map.put("Message", "需要登录");
