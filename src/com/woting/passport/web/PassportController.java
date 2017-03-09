@@ -163,7 +163,7 @@ public class PassportController {
             mUdk.setUserId(u.getUserId());
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
             RedisOperService roService=new RedisOperService(redisConn, 4);
-            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService, new BlockLockConfig(5, 2, 0, 50));
+            //ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService, new BlockLockConfig(5, 2, 0, 50));
             try {
                 sessionService.registUser(mUdk, u);
                 MobileUsedPo mu=new MobileUsedPo();
@@ -173,7 +173,7 @@ public class PassportController {
                 mu.setUserId(u.getUserId());
                 muService.saveMobileUsed(mu);
             } finally {
-                rLock.unlock();
+                //rLock.unlock();
                 roService.close();
                 roService=null;
             }
