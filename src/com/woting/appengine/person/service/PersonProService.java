@@ -88,15 +88,17 @@ public class PersonProService {
 						ret.put("ContentImg", cha.getPubImg());
 						ret.put("ContentName", cha.getPubName());
 						MediaAsset ma = mediaService.getMaInfoById(cha.getAssetId());
-						if (ma.getTimeLong()!=0) {
-							ret.put("ContentTime", ma.getTimeLong());
-						} else {
-							ret.put("ContentTime", "123400");
+						if (ma!=null) {
+							if (ma.getTimeLong()!=0) {
+								ret.put("ContentTime", ma.getTimeLong());
+							} else {
+								ret.put("ContentTime", "123400");
+							}
+							ret.put("ContentPlay", ma.getMaURL());
+							ret.put("ContentPubTime", cha.getPubTime());
+							ret.put("PlayCount", "1234");
+							mas.add(ret);
 						}
-						ret.put("ContentPlay", ma.getMaURL());
-						ret.put("ContentPubTime", cha.getPubTime());
-						ret.put("PlayCount", "1234");
-						mas.add(ret);
 					}
 					retM.put("MediaAssetList", mas);
 				}

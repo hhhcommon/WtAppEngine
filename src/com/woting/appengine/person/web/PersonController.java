@@ -105,6 +105,7 @@ public class PersonController {
             if (map!=null&&map.size()>0) {
                 map.put("ReturnType", "1001");
             } else {
+            	map = new HashMap<>();
                 map.put("ReturnType", "1011");
                 map.put("Message", "无主播信息");
             }
