@@ -35,6 +35,8 @@ import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
+import com.woting.appengine.favorite.persis.po.UserFavoritePo;
+import com.woting.appengine.favorite.service.FavoriteService;
 import com.woting.cm.core.utils.ContentUtils;
 import com.woting.cm.core.broadcast.persis.po.BCProgrammePo;
 import com.woting.cm.core.broadcast.service.BcProgrammeService;
@@ -44,8 +46,6 @@ import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
 import com.woting.cm.core.media.MediaType;
 import com.woting.cm.core.subscribe.service.SubscribeService;
-import com.woting.favorite.persis.po.UserFavoritePo;
-import com.woting.favorite.service.FavoriteService;
 import com.woting.passport.UGA.persis.pojo.GroupPo;
 import com.woting.passport.mobile.MobileUDKey;
 

@@ -1,4 +1,4 @@
-package com.woting.favorite.service;
+package com.woting.appengine.favorite.service;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -24,8 +24,9 @@ import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.cm.core.utils.ContentUtils;
+import com.woting.appengine.favorite.persis.po.UserFavoritePo;
 import com.woting.cm.core.channel.service.ChannelService;
-import com.woting.favorite.persis.po.UserFavoritePo;
+import com.woting.cm.core.media.MediaType;
 import com.woting.passport.UGA.persis.pojo.GroupPo;
 import com.woting.passport.mobile.MobileUDKey;
 
@@ -57,16 +58,15 @@ public class FavoriteService {
      *          -100——内容类型不符合要求
      */
     public int favorite(String mediaType, String contentId, int flag, MobileUDKey mUdk) {
-        String CType=mediaType.toUpperCase();
-        if (!CType.equals("RADIO")&&!CType.equals("AUDIO")&&!CType.equals("SEQU")&&!CType.equals("TEXT")) return -100;
+        if (MediaType.buildByTypeName(mediaType.toUpperCase())==MediaType.ERR)  return -100;
+        String _tabName=MediaType.buildByTypeName(mediaType.toUpperCase()).getTabName();
 
-        String assetType=ContentUtils.getResTableName(mediaType);
         Map<String, Object> param=new HashMap<String, Object>();
-        param.put("resTableName", assetType);
+        param.put("resTableName", _tabName);
         param.put("resId", contentId);
 
         if (flag==1) {
-            if (!channelService.isPub(assetType, contentId)) return 0;
+            if (!channelService.isPub(_tabName, contentId)) return 0;
             if (mUdk.isUser()) {
                 param.put("ownerType", "201");
                 param.put("ownerId", mUdk.getUserId());
@@ -144,8 +144,8 @@ public class FavoriteService {
                 String typeSql="";
                 String[] types=mediaType.split(",");
                 for (int i=0; i<types.length; i++) {
-                    if (types[i].equals("RADIO")||types[i].equals("AUDIO")||!types[i].equals("SEQU")||!types[i].equals("TEXT")) {
-                        typeSql+="or resTableName='"+ContentUtils.getResTableName(types[i])+"'";
+                    if (MediaType.buildByTypeName(types[i])!=MediaType.ERR)  {
+                        typeSql+="or resTableName='"+MediaType.buildByTypeName(types[i]).getTabName()+"'";
                     }
                 }
                 if (typeSql.length()>0) {
@@ -417,11 +417,11 @@ public class FavoriteService {
     }
     private boolean equalContent(Map<String, Object> oneContent, Map<String, Object> oneFavorite) {
         if (!(oneContent.get("ContentId")+"").equals(oneFavorite.get("resId")+"")) return false;
-        if (!(ContentUtils.getResTableName(oneContent.get("MediaType")+"")).equals(oneFavorite.get("resTableName")+"")) return false;
+        if (!(MediaType.buildByTypeName(oneContent.get("MediaType")+"").getTabName()).equals(oneFavorite.get("resTableName")+"")) return false;
         return true;
     }
     private boolean fillTypeList(String cnttType, List<Map<String, Object>> fList, int perSize, int pageSize, Map<String, Object> param) {
-        param.put("resTableName", ContentUtils.getResTableName(cnttType));
+        param.put("resTableName", MediaType.buildByTypeName(cnttType).getTabName());
         List<UserFavoritePo> thisTypeList=userFavoriteDao.queryForList(param);
         for (int i=perSize-1; i<thisTypeList.size()-1; i++) thisTypeList.remove(i);
         for (int i=0; i<thisTypeList.size(); i++) {
@@ -487,7 +487,7 @@ public class FavoriteService {
                 if (!CType.equals("RADIO")&&!CType.equals("AUDIO")&&!CType.equals("SEQU")&&!CType.equals("TEXT")) oneResult.put("Result", "-1");
                 else {//删除
                     Map<String, Object> paraDel=new HashMap<String, Object>();
-                    paraDel.put("resTableName", ContentUtils.getResTableName(CType));
+                    paraDel.put("resTableName", MediaType.buildByTypeName(CType).getTabName());
                     paraDel.put("resId", cInfo[1]);
                     paraDel.put("ownerType", "202");
                     paraDel.put("ownerId", mUdk.getDeviceId());

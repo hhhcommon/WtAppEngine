@@ -6,7 +6,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="WT_DISCUSS">
   <!-- 对象定义:用户意见 -->
-  <resultMap id="discussMap" type="discuss">
+  <resultMap id="discussMap" type="Discuss">
     <id      column="id"            property="id"            jdbcType="VARCHAR"/>
     <result  column="userId"        property="userId"        jdbcType="VARCHAR"/>
     <result  column="resTableName"  property="resTableName"  jdbcType="VARCHAR"/>

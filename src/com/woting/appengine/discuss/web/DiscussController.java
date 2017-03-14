@@ -1,4 +1,4 @@
-package com.woting.discuss.web;
+package com.woting.appengine.discuss.web;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.content.utils.ContentRedisUtils;
+import com.woting.appengine.discuss.model.Discuss;
+import com.woting.appengine.discuss.service.DiscussService;
 import com.woting.cm.core.media.MediaType;
 import com.woting.dataanal.gather.API.ApiGatherUtils;
 import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
 import com.woting.dataanal.gather.API.persis.pojo.ApiLogPo;
-import com.woting.discuss.model.Discuss;
-import com.woting.discuss.service.DiscussService;
 import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.UserService;
 import com.spiritdata.framework.util.JsonUtils;

@@ -1,4 +1,4 @@
-/**== 一、字典类=============================================*/
+﻿/**== 一、字典类=============================================*/
 /**001 字典组[PLAT_DICTM]*/
 DROP TABLE IF EXISTS plat_DictM;
 CREATE TABLE plat_DictM (
@@ -542,7 +542,7 @@ CREATE TABLE wt_ChannelAsset (
   checkRuleIds  varchar(100)                          COMMENT '审核规则，0为手工/人工创建，其他为系统规则id',
   cTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   pubTime       timestamp                             COMMENT '发布时间，发布时的时间，若多次发布，则是最新的发布时间',
-  ？？？lmTime        timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改时间，任何字段进行了修改都要改这个字段',
+  lmTime        timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改时间，任何字段进行了修改都要改这个字段',
   INDEX pubAsset (assetType, assetId, flowFlag) USING HASH,
   INDEX bizIdx (assetType, assetId, channelId) USING BTREE,
   PRIMARY KEY (id)
@@ -636,6 +636,22 @@ CREATE TABLE wt_Complex_Ref (
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='035复杂关系表';
+
+/**036内容举报[WT_CONTENT_ACCUSATION]*/
+DROP TABLE IF EXISTS wt_Content_Accusation;
+CREATE TABLE wt_Content_Accusation (
+  id              varchar(32)   NOT NULL             COMMENT 'ID',
+  resTableName    varchar(200)  NOT NULL             COMMENT '资源类型表名',
+  resId           varchar(32)   NOT NULL             COMMENT '资源Id',
+  userId          varchar(34)                        COMMENT '举报者Id,若是过客，则存入其IMEI，并在前面加入::',
+  selReasons      varchar(400)                       COMMENT '选择性原因,用逗号隔开,例：3244e3234e23444352245::侵权,234::违法',
+  inputReason     varchar(300)  NOT NULL             COMMENT '输入原因，100个汉字以内',
+  cTime           timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间，也就是举报时间',
+  INDEX userIdx (userId) USING HASH,
+  INDEX assetIdx (assetTableName, assetId) USING HASH,
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='036内容举报';
 
 
 /*****************************************/

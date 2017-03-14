@@ -13,6 +13,7 @@ import com.woting.WtAppEngineConstants;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictDetail;
 import com.woting.cm.core.dict.model.DictModel;
+import com.woting.cm.core.media.MediaType;
 
 /**
  * 内容方法类：内容数据的转换，主要——存储对象转换为显示对象。
@@ -197,20 +198,21 @@ public abstract class ContentUtils {
                                       List<Map<String, Object>> pubChannelList,
                                       List<Map<String, Object>> favoriteList, 
                                       List<Map<String, Object>> playCountList) {
+        String _tabName=MediaType.buildByTypeName(mediaType).getTabName();
         //P12-公共：相关人员列表
-        Object temp=fetchPersons(personList, getResTableName(mediaType), one.get("ContentId")+"");
+        Object temp=fetchPersons(personList, _tabName, one.get("ContentId")+"");
         if (temp!=null) one.put("ContentPersons", temp);
         //P13-公共：所有分类列表
-        temp=fetchCatas(cataList, getResTableName(mediaType), one.get("ContentId")+"");
+        temp=fetchCatas(cataList, _tabName, one.get("ContentId")+"");
         if (temp!=null) one.put("ContentCatalogs", temp);
         //P14-公共：发布情况
-        Object cnls=fetchChannels(pubChannelList, getResTableName(mediaType), one.get("ContentId")+"");
+        Object cnls=fetchChannels(pubChannelList, _tabName, one.get("ContentId")+"");
         if (cnls!=null) one.put("ContentPubChannels", cnls);
         //P15-公共：是否喜欢
-        temp=fetchFavorite(favoriteList, getResTableName(mediaType), one.get("ContentId")+"");
+        temp=fetchFavorite(favoriteList, _tabName, one.get("ContentId")+"");
         one.put("ContentFavorite", (temp==null?0:(((Integer)temp)==1?(cnls==null?"您喜欢的内容已经下架":1):0))+"");
         //P16-公共：播放次数
-        temp=fetchPlayCount(playCountList, getResTableName(mediaType), one.get("ContentId")+"");
+        temp=fetchPlayCount(playCountList, _tabName, one.get("ContentId")+"");
         one.put("PlayCount", temp);
     }
 
@@ -342,21 +344,6 @@ public abstract class ContentUtils {
     }
     public static final String getShareUrl_DT(String preUrl, String contentId) {//的到电台的分享地址
         return preUrl+"/dt/"+contentId+"/content.html";
-    }
-
-    /**
-     * 从媒体类型转换为资源表名
-     * @param mediaType 媒体类型
-     * @return 资源表名
-     */
-    public static String getResTableName(String mediaType) {
-        if (mediaType.equals("RADIO")) return "wt_Broadcast";
-        else
-        if (mediaType.equals("AUDIO")) return "wt_MediaAsset";
-        else
-        if (mediaType.equals("SEQU")) return "wt_SeqMediaAsset";
-        else
-        return "wt_Document";
     }
 
     /**

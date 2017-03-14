@@ -1,4 +1,4 @@
-package com.woting.discuss.service;
+package com.woting.appengine.discuss.service;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -20,6 +20,9 @@ import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.WtAppEngineConstants;
+import com.woting.appengine.discuss.model.Discuss;
+import com.woting.appengine.discuss.persis.po.DiscussPo;
+import com.woting.appengine.favorite.persis.po.UserFavoritePo;
 import com.woting.cm.core.broadcast.service.BroadcastService;
 import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.channel.model.Channel;
@@ -28,9 +31,6 @@ import com.woting.cm.core.dict.persis.po.DictRefResPo;
 import com.woting.cm.core.media.MediaType;
 import com.woting.cm.core.media.service.MediaService;
 import com.woting.cm.core.utils.ContentUtils;
-import com.woting.discuss.model.Discuss;
-import com.woting.discuss.persis.po.DiscussPo;
-import com.woting.favorite.persis.po.UserFavoritePo;
 import com.woting.passport.UGA.persis.pojo.GroupPo;
 
 public class DiscussService {

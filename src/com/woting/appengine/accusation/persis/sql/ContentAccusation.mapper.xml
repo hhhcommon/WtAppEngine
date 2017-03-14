@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+  内容举报
+-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DA_ACCUSATION">
+  <!-- 对象定义:用户意见 -->
+  <resultMap id="accusationMap" type="Accusation">
+    <id      column="id"              property="id"              jdbcType="VARCHAR"/>
+    <result  column="resTableName"  property="resTableName"  jdbcType="VARCHAR"/>
+    <result  column="resId"         property="resId"         jdbcType="VARCHAR"/>
+    <result  column="userId"          property="userId"          jdbcType="VARCHAR"/>
+    <result  column="selReasons"      property="selReasons"      jdbcType="VARCHAR"/>
+    <result  column="inputReason"     property="inputReason"     jdbcType="VARCHAR"/>
+    <result  column="cTime"           property="CTime"           jdbcType="TIMESTAMP"/>
+  </resultMap>
+
+  <!-- 所有列 -->
+  <sql id="Base_Column_List">
+    id, resTableName, resId, userId, selReasons, inputReason
+  </sql>
+
+  <!-- 条件子句 -->
+  <sql id="WhereClauseByEntiey">
+    <where>
+      <trim prefix="(" suffix=")" prefixOverrides="and">
+        <if test="id!=null"> and id=#{id,jdbcType=VARCHAR}</if>
+        <if test="resTableName!=null"> and resTableName=#{resTableName,jdbcType=VARCHAR}</if>
+        <if test="resId!=null"> and resId=#{resId,jdbcType=VARCHAR}</if>
+        <if test="userId!=null"> and userId=#{userId,jdbcType=VARCHAR}</if>
+        <if test="selReasons!=null"> and selReasons=#{selReasons,jdbcType=VARCHAR}</if>
+        <if test="inputReason!=null"> and inputReason=#{inputReason,jdbcType=VARCHAR}</if>
+        <if test="CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
+      </trim>
+    </where>
+  </sql>
+
+  <!-- 获得记录条数-->
+  <select id="getCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select count(*) from wt_Content_Accusation <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </select>
+
+  <!-- 获得列表 -->
+  <select id="getList" parameterType="java.util.Map" resultMap="favoriteMap">
+    select <include refid="Base_Column_List"/> from wt_Content_Accusation
+    <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+    <if test="sortByClause!=null">order by ${sortByClause}</if>
+  </select>
+
+  <!-- 获得一条数据 -->
+  <select id="getInfo" resultMap="favoriteMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_Content_Accusation <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </select>
+
+  <!-- 新增数据 -->
+  <insert id="insert" parameterType="java.util.Map">
+    insert into wt_Content_Accusation
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="resTableName!=null">resTableName,</if>
+      <if test="resId!=null">resId,</if>
+      <if test="userId!=null">userId,</if>
+      <if test="selReasons!=null">selReasons,</if>
+      <if test="inputReason!=null">inputReason,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="resTableName!=null">#{resTableName,jdbcType=VARCHAR},</if>
+      <if test="resId!=null">#{resId,jdbcType=VARCHAR},</if>
+      <if test="userId!=null">#{userId,jdbcType=VARCHAR},</if>
+      <if test="selReasons!=null">#{selReasons,jdbcType=VARCHAR},</if>
+      <if test="inputReason!=null">#{inputReason,jdbcType=VARCHAR},</if>
+    </trim>
+  </insert>
+
+  <!-- 删除数据 -->
+  <delete id="delete" parameterType="java.lang.String">
+    delete from wt_Content_Accusation where id=#{id,jdbcType=VARCHAR}
+  </delete>
+  <delete id="deleteByEntity" parameterType="java.util.Map">
+    delete from wt_Content_Accusation <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </delete>
+</mapper>

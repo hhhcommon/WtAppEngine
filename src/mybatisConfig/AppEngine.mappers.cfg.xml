@@ -13,11 +13,13 @@
     <typeAlias alias="PVersion"       type="com.woting.version.core.model.Version"/>
     <typeAlias alias="PVerConfig"     type="com.woting.version.core.model.VersionConfig"/>
     <!-- 用户喜欢 -->
-    <typeAlias alias="DaUserFavorite" type="com.woting.favorite.persis.po.UserFavoritePo"/>
+    <typeAlias alias="DaUserFavorite" type="com.woting.appengine.favorite.persis.po.UserFavoritePo"/>
     <!-- 用户评论 -->
-    <typeAlias alias="discuss"        type="com.woting.discuss.persis.po.DiscussPo"/>
+    <typeAlias alias="Discuss"        type="com.woting.appengine.discuss.persis.po.DiscussPo"/>
+    <!-- 用户举报 -->
+    <typeAlias alias="Accusation"     type="com.woting.appengine.accusation.persis.po.ContentAccusationPo"/>
     <!-- Api日志 -->
-    <typeAlias alias="apiLog"         type="com.woting.dataanal.gather.API.persis.pojo.ApiLogPo"/>
+    <typeAlias alias="ApiLog"         type="com.woting.dataanal.gather.API.persis.pojo.ApiLogPo"/>
   </typeAliases>
   <!-- SQL配置 -->
   <mappers>
@@ -29,9 +31,11 @@
     <!-- 版本管理 -->
     <mapper resource="com/woting/version/core/persis/sql/Version.mapper.xml"/>
     <!-- 用户喜欢 -->
-    <mapper resource="com/woting/favorite/persis/sql/UserFavorite.mapper.xml"/>
+    <mapper resource="com/woting/appengine/favorite/persis/sql/UserFavorite.mapper.xml"/>
     <!-- 用户评论 -->
-    <mapper resource="com/woting/discuss/persis/sql/Discuss.mapper.xml"/>
+    <mapper resource="com/woting/appengine/discuss/persis/sql/Discuss.mapper.xml"/>
+    <!-- 用户举报 -->
+    <mapper resource="com/woting/appengine/accusation/persis/sql/ContentAccusation.mapper.xml"/>
     <!-- Api日志 -->
     <mapper resource="com/woting/dataanal/gather/API/persis/sql/ApiLog.mapper.xml"/>
   </mappers>

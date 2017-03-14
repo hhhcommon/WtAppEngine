@@ -188,6 +188,7 @@ public class PassportController {
                             um.put("Sex", drr.getDd().getNodeName());
                         } else
                         if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
+                            System.out.println("==========================================="+drr.getDd());
                             um.put("Region", drr.getDd().getTreePathName());
                         }
                     }
