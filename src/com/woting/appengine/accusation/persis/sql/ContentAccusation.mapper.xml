@@ -4,16 +4,16 @@
   内容举报
 -->
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="DA_ACCUSATION">
+<mapper namespace="ACCUSATION">
   <!-- 对象定义:用户意见 -->
   <resultMap id="accusationMap" type="Accusation">
-    <id      column="id"              property="id"              jdbcType="VARCHAR"/>
+    <id      column="id"            property="id"            jdbcType="VARCHAR"/>
     <result  column="resTableName"  property="resTableName"  jdbcType="VARCHAR"/>
     <result  column="resId"         property="resId"         jdbcType="VARCHAR"/>
-    <result  column="userId"          property="userId"          jdbcType="VARCHAR"/>
-    <result  column="selReasons"      property="selReasons"      jdbcType="VARCHAR"/>
-    <result  column="inputReason"     property="inputReason"     jdbcType="VARCHAR"/>
-    <result  column="cTime"           property="CTime"           jdbcType="TIMESTAMP"/>
+    <result  column="userId"        property="userId"        jdbcType="VARCHAR"/>
+    <result  column="selReasons"    property="selReasons"    jdbcType="VARCHAR"/>
+    <result  column="inputReason"   property="inputReason"   jdbcType="VARCHAR"/>
+    <result  column="cTime"         property="CTime"         jdbcType="TIMESTAMP"/>
   </resultMap>
 
   <!-- 所有列 -->
@@ -42,14 +42,14 @@
   </select>
 
   <!-- 获得列表 -->
-  <select id="getList" parameterType="java.util.Map" resultMap="favoriteMap">
+  <select id="getList" parameterType="java.util.Map" resultMap="accusationMap">
     select <include refid="Base_Column_List"/> from wt_Content_Accusation
     <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
     <if test="sortByClause!=null">order by ${sortByClause}</if>
   </select>
 
   <!-- 获得一条数据 -->
-  <select id="getInfo" resultMap="favoriteMap" parameterType="java.util.Map">
+  <select id="getInfo" resultMap="accusationMap" parameterType="java.util.Map">
     select <include refid="Base_Column_List"/> from wt_Content_Accusation <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </select>
 

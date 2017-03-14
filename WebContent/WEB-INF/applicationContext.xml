@@ -30,12 +30,8 @@
     <property name="maxWait" value="60000"/>
     <property name="poolPreparedStatements" value="true"/>
     <property name="maxOpenPreparedStatements" value="40"/>
-    <property name="testOnBorrow">
-      <value>false</value>
-    </property>
-    <property name="validationQuery">
-      <value>select 1 from dual</value>
-    </property>
+    <property name="testOnBorrow"><value>false</value></property>
+    <property name="validationQuery"><value>select 1 from dual</value></property>
   </bean>
   <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
     <property name="dataSource" ref="dataSource"/>

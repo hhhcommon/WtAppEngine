@@ -1388,7 +1388,7 @@ public class ContentController {
                 if (mUdk!=null) {
                     map.putAll(mUdk.toHashMapAsBean());
                     Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "content/accuse");
-                    map.putAll(retM);
+                    if (retM.get("UserId")!=null) map.put("UserId", retM.get("UserId"));
                     map.remove("ReturnType");
                 }
             }
@@ -1430,9 +1430,21 @@ public class ContentController {
 
             int ret=accusationService.accuseContent(mediaType, contentId, selReasons, inputReason, mUdk);
             //若成功返回1；若必要参数为空，返回0；若插入失败返回2；若mediaType不合法，返回-100
-            if (ret==-4) map.put("ReturnType", "1002");
-            else if (ret==1) map.put("ReturnType", "1001");
-            else map.put("ReturnType", "1000");
+            if (ret==1) {
+                map.put("ReturnType", "1001");
+            } else if (ret==-4) {
+                map.put("Message", "无法获得有效举报原因");
+                map.put("ReturnType", "1002");
+            } else if (ret==-5) {
+                map.put("Message", "无对应的内容["+mediaType+"::"+contentId+"]");
+                map.put("ReturnType", "1003");
+            } else if (ret==-6) {
+                map.put("Message", "选择性原因参数不合法["+selReasons+"]");
+                map.put("ReturnType", "1004");
+            } else {
+                map.put("Message", "无法获取相关的参数");
+                map.put("ReturnType", "1000");
+            }
             return map;
         } catch(Exception e) {
             e.printStackTrace();
