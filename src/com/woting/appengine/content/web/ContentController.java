@@ -21,6 +21,7 @@ import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.RequestUtils;
+import com.woting.appengine.accusation.service.AccusationService;
 import com.woting.appengine.content.service.ContentService;
 import com.woting.appengine.content.utils.ContentRedisUtils;
 import com.woting.appengine.favorite.service.FavoriteService;
@@ -42,6 +43,8 @@ public class ContentController {
     private ContentService contentService;
     @Resource
     private FavoriteService favoriteService;
+    @Resource
+    private AccusationService accusationService;
     @Resource
     private SubscribeService subscribeService;
     @Resource
@@ -1333,6 +1336,103 @@ public class ContentController {
                 map.put("ReturnType", "1011");
                 map.put("Message", "无数据");
             }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
+            return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
+        }
+    }
+
+    /**
+     * 获得内容（某栏目或分类下的内容）
+     * @param request
+     * @return 所获得的内容，包括分页
+     */
+    @RequestMapping(value="accuse.do")
+    @ResponseBody
+    public Map<String,Object> accuseContent(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("4.7.1-content/accuse");
+        alPo.setObjType("001");//内容对象
+        alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
+
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
+            MobileUDKey mUdk=null;
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
+                }
+                mUdk=mp.getUserDeviceKey();
+                if (mUdk!=null) {
+                    map.putAll(mUdk.toHashMapAsBean());
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "content/accuse");
+                    map.putAll(retM);
+                    map.remove("ReturnType");
+                }
+            }
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
+            }
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //1-得到资源类型
+            String mediaType=(m.get("MediaType")==null?null:m.get("MediaType")+"");
+            //2-得到资源的Id
+            String contentId=(m.get("ContentId")==null?null:m.get("ContentId")+"");
+            //3-得到选择性内容
+            String selReasons=(m.get("SelReasons")==null?null:m.get("SelReasons")+"");
+            //4-得到输入性内容
+            String inputReason=(m.get("InputReason")==null?null:m.get("InputReason")+"");
+
+            int ret=accusationService.accuseContent(mediaType, contentId, selReasons, inputReason, mUdk);
+            //若成功返回1；若必要参数为空，返回0；若插入失败返回2；若mediaType不合法，返回-100
+            if (ret==-4) map.put("ReturnType", "1002");
+            else if (ret==1) map.put("ReturnType", "1001");
+            else map.put("ReturnType", "1000");
             return map;
         } catch(Exception e) {
             e.printStackTrace();

@@ -32,12 +32,13 @@ public class AccusationService {
      * @param selReasons 选择性原因,用逗号隔开,例：3244e3234e23444352245::侵权,234::违法
      * @param inputReason 输入原因，100个汉字以内
      * @param mUdk 用户标识，可以是登录用户，也可以是手机设备
-     * @return 若成功返回1；若必要参数为空，返回0；若插入失败返回2；若mediaType不合法，返回-100
+     * @return 若成功返回1；用户标识为空，返回-1；若内容Id为空返回-2；若mediaType不合法，返回-3；若得不到原因，返回-4
      */
     public int accuseContent(String mediaType, String contentId, String selReasons, String inputReason, MobileUDKey mUdk) {
-        if (MediaType.buildByTypeName(mediaType.toUpperCase())==MediaType.ERR)  return -100;
-        if (mUdk==null)  return 0;
-        if (StringUtils.isNullOrEmptyOrSpace(selReasons)&&StringUtils.isNullOrEmptyOrSpace(inputReason)) return 0;
+        if (mUdk==null)  return -1;
+        if (StringUtils.isNullOrEmptyOrSpace(contentId))  return -2;
+        if (MediaType.buildByTypeName(mediaType.toUpperCase())==MediaType.ERR)  return -3;
+        if (StringUtils.isNullOrEmptyOrSpace(selReasons)&&StringUtils.isNullOrEmptyOrSpace(inputReason)) return -4;
 
         Map<String, Object> param=new HashMap<String, Object>();
         param.put("resTableName", MediaType.buildByTypeName(mediaType.toUpperCase()).getTabName());
