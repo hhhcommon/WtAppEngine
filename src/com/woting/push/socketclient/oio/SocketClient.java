@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class SocketClient {
     FileOutputStream sendLogFile=null;
     FileOutputStream recvLogFile=null;
 
-    private ConcurrentLinkedQueue<byte[]> sendMsgQueue; //要发送的消息队列
+    private LinkedBlockingQueue<byte[]> sendMsgQueue; //要发送的消息队列
 
     private int nextReConnIndex; //重连策略下一个执行序列;
 
@@ -50,7 +50,7 @@ public class SocketClient {
         nextReConnIndex=0;
         this.scc=scc;
         if (StringUtils.isNullOrEmptyOrSpace(scc.getServerType())||StringUtils.isNullOrEmptyOrSpace(scc.getServerType())) throw new Exception("未能获得服务器标识");
-        sendMsgQueue=new ConcurrentLinkedQueue<byte[]>();//初始化传送队列
+        sendMsgQueue=new LinkedBlockingQueue<byte[]>();//初始化传送队列
     }
     /**
      * 设置当前重连策略的Index，通过这个方法提供一个更灵活的设置重连策略
@@ -186,19 +186,17 @@ public class SocketClient {
     //健康监控线程
     private class HealthWatch extends TimerTask {
         public void run() { //主线程监控连接
-            while (!toBeStop) {//检查线程的健康状况
-                try {
-                    if (!socketOk()||(System.currentTimeMillis()-lastReceiveTime>scc.getExpireTime())) {//连接失败了
-                        if (reConn==null||!reConn.isAlive()) {
-                            closeSocketAll();
-                            reConn=new ReConn("重连", nextReConnIndex);//此线程在健康监护线程中启动
-                            reConn.setDaemon(true);
-                            reConn.start();
-                        }
+            try {
+                if (!toBeStop&&(!socketOk()||(System.currentTimeMillis()-lastReceiveTime>scc.getExpireTime()))) {//连接失败了
+                    if (reConn==null||!reConn.isAlive()) {
+                        closeSocketAll();
+                        reConn=new ReConn("重连", nextReConnIndex);//此线程在健康监护线程中启动
+                        reConn.setDaemon(true);
+                        reConn.start();
                     }
-                } catch(Exception e) {
-                    e.printStackTrace();
                 }
+            } catch(Exception e) {
+                e.printStackTrace();
             }
         }
     }
@@ -348,7 +346,7 @@ public class SocketClient {
             logger.debug(this.getName()+"线程启动");
             while (!toBeStop&&socketOk()&&!isClose) {
                 try {
-                    byte[] msg4Send=sendMsgQueue.poll();
+                    byte[] msg4Send=sendMsgQueue.take();
                     if (msg4Send==null) continue;
                     if (socketOut!=null&&!socket.isOutputShutdown()) {
                         synchronized (socketSendLock) {

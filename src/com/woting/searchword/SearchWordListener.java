@@ -1,5 +1,8 @@
 package com.woting.searchword;
 
+import java.util.Date;
+import java.util.Timer;
+
 import javax.servlet.ServletContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import com.spiritdata.framework.FConstants;
@@ -36,12 +39,16 @@ public class SearchWordListener extends Thread {
                 }
             }
             if (SearchWordListener.wordService!=null) {
-                //启动在线监控
-                (new DealOnlineQueue(SearchWordListener.wordService)).start();
-                //启动加载监控
-                (new DealLoadQueue(SearchWordListener.wordService)).start();
-                //向加载队列输入内容
+                //从数据库加载队列输入内容
                 (new LoadWord(SearchWordListener.wordService)).start();
+
+                long interval_1=10*1000l, interval_2=60*60*1000l; 
+                //启动在线监控
+                (new Timer("在线搜索词队列监控，每隔["+interval_1+"]毫秒执行", true))
+                .schedule(new DealOnlineQueue(SearchWordListener.wordService), new Date(), interval_1);
+                //启动加载监控
+                (new Timer("装载搜索词队列监控，每隔["+interval_2+"]毫秒执行", true))
+                .schedule(new DealLoadQueue(SearchWordListener.wordService), new Date(), interval_2);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
