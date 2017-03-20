@@ -30,7 +30,7 @@ public class SearchCrawlerService {
 		List<Map<String, Object>> list=null;
         ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
         if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-            JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+            JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory123");
             RedisOperService roService=new RedisOperService(conn);
             list=SearchUtils.getListPage(searchStr, page, pageSize, roService); // 保存到在redis里key为constr的list里
             if (list==null) {

@@ -42,7 +42,7 @@ public class LocalSearch extends Thread {
 				List<Map<String, Object>> list=(List<Map<String, Object>>) map.get("List");
 	            ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
 	            if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-	                JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+	                JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory123");
 	                RedisOperService roService=new RedisOperService(conn);
 	                for (Map<String, Object> m : list) {
 	                    SearchUtils.addListInfo(searchStr, m, roService);
@@ -55,7 +55,7 @@ public class LocalSearch extends Thread {
 		finally {
             ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
             if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-                JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+                JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory123");
                 RedisOperService roService=new RedisOperService(conn);
                 SearchUtils.updateSearchFinish(searchStr, roService);
             } else {

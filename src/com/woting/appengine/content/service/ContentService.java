@@ -58,10 +58,10 @@ import com.woting.passport.mobile.MobileUDKey;
 @Lazy(true)
 @Service
 public class ContentService {
-    @Resource
+    @Resource(name="connectionFactory123")
     JedisConnectionFactory redisConn;
-    @Resource(name="connectionFactoryContent")
-    JedisConnectionFactory js;
+    @Resource(name="connectionFactory182")
+    JedisConnectionFactory redisConn182;
     //先用Group代替！！
     @Resource(name="defaultDAO")
     private MybatisDAO<GroupPo> groupDao;
@@ -1920,27 +1920,43 @@ public class ContentService {
 	}
 
 	public Map<String, Object> searchBySolr(String searchStr, String mediaType, int pageType, MobileUDKey mUdk) {
-        try {
-            List<SortClause> solrsorts = SolrUtils.makeSolrSort("score desc","item_meidasize desc"); 
-            SolrSearchResult sResult = solrJService.solrSearch(searchStr, solrsorts, "*,score", 1, 5, "item_type:"+mediaType);
-            List<SolrInputPo> solrips = sResult.getSolrInputPos();
-            List<Map<String, Object>> retLs = new ArrayList<>();
-            if (solrips!=null && solrips.size()>0) {
-                for (SolrInputPo solrInputPo : solrips) {
-                    String contentid = solrInputPo.getItem_id();
-                    RedisOperService rs = new RedisOperService(js, 11);
-                    String info = null;
-                    if (mediaType.equals("SEQU")) info = rs.get("Content::MediaType_CID::[SEQU_"+contentid+"]::INFO");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-        return null;
-    }
-	//为给Redis准备数据组准备
-	class GetFavoriteList extends GetBizData {
+		try {
+			List<SortClause> solrsorts = SolrUtils.makeSolrSort("score desc","item_meidasize desc"); 
+			SolrSearchResult sResult = solrJService.solrSearch(searchStr, solrsorts, "*,score", 1, 5, "item_type:"+mediaType);
+			List<SolrInputPo> solrips = sResult.getSolrInputPos();
+			List<Map<String, Object>> retLs = new ArrayList<>();
+			if (solrips!=null && solrips.size()>0) {
+				for (SolrInputPo solrInputPo : solrips) {
+					String contentid = solrInputPo.getItem_id();
+					RedisOperService rs = new RedisOperService(redisConn182, 11);
+					String info = null;
+					if (mediaType.equals("SEQU")) info = rs.get("Content::MediaType_CID::[SEQU_"+contentid+"]::INFO");
+					else if (mediaType.equals("AUDIO")) info = rs.get("Content::MediaType_CID::[AUDIO_"+contentid+"]::INFO");
+					if (info!=null) {
+						Map<String, Object> infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
+						String playcount = null;
+						playcount = rs.get("Content::MediaType_CID::["+mediaType+"_"+contentid+"]::PLAYCOUNT");
+						if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
+						else infomap.put("PlayCount", 0);
+						retLs.add(infomap);
+					}
+				}
+				if (retLs!=null && retLs.size()>0) {
+					Map<String, Object> ret = new HashMap<>();
+					ret.put("ResultType", "1001");
+					ret.put("List", retLs);
+		            ret.put("AllCount", sResult.getRecordCount());
+		            return ret;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		return null;
+	}
+
+    class GetFavoriteList extends GetBizData {
         public GetFavoriteList(Map<String, Object> param) {
             super(param);
         }
@@ -1950,5 +1966,5 @@ public class ContentService {
             if (ret==null) return null;
             return JsonUtils.objToJson(ret);
         }
-	}
+    }
 }
