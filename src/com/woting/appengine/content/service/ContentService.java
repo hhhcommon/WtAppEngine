@@ -29,6 +29,7 @@ import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
+import com.spiritdata.framework.ext.redis.GetBizData;
 import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.DateUtils;
 import com.spiritdata.framework.util.JsonUtils;
@@ -648,7 +649,7 @@ public class ContentService {
         oneAsset.put("resId", contentId);
         oneAsset.put("resTableName", "wt_SeqMediaAsset");
         assetList.add(oneAsset);
-        List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);//TODO
+        List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
         //4、得到点击量
         paraM.put("smaIds", "a.resTableName='wt_SeqMediaAsset' and a.resId='"+contentId+"'");
         List<Map<String, Object>> playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
@@ -806,6 +807,7 @@ public class ContentService {
                                             int pageType, MobileUDKey mUdk, Map<String, Object> filterData) {
         Map<String, Object> rt=null;
         //1-得到喜欢列表
+        
         List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
         List<Map<String, Object>> fList=null;
         if (_fList!=null&&!_fList.isEmpty()) {
@@ -825,7 +827,7 @@ public class ContentService {
                     roService.set(key, JsonUtils.objToJson(rt), 60*1000*60);
                 }
             } else {
-                rt=(Map)JsonUtils.jsonToObj(_result, Map.class);
+                rt=(Map<String, Object>)JsonUtils.jsonToObj(_result, Map.class);
             }
         } finally {
             if (roService!=null) roService.close();
@@ -836,7 +838,17 @@ public class ContentService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> getContents1(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId,
                                             int pageType, MobileUDKey mUdk, Map<String, Object> filterData) {
+        Map<String, Object> param=new HashMap<String, Object>();
         //1-得到喜欢列表
+        String key="Favorite::"+(mUdk.isUser()?("UserId::["+mUdk.getUserId()+"]::LIST"):("DeviceId::["+mUdk.getDeviceId()+"]::LIST"));
+        RedisOperService roService=new RedisOperService(redisConn, 11);
+        try {
+            key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
+        } finally {
+            if (roService!=null) roService.close();
+            roService=null;
+        }
+        
         List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
         List<Map<String, Object>> fList=null;
         if (_fList!=null&&!_fList.isEmpty()) {
@@ -1387,7 +1399,7 @@ public class ContentService {
                 if (conn!=null) try {conn.close();conn=null;} catch(Exception e) {conn=null;} finally {conn=null;};
             }
         } else if (resultType==2){ //按媒体类型
-            //TODO 暂不实现
+            
         } else if (resultType==1){ //按下级分类
             int pageCount=0;
             List<Map<String, Object>> retCataList=new ArrayList<Map<String, Object>>();
@@ -1464,7 +1476,7 @@ public class ContentService {
 //                    sql+=" and "+filterSql_inwhere;
 //                    sql+=" where a.dictMid='"+catalogType+"'";
 //                    if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
-//                    sql+=" and (SQL) and b.id is null order by a.cTime desc)) as ul"; //TODO
+//                    sql+=" and (SQL) and b.id is null order by a.cTime desc)) as ul"; 
                 }
             }
             if (StringUtils.isNullOrEmptyOrSpace(filterStr)) sql+=" limit "+perSize;
@@ -1896,5 +1908,19 @@ public class ContentService {
             retInfo.put("ContentSubCount", tempList.size());
         }
         return retInfo;
+	}
+
+	//为给Redis准备数据组准备
+	class GetFavoriteList extends GetBizData {
+        public GetFavoriteList(Map<String, Object> param) {
+            super(param);
+        }
+        @Override
+        public String _getBizData(Map<String, Object> param) {
+            Object ret=favoriteService.getPureFavoriteList((MobileUDKey)param.get("mUdk"));
+            if (ret==null) return null;
+            return JsonUtils.objToJson(ret);
+        }
+	    
 	}
 }

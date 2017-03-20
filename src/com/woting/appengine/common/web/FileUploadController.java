@@ -10,18 +10,13 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Controller;
-import com.spiritdata.framework.FConstants;
-import com.spiritdata.framework.core.cache.CacheEle;
-import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.web.AbstractFileUploadController;
-import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
 import com.woting.dataanal.gather.API.persis.pojo.ApiLogPo;
 import com.woting.passport.UGA.persis.pojo.GroupPo;
-import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.GroupService;
 import com.woting.passport.UGA.service.UserService;
 import com.woting.passport.mobile.MobileParam;
@@ -29,8 +24,13 @@ import com.woting.passport.mobile.MobileUDKey;
 import com.woting.passport.session.DeviceType;
 import com.woting.passport.session.SessionService;
 
+import net.coobird.thumbnailator.Thumbnails;
+
 @Controller
 public class FileUploadController extends AbstractFileUploadController {
+    public static final String PREFIX_URL="http://www.wotingfm.com/dataCenter/userimg"; //URL前缀
+    public static final String STOREPATH="/opt/dataCenter/userimg"; //存储目录
+
     @Resource
     private UserService userService;
     @Resource
@@ -101,7 +101,8 @@ public class FileUploadController extends AbstractFileUploadController {
 
     @Override
     public Map<String, Object> afterUploadOneFileOnSuccess(Map<String, Object> m, Map<String, Object> a, Map<String, Object> p, HttpSession session) {
-        String tempFileName=m.get("storeFilename")+"";
+        String tempFileName=m.get("storeFilename")+"";//缓存文件名称
+
         Map<String,Object> retmap=new HashMap<String, Object>();
         Map<String,Object> datamap=new HashMap<String, Object>();
         //0-获取参数
@@ -132,19 +133,18 @@ public class FileUploadController extends AbstractFileUploadController {
             String extName=p.get("ExtName")+"";
             if (fType.equals("UserP")) {//========================================处理用户头像
                 try {
-                    String appPath=(SystemCache.getCache(FConstants.APPOSPATH)==null?"":((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent());
-                    String bigImgFileName = "asset"+File.separatorChar+"members"+File.separatorChar+userId+File.separatorChar+"Portrait"+File.separatorChar+"bigImg"+SequenceUUID.getUUIDSubSegment(2)+(extName.startsWith(".")?extName:"."+extName);
-                    FileUtils.copyFile(new File(tempFileName), new File(FileNameUtils.concatPath(appPath,bigImgFileName)));
+                    String storeFile="/user_"+SequenceUUID.getUUIDSubSegment(2)+(extName.startsWith(".")?extName:"."+extName);
+                    copyFiles(tempFileName, storeFile);
                     //图片文件缩略存储
                     //文件保存到数据库中
                     Map<String, Object> updateInfo=new HashMap<String, Object>();
                     updateInfo.put("userId", userId);
-                    updateInfo.put("portraitBig", bigImgFileName);
-                    updateInfo.put("portraitMini", bigImgFileName);
+                    updateInfo.put("portraitBig", PREFIX_URL+storeFile);
+                    updateInfo.put("portraitMini", PREFIX_URL+storeFile);
                     userService.updateUser(updateInfo);
                     datamap.put("ReturnType", "1001");
-                    datamap.put("PortraitBig", bigImgFileName);
-                    datamap.put("PortraitMini", bigImgFileName);
+                    datamap.put("PortraitBig", PREFIX_URL+storeFile);
+                    datamap.put("PortraitMini", PREFIX_URL+storeFile);
                 } catch (IOException e) {
                     datamap.put("ReturnType", "1003");
                     datamap.put("Message", "文件转存失败:"+e.getMessage());
@@ -158,15 +158,14 @@ public class FileUploadController extends AbstractFileUploadController {
                     datamap.put("Message", "根据Id无法获取用户组，不能保存图片");
                 } else {
                     try {
-                        String bigImgFileName=((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent();
-                        bigImgFileName = "asset"+File.separatorChar+"group"+File.separatorChar+groupId+File.separatorChar+"Portrait"+File.separatorChar+"bigImg"+SequenceUUID.getUUIDSubSegment(2)+(extName.startsWith(".")?extName:"."+extName);
-                        FileUtils.copyFile(new File(tempFileName), new File(FileNameUtils.concatPath(((CacheEle<String>)(SystemCache.getCache(FConstants.APPOSPATH))).getContent(),bigImgFileName)));
+                        String storeFile="/group_"+SequenceUUID.getUUIDSubSegment(2)+(extName.startsWith(".")?extName:"."+extName);
+                        copyFiles(tempFileName, storeFile);
                         //图片文件缩略存储
                         //文件保存到数据库中
-                        g.setGroupImg(bigImgFileName);
+                        g.setGroupImg(PREFIX_URL+storeFile);
                         groupService.updateGroup(g);
                         datamap.put("ReturnType", "1001");
-                        datamap.put("GroupImg", bigImgFileName);
+                        datamap.put("GroupImg", PREFIX_URL+storeFile);
                     } catch (IOException e) {
                         datamap.put("ReturnType", "1003");
                         datamap.put("Message", "文件转存失败:"+e.getMessage());
@@ -186,5 +185,20 @@ public class FileUploadController extends AbstractFileUploadController {
         retmap.put("success", "TRUE");
         retmap.put("onFaildBreak", "FALSE");
         return retmap;
+    }
+
+    private void copyFiles(String srcFileName, String destFileName) throws IOException {
+        //拷贝到指定目录，原始图片
+        FileUtils.copyFile(new File(srcFileName), new File(STOREPATH+destFileName));
+        File f=new File(STOREPATH+destFileName);
+        if (f.isFile()) {
+            //按照文件格式标准，转存图片
+            String img150path=destFileName+".150_150.png";
+            String img300path=destFileName+".300_300.png";
+            String img450path=destFileName+".450_450.png";
+            Thumbnails.of(new File(srcFileName)).size(150, 150).toFile(STOREPATH+img150path);
+            Thumbnails.of(new File(srcFileName)).size(300, 300).toFile(STOREPATH+img300path);
+            Thumbnails.of(new File(srcFileName)).size(450, 450).toFile(STOREPATH+img450path);
+        }
     }
 }
