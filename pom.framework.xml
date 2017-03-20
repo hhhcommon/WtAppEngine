@@ -13,6 +13,11 @@
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>org.apache.solr</groupId>
+      <artifactId>solr-solrj</artifactId>
+      <version>4.10.4</version>
+    </dependency>
     <!-- Junit组件 -->
     <dependency>
       <groupId>junit</groupId>

@@ -820,7 +820,8 @@ public class CommonController {
             Owner o=new Owner(201, mUdk.getUserId());
             String _s[]=searchStr.split(",");
             for (int i=0; i<_s.length; i++) wordService.addWord2Online(_s[i].trim(), o);
-
+            String mediaType = null;
+            try {mediaType=m.get("MediaType").toString();} catch(Exception e) {}
             //获得结果类型，0获得一个列表，1获得分类列表，这个列表根据content字段处理，这个字段目前没有用到
             int resultType=0;
             try {resultType=Integer.parseInt(m.get("ResultType")+"");} catch(Exception e) {}

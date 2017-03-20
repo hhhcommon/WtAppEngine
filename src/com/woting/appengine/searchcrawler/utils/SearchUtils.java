@@ -13,8 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
+//import org.jsoup.Jsoup;
+//import org.jsoup.nodes.Document;
 
 import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.JsonUtils;
@@ -101,22 +101,22 @@ public abstract class SearchUtils {
 	 *            链接地址
 	 * @return 得到的json格式数据或者html格式文本
 	 */
-	public static String jsoupTOstr(String url) {
-		Document doc = null;
-		String str = null;
-		try {
-			doc = Jsoup.connect(url).ignoreContentType(true).timeout(T).get();
-			// 获取频道json数据
-			str = doc.select("body").html().toString();
-			str = str.replaceAll("\"", "'");
-			str = str.replaceAll("\n", "");
-			str = str.replaceAll("&quot;", "\"");
-			str = str.replaceAll("\r", "");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return str;
-	}
+//	public static String jsoupTOstr(String url) {
+//		Document doc = null;
+//		String str = null;
+//		try {
+//			doc = Jsoup.connect(url).ignoreContentType(true).timeout(T).get();
+//			// 获取频道json数据
+//			str = doc.select("body").html().toString();
+//			str = str.replaceAll("\"", "'");
+//			str = str.replaceAll("\n", "");
+//			str = str.replaceAll("&quot;", "\"");
+//			str = str.replaceAll("\r", "");
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		return str;
+//	}
 
 	public static int findint(String str) {
 		char[] s = str.toCharArray();

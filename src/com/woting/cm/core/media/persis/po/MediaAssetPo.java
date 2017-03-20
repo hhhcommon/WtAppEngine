@@ -6,7 +6,6 @@ import com.spiritdata.framework.core.model.BaseObject;
 
 public class MediaAssetPo extends BaseObject {
     private static final long serialVersionUID=-8041605008751208529L;
-
     private String id; //uuid(主键)
     private String maTitle; //媒体资源名称
     private int maPubType; //发布者记录类型：1-组织表,2-文本
