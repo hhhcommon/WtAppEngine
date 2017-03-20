@@ -63,7 +63,7 @@ public class PassportController {
     private FriendService friendService;
     @Resource(name="redisSessionService")
     private SessionService sessionService;
-    @Resource
+    @Resource(name="connectionFactory")
     JedisConnectionFactory redisConn;
 
     private UserAliasMemoryManage uamm=UserAliasMemoryManage.getInstance();

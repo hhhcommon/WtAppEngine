@@ -57,7 +57,7 @@ import com.woting.passport.mobile.MobileUDKey;
 @Lazy(true)
 @Service
 public class ContentService {
-    @Resource
+    @Resource(name="connectionFactory")
     JedisConnectionFactory redisConn;
     @Resource(name="connectionFactoryContent")
     JedisConnectionFactory js;
@@ -1919,15 +1919,28 @@ public class ContentService {
 					RedisOperService rs = new RedisOperService(js, 11);
 					String info = null;
 					if (mediaType.equals("SEQU")) info = rs.get("Content::MediaType_CID::[SEQU_"+contentid+"]::INFO");
-//					else if (mediaType.)
-					
+					else if (mediaType.equals("AUDIO")) info = rs.get("Content::MediaType_CID::[AUDIO_"+contentid+"]::INFO");
+					if (info!=null) {
+						Map<String, Object> infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
+						String playcount = null;
+						playcount = rs.get("Content::MediaType_CID::["+mediaType+"_"+contentid+"]::PLAYCOUNT");
+						if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
+						else infomap.put("PlayCount", 0);
+						retLs.add(infomap);
+					}
+				}
+				if (retLs!=null && retLs.size()>0) {
+					Map<String, Object> ret = new HashMap<>();
+					ret.put("ResultType", "1001");
+					ret.put("List", retLs);
+		            ret.put("AllCount", sResult.getRecordCount());
+		            return ret;
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
-		
 		return null;
 	}
 }

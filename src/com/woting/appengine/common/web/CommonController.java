@@ -838,7 +838,7 @@ public class CommonController {
             Map<String, Object> cl=new HashMap<String,Object>();
             long a=System.currentTimeMillis();
             if(page>0 && pageSize>0 && resultType==0 && pageType==0)cl=scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mUdk);
-            else cl=contentService.searchAll(searchStr, resultType, pageType, mUdk);
+            else cl=contentService.searchBySolr(searchStr, mediaType, pageType, mUdk);//contentService.searchAll(searchStr, resultType, pageType, mUdk);
             a=System.currentTimeMillis()-a;
 
             if (cl!=null&&cl.size()>0) {
