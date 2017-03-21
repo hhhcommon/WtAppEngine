@@ -210,3 +210,16 @@ CREATE TABLE wt_ChannelAssetProgress (
   PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='内容发布进程表';
+
+/** 栏目映射表[WT_CHANNELMAP_REF]*/
+DROP TABLE IF EXISTS wt_ChannelMap_Ref;
+CREATE TABLE wt_ChannelMap_Ref (
+  id         varchar(32)   NOT NULL  COMMENT '关系UUID',
+  channelId  varchar(200)  NOT NULL  COMMENT '栏目Id',
+  srcMid     varchar(32)   NOT NULL  COMMENT '中间库栏目(字典)组Id',
+  srcDid     varchar(32)   NOT NULL  COMMENT '中间库栏目(字典)项Id',
+  srcName    varchar(32)   NOT NULL  COMMENT '中间库平台名称——对应pubisher',
+  cTime      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='栏目映射表';

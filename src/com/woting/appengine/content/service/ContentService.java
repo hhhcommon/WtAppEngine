@@ -12,6 +12,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -1907,26 +1909,60 @@ public class ContentService {
         return retInfo;
 	}
 	
-	public Map<String, Object> searchBySolr(String searchStr, String mediaType, int pageType, MobileUDKey mUdk) {
+	public Map<String, Object> searchBySolr(String searchStr, String mediaType, int pageType, int page, int pageSize, MobileUDKey mUdk) {
 		try {
 			List<SortClause> solrsorts = SolrUtils.makeSolrSort("score desc","item_meidasize desc"); 
-			SolrSearchResult sResult = solrJService.solrSearch(searchStr, solrsorts, "*,score", 1, 5, "item_type:"+mediaType);
+			SolrSearchResult sResult = null;
+			if (mediaType!=null) sResult = solrJService.solrSearch(searchStr, solrsorts, "*,score", page, pageSize, "item_type:"+mediaType);
+			else sResult = solrJService.solrSearch(searchStr, solrsorts, "*,score", page, pageSize);
 			List<SolrInputPo> solrips = sResult.getSolrInputPos();
 			List<Map<String, Object>> retLs = new ArrayList<>();
 			if (solrips!=null && solrips.size()>0) {
+				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
 				for (SolrInputPo solrInputPo : solrips) {
-					String contentid = solrInputPo.getItem_id();
-					RedisOperService rs = new RedisOperService(js, 11);
-					String info = null;
-					if (mediaType.equals("SEQU")) info = rs.get("Content::MediaType_CID::[SEQU_"+contentid+"]::INFO");
-					else if (mediaType.equals("AUDIO")) info = rs.get("Content::MediaType_CID::[AUDIO_"+contentid+"]::INFO");
-					if (info!=null) {
-						Map<String, Object> infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
-						String playcount = null;
-						playcount = rs.get("Content::MediaType_CID::["+mediaType+"_"+contentid+"]::PLAYCOUNT");
-						if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
-						else infomap.put("PlayCount", 0);
-						retLs.add(infomap);
+					fixedThreadPool.execute(new Runnable() {
+						@SuppressWarnings("unchecked")
+						public void run() {
+							String contentid = solrInputPo.getItem_id();
+							RedisOperService rs = new RedisOperService(js, 11);
+							String info = null;
+							if (pageType==0) {
+								if (solrInputPo.getItem_type().equals("SEQU")) {
+									String malist = rs.get("Content::MediaType_CID::[SEQU_"+contentid+"]::SUBLIST");
+									if (malist!=null) {
+										List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
+										contentid = mas.get(0);
+										solrInputPo.setItem_type("AUDIO");
+									}
+								}
+							}
+							info = rs.get("Content::MediaType_CID::["+solrInputPo.getItem_type()+"_"+contentid+"]::INFO");
+							if (info!=null) {
+								Map<String, Object> infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
+								String playcount = null;
+								playcount = rs.get("Content::MediaType_CID::["+solrInputPo.getItem_type()+"_"+contentid+"]::PLAYCOUNT");
+								if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
+								else infomap.put("PlayCount", 0);
+								infomap.put("ContentFavorite", 0);
+								try {
+									if (solrInputPo.getItem_type().equals("AUDIO")) {
+										Map<String, Object> smainfom = (Map<String, Object>) infomap.get("SeqInfo");
+										String smaid = smainfom.get("ContentId").toString();
+										String smainfo = rs.get("Content::MediaType_CID::[SEQU_"+smaid+"]::INFO");
+										smainfom = (Map<String, Object>) JsonUtils.jsonToObj(smainfo, Map.class);
+										infomap.put("SeqInfo", smainfom);
+									}
+								} catch (Exception e) {}
+								retLs.add(infomap);
+							}
+						}
+					});
+				}
+				fixedThreadPool.shutdown();
+				while (true) {
+					Thread.sleep(10);
+					if (fixedThreadPool.isTerminated()) {
+						break;
 					}
 				}
 				if (retLs!=null && retLs.size()>0) {

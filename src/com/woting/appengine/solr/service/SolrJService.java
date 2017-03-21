@@ -100,6 +100,7 @@ public class SolrJService {
 		solrQuery.setRows(pageSize);
 		//设置默认搜索域
 		solrQuery.set("df", "item_title");
+		solrQuery.set("df", "item_descn");
 		if (sorts!=null && sorts.size()>0) {
 			solrQuery.setSorts(sorts);
 		}
