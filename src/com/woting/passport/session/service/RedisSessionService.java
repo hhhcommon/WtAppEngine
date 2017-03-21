@@ -28,7 +28,7 @@ import com.woting.passport.session.redis.RedisUserDeviceKey;
 
 @Service
 public class RedisSessionService implements SessionService {
-    @Resource(name="connectionFactory")
+    @Resource(name="connectionFactory123")
     JedisConnectionFactory redisConn;
     @Resource
     private UserService userService;

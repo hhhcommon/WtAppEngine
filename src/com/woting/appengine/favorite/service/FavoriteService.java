@@ -438,7 +438,6 @@ public class FavoriteService {
      */
     public List<UserFavoritePo> getPureFavoriteList(MobileUDKey mUdk) {
         if (mUdk==null) return null;
-
         Map<String, Object> param=new HashMap<String, Object>();
         param.put("mobileId", mUdk.getDeviceId());
         if (mUdk.isUser()) param.put("userId", mUdk.getUserId());
