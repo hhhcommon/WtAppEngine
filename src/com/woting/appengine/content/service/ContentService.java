@@ -816,7 +816,17 @@ public class ContentService {
                                             int pageType, MobileUDKey mUdk, Map<String, Object> filterData) {
         Map<String, Object> rt=null;
         //1-得到喜欢列表
-        
+        Map<String, Object> param=new HashMap<String, Object>();
+        param.put("mUdk", mUdk);
+        String key="Favorite::"+(mUdk.isUser()?("UserId::["+mUdk.getUserId()+"]::LIST"):("DeviceId::["+mUdk.getDeviceId()+"]::LIST"));
+        RedisOperService roService=new RedisOperService(redisConn182, 11);
+        try {
+            key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
+        } finally {
+            if (roService!=null) roService.close();
+            roService=null;
+        }
+
         List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
         List<Map<String, Object>> fList=null;
         if (_fList!=null&&!_fList.isEmpty()) {
@@ -826,8 +836,8 @@ public class ContentService {
             }
         }
 
-        String key="getContents::"+catalogType+"_"+catalogId+"_"+resultType+"_"+mediaType+"_"+perSize+"_"+pageSize+"_"+page+"_"+catalogId+"_"+beginCatalogId+"_"+pageType+mUdk.getUserId();
-        RedisOperService roService=new RedisOperService(redisConn, 14);
+        key="getContents::"+catalogType+"_"+catalogId+"_"+resultType+"_"+mediaType+"_"+perSize+"_"+pageSize+"_"+page+"_"+catalogId+"_"+beginCatalogId+"_"+pageType+mUdk.getUserId();
+        roService=new RedisOperService(redisConn, 14);
         try {
             String _result=roService.get(key);
             if (_result==null) {
@@ -847,17 +857,7 @@ public class ContentService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> getContents1(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId,
                                             int pageType, MobileUDKey mUdk, Map<String, Object> filterData) {
-        Map<String, Object> param=new HashMap<String, Object>();
         //1-得到喜欢列表
-        String key="Favorite::"+(mUdk.isUser()?("UserId::["+mUdk.getUserId()+"]::LIST"):("DeviceId::["+mUdk.getDeviceId()+"]::LIST"));
-        RedisOperService roService=new RedisOperService(redisConn, 11);
-        try {
-            key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
-        } finally {
-            if (roService!=null) roService.close();
-            roService=null;
-        }
-        
         List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
         List<Map<String, Object>> fList=null;
         if (_fList!=null&&!_fList.isEmpty()) {
@@ -1919,7 +1919,8 @@ public class ContentService {
         return retInfo;
 	}
 
-	public Map<String, Object> searchBySolr(String searchStr, String mediaType, int pageType, MobileUDKey mUdk) {
+	@SuppressWarnings("unchecked")
+    public Map<String, Object> searchBySolr(String searchStr, String mediaType, int pageType, MobileUDKey mUdk) {
 		try {
 			List<SortClause> solrsorts = SolrUtils.makeSolrSort("score desc","item_meidasize desc"); 
 			SolrSearchResult sResult = solrJService.solrSearch(searchStr, solrsorts, "*,score", 1, 5, "item_type:"+mediaType);
