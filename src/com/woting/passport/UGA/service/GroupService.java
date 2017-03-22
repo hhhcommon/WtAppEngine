@@ -14,12 +14,16 @@ import org.springframework.stereotype.Service;
 import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
+import com.spiritdata.framework.core.model.tree.TreeNode;
+import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.push.core.message.MsgNormal;
 import com.woting.push.core.message.content.MapContent;
 import com.woting.push.socketclient.oio.SocketClient;
 import com.woting.WtAppEngineConstants;
+import com.woting.cm.core.dict.mem._CacheDictionary;
+import com.woting.cm.core.dict.model.DictModel;
 import com.woting.passport.UGA.model.Group;
 import com.woting.passport.UGA.persis.pojo.GroupPo;
 import com.woting.passport.UGA.persis.pojo.GroupUserPo;
@@ -46,6 +50,9 @@ public class GroupService {
     @Resource(name="redisSessionService")
     private SessionService sessionService;
 
+    @SuppressWarnings("unused")
+    private _CacheDictionary _cd=(SystemCache.getCache(WtAppEngineConstants.CACHE_DICT)==null?null:((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT)).getContent());
+
     @PostConstruct
     public void initParam() {
         userDao.setNamespace("WT_USER");
@@ -62,6 +69,21 @@ public class GroupService {
         int i=0;
         try {
             group.setGroupId(SequenceUUID.getUUIDSubSegment(4));
+            if (StringUtils.isNullOrEmptyOrSpace(group.getDefaultFreq())) {
+                String df="409.7500,409.7625";
+                DictModel dm=_cd.getDictModelById("11");
+                if (dm!=null&&dm.dictTree!=null) {
+                    TreeNode<? extends TreeNodeBean> root=dm.dictTree;
+                    if (root.getChildren()!=null&&!root.getChildren().isEmpty()) {
+                        df="";
+                        for (int j=0; j<root.getChildren().size()||i>=2; j++) {
+                            df+=","+root.getChildren().get(j).getAttributes().get("aliasName");
+                        }
+                        df=df.substring(0);
+                    }
+                }
+                group.setDefaultFreq(df);
+            }
             groupDao.insert(group);
             //插入用户组所属用户
             List<UserPo> ul=group.getUserList();
@@ -991,7 +1013,7 @@ public class GroupService {
      * @param refuseMsg 拒绝理由
      * @return
      */
-    public Map<String, Object>  dealCheck(String inviteUserId, String beInvitedUserId, String groupId, boolean isRefuse, String refuseMsg) {
+    public Map<String, Object> dealCheck(String inviteUserId, String beInvitedUserId, String groupId, boolean isRefuse, String refuseMsg) {
         Map<String, Object> m=new HashMap<String, Object>();
         if (userDao.getInfoObject("getUserById", inviteUserId)==null) {
             m.put("ReturnType", "10041");
@@ -1175,6 +1197,7 @@ public class GroupService {
             MapContent mc=new MapContent(dataMap);
             nMsg.setMsgContent(mc);
             dataMap.put("_TOGROUPS", gp.getGroupId());
+            dataMap.put("_TOUSERS", userIds);
             dataMap.put("_AFFIRMTYPE", "3");
             sc.addSendMsg(nMsg);
 

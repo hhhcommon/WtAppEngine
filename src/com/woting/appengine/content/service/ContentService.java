@@ -817,28 +817,37 @@ public class ContentService {
     public Map<String, Object> getContents(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId,
                                             int pageType, MobileUDKey mUdk, Map<String, Object> filterData) {
         Map<String, Object> rt=null;
+//        //1-得到喜欢列表
+//        Map<String, Object> param=new HashMap<String, Object>();
+//        param.put("mUdk", mUdk);
+//        String key="Favorite::"+(mUdk.isUser()?("UserId::["+mUdk.getUserId()+"]::LIST"):("DeviceId::["+mUdk.getDeviceId()+"]::LIST"));
+//        RedisOperService roService=new RedisOperService(redisConn182, 11);
+//        try {
+//            key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
+//        } finally {
+//            if (roService!=null) roService.close();
+//            roService=null;
+//        }
+//        List<Map<String, Object>> _fList=(key==null?null:(List<Map<String, Object>>)JsonUtils.jsonToObj(key, List.class));
+//        List<Map<String, Object>> fList=null;
+//        if (_fList!=null&&!_fList.isEmpty()) {
+//            fList=new ArrayList<Map<String, Object>>();
+//            for (Map<String, Object> ufPo: _fList) {
+//                fList.add(ufPo);
+//            }
+//        }
         //1-得到喜欢列表
-        Map<String, Object> param=new HashMap<String, Object>();
-        param.put("mUdk", mUdk);
-        String key="Favorite::"+(mUdk.isUser()?("UserId::["+mUdk.getUserId()+"]::LIST"):("DeviceId::["+mUdk.getDeviceId()+"]::LIST"));
-        RedisOperService roService=new RedisOperService(redisConn182, 11);
-        try {
-            key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
-        } finally {
-            if (roService!=null) roService.close();
-            roService=null;
-        }
-        List<Map<String, Object>> _fList=(key==null?null:(List<Map<String, Object>>)JsonUtils.jsonToObj(key, List.class));
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
         List<Map<String, Object>> fList=null;
         if (_fList!=null&&!_fList.isEmpty()) {
             fList=new ArrayList<Map<String, Object>>();
-            for (Map<String, Object> ufPo: _fList) {
-                fList.add(ufPo);
+            for (UserFavoritePo ufPo: _fList) {
+                fList.add(ufPo.toHashMapAsBean());
             }
         }
 
-        key="Contents::CatalogType_CatalogId_ResultType_PageType_MediaType_PageSize_Page_BeginCatalogId::[]"+catalogType+"_"+catalogId+"_"+resultType+"_"+mediaType+"_"+perSize+"_"+pageSize+"_"+page+"_"+catalogId+"_"+beginCatalogId+"_"+pageType+mUdk.getUserId();
-        roService=new RedisOperService(redisConn, 14);
+        String key="Contents::CatalogType_CatalogId_ResultType_PageType_MediaType_PageSize_Page_BeginCatalogId::[]"+catalogType+"_"+catalogId+"_"+resultType+"_"+mediaType+"_"+perSize+"_"+pageSize+"_"+page+"_"+catalogId+"_"+beginCatalogId+"_"+pageType+mUdk.getUserId();
+        RedisOperService roService=new RedisOperService(redisConn, 14);
         try {
             String _result=roService.get(key);
             if (_result==null) {

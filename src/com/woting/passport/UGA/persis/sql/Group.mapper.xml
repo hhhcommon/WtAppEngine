@@ -130,7 +130,7 @@
       <if test="sort!=null and sort!=0">sort,</if>
       <if test="createUserId!=null">createUserId,</if>
       <if test="adminUserIds!=null">adminUserIds,</if>
-      <if test="adminUserIds!=null">defaultFreq,</if>
+      <if test="defaultFreq!=null">defaultFreq,</if>
       <if test="descn!=null">descn,</if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
