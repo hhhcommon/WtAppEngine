@@ -94,7 +94,7 @@ public class SolrJService {
 			solrQuery.setQuery("*:*");
 		} else {
 			querystr = SolrUtils.makeQueryStr(querystr, true);
-			solrQuery.setQuery("item_title:"+querystr+"^5 item_descn:"+querystr+"^1");
+			solrQuery.setQuery("item_title:"+querystr+"^5 item_persons:"+querystr+"^3 item_channel:"+querystr+"^1 item_descn:"+querystr+"^2");
 		}
 		solrQuery.setStart((page -1) * pageSize);
 		solrQuery.setRows(pageSize);
