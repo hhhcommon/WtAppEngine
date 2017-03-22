@@ -839,7 +839,7 @@ public class CommonController {
             long a=System.currentTimeMillis();
 //            if(page>0 && pageSize>0 && resultType==0 && pageType==0)cl=scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mUdk);
 //            else cl=contentService.searchBySolr(searchStr, mediaType, pageType, page, pageSize, mUdk);//contentService.searchAll(searchStr, resultType, pageType, mUdk);
-            cl=contentService.searchBySolr(searchStr, mediaType, pageType, page, pageSize, mUdk);
+            cl=contentService.searchBySolr(searchStr, mediaType, pageType, resultType, page, pageSize, mUdk);
             a=System.currentTimeMillis()-a;
 
             if (cl!=null&&cl.size()>0) {
