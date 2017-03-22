@@ -94,13 +94,12 @@ public class SolrJService {
 			solrQuery.setQuery("*:*");
 		} else {
 			querystr = SolrUtils.makeQueryStr(querystr, true);
-			solrQuery.setQuery(querystr);
+			solrQuery.setQuery("item_title:"+querystr+"^5 item_descn:"+querystr+"^1");
 		}
 		solrQuery.setStart((page -1) * pageSize);
 		solrQuery.setRows(pageSize);
 		//设置默认搜索域
-		solrQuery.set("df", "item_title");
-		solrQuery.set("df", "item_descn");
+//		solrQuery.set("df", "item_keywords");
 		if (sorts!=null && sorts.size()>0) {
 			solrQuery.setSorts(sorts);
 		}

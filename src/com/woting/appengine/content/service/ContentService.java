@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -1920,45 +1921,67 @@ public class ContentService {
         }
         return retInfo;
 	}
-
 	
-	public Map<String, Object> searchBySolr(String searchStr, String mediaType, int pageType, int page, int pageSize, MobileUDKey mUdk) {
+	public Map<String, Object> searchBySolr(String searchStr, String mediaType, int pageType, int resultType, int page, int pageSize, MobileUDKey mUdk) {
 		try {
-			List<SortClause> solrsorts = SolrUtils.makeSolrSort("score desc","item_meidasize desc"); 
+			List<SortClause> solrsorts = SolrUtils.makeSolrSort("score desc");
 			SolrSearchResult sResult = null;
-			if (mediaType!=null) sResult = solrJService.solrSearch(searchStr, solrsorts, "*,score", page, pageSize, "item_type:"+mediaType);
-			else sResult = solrJService.solrSearch(searchStr, solrsorts, "*,score", page, pageSize);
-			List<SolrInputPo> solrips = sResult.getSolrInputPos();
+			List<SolrInputPo> solrips = new ArrayList<>();
+			if (resultType==2) {
+				String[] types = {"SEQU","AUDIO"};
+				for (String type : types) {
+					sResult = solrJService.solrSearch(searchStr, solrsorts, "*,score", 1, 5, "item_type:"+type);
+					if (sResult!=null && sResult.getSolrInputPos().size()>0) {
+						solrips.addAll(sResult.getSolrInputPos());
+					}
+				}
+			} else {
+				if (resultType==0) {
+					if (mediaType!=null) {
+						sResult = solrJService.solrSearch(searchStr, solrsorts, "*,score", page, pageSize, "item_type:"+mediaType);
+						if (sResult!=null && sResult.getSolrInputPos().size()>0) {
+							solrips.addAll(sResult.getSolrInputPos());
+					    }
+					} else {
+						sResult = solrJService.solrSearch(searchStr, solrsorts, "*,score", page, pageSize);
+						if (sResult!=null && sResult.getSolrInputPos().size()>0) {
+							solrips.addAll(sResult.getSolrInputPos());
+					    }
+					}
+				}	
+			}
 			List<Map<String, Object>> retLs = new ArrayList<>();
 			if (solrips!=null && solrips.size()>0) {
 				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
-				for (SolrInputPo solrInputPo : solrips) {
+				for (int i=0;i<solrips.size();i++) {
+					int f = i;
+					retLs.add(null);
 					fixedThreadPool.execute(new Runnable() {
 						@SuppressWarnings("unchecked")
 						public void run() {
-							String contentid = solrInputPo.getItem_id();
+							String contentid = solrips.get(f).getItem_id();
 							RedisOperService rs = new RedisOperService(redisConn182, 11);
 							String info = null;
 							if (pageType==0) {
-								if (solrInputPo.getItem_type().equals("SEQU")) {
+								if (solrips.get(f).getItem_type().equals("SEQU")) {
 									String malist = rs.get("Content::MediaType_CID::[SEQU_"+contentid+"]::SUBLIST");
 									if (malist!=null) {
 										List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
 										contentid = mas.get(0);
-										solrInputPo.setItem_type("AUDIO");
+										solrips.get(f).setItem_type("AUDIO");
 									}
 								}
 							}
-							info = rs.get("Content::MediaType_CID::["+solrInputPo.getItem_type()+"_"+contentid+"]::INFO");
+							info = rs.get("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::INFO");
 							if (info!=null) {
 								Map<String, Object> infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
 								String playcount = null;
-								playcount = rs.get("Content::MediaType_CID::["+solrInputPo.getItem_type()+"_"+contentid+"]::PLAYCOUNT");
+								playcount = rs.get("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::PLAYCOUNT");
 								if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
 								else infomap.put("PlayCount", 0);
 								infomap.put("ContentFavorite", 0);
 								try {
-									if (solrInputPo.getItem_type().equals("AUDIO")) {
+									if (solrips.get(f).getItem_type().equals("AUDIO")) {
 										Map<String, Object> smainfom = (Map<String, Object>) infomap.get("SeqInfo");
 										String smaid = smainfom.get("ContentId").toString();
 										String smainfo = rs.get("Content::MediaType_CID::[SEQU_"+smaid+"]::INFO");
@@ -1966,7 +1989,7 @@ public class ContentService {
 										infomap.put("SeqInfo", smainfom);
 									}
 								} catch (Exception e) {}
-								retLs.add(infomap);
+								retLs.add(f,infomap);
 							}
 						}
 					});
@@ -1979,6 +2002,13 @@ public class ContentService {
 					}
 				}
 				if (retLs!=null && retLs.size()>0) {
+					Iterator<Map<String, Object>> it = retLs.iterator();
+					while (it.hasNext()) {
+						Map<String, Object> m = it.next();
+						if (m==null) {
+							it.remove();
+						}
+					}
 					Map<String, Object> ret = new HashMap<>();
 					ret.put("ResultType", "1001");
 					ret.put("List", retLs);
