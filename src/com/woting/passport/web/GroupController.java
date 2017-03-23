@@ -705,7 +705,7 @@ public class GroupController {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
                 }
-                if (gp.getAdminUserIds().equals(userId)) isManager=1;//是管理员
+                if (gp.getAdminUserIds().indexOf(userId)!=-1) isManager=1;//是管理员
             }
             if (map.get("ReturnType")!=null) return map;
 
@@ -970,7 +970,7 @@ public class GroupController {
             //4-获得拒绝理由
             String refuseMsg=(m.get("RefuseMsg")==null?null:m.get("RefuseMsg")+"");
             //5-邀请处理
-            map.putAll(groupService.dealInvite(userId, inviteUserId, groupId, dealType.equals("2"), refuseMsg, 1));
+            map.putAll(groupService.dealInvite(userId, inviteUserId, groupId, dealType.equals("2"), refuseMsg, 1, userId));
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -1483,7 +1483,7 @@ public class GroupController {
             //4-获得拒绝理由
             String refuseMsg=(m.get("RefuseMsg")==null?null:m.get("RefuseMsg")+"");
             //4-邀请处理
-            map.putAll(groupService.dealInvite(applyUserId, userId, groupId, dealType.equals("2"), refuseMsg, 2));
+            map.putAll(groupService.dealInvite(applyUserId, userId, groupId, dealType.equals("2"), refuseMsg, 2, userId));
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -1617,7 +1617,7 @@ public class GroupController {
             }
             //3-加入用户组
             UserPo u=(UserPo)userService.getUserById(userId);
-            if (c==0) groupService.insertGroupUser(gp, u, 1, true);
+            if (c==0) groupService.insertGroupUser(gp, u, 1, true, userId);
             //组织返回值
             map.put("ReturnType", (c==0?"1001":"1101"));
             //组信息
@@ -1883,7 +1883,7 @@ public class GroupController {
 
             //3-处理
             map.put("ReturnType", "1001");
-            map.put("Result", groupService.kickoutGroup(gp, userIds));
+            map.put("Result", groupService.kickoutGroup(gp, userIds, userId));
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -1999,7 +1999,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //3-处理
-            map.putAll(groupService.dissolve(gp));
+            map.putAll(groupService.dissolve(gp, userId));
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -2123,7 +2123,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //3-处理
-            map.putAll(groupService.changGroupAdminner(gp, toUserId));
+            map.putAll(groupService.changGroupAdminner(gp, toUserId, userId));
             return map;
         } catch(Exception e) {
             e.printStackTrace();
@@ -2824,7 +2824,7 @@ public class GroupController {
             String refuseMsg=(m.get("RefuseMsg")==null?null:m.get("RefuseMsg")+"");
 
             //6-处理
-            map.putAll(groupService.dealCheck(inviteUserId, beInvitedUserId, groupId, dealType.equals("2"), refuseMsg));
+            map.putAll(groupService.dealCheck(inviteUserId, beInvitedUserId, groupId, dealType.equals("2"), refuseMsg, userId));
             return map;
         } catch(Exception e) {
             e.printStackTrace();
