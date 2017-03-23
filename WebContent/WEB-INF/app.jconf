@@ -1,0 +1,19 @@
+{
+  //socket客户端配置信息
+  "serverIdentify":{
+    "serverType":"AppEngints", //不能大于12个字符
+    "serverName":"MainServer"
+  },
+  "logPath":"/opt/logs/AppEngine/ServerSocketClient",
+  "socketClient": {
+    "ip":"123.56.254.75",            //服务端Ip
+    "port":"16789",                  //服务端端口号
+    "intervalBeat":"23*1000",        //发送心跳信号的间隔
+    "intervalCheckSocket":"19*1000", //检查Socket健康情况的时间间隔
+    "expireTime":"30*60*1000",       //过期时间，大于这个时间还未收到服务器信息，说明socket已经断开
+    "stopDelay":"10*1000",           //多长时间后还未停止，则强行停止
+    "reConnStrategy":[
+      "INTE::500","INTE::1000","INTE::3000","INTE::6000","GOTO::0"
+    ]
+  }
+}
