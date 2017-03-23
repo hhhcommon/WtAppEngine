@@ -27,12 +27,11 @@ import com.woting.appengine.solr.persis.po.SolrInputPo;
 import com.woting.appengine.solr.persis.po.SolrSearchResult;
 import com.woting.appengine.solr.utils.SolrUtils;
 
-
 @Service
 public class SolrJService {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	@Resource
-	private HttpSolrServer httpSolrServer;  
+	private HttpSolrServer httpSolrServer;
 	
 	public void addSolrIndex(Object media , String pid, long playcount) {
 		if (media!=null) {
