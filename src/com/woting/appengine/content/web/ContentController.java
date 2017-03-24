@@ -370,7 +370,6 @@ public class ContentController {
 	            else if (mediaType.equals("RADIO"))  contentInfo=contentService.getBcInfo(contentId, mUdk);
 			}
             
-            
             if (contentInfo!=null&&contentInfo.size()>0) {
                 map.put("ResultInfo", contentInfo);
                 map.put("ReturnType", "1001");
