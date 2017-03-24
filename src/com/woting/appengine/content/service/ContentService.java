@@ -939,7 +939,7 @@ public class ContentService {
                 if (mediaType!=null && mediaType.equals("RADIO") && catalogType.equals("1")) {
                 	ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
                     if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-                        JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+                        JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory123");
                         RedisOperService ros=new RedisOperService(conn, 5);
                         if (ros.exist("LINSHENG_ID_"+f_catalogId)) {
                         	TreeNode<? extends TreeNodeBean> roots=null;
@@ -1019,7 +1019,7 @@ public class ContentService {
             if ((mediaType!=null && mediaType.equals("RADIO")) || catalogType.equals("2")) {
             	ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
                 if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-                    JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+                    JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory123");
                     RedisOperService ros=new RedisOperService(conn, 5);
                     if (ros.exist("LINSHENG_ID_"+catalogId)) {
                     	TreeNode<? extends TreeNodeBean> roots=null;
