@@ -344,17 +344,17 @@ public class ContentController {
             
             Map<String, Object> contentInfo=null;
             //检测内容是否存在redis里
-            map = ContentRedisUtils.isOrNoToLocal(m, 1);
-            if (map!=null) {
-				int isnum = (int) map.get("IsOrNoLocal");
-				Object info = map.get("Info");
-				if (isnum == 0) {
-					contentInfo = (Map<String, Object>) info;
-				} else if (isnum == 1) {
-					contentId = (String) info;
-				}
-			}
-            map=new HashMap<>();
+//            map = ContentRedisUtils.isOrNoToLocal(m, 1);
+//            if (map!=null) {
+//				int isnum = (int) map.get("IsOrNoLocal");
+//				Object info = map.get("Info");
+//				if (isnum == 0) {
+//					contentInfo = (Map<String, Object>) info;
+//				} else if (isnum == 1) {
+//					contentId = (String) info;
+//				}
+//			}
+//            map=new HashMap<>();
             
             if (contentInfo==null) {
 				if (mediaType.equals("SEQU")) contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page, mUdk);
@@ -472,17 +472,17 @@ public class ContentController {
             m.put("MediaType", "SEQU");
             Map<String, Object> contentInfo=null;
             //检测内容是否存在redis里
-            map = ContentRedisUtils.isOrNoToLocal(m, 1);
-            if (map!=null) {
-				int isnum = (int) map.get("IsOrNoLocal");
-				Object info = map.get("Info");
-				if (isnum == 0) {
-					contentInfo = (Map<String, Object>) info;
-				} else if (isnum == 1) {
-					contentId = (String) info;
-				}
-			}
-            map=new HashMap<>();
+//            map = ContentRedisUtils.isOrNoToLocal(m, 1);
+//            if (map!=null) {
+//				int isnum = (int) map.get("IsOrNoLocal");
+//				Object info = map.get("Info");
+//				if (isnum == 0) {
+//					contentInfo = (Map<String, Object>) info;
+//				} else if (isnum == 1) {
+//					contentId = (String) info;
+//				}
+//			}
+//            map=new HashMap<>();
             
             if (contentInfo==null) {
 				contentInfo = contentService.getSmSubMedias(contentId, page, pageSize, sortType, mUdk);
@@ -603,20 +603,20 @@ public class ContentController {
 
             m.put("MUDK", mUdk);
             boolean isok = false;
-            map = ContentRedisUtils.isOrNoToLocal(m, 3);
-            if (map!=null) {
-				int isnum = (int) map.get("IsOrNoLocal");
-				Object info = map.get("Info");
-				if (isnum == 0) { //未入库
-					isok = false;
-				} else if (isnum == 1) { //已入库
-					contentId = (String) info;
-					isok = true;
-				} else if (isnum == 2) { //redis不存在内容
-					isok = true;
-				}
-			}
-            map=new HashMap<>();
+//            map = ContentRedisUtils.isOrNoToLocal(m, 3);
+//            if (map!=null) {
+//				int isnum = (int) map.get("IsOrNoLocal");
+//				Object info = map.get("Info");
+//				if (isnum == 0) { //未入库
+//					isok = false;
+//				} else if (isnum == 1) { //已入库
+//					contentId = (String) info;
+//					isok = true;
+//				} else if (isnum == 2) { //redis不存在内容
+//					isok = true;
+//				}
+//			}
+//            map=new HashMap<>();
 
             if (isok) {
 				flag=favoriteService.favorite(mediaType, contentId, flag, mUdk);
@@ -1211,23 +1211,23 @@ public class ContentController {
             m.put("MUDK", mUdk);
             m.put("MediaType","SEQU");
             boolean isok = false;
-            map = ContentRedisUtils.isOrNoToLocal(m, 3);
-            if (map!=null) {
-				int isnum = (int) map.get("IsOrNoLocal");
-				Object info = map.get("Info");
-				if (isnum == 0) { //未入库
-					isok = false;
-				} else if (isnum == 1) { //已入库
-					contentId = (String) info;
-					isok = true;
-				} else if (isnum == 2) {
-					isok = true;
-				}
-			}
-            map = new HashMap<>();
-            if (isok) {
+//            map = ContentRedisUtils.isOrNoToLocal(m, 3);
+//            if (map!=null) {
+//				int isnum = (int) map.get("IsOrNoLocal");
+//				Object info = map.get("Info");
+//				if (isnum == 0) { //未入库
+//					isok = false;
+//				} else if (isnum == 1) { //已入库
+//					contentId = (String) info;
+//					isok = true;
+//				} else if (isnum == 2) {
+//					isok = true;
+//				}
+//			}
+//            map = new HashMap<>();
+//            if (isok) {
 				flag=subscribeService.Subscribe(contentId, flag, mUdk);
-			}
+//			}
             
             if (flag==1) {
                 map.put("ReturnType", "1001");
