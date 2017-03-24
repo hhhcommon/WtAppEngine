@@ -65,6 +65,8 @@ public class ContentService {
     JedisConnectionFactory redisConn;
     @Resource(name="connectionFactory182")
     JedisConnectionFactory redisConn182;
+    @Resource(name="connectionFactory7_2")
+    JedisConnectionFactory redisConn7_2;
     //先用Group代替！！
     @Resource(name="defaultDAO")
     private MybatisDAO<GroupPo> groupDao;
@@ -827,15 +829,14 @@ public class ContentService {
         return retInfo;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Map<String, Object> getContents(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId,
                                             int pageType, MobileUDKey mUdk, Map<String, Object> filterData) {
-        Map<String, Object> rt=null;
         //1-得到喜欢列表
         Map<String, Object> param=new HashMap<String, Object>();
         param.put("mUdk", mUdk);
         String key="Favorite::"+(mUdk.isUser()?("UserId::["+mUdk.getUserId()+"]::LIST"):("DeviceId::["+mUdk.getDeviceId()+"]::LIST"));
-        RedisOperService roService=new RedisOperService(redisConn182, 11);
+        RedisOperService roService=new RedisOperService(redisConn7_2, 11);
         try {
             key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
         } finally {
@@ -872,9 +873,9 @@ public class ContentService {
         param.put("Page", page);
         param.put("PerSize", perSize);
         param.put("BeginCatalogId", beginCatalogId);
-        param.put("FList", fList);
-        
-        roService=new RedisOperService(redisConn182, 11);
+        //param.put("FList", fList);
+
+        roService=new RedisOperService(redisConn7_2, 11);
         try {
             key=roService.getAndSet(key, new GetContents(param), 30*60*1000);
         } finally {
@@ -895,7 +896,44 @@ public class ContentService {
 //            if (roService!=null) roService.close();
 //            roService=null;
 //        }
-        return rt;
+        param=(Map)JsonUtils.jsonToObj(key, Map.class);
+        //加入喜欢
+        if (fList==null||fList.size()==0) return param;
+
+        resultType=0;
+        try {resultType=Integer.parseInt(""+param.get("ResultType"));} catch(Exception e) {};
+        if (resultType==1) {
+            List<Map> lm=(List<Map>)param.get("List");
+            for (Map m: lm) {
+                List<Map> lm2=(List<Map>)m.get("List");
+                for (Map m2: lm2) {
+                    boolean find=false;
+                    String tableName=MediaType.buildByTypeName(""+m2.get("MediaType")).getTabName();
+                    for (Map fm: fList) {
+                        if (m2.get("ContentId").equals(fm.get("resId"))&&fm.get("resTableName").equals(tableName)) {
+                            find=true;
+                            break;
+                        }
+                    }
+                    if (find) m2.put("ContentFavorite", "1");
+                }
+            }
+            return null;
+        } else if (resultType==3) {//列表
+            List<Map> lm=(List<Map>)param.get("List");
+            for (Map m: lm) {
+                boolean find=false;
+                String tableName=MediaType.buildByTypeName(""+m.get("MediaType")).getTabName();
+                for (Map fm: fList) {
+                    if (m.get("ContentId").equals(fm.get("resId"))&&fm.get("resTableName").equals(tableName)) {
+                        find=true;
+                        break;
+                    }
+                }
+                if (find) m.put("ContentFavorite", "1");
+            }
+        } else return param;
+        return param;
     }
 
     //私有方法
@@ -1182,13 +1220,11 @@ public class ContentService {
         private int page;
         private int perSize;
         private String beginCatalogId;
-        private List<Map<String, Object>> fList=null;
 
         public GetContents(Map<String, Object> param) {
             super(param);
             parseParam();
         }
-        @SuppressWarnings("unchecked")
         private void parseParam() {
             catalogType=param.get("CatalogType")==null?"-1":(String)param.get("CatalogType");
             catalogId=param.get("CatalogId")==null?null:(String)param.get("CatalogId");
@@ -1202,8 +1238,6 @@ public class ContentService {
 
             perSize=param.get("PerSize")==null?0:(Integer)param.get("PerSize");
             beginCatalogId=param.get("BeginCatalogId")==null?null:(String)param.get("BeginCatalogId");
-
-            fList=param.get("FList")==null?null:(List<Map<String, Object>>)param.get("FList");
         }
         @SuppressWarnings("unchecked")
         @Override
@@ -1679,7 +1713,7 @@ public class ContentService {
                                 oneData.put("pubCount", rs.getInt("pubCount"));
                                 oneData.put("cTime", rs.getTimestamp("cTime"));
 
-                                Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, personList, cataList, pubChannelList, fList, playCountList);
+                                Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, personList, cataList, pubChannelList, null, playCountList);
                                 int i=0;
                                 for (; i<sortIdList.size(); i++) {
                                     if (sortIdList.get(i).equals("wt_MediaAsset::"+oneMedia.get("ContentId"))) break;
@@ -1709,7 +1743,7 @@ public class ContentService {
                                 oneData.put("pubCount", rs.getInt("pubCount"));
                                 oneData.put("cTime", rs.getTimestamp("cTime"));
 
-                                Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, personList, cataList, pubChannelList, fList, playCountList);
+                                Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, personList, cataList, pubChannelList, null, playCountList);
                                 int i=0;
                                 for (; i<sortIdList.size(); i++) {
                                     if (sortIdList.get(i).equals("wt_SeqMediaAsset::"+oneMedia.get("ContentId"))) break;
@@ -1718,7 +1752,7 @@ public class ContentService {
                                 if (pageType==0&&samExtractHas) {
                                     for (Map<String, Object> _o: ret4) {
                                         if ((""+oneMedia.get("ContentId")).equals(""+_o.get("sId"))) {
-                                            Map<String, Object> newOne=ContentUtils.convert2Ma(_o, null, cataList, pubChannelList, fList, playCountList);
+                                            Map<String, Object> newOne=ContentUtils.convert2Ma(_o, null, cataList, pubChannelList, null, playCountList);
                                             newOne.put("SeqInfo", oneMedia);
                                             _ret.set(i, newOne);
                                             hasAdd=true;
@@ -1952,7 +1986,7 @@ public class ContentService {
                                         oneData.put("bcSource", rs.getString("bcSource"));
                                         oneData.put("flowURI", rs.getString("flowURI"));
                                         oneData.put("CTime", rs.getTimestamp("cTime"));
-                                        Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, personList, cataList, pubChannelList, fList, playCountList, playingList);
+                                        Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, personList, cataList, pubChannelList, null, playCountList, playingList);
                                         Map<String, Object> pm = getBCIsPlayingProgramme(oneData.get("id")+"", System.currentTimeMillis());
                                         if (pm!=null && pm.size()>0) {
                                             oneMedia.put("IsPlaying", pm.get(oneData.get("id")+""));
@@ -1986,7 +2020,7 @@ public class ContentService {
                                         oneData.put("pubCount", rs.getInt("pubCount"));
                                         oneData.put("cTime", rs.getTimestamp("cTime"));
 
-                                        Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, personList, cataList, pubChannelList, fList, playCountList);
+                                        Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, personList, cataList, pubChannelList, null, playCountList);
                                         int i=0;
                                         for (; i<sortIdList.size(); i++) {
                                             if (sortIdList.get(i).equals("wt_MediaAsset::"+oneMedia.get("ContentId"))) break;
@@ -2014,7 +2048,7 @@ public class ContentService {
                                         oneData.put("pubCount", rs.getInt("pubCount"));
                                         oneData.put("cTime", rs.getTimestamp("cTime"));
 
-                                        Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, personList, cataList, pubChannelList, fList, playCountList);
+                                        Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, personList, cataList, pubChannelList, null, playCountList);
                                         int i=0;
                                         for (; i<sortIdList.size(); i++) {
                                             if (sortIdList.get(i).equals("wt_SeqMediaAsset::"+oneMedia.get("ContentId"))) break;

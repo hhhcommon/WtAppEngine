@@ -161,7 +161,7 @@ public class PassportController {
             }
             //3-用户登录成功
             mUdk.setUserId(u.getUserId());
-            RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
+            //RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
             RedisOperService roService=new RedisOperService(redisConn, 4);
             //ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService, new BlockLockConfig(5, 2, 0, 50));
             try {
@@ -188,7 +188,6 @@ public class PassportController {
                             um.put("Sex", drr.getDd().getNodeName());
                         } else
                         if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
-                            System.out.println("==========================================="+drr.getDd());
                             um.put("Region", drr.getDd().getTreePathName());
                         }
                     }
