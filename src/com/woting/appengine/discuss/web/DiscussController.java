@@ -142,25 +142,25 @@ public class DiscussController {
                 return map;
             }
             boolean isok = false;
-            map = ContentRedisUtils.isOrNoToLocal(m, 2);
-            if (map!=null) {
-				int isnum = (int) map.get("IsOrNoLocal");
-				Object info = map.get("Info");
-				if (isnum == 0) { //未入库
-					isok = false;
-				} else if (isnum == 1) { //已入库
-					contentId = (String) info;
-					isok = true;
-				} else if (isnum == 2) {
-					isok = false;
-				}
-			}
-            map=new HashMap<>();
+//            map = ContentRedisUtils.isOrNoToLocal(m, 2);
+//            if (map!=null) {
+//				int isnum = (int) map.get("IsOrNoLocal");
+//				Object info = map.get("Info");
+//				if (isnum == 0) { //未入库
+//					isok = false;
+//				} else if (isnum == 1) { //已入库
+//					contentId = (String) info;
+//					isok = true;
+//				} else if (isnum == 2) {
+//					isok = false;
+//				}
+//			}
+//            map=new HashMap<>();
             
             //4-存储意见
             try {
             	int r = 1;
-            	if (isok) {
+//            	if (isok) {
 					Discuss discuss=new Discuss();
 	                discuss.setUserId(userId);
 	                discuss.setDiscuss(discu);
@@ -174,7 +174,7 @@ public class DiscussController {
 	                    return map;
 	                };
 	                r=discussService.insertDiscuss(discuss);
-				}
+//				}
                 
                 if (r!=1) {
                     map.put("ReturnType", "1007");
