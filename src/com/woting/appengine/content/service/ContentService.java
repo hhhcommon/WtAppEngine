@@ -1069,7 +1069,7 @@ public class ContentService {
 							solrips.addAll(sResult.getSolrInputPos());
 					    }
 					}
-				}	
+				}
 			}
 			List<Map<String, Object>> retLs = new ArrayList<>();
 			if (solrips!=null && solrips.size()>0) {

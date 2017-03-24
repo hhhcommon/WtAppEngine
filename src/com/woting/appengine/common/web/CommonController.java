@@ -12,6 +12,7 @@ import java.util.Random;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Controller;
@@ -742,7 +743,8 @@ public class CommonController {
 
     @RequestMapping(value="/searchByText.do")
     @ResponseBody
-    public Map<String,Object> searchByText(HttpServletRequest request) {
+    public Map<String,Object> searchByText(HttpServletRequest request, HttpServletResponse response) {
+    	response.setHeader("Access-Control-Allow-Origin", "http://www.wotingfm.com");
         //数据收集处理==1
         ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
         alPo.setApiName("4.1.5-searchByText");
@@ -951,6 +953,8 @@ public class CommonController {
             String _s[]=searchStr.split(",");
             for (int i=0; i<_s.length; i++) wordService.addWord2Online(_s[i].trim(), o);
 
+            String mediaType = null;
+            try {mediaType=m.get("MediaType").toString();} catch(Exception e) {}
             //获得结果类型，0获得一个列表，1获得分类列表，这个列表根据content字段处理，这个字段目前没有用到
             int resultType=0;
             try {resultType=Integer.parseInt(m.get("ResultType")+"");} catch(Exception e) {}
@@ -966,9 +970,11 @@ public class CommonController {
 
             Map<String, Object> cl=new HashMap<String,Object>();
             long a=System.currentTimeMillis();
-            if(resultType==0 && pageType==0) cl=scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mUdk);
-            else cl=contentService.searchAll(searchStr, resultType, pageType, mUdk);
+//            if(resultType==0 && pageType==0) cl=scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mUdk);
+//            else cl=contentService.searchAll(searchStr, resultType, pageType, mUdk);
+            cl=contentService.searchBySolr(searchStr, mediaType, pageType, resultType, page, pageSize, mUdk);
             a=System.currentTimeMillis()-a;
+//            a=System.currentTimeMillis()-a;
 
             if (cl!=null&&cl.size()>0) {
                 map.put("ResultType", cl.get("ResultType"));

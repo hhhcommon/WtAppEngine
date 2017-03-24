@@ -362,14 +362,13 @@ public class ContentController {
 	            if (mediaType.equals("TTS")) {
 	                ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
 	                if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-	                    JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+	                    JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory123");
 	                    RedisOperService roService=new RedisOperService(conn);
 	                    contentInfo=SearchUtils.getNewsInfo(contentId, roService);
 	                }
 	            } else if (mediaType.equals("AUDIO"))  contentInfo=contentService.getMaInfo(contentId, mUdk);
 	            else if (mediaType.equals("RADIO"))  contentInfo=contentService.getBcInfo(contentId, mUdk);
 			}
-            
             
             if (contentInfo!=null&&contentInfo.size()>0) {
                 map.put("ResultInfo", contentInfo);

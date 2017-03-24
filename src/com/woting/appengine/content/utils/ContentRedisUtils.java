@@ -31,7 +31,7 @@ public abstract class ContentRedisUtils {
 		Map<String, Object> retM = new HashMap<>();
 		ServletContext sc = (SystemCache.getCache(FConstants.SERVLET_CONTEXT) == null ? null : (ServletContext) SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
 		if (WebApplicationContextUtils.getWebApplicationContext(sc) != null) {
-			JedisConnectionFactory conn = (JedisConnectionFactory) WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+			JedisConnectionFactory conn = (JedisConnectionFactory) WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory123");
 			RedisOperService ros = new RedisOperService(conn);
 			String mediaType = m.get("MediaType")+"";
 			String ContentId = m.get("ContentId")+"";
