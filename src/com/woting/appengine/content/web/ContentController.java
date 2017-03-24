@@ -344,17 +344,17 @@ public class ContentController {
             
             Map<String, Object> contentInfo=null;
             //检测内容是否存在redis里
-            map = ContentRedisUtils.isOrNoToLocal(m, 1);
-            if (map!=null) {
-				int isnum = (int) map.get("IsOrNoLocal");
-				Object info = map.get("Info");
-				if (isnum == 0) {
-					contentInfo = (Map<String, Object>) info;
-				} else if (isnum == 1) {
-					contentId = (String) info;
-				}
-			}
-            map=new HashMap<>();
+//            map = ContentRedisUtils.isOrNoToLocal(m, 1);
+//            if (map!=null) {
+//				int isnum = (int) map.get("IsOrNoLocal");
+//				Object info = map.get("Info");
+//				if (isnum == 0) {
+//					contentInfo = (Map<String, Object>) info;
+//				} else if (isnum == 1) {
+//					contentId = (String) info;
+//				}
+//			}
+//            map=new HashMap<>();
             
             if (contentInfo==null) {
 				if (mediaType.equals("SEQU")) contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page, mUdk);
