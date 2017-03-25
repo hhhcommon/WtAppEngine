@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spiritdata.framework.util.StringUtils;
-import com.woting.appengine.content.utils.ContentRedisUtils;
 import com.woting.appengine.discuss.model.Discuss;
 import com.woting.appengine.discuss.service.DiscussService;
 import com.woting.cm.core.media.MediaType;

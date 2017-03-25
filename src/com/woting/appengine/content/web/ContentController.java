@@ -264,7 +264,6 @@ public class ContentController {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @RequestMapping(value="getContentInfo.do")
     @ResponseBody
     public Map<String,Object> getContentInfo(HttpServletRequest request) {

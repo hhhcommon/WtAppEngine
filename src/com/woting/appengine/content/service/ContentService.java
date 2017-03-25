@@ -1111,13 +1111,16 @@ public class ContentService {
 			}
 			List<Map<String, Object>> retLs = new ArrayList<>();
 			if (solrips!=null && solrips.size()>0) {
-				for (int i = 0;i<solrips.size();i++) {
-					retLs.add(null);
-				}
+				Map<String, Object> mf = new HashMap<>();
+				mf.put("mUdk", mUdk);
+				String fstr = new GetFavoriteList(mf)._getBizData();
+				List<UserFavoritePo> favret = null;
+				if (fstr!=null) favret = (List<UserFavoritePo>) JsonUtils.jsonToObj(fstr, List.class);
 				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
 				for (int i=0;i<solrips.size();i++) {
 					int f = i;
 					retLs.add(null);
+					List<UserFavoritePo> ret = favret;
 					fixedThreadPool.execute(new Runnable() {
 						@SuppressWarnings("unchecked")
 						public void run() {
@@ -1152,12 +1155,21 @@ public class ContentService {
 										infomap.put("SeqInfo", smainfom);
 									}
 								} catch (Exception e) {}
+								if (ret!=null && ret.size()>0) {
+									for (UserFavoritePo userfav : ret) {
+										if (userfav!=null && userfav.getResId().equals(contentid)) {
+											if ((mediaType.equals("AUDIO") && userfav.getResTableName().equals("wt_MediaAsset")) 
+											|| (mediaType.equals("SEQU") && userfav.getResTableName().equals("wt_SeqMediaAsset")) 
+											|| (mediaType.equals("RADIO") && userfav.getResTableName().equals("wt_Broadcast"))) 
+												infomap.put("ContentFavorite", 1);
+										}
+								    }
+								}
 								retLs.set(f, infomap);
 							}
 						}
 					});
 				}
-				
 				fixedThreadPool.shutdown();
 				while (true) {
 					Thread.sleep(10);
