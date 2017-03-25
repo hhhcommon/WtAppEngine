@@ -1117,11 +1117,10 @@ public class ContentService {
 				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
 				for (int i=0;i<solrips.size();i++) {
 					int f = i;
+					retLs.add(null);
 					fixedThreadPool.execute(new Runnable() {
 						@SuppressWarnings("unchecked")
 						public void run() {
-//							Map<String, Object> infomap = new HashMap<>();
-//							retLs.add(infomap);
 							String contentid = solrips.get(f).getItem_id();
 							RedisOperService rs = new RedisOperService(redisConn182, 11);
 							String info = null;
@@ -1153,9 +1152,7 @@ public class ContentService {
 										infomap.put("SeqInfo", smainfom);
 									}
 								} catch (Exception e) {}
-//								Map<String, Object> m = retLs.get(f);
-//								m.putAll(infomap);
-//								retLs.add(f,infomap);
+								retLs.set(f, infomap);
 							}
 						}
 					});
@@ -1168,8 +1165,6 @@ public class ContentService {
 						break;
 					}
 				}
-				System.out.println("##########################");
-				System.out.println(JsonUtils.objToJson(retLs));
 				if (retLs!=null && retLs.size()>0) {
 					Iterator<Map<String, Object>> it = retLs.iterator();
 					while (it.hasNext()) {
