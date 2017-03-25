@@ -1960,13 +1960,17 @@ public class ContentService {
 			}
 			List<Map<String, Object>> retLs = new ArrayList<>();
 			if (solrips!=null && solrips.size()>0) {
+				for (int i = 0;i<solrips.size();i++) {
+					retLs.add(null);
+				}
 				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
 				for (int i=0;i<solrips.size();i++) {
 					int f = i;
-					retLs.add(null);
 					fixedThreadPool.execute(new Runnable() {
 						@SuppressWarnings("unchecked")
 						public void run() {
+//							Map<String, Object> infomap = new HashMap<>();
+//							retLs.add(infomap);
 							String contentid = solrips.get(f).getItem_id();
 							RedisOperService rs = new RedisOperService(redisConn182, 11);
 							String info = null;
@@ -1982,7 +1986,8 @@ public class ContentService {
 							}
 							info = rs.get("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::INFO");
 							if (info!=null) {
-								Map<String, Object> infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
+								Map<String, Object> infomap = retLs.get(f);
+								infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
 								String playcount = null;
 								playcount = rs.get("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::PLAYCOUNT");
 								if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
@@ -1997,11 +2002,14 @@ public class ContentService {
 										infomap.put("SeqInfo", smainfom);
 									}
 								} catch (Exception e) {}
-								retLs.add(f,infomap);
+//								Map<String, Object> m = retLs.get(f);
+//								m.putAll(infomap);
+//								retLs.add(f,infomap);
 							}
 						}
 					});
 				}
+				
 				fixedThreadPool.shutdown();
 				while (true) {
 					Thread.sleep(10);
@@ -2009,6 +2017,8 @@ public class ContentService {
 						break;
 					}
 				}
+				System.out.println("##########################");
+				System.out.println(JsonUtils.objToJson(retLs));
 				if (retLs!=null && retLs.size()>0) {
 					Iterator<Map<String, Object>> it = retLs.iterator();
 					while (it.hasNext()) {
