@@ -1111,10 +1111,16 @@ public class ContentService {
 			}
 			List<Map<String, Object>> retLs = new ArrayList<>();
 			if (solrips!=null && solrips.size()>0) {
+				Map<String, Object> mf = new HashMap<>();
+				mf.put("mUdk", mUdk);
+				String fstr = new GetFavoriteList(mf)._getBizData();
+				List<UserFavoritePo> favret = null;
+				if (fstr!=null) favret = (List<UserFavoritePo>) JsonUtils.jsonToObj(fstr, List.class);
 				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
 				for (int i=0;i<solrips.size();i++) {
 					int f = i;
 					retLs.add(null);
+					List<UserFavoritePo> ret = favret;
 					fixedThreadPool.execute(new Runnable() {
 						@SuppressWarnings("unchecked")
 						public void run() {
@@ -1133,7 +1139,8 @@ public class ContentService {
 							}
 							info = rs.get("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::INFO");
 							if (info!=null) {
-								Map<String, Object> infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
+								Map<String, Object> infomap = retLs.get(f);
+								infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
 								String playcount = null;
 								playcount = rs.get("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::PLAYCOUNT");
 								if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
@@ -1148,7 +1155,17 @@ public class ContentService {
 										infomap.put("SeqInfo", smainfom);
 									}
 								} catch (Exception e) {}
-								retLs.add(f,infomap);
+								if (ret!=null && ret.size()>0) {
+									for (UserFavoritePo userfav : ret) {
+										if (userfav!=null && userfav.getResId().equals(contentid)) {
+											if ((mediaType.equals("AUDIO") && userfav.getResTableName().equals("wt_MediaAsset")) 
+											|| (mediaType.equals("SEQU") && userfav.getResTableName().equals("wt_SeqMediaAsset")) 
+											|| (mediaType.equals("RADIO") && userfav.getResTableName().equals("wt_Broadcast"))) 
+												infomap.put("ContentFavorite", 1);
+										}
+								    }
+								}
+								retLs.set(f, infomap);
 							}
 						}
 					});
