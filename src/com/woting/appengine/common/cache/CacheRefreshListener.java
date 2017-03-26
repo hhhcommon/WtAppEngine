@@ -49,7 +49,9 @@ class RefrshCacheTask extends TimerTask {
                     SystemCache.remove(WtAppEngineConstants.APP_VERSIONCONFIG);
                     SystemCache.setCache(new CacheEle<VersionConfig>(WtAppEngineConstants.APP_VERSIONCONFIG, "版本设置", versionService.getVerConfig()));
                 }
+                
             }
+            
         } catch(Exception e) {
             e.printStackTrace();
         }

@@ -1240,7 +1240,7 @@ public class GroupService {
             nMsg.setToType(1);
             nMsg.setMsgType(0);
             nMsg.setAffirm(1);
-            nMsg.setBizType(0x40);
+            nMsg.setBizType(0x04);
             nMsg.setCmdType(2);
             nMsg.setCommand(5);//退组用户消息
             Map<String, Object> dataMap=new HashMap<String, Object>();

@@ -23,7 +23,6 @@ import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.RequestUtils;
 import com.woting.appengine.accusation.service.AccusationService;
 import com.woting.appengine.content.service.ContentService;
-import com.woting.appengine.content.utils.ContentRedisUtils;
 import com.woting.appengine.favorite.service.FavoriteService;
 import com.woting.appengine.searchcrawler.utils.SearchUtils;
 import com.woting.cm.core.channel.service.ChannelService;
@@ -264,7 +263,6 @@ public class ContentController {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @RequestMapping(value="getContentInfo.do")
     @ResponseBody
     public Map<String,Object> getContentInfo(HttpServletRequest request) {
@@ -394,8 +392,7 @@ public class ContentController {
             } catch (InterruptedException e) {}
         }
     }
-    
-    @SuppressWarnings("unchecked")
+
     @RequestMapping(value="getSmSubMedias.do")
     @ResponseBody
     public Map<String,Object> getSmSubMediaList(HttpServletRequest request) {
@@ -618,6 +615,7 @@ public class ContentController {
 //			}
 //            map=new HashMap<>();
 
+            isok=true;
             if (isok) {
 				flag=favoriteService.favorite(mediaType, contentId, flag, mUdk);
 			}
@@ -1210,7 +1208,7 @@ public class ContentController {
 
             m.put("MUDK", mUdk);
             m.put("MediaType","SEQU");
-            boolean isok = false;
+//            boolean isok = false;
 //            map = ContentRedisUtils.isOrNoToLocal(m, 3);
 //            if (map!=null) {
 //				int isnum = (int) map.get("IsOrNoLocal");
