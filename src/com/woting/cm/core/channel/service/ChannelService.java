@@ -38,6 +38,7 @@ public class ChannelService {
 
     private _CacheChannel _cc=null;
 
+    @SuppressWarnings("unchecked")
     @PostConstruct 
     public void initParam() {
         channelDao.setNamespace("A_CHANNEL");
@@ -48,6 +49,7 @@ public class ChannelService {
     /**
      * 加载栏目结构信息
      */
+    @SuppressWarnings("unchecked")
     public _CacheChannel loadCache() {
         _CacheChannel _cc=null;
         //初始化_cc
@@ -70,6 +72,7 @@ public class ChannelService {
             Map<String, Object> param=new HashMap<String, Object>();
             param.put("ownerType", "100");
             param.put("sortByClause", "sort");
+            param.put("isValidate", "1");
             List<ChannelPo> cpol=channelDao.queryForList(param);
             if (cpol!=null&&!cpol.isEmpty()) {
                 List<Channel> cl=new ArrayList<Channel>();
@@ -125,6 +128,7 @@ public class ChannelService {
      * @param assetList 内容列表，列表中是Map，Map中包括两个字段 assetType,assetId
      * @return 该资源是否发布了，返回值包括三个字段assetType,assetId,isPub，其中isPub=1是已发布，否则是未发布
      */
+    @SuppressWarnings("unchecked")
     public List<Map<String, Object>> getPubChannelList(List<Map<String, Object>> assetList) {
         if (assetList==null||assetList.isEmpty()) return null;
         //拼Sql
@@ -156,6 +160,7 @@ public class ChannelService {
      * @param c 字典项信息
      * @return 新增的栏目Id；2-未找到父亲结点；3-名称重复，同级重复;
      */
+    @SuppressWarnings("unchecked")
     public String insertChannel(Channel c) {
         CacheEle<_CacheChannel> cache=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL));
         _CacheChannel cc=cache.getContent();
@@ -193,6 +198,7 @@ public class ChannelService {
      * @param c
      * @return 1-修改成功；2-对应的结点未找到；3-名称重复，同级重复；4-与原信息相同，不必修改
      */
+    @SuppressWarnings("unchecked")
     public int updateChannel(Channel c) {
         CacheEle<_CacheChannel> cache=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL));
         _CacheChannel cc=cache.getContent();
@@ -265,6 +271,7 @@ public class ChannelService {
      * @param force 是否强制删除
      * @return "1"成功删除,"2"未找到相应的结点,"3::因为什么什么关联信息的存在而不能删除"
      */
+    @SuppressWarnings("unchecked")
     public String delChannel(Channel c, boolean force) {
         CacheEle<_CacheChannel> cache=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT));
         _CacheChannel cc=cache.getContent();
@@ -283,7 +290,7 @@ public class ChannelService {
         inStr=inStr.substring(4);
         inStr2=inStr2.substring(4);
         int count=channelAssetDao.getCount("existRefChannel", inStr2);
-        if (count>0&&!force) return "3::由于有关联信息存在，不能删除";
+        if (count>0&&!force) return "3=由于有关联信息存在，不能删除";
         else {
             //删除关联
             channelAssetDao.execute("delByChannels", inStr2);

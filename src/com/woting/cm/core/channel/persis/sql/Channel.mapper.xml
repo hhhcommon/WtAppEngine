@@ -74,7 +74,7 @@
 
   <!-- 获得列表 -->
   <select id="getList" resultMap="channelMap" parameterType="java.util.Map">
-    select <include refid="Base_Column_List"/>from wt_Channel
+    select <include refid="Base_Column_List"/>from wt_Channel <include refid="WhereClauseByEntiey"/>
   </select>
 
   <!-- 获得一条数据 -->

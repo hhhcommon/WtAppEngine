@@ -82,7 +82,7 @@ public abstract class MessageUtils {
             }
         }
         String s=(encode==null?new String(binaryMsg, offset, i):new String(binaryMsg, offset, i, encode));
-        return (nextOffset==-1?nextOffset:(nextOffset+offset))+"::"+s;
+        return (nextOffset==-1?nextOffset:(nextOffset+offset))+"="+s;
     }
 
     /**

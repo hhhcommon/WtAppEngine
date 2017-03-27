@@ -9,21 +9,17 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
 
-import com.spiritdata.framework.component.module.pojo.Module;
 import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
-import com.spiritdata.framework.ui.tree.EasyUiTree;
-import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.cm.core.channel.mem._CacheChannel;
-import com.woting.cm.core.channel.model.Channel;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictDetail;
 import com.woting.cm.core.dict.model.DictMaster;
@@ -445,7 +441,7 @@ public class DictService {
             inStr=inStr.substring(4);
             inStr2=inStr2.substring(4);
             int count=dictRefDao.getCount("existRefDict", inStr2);
-            if (count>0&&!force) return "3::由于有关联信息存在，不能删除";
+            if (count>0&&!force) return "3=由于有关联信息存在，不能删除";
             else {
                 //删除关联
                 dictRefDao.execute("delByDicts", inStr2);

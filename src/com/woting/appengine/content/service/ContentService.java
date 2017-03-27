@@ -727,7 +727,7 @@ public class ContentService {
         if (mUdk!=null) {
             Map<String, Object> param=new HashMap<String, Object>();
             param.put("mUdk", mUdk);
-            String key="Favorite::"+(mUdk.isUser()?("UserId::["+mUdk.getUserId()+"]::LIST"):("DeviceId::["+mUdk.getDeviceId()+"]::LIST"));
+            String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
             RedisOperService roService=new RedisOperService(redisConn182, 11);
             try {
                 key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
@@ -836,7 +836,7 @@ public class ContentService {
         //1-得到喜欢列表
         Map<String, Object> param=new HashMap<String, Object>();
         param.put("mUdk", mUdk);
-        String key="Favorite::"+(mUdk.isUser()?("UserId::["+mUdk.getUserId()+"]::LIST"):("DeviceId::["+mUdk.getDeviceId()+"]::LIST"));
+        String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
         RedisOperService roService=new RedisOperService(redisConn7_2, 11);
         try {
             key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
@@ -863,7 +863,7 @@ public class ContentService {
 //        }
 
         //2-根据参数得到内容
-        key="Contents::CatalogType_CatalogId_ResultType_PageType_MediaType_PageSize_Page_PerSize_BeginCatalogId::["+catalogType+"_"+catalogId+"_"+resultType+"_"+pageType+"_"+mediaType+"_"+pageSize+"_"+page+"_"+"_"+perSize+"_"+beginCatalogId+"]";
+        key="Contents=CatalogType_CatalogId_ResultType_PageType_MediaType_PageSize_Page_PerSize_BeginCatalogId=FilterData=["+catalogType+"_"+catalogId+"_"+resultType+"_"+pageType+"_"+mediaType+"_"+pageSize+"_"+page+"_"+"_"+perSize+"_"+beginCatalogId+"_"+JsonUtils.objToJson(filterData)+"]";
         param.clear();
         param.put("CatalogType", catalogType);
         param.put("CatalogId", catalogId);
@@ -874,7 +874,7 @@ public class ContentService {
         param.put("Page", page);
         param.put("PerSize", perSize);
         param.put("BeginCatalogId", beginCatalogId);
-        //param.put("FList", fList);
+        param.put("FilterData", filterData);
 
         roService=new RedisOperService(redisConn7_2, 11);
         try {
@@ -897,6 +897,7 @@ public class ContentService {
 //            if (roService!=null) roService.close();
 //            roService=null;
 //        }
+        if (key==null) return null;
         param=(Map)JsonUtils.jsonToObj(key, Map.class);
         //加入喜欢
         if (fList==null||fList.size()==0) return param;
@@ -919,7 +920,6 @@ public class ContentService {
                     if (find) m2.put("ContentFavorite", "1");
                 }
             }
-            return null;
         } else if (resultType==3) {//列表
             List<Map> lm=(List<Map>)param.get("List");
             for (Map m: lm) {
@@ -933,7 +933,7 @@ public class ContentService {
                 }
                 if (find) m.put("ContentFavorite", "1");
             }
-        } else return param;
+        }
         return param;
     }
 
@@ -1144,7 +1144,7 @@ public class ContentService {
 								Map<String, Object> infomap = retLs.get(f);
 								infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
 								String playcount = null;
-								playcount = rs.get("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::PLAYCOUNT");
+								playcount = rs.get("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=PLAYCOUNT");
 								if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
 								else infomap.put("PlayCount", 0);
 								infomap.put("ContentFavorite", 0);
@@ -1239,11 +1239,13 @@ public class ContentService {
         private int page;
         private int perSize;
         private String beginCatalogId;
+        private Map<String, Object> filterData;
 
         public GetContents(Map<String, Object> param) {
             super(param);
             parseParam();
         }
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         private void parseParam() {
             catalogType=param.get("CatalogType")==null?"-1":(String)param.get("CatalogType");
             catalogId=param.get("CatalogId")==null?null:(String)param.get("CatalogId");
@@ -1257,6 +1259,7 @@ public class ContentService {
 
             perSize=param.get("PerSize")==null?0:(Integer)param.get("PerSize");
             beginCatalogId=param.get("BeginCatalogId")==null?null:(String)param.get("BeginCatalogId");
+            filterData=param.get("FilterData")==null?null:(Map)param.get("FilterData");
         }
         @SuppressWarnings("unchecked")
         @Override
@@ -1284,89 +1287,89 @@ public class ContentService {
             String filterStr="";
             List<TreeNode<? extends TreeNodeBean>> allTn=null;
             String filterSql_inwhere="";
-            String f_catalogType="";//, f_catalogId="";
+            String f_catalogType="", f_catalogId="";
             String f_orderBySql="";
-//            if (filterData!=null) {//若有过滤，类别过滤
-//                f_catalogType=filterData.get("CatalogType")==null?"-1":(filterData.get("CatalogType")+"");
-//                f_catalogId=filterData.get("CatalogId")==null?null:(filterData.get("CatalogId")+"");
-//
-//                TreeNode<? extends TreeNodeBean> _root=null;
-//                if (!StringUtils.isNullOrEmptyOrSpace(f_catalogType)) {
-//                    //根据分类获得根
-//                    if (f_catalogType.equals("-1")) {
-//                        _root=_cc.channelTree;
-//                    } else {
-//                        DictModel dm=_cd.getDictModelById(f_catalogType);
-//                        if (dm!=null&&dm.dictTree!=null) _root=dm.dictTree;
-//                    }
-//                    if (_root!=null&&!StringUtils.isNullOrEmptyOrSpace(f_catalogId)) _root=_root.findNode(f_catalogId);
-//                }
-//                if (_root!=null) {
-//                    String _idCName=f_catalogType.equals("-1")?"channelId":"dictDid";
-//                    if (!f_catalogType.equals("-1")) {
-//                        if (!f_catalogType.equals("2")) {
-//                            filterSql_inwhere="b.dictMid='"+f_catalogType+"' and (";
-//                        } else {
-//                            filterSql_inwhere="(b.dictMid='"+f_catalogType+"' or b.dictMid='9') and (";
-//                        }
-//                    } 
-//                    filterSql_inwhere+="b."+_idCName+"='"+_root.getId()+"'";
-//                    f_orderBySql+="'"+_root.getId()+"'";
-//                    allTn=TreeUtils.getDeepList(_root);
-//                    if (allTn!=null&&!allTn.isEmpty()) {
-//                        for (TreeNode<? extends TreeNodeBean> tn: allTn) {
-//                            filterSql_inwhere+=" or b."+_idCName+"='"+tn.getId()+"'";
-//                            f_orderBySql+=",'"+tn.getId()+"'";
-//                        }
-//                    }
-//                    if (mediaType!=null && mediaType.equals("RADIO") && catalogType.equals("1")) {
-//                        ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
-//                        if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-//                            JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
-//                            RedisOperService ros=new RedisOperService(conn, 5);
-//                            if (ros.exist("LINSHENG_ID_"+f_catalogId)) {
-//                                TreeNode<? extends TreeNodeBean> roots=null;
-//                                DictModel dm=_cd.getDictModelById(f_catalogType);
-//                                if (dm!=null&&dm.dictTree!=null) roots=dm.dictTree;
-//                                String lscataids = ros.get("LINSHENG_ID_"+f_catalogId);
-//                                String[] lsids = lscataids.split(",");
-//                                for (String str : lsids) {
-//                                    if (str.equals("dtfl2001_1")) {
-//                                        dm = _cd.getDictModelById("9");
-//                                        if (dm!=null&&dm.dictTree!=null) roots=dm.dictTree;
-//                                        roots = roots.findNode(str);
-//                                        filterSql_inwhere+=" or b."+idCName+"='"+roots.getId()+"'";
-//                                        f_orderBySql+=",'"+roots.getId()+"'";
-//                                        allTn=TreeUtils.getDeepList(roots);
-//                                        if (allTn!=null&&!allTn.isEmpty()) {
-//                                            for (TreeNode<? extends TreeNodeBean> tn: allTn) {
-//                                                filterSql_inwhere+=" or b."+idCName+"='"+tn.getId()+"'";
-//                                                f_orderBySql+=",'"+tn.getId()+"'";
-//                                            }
-//                                        }
-//                                    } else {
-//                                        dm=_cd.getDictModelById(f_catalogType);
-//                                        if (dm!=null&&dm.dictTree!=null) roots=dm.dictTree;
-//                                        roots = roots.findNode(str);
-//                                        TreeUtils.cutLevel(roots, 1);
-//                                        filterSql_inwhere+=" or b."+idCName+"='"+roots.getId()+"'";
-//                                        f_orderBySql+=",'"+roots.getId()+"'";
-//                                        allTn=TreeUtils.getDeepList(roots);
-//                                        if (allTn!=null&&!allTn.isEmpty()) {
-//                                            for (TreeNode<? extends TreeNodeBean> tn: allTn) {
-//                                                filterSql_inwhere+=" or b."+idCName+"='"+tn.getId()+"'";
-//                                                f_orderBySql+=",'"+tn.getId()+"'";
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                    if (!f_catalogType.equals("-1")) filterSql_inwhere+=")";
-//                    filterSql_inwhere="("+filterSql_inwhere+")";
-//                }
-//            }
+            if (filterData!=null) {//若有过滤，类别过滤
+                f_catalogType=filterData.get("CatalogType")==null?"-1":(filterData.get("CatalogType")+"");
+                f_catalogId=filterData.get("CatalogId")==null?null:(filterData.get("CatalogId")+"");
+
+                TreeNode<? extends TreeNodeBean> _root=null;
+                if (!StringUtils.isNullOrEmptyOrSpace(f_catalogType)) {
+                    //根据分类获得根
+                    if (f_catalogType.equals("-1")) {
+                        _root=_cc.channelTree;
+                    } else {
+                        DictModel dm=_cd.getDictModelById(f_catalogType);
+                        if (dm!=null&&dm.dictTree!=null) _root=dm.dictTree;
+                    }
+                    if (_root!=null&&!StringUtils.isNullOrEmptyOrSpace(f_catalogId)) _root=_root.findNode(f_catalogId);
+                }
+                if (_root!=null) {
+                    String _idCName=f_catalogType.equals("-1")?"channelId":"dictDid";
+                    if (!f_catalogType.equals("-1")) {
+                        if (!f_catalogType.equals("2")) {
+                            filterSql_inwhere="b.dictMid='"+f_catalogType+"' and (";
+                        } else {
+                            filterSql_inwhere="(b.dictMid='"+f_catalogType+"' or b.dictMid='9') and (";
+                        }
+                    } 
+                    filterSql_inwhere+="b."+_idCName+"='"+_root.getId()+"'";
+                    f_orderBySql+="'"+_root.getId()+"'";
+                    allTn=TreeUtils.getDeepList(_root);
+                    if (allTn!=null&&!allTn.isEmpty()) {
+                        for (TreeNode<? extends TreeNodeBean> tn: allTn) {
+                            filterSql_inwhere+=" or b."+_idCName+"='"+tn.getId()+"'";
+                            f_orderBySql+=",'"+tn.getId()+"'";
+                        }
+                    }
+                    if (mediaType!=null && mediaType.equals("RADIO") && catalogType.equals("1")) {
+                        ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+                        if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                            JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory182");
+                            RedisOperService ros=new RedisOperService(conn, 5);
+                            if (ros.exist("LINSHENG_ID_"+f_catalogId)) {
+                                TreeNode<? extends TreeNodeBean> roots=null;
+                                DictModel dm=_cd.getDictModelById(f_catalogType);
+                                if (dm!=null&&dm.dictTree!=null) roots=dm.dictTree;
+                                String lscataids = ros.get("LINSHENG_ID_"+f_catalogId);
+                                String[] lsids = lscataids.split(",");
+                                for (String str : lsids) {
+                                    if (str.equals("dtfl2001_1")) {
+                                        dm = _cd.getDictModelById("9");
+                                        if (dm!=null&&dm.dictTree!=null) roots=dm.dictTree;
+                                        roots = roots.findNode(str);
+                                        filterSql_inwhere+=" or b."+idCName+"='"+roots.getId()+"'";
+                                        f_orderBySql+=",'"+roots.getId()+"'";
+                                        allTn=TreeUtils.getDeepList(roots);
+                                        if (allTn!=null&&!allTn.isEmpty()) {
+                                            for (TreeNode<? extends TreeNodeBean> tn: allTn) {
+                                                filterSql_inwhere+=" or b."+idCName+"='"+tn.getId()+"'";
+                                                f_orderBySql+=",'"+tn.getId()+"'";
+                                            }
+                                        }
+                                    } else {
+                                        dm=_cd.getDictModelById(f_catalogType);
+                                        if (dm!=null&&dm.dictTree!=null) roots=dm.dictTree;
+                                        roots = roots.findNode(str);
+                                        TreeUtils.cutLevel(roots, 1);
+                                        filterSql_inwhere+=" or b."+idCName+"='"+roots.getId()+"'";
+                                        f_orderBySql+=",'"+roots.getId()+"'";
+                                        allTn=TreeUtils.getDeepList(roots);
+                                        if (allTn!=null&&!allTn.isEmpty()) {
+                                            for (TreeNode<? extends TreeNodeBean> tn: allTn) {
+                                                filterSql_inwhere+=" or b."+idCName+"='"+tn.getId()+"'";
+                                                f_orderBySql+=",'"+tn.getId()+"'";
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (!f_catalogType.equals("-1")) filterSql_inwhere+=")";
+                    filterSql_inwhere="("+filterSql_inwhere+")";
+                }
+            }
             //5-得到媒体类型过滤串
             String mediaFilterSql="";
             if (!StringUtils.isNullOrEmptyOrSpace(mediaType)) {
@@ -1402,7 +1405,7 @@ public class ContentService {
                 if ((mediaType!=null && mediaType.equals("RADIO")) || catalogType.equals("2")) {
                     ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
                     if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-                        JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory");
+                        JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory182");
                         RedisOperService ros=new RedisOperService(conn, 5);
                         if (ros.exist("LINSHENG_ID_"+catalogId)) {
                             TreeNode<? extends TreeNodeBean> roots=null;
@@ -1561,7 +1564,7 @@ public class ContentService {
                     orderBySql = "";
                     List<Map<String, Object>> pubChannelList=new ArrayList<Map<String, Object>>();
                     while (rs!=null&&rs.next()) {
-                        sortIdList.add(rs.getString(typeCName)+"::"+rs.getString(resIdCName));
+                        sortIdList.add(rs.getString(typeCName)+"="+rs.getString(resIdCName));
                         if (rs.getString(typeCName).equals("wt_Broadcast")) {
                             bcSqlSign+=" or a.id='"+rs.getString(resIdCName)+"'";
                             bcSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
@@ -1705,7 +1708,7 @@ public class ContentService {
                                 }
                                 int i=0;
                                 for (; i<sortIdList.size(); i++) {
-                                    if (sortIdList.get(i).equals("wt_Broadcast::"+oneMedia.get("ContentId"))) break;
+                                    if (sortIdList.get(i).equals("wt_Broadcast="+oneMedia.get("ContentId"))) break;
                                 }
                                 _ret.set(i, oneMedia);
                             }
@@ -1735,7 +1738,7 @@ public class ContentService {
                                 Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, personList, cataList, pubChannelList, null, playCountList);
                                 int i=0;
                                 for (; i<sortIdList.size(); i++) {
-                                    if (sortIdList.get(i).equals("wt_MediaAsset::"+oneMedia.get("ContentId"))) break;
+                                    if (sortIdList.get(i).equals("wt_MediaAsset="+oneMedia.get("ContentId"))) break;
                                 }
                                 _ret.set(i, oneMedia);
                             }
@@ -1765,7 +1768,7 @@ public class ContentService {
                                 Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, personList, cataList, pubChannelList, null, playCountList);
                                 int i=0;
                                 for (; i<sortIdList.size(); i++) {
-                                    if (sortIdList.get(i).equals("wt_SeqMediaAsset::"+oneMedia.get("ContentId"))) break;
+                                    if (sortIdList.get(i).equals("wt_SeqMediaAsset="+oneMedia.get("ContentId"))) break;
                                 }
                                 boolean hasAdd=false;
                                 if (pageType==0&&samExtractHas) {
@@ -1921,7 +1924,7 @@ public class ContentService {
                             rs=psAsset.executeQuery();
                             List<String> sortIdList=new ArrayList<String>();
                             while (rs!=null&&rs.next()) {
-                                sortIdList.add(rs.getString(typeCName)+"::"+rs.getString(resIdCName));
+                                sortIdList.add(rs.getString(typeCName)+"="+rs.getString(resIdCName));
                                 if (rs.getString(typeCName).equals("wt_Broadcast")) {
                                     bcSqlSign+=" or a.id='"+rs.getString(resIdCName)+"'";
                                     bcSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
@@ -2014,7 +2017,7 @@ public class ContentService {
                                         }
                                         int i=0;
                                         for (; i<sortIdList.size(); i++) {
-                                            if (sortIdList.get(i).equals("wt_Broadcast::"+oneMedia.get("ContentId"))) break;
+                                            if (sortIdList.get(i).equals("wt_Broadcast="+oneMedia.get("ContentId"))) break;
                                         }
                                         _ret.set(i, oneMedia);
                                     }
@@ -2042,7 +2045,7 @@ public class ContentService {
                                         Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, personList, cataList, pubChannelList, null, playCountList);
                                         int i=0;
                                         for (; i<sortIdList.size(); i++) {
-                                            if (sortIdList.get(i).equals("wt_MediaAsset::"+oneMedia.get("ContentId"))) break;
+                                            if (sortIdList.get(i).equals("wt_MediaAsset="+oneMedia.get("ContentId"))) break;
                                         }
                                         _ret.set(i, oneMedia);
                                     }
@@ -2070,7 +2073,7 @@ public class ContentService {
                                         Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, personList, cataList, pubChannelList, null, playCountList);
                                         int i=0;
                                         for (; i<sortIdList.size(); i++) {
-                                            if (sortIdList.get(i).equals("wt_SeqMediaAsset::"+oneMedia.get("ContentId"))) break;
+                                            if (sortIdList.get(i).equals("wt_SeqMediaAsset="+oneMedia.get("ContentId"))) break;
                                         }
                                         _ret.set(i, oneMedia);
                                     }
@@ -2093,7 +2096,7 @@ public class ContentService {
                                             for (j=0; j<catalogs.size(); j++) {
                                                 oneCatalog=catalogs.get(j);
                                                 if (oneCatalog!=null&&!oneCatalog.isEmpty()) {
-                                                    identifyStr=oneCatalog.get("CataMId")+"::"+oneCatalog.get("CataDId");
+                                                    identifyStr=oneCatalog.get("CataMId")+"="+oneCatalog.get("CataDId");
                                                     if (filterStr.indexOf(identifyStr)>-1) {
                                                         retlIndex[insertIndex++]=i;
                                                         break;

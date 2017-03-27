@@ -43,7 +43,7 @@ public class WordService {
      * @param o 所属用户
      */
     public void addWord2Online(String oneWord, Owner o) {
-        swm.addWord2OnlineQueue(o.getOwnerId()+"::"+o.getOwnerType()+"::"+oneWord);
+        swm.addWord2OnlineQueue(o.getOwnerId()+"="+o.getOwnerType()+"="+oneWord);
     }
 
     /**
@@ -52,7 +52,7 @@ public class WordService {
      * @param o 所属用户
      */
     public void addWord2LoadQueue(Word oneWord, Owner o) {
-        swm.addWord2LoadQueue(o.getOwnerId()+"::"+o.getOwnerType()+"::"+oneWord.getWord()+"::"+oneWord.getCount());
+        swm.addWord2LoadQueue(o.getOwnerId()+"="+o.getOwnerType()+"="+oneWord.getWord()+"="+oneWord.getCount());
     }
 
     /**
@@ -61,7 +61,7 @@ public class WordService {
     public void dealWordOnlineQueue() {
         String _oneWord=swm.pollFromOnlineQueue();
         if (!StringUtils.isNullOrEmptyOrSpace(_oneWord)) {
-            String[] _split=_oneWord.split("::");
+            String[] _split=_oneWord.split("=");
             if (_split.length==3) {
                 Owner o=new Owner(Integer.parseInt(_split[1]), _split[0]);
                 Owner sysO=new Owner(100, "cm");
@@ -92,7 +92,7 @@ public class WordService {
     public void dealWordLoadQueue() {
         String _oneWord=swm.pollFromLoadQueue();
         if (!StringUtils.isNullOrEmptyOrSpace(_oneWord)) {
-            String[] _split=_oneWord.split("::");
+            String[] _split=_oneWord.split("=");
             if (_split.length==4) {
                 Owner o=new Owner(Integer.parseInt(_split[1]), _split[0]);
                 Owner sysO=new Owner(100, "cm");
@@ -199,7 +199,7 @@ public class WordService {
             List<UserWordPo> l=new ArrayList<UserWordPo>();
             l.addAll(uwPage.getResult());
             for (UserWordPo uwPo: l) {
-                swm.addWord2LoadQueue(uwPo.getOwnerId()+"::"+uwPo.getOwnerType()+"::"+uwPo.getWord()+"::"+uwPo.getSumNum());
+                swm.addWord2LoadQueue(uwPo.getOwnerId()+"="+uwPo.getOwnerType()+"="+uwPo.getWord()+"="+uwPo.getSumNum());
             }
             uwPage=userWordDao.pageQuery("getCount", "DA_USERWORD.getList", param, i++,10000);
             hasDD=!uwPage.getResult().isEmpty();
