@@ -72,7 +72,7 @@ public class Owner extends BaseObject {
      * @return
      */
     public String getKey() {
-        return ownerId+"::"+ownerType;
+        return ownerId+"="+ownerType;
     }
 
     @Override

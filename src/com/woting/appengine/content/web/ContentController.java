@@ -1433,7 +1433,7 @@ public class ContentController {
                 map.put("Message", "无法获得有效举报原因");
                 map.put("ReturnType", "1002");
             } else if (ret==-5) {
-                map.put("Message", "无对应的内容["+mediaType+"::"+contentId+"]");
+                map.put("Message", "无对应的内容["+mediaType+"="+contentId+"]");
                 map.put("ReturnType", "1003");
             } else if (ret==-6) {
                 map.put("Message", "选择性原因参数不合法["+selReasons+"]");

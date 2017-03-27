@@ -89,7 +89,7 @@ public class AccusationService {
         param.put("resId", contentId);
         param.put("selReasons", selReasons);
         param.put("inputReason", inputReason);
-        param.put("userId", mUdk.isUser()?mUdk.getUserId():"::"+mUdk.getDeviceId());
+        param.put("userId", mUdk.isUser()?mUdk.getUserId():"="+mUdk.getDeviceId());
 
         accusationPo.insert(param);
         return 1;

@@ -441,7 +441,7 @@ public class DictService {
             inStr=inStr.substring(4);
             inStr2=inStr2.substring(4);
             int count=dictRefDao.getCount("existRefDict", inStr2);
-            if (count>0&&!force) return "3::由于有关联信息存在，不能删除";
+            if (count>0&&!force) return "3=由于有关联信息存在，不能删除";
             else {
                 //删除关联
                 dictRefDao.execute("delByDicts", inStr2);

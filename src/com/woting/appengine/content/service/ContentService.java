@@ -726,7 +726,7 @@ public class ContentService {
         if (mUdk!=null) {
             Map<String, Object> param=new HashMap<String, Object>();
             param.put("mUdk", mUdk);
-            String key="Favorite::"+(mUdk.isUser()?("UserId::["+mUdk.getUserId()+"]::LIST"):("DeviceId::["+mUdk.getDeviceId()+"]::LIST"));
+            String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
             RedisOperService roService=new RedisOperService(redisConn182, 11);
             try {
                 key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
@@ -835,7 +835,7 @@ public class ContentService {
         //1-得到喜欢列表
         Map<String, Object> param=new HashMap<String, Object>();
         param.put("mUdk", mUdk);
-        String key="Favorite::"+(mUdk.isUser()?("UserId::["+mUdk.getUserId()+"]::LIST"):("DeviceId::["+mUdk.getDeviceId()+"]::LIST"));
+        String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
         RedisOperService roService=new RedisOperService(redisConn7_2, 11);
         try {
             key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
@@ -862,7 +862,7 @@ public class ContentService {
 //        }
 
         //2-根据参数得到内容
-        key="Contents::CatalogType_CatalogId_ResultType_PageType_MediaType_PageSize_Page_PerSize_BeginCatalogId::FilterData::["+catalogType+"_"+catalogId+"_"+resultType+"_"+pageType+"_"+mediaType+"_"+pageSize+"_"+page+"_"+"_"+perSize+"_"+beginCatalogId+"_"+JsonUtils.objToJson(filterData)+"]";
+        key="Contents=CatalogType_CatalogId_ResultType_PageType_MediaType_PageSize_Page_PerSize_BeginCatalogId=FilterData=["+catalogType+"_"+catalogId+"_"+resultType+"_"+pageType+"_"+mediaType+"_"+pageSize+"_"+page+"_"+"_"+perSize+"_"+beginCatalogId+"_"+JsonUtils.objToJson(filterData)+"]";
         param.clear();
         param.put("CatalogType", catalogType);
         param.put("CatalogId", catalogId);
@@ -1129,7 +1129,7 @@ public class ContentService {
 							String info = null;
 							if (pageType==0) {
 								if (solrips.get(f).getItem_type().equals("SEQU")) {
-									String malist = rs.get("Content::MediaType_CID::[SEQU_"+contentid+"]::SUBLIST");
+									String malist = rs.get("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");
 									if (malist!=null) {
 										List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
 										contentid = mas.get(0);
@@ -1137,12 +1137,12 @@ public class ContentService {
 									}
 								}
 							}
-							info = rs.get("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::INFO");
+							info = rs.get("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
 							if (info!=null) {
 								Map<String, Object> infomap = retLs.get(f);
 								infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
 								String playcount = null;
-								playcount = rs.get("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::PLAYCOUNT");
+								playcount = rs.get("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=PLAYCOUNT");
 								if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
 								else infomap.put("PlayCount", 0);
 								infomap.put("ContentFavorite", 0);
@@ -1150,7 +1150,7 @@ public class ContentService {
 									if (solrips.get(f).getItem_type().equals("AUDIO")) {
 										Map<String, Object> smainfom = (Map<String, Object>) infomap.get("SeqInfo");
 										String smaid = smainfom.get("ContentId").toString();
-										String smainfo = rs.get("Content::MediaType_CID::[SEQU_"+smaid+"]::INFO");
+										String smainfo = rs.get("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");
 										smainfom = (Map<String, Object>) JsonUtils.jsonToObj(smainfo, Map.class);
 										infomap.put("SeqInfo", smainfom);
 									}
@@ -1562,7 +1562,7 @@ public class ContentService {
                     orderBySql = "";
                     List<Map<String, Object>> pubChannelList=new ArrayList<Map<String, Object>>();
                     while (rs!=null&&rs.next()) {
-                        sortIdList.add(rs.getString(typeCName)+"::"+rs.getString(resIdCName));
+                        sortIdList.add(rs.getString(typeCName)+"="+rs.getString(resIdCName));
                         if (rs.getString(typeCName).equals("wt_Broadcast")) {
                             bcSqlSign+=" or a.id='"+rs.getString(resIdCName)+"'";
                             bcSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
@@ -1706,7 +1706,7 @@ public class ContentService {
                                 }
                                 int i=0;
                                 for (; i<sortIdList.size(); i++) {
-                                    if (sortIdList.get(i).equals("wt_Broadcast::"+oneMedia.get("ContentId"))) break;
+                                    if (sortIdList.get(i).equals("wt_Broadcast="+oneMedia.get("ContentId"))) break;
                                 }
                                 _ret.set(i, oneMedia);
                             }
@@ -1736,7 +1736,7 @@ public class ContentService {
                                 Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, personList, cataList, pubChannelList, null, playCountList);
                                 int i=0;
                                 for (; i<sortIdList.size(); i++) {
-                                    if (sortIdList.get(i).equals("wt_MediaAsset::"+oneMedia.get("ContentId"))) break;
+                                    if (sortIdList.get(i).equals("wt_MediaAsset="+oneMedia.get("ContentId"))) break;
                                 }
                                 _ret.set(i, oneMedia);
                             }
@@ -1766,7 +1766,7 @@ public class ContentService {
                                 Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, personList, cataList, pubChannelList, null, playCountList);
                                 int i=0;
                                 for (; i<sortIdList.size(); i++) {
-                                    if (sortIdList.get(i).equals("wt_SeqMediaAsset::"+oneMedia.get("ContentId"))) break;
+                                    if (sortIdList.get(i).equals("wt_SeqMediaAsset="+oneMedia.get("ContentId"))) break;
                                 }
                                 boolean hasAdd=false;
                                 if (pageType==0&&samExtractHas) {
@@ -1922,7 +1922,7 @@ public class ContentService {
                             rs=psAsset.executeQuery();
                             List<String> sortIdList=new ArrayList<String>();
                             while (rs!=null&&rs.next()) {
-                                sortIdList.add(rs.getString(typeCName)+"::"+rs.getString(resIdCName));
+                                sortIdList.add(rs.getString(typeCName)+"="+rs.getString(resIdCName));
                                 if (rs.getString(typeCName).equals("wt_Broadcast")) {
                                     bcSqlSign+=" or a.id='"+rs.getString(resIdCName)+"'";
                                     bcSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
@@ -2015,7 +2015,7 @@ public class ContentService {
                                         }
                                         int i=0;
                                         for (; i<sortIdList.size(); i++) {
-                                            if (sortIdList.get(i).equals("wt_Broadcast::"+oneMedia.get("ContentId"))) break;
+                                            if (sortIdList.get(i).equals("wt_Broadcast="+oneMedia.get("ContentId"))) break;
                                         }
                                         _ret.set(i, oneMedia);
                                     }
@@ -2043,7 +2043,7 @@ public class ContentService {
                                         Map<String, Object> oneMedia=ContentUtils.convert2Ma(oneData, personList, cataList, pubChannelList, null, playCountList);
                                         int i=0;
                                         for (; i<sortIdList.size(); i++) {
-                                            if (sortIdList.get(i).equals("wt_MediaAsset::"+oneMedia.get("ContentId"))) break;
+                                            if (sortIdList.get(i).equals("wt_MediaAsset="+oneMedia.get("ContentId"))) break;
                                         }
                                         _ret.set(i, oneMedia);
                                     }
@@ -2071,7 +2071,7 @@ public class ContentService {
                                         Map<String, Object> oneMedia=ContentUtils.convert2Sma(oneData, personList, cataList, pubChannelList, null, playCountList);
                                         int i=0;
                                         for (; i<sortIdList.size(); i++) {
-                                            if (sortIdList.get(i).equals("wt_SeqMediaAsset::"+oneMedia.get("ContentId"))) break;
+                                            if (sortIdList.get(i).equals("wt_SeqMediaAsset="+oneMedia.get("ContentId"))) break;
                                         }
                                         _ret.set(i, oneMedia);
                                     }
@@ -2094,7 +2094,7 @@ public class ContentService {
                                             for (j=0; j<catalogs.size(); j++) {
                                                 oneCatalog=catalogs.get(j);
                                                 if (oneCatalog!=null&&!oneCatalog.isEmpty()) {
-                                                    identifyStr=oneCatalog.get("CataMId")+"::"+oneCatalog.get("CataDId");
+                                                    identifyStr=oneCatalog.get("CataMId")+"="+oneCatalog.get("CataDId");
                                                     if (filterStr.indexOf(identifyStr)>-1) {
                                                         retlIndex[insertIndex++]=i;
                                                         break;
