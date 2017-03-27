@@ -826,7 +826,7 @@ public class CommonController {
             try {mediaType=m.get("MediaType").toString();} catch(Exception e) {}
             //获得结果类型，0获得一个列表，1获得分类列表，这个列表根据content字段处理，这个字段目前没有用到
             int resultType=0;
-            try {resultType=Integer.parseInt(m.get("ResultType")+"");} catch(Exception e) {}
+            try {resultType=Integer.parseInt(m.get("ResultType")+"");} catch(Exception e) {};
             //获得页面类型
             int pageType=1;
             try {pageType=Integer.parseInt(m.get("PageType")+"");} catch(Exception e) {};
@@ -836,12 +836,17 @@ public class CommonController {
             //得到页数
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
-
+            //得到推荐信息
+            int rootPage=0;
+            try {rootPage=Integer.parseInt(m.get("RootPage")+"");} catch(Exception e) {};
+            String rootInfo = null;
+            try {rootInfo=m.get("RootInfo").toString();} catch(Exception e) {};
+            
             Map<String, Object> cl=new HashMap<String,Object>();
             long a=System.currentTimeMillis();
 //            if(page>0 && pageSize>0 && resultType==0 && pageType==0)cl=scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mUdk);
 //            else cl=contentService.searchBySolr(searchStr, mediaType, pageType, page, pageSize, mUdk);//contentService.searchAll(searchStr, resultType, pageType, mUdk);
-            cl=contentService.searchBySolr(searchStr, mediaType, pageType, resultType, page, pageSize, mUdk);
+            cl=contentService.searchBySolr(searchStr, mediaType, pageType, resultType, page, pageSize, rootPage, rootInfo, mUdk);
             a=System.currentTimeMillis()-a;
 
             if (cl!=null&&cl.size()>0) {
@@ -967,12 +972,17 @@ public class CommonController {
             //得到页数
             int page=1;
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
-
+            //得到推荐信息
+            int rootPage=0;
+            try {rootPage=Integer.parseInt(m.get("RootPage")+"");} catch(Exception e) {};
+            String rootInfo = null;
+            try {rootInfo=m.get("RootInfo").toString();} catch(Exception e) {};
+            
             Map<String, Object> cl=new HashMap<String,Object>();
             long a=System.currentTimeMillis();
 //            if(resultType==0 && pageType==0) cl=scs.searchCrawler(searchStr, resultType, pageType, page, pageSize, mUdk);
 //            else cl=contentService.searchAll(searchStr, resultType, pageType, mUdk);
-            cl=contentService.searchBySolr(searchStr, mediaType, pageType, resultType, page, pageSize, mUdk);
+            cl=contentService.searchBySolr(searchStr, mediaType, pageType, resultType, page, pageSize, rootPage, rootInfo, mUdk);
             a=System.currentTimeMillis()-a;
 //            a=System.currentTimeMillis()-a;
 

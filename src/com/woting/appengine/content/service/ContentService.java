@@ -40,6 +40,7 @@ import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
+import com.woting.appengine.content.utils.FileUtils;
 import com.woting.appengine.favorite.persis.po.UserFavoritePo;
 import com.woting.appengine.favorite.service.FavoriteService;
 import com.woting.appengine.solr.persis.po.SolrInputPo;
@@ -1081,7 +1082,7 @@ public class ContentService {
         return retInfo;
 	}
 	
-	public Map<String, Object> searchBySolr(String searchStr, String mediaType, int pageType, int resultType, int page, int pageSize, MobileUDKey mUdk) {
+	public Map<String, Object> searchBySolr(String searchStr, String mediaType, int pageType, int resultType, int page, int pageSize, int rootPage, String rootInfo, MobileUDKey mUdk) {
 		try {
 			List<SortClause> solrsorts = SolrUtils.makeSolrSort("score desc");
 			SolrSearchResult sResult = null;
@@ -1129,15 +1130,16 @@ public class ContentService {
 							String info = null;
 							if (pageType==0) {
 								if (solrips.get(f).getItem_type().equals("SEQU")) {
-									String malist = rs.get("Content::MediaType_CID::[SEQU_"+contentid+"]::SUBLIST");
+//									String malist = rs.get("Content::MediaType_CID::[SEQU_"+contentid+"]::SUBLIST");
+									String malist = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");//rs.get("Content::MediaType_CID::[SEQU_"+contentid+"]::SUBLIST");
 									if (malist!=null) {
 										List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
-										contentid = mas.get(0);
+										contentid = mas.get(0).replace("Content::MediaType_CID::[AUDIO_", "").replace("]", "");
 										solrips.get(f).setItem_type("AUDIO");
 									}
 								}
 							}
-							info = rs.get("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::INFO");
+							info = FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");//rs.get("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::INFO");
 							if (info!=null) {
 								Map<String, Object> infomap = retLs.get(f);
 								infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
@@ -1150,7 +1152,7 @@ public class ContentService {
 									if (solrips.get(f).getItem_type().equals("AUDIO")) {
 										Map<String, Object> smainfom = (Map<String, Object>) infomap.get("SeqInfo");
 										String smaid = smainfom.get("ContentId").toString();
-										String smainfo = rs.get("Content::MediaType_CID::[SEQU_"+smaid+"]::INFO");
+										String smainfo = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");//rs.get("Content::MediaType_CID::[SEQU_"+smaid+"]::INFO");
 										smainfom = (Map<String, Object>) JsonUtils.jsonToObj(smainfo, Map.class);
 										infomap.put("SeqInfo", smainfom);
 									}
