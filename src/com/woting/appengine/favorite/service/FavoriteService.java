@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
+import com.spiritdata.framework.core.model.BaseObject;
 import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
@@ -27,7 +28,6 @@ import com.woting.cm.core.utils.ContentUtils;
 import com.woting.appengine.favorite.persis.po.UserFavoritePo;
 import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.cm.core.media.MediaType;
-import com.woting.passport.UGA.persis.pojo.GroupPo;
 import com.woting.passport.mobile.MobileUDKey;
 
 @Lazy(true)
@@ -38,13 +38,13 @@ public class FavoriteService {
     @Resource(name="defaultDAO")
     private MybatisDAO<UserFavoritePo> userFavoriteDao;
     @Resource(name="defaultDAO")
-    private MybatisDAO<GroupPo> groupDao;
+    private MybatisDAO<BaseObject> contentDao;
     @Resource
     private DataSource dataSource;
 
     @PostConstruct
     public void initParam() {
-        groupDao.setNamespace("WT_GROUP");
+        contentDao.setNamespace("WT_CONTENT");
         userFavoriteDao.setNamespace("DA_USERFAVORITE");
     }
 
@@ -190,9 +190,9 @@ public class FavoriteService {
             if (maIds.length()>0) reParam.put("maIds", maIds);
             if (smaIds.length()>0) reParam.put("smaIds", smaIds);
             //重构人员
-            personList=groupDao.queryForListAutoTranform("refPersonById", reParam);
+            personList=contentDao.queryForListAutoTranform("refPersonById", reParam);
             //重构分类
-            cataList=groupDao.queryForListAutoTranform("refCataById", reParam);
+            cataList=contentDao.queryForListAutoTranform("refCataById", reParam);
         }
         List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
         for (Map<String, Object> oneF: fList) {
@@ -202,7 +202,7 @@ public class FavoriteService {
             assetList.add(oneAsset);
         }
         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList); //发布
-        List<Map<String, Object>> playCountList=groupDao.queryForListAutoTranform("refPlayCountById", reParam);; //播放次数
+        List<Map<String, Object>> playCountList=contentDao.queryForListAutoTranform("refPlayCountById", reParam);; //播放次数
 
         //三、组装大列表
         Map<String, Object>[] favoriteArray=new Map[fList.size()];
@@ -212,7 +212,7 @@ public class FavoriteService {
         if (bcIds.length()>0) {
             reParam.clear();
             reParam.put("orIds", bcOrIds);
-            tempList=groupDao.queryForListAutoTranform("getBcList", reParam);
+            tempList=contentDao.queryForListAutoTranform("getBcList", reParam);
             //电台播放节目
             reParam.clear();
             Calendar cal = Calendar.getInstance();
@@ -226,7 +226,7 @@ public class FavoriteService {
             reParam.put("weekDay", week);
             reParam.put("sort", 0);
             reParam.put("timeStr", timestr);
-            List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", reParam);
+            List<Map<String, Object>> playingList=contentDao.queryForListAutoTranform("playingBc", reParam);
             if (tempList!=null&&!tempList.isEmpty()) {
                 for (Map<String, Object> oneCntt: tempList) {
                     oneContent=ContentUtils.convert2Bc(oneCntt, personList, cataList, pubChannelList, fList, playCountList, playingList);
@@ -237,7 +237,7 @@ public class FavoriteService {
         if (maIds.length()>0) {
             reParam.clear();
             reParam.put("orIds", maOrIds);
-            tempList=groupDao.queryForListAutoTranform("getMaList", reParam);
+            tempList=contentDao.queryForListAutoTranform("getMaList", reParam);
             if (tempList!=null&&!tempList.isEmpty()) {
                 for (Map<String, Object> oneCntt: tempList) {
                     oneContent=ContentUtils.convert2Ma(oneCntt, personList, cataList, pubChannelList, fList, playCountList);
@@ -248,7 +248,7 @@ public class FavoriteService {
         if (smaIds.length()>0) {
             reParam.clear();
             reParam.put("orIds", smaOrIds);
-            tempList=groupDao.queryForListAutoTranform("getSeqMaList", reParam);
+            tempList=contentDao.queryForListAutoTranform("getSeqMaList", reParam);
             if (tempList!=null&&!tempList.isEmpty()) {
                 if (pageType==0) {//提取可听内容，//TODO 注意：这里有一个问题：提取单体后，可能和已有的单体重复，这个目前无法处理（特别是在分页的情况下），除非采用分布式处理；现在不处理，重复就重复吧
                     Map<String, Object> seqMaMap=new HashMap<String, Object>();
@@ -313,9 +313,9 @@ public class FavoriteService {
                         reParam.clear();
                         reParam.put("maIds", maIds);
                         //重构人员
-                        personList=groupDao.queryForListAutoTranform("refPersonById", reParam);
+                        personList=contentDao.queryForListAutoTranform("refPersonById", reParam);
                         //重构分类
-                        cataList=groupDao.queryForListAutoTranform("refCataById", reParam);
+                        cataList=contentDao.queryForListAutoTranform("refCataById", reParam);
                         //重构发布
                         pubChannelList=channelService.getPubChannelList(assetList);
                         //重构喜欢

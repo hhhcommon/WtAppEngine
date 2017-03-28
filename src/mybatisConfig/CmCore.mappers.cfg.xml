@@ -42,5 +42,7 @@
     <mapper resource="com/woting/cm/core/broadcast/persis/sql/Broadcast.mapper.xml"/>
     <mapper resource="com/woting/cm/core/broadcast/persis/sql/BCProgramme.mapper.xml"/>
     <mapper resource="com/woting/cm/core/broadcast/persis/sql/BCLiveFlow.mapper.xml"/>
+    <!-- 内容汇总 -->
+    <mapper resource="com/woting/cm/core/sql/Content.mapper.xml"/>
   </mappers>
 </configuration>

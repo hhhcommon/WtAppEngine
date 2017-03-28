@@ -31,6 +31,8 @@ import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
+import com.spiritdata.framework.core.model.BaseObject;
+import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.ext.redis.GetBizData;
@@ -55,7 +57,6 @@ import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
 import com.woting.cm.core.media.MediaType;
 import com.woting.cm.core.subscribe.service.SubscribeService;
-import com.woting.passport.UGA.persis.pojo.GroupPo;
 import com.woting.passport.mobile.MobileUDKey;
 
 @Lazy(true)
@@ -69,7 +70,7 @@ public class ContentService {
     JedisConnectionFactory redisConn7_2;
     //先用Group代替！！
     @Resource(name="defaultDAO")
-    private MybatisDAO<GroupPo> groupDao;
+    private MybatisDAO<BaseObject> contentDao;
     @Resource
     private DataSource dataSource;
     @Resource
@@ -89,7 +90,7 @@ public class ContentService {
     @SuppressWarnings("unchecked")
     @PostConstruct
     public void initParam() {
-        groupDao.setNamespace("WT_GROUP");
+        contentDao.setNamespace("WT_CONTENT");
         _cd=(SystemCache.getCache(WtAppEngineConstants.CACHE_DICT)==null?null:((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT)).getContent());
         _cc=(SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)==null?null:((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL)).getContent());
     }
@@ -227,7 +228,7 @@ public class ContentService {
             if (!find) idl.add(one.get("resId")+"");
         }
         //0.2-查找节目-查人员
-        List<Map<String, Object>> personList=groupDao.queryForListAutoTranform("searchPerson", _s);
+        List<Map<String, Object>> personList=contentDao.queryForListAutoTranform("searchPerson", _s);
         for (int i=0; i<personList.size(); i++) {
             Map<String, Object> one=personList.get(i);
             String resTableName=one.get("resTableName")+"";
@@ -250,7 +251,7 @@ public class ContentService {
         paraM.put("searchArray", _s);
         String tempStr=getIds(typeMap, "wt_Broadcast", "c.id");
         if (tempStr!=null) paraM.put("orIds", tempStr);
-        tempList=groupDao.queryForListAutoTranform("searchBc", paraM);
+        tempList=contentDao.queryForListAutoTranform("searchBc", paraM);
         String bcPlayOrIds="";
         for (int i=0; i<tempList.size(); i++) {
             add(ret1, tempList.get(i));
@@ -468,15 +469,15 @@ public class ContentService {
         if (reBuildMap.get("wt_SeqMediaAsset")!=null&&reBuildMap.get("wt_SeqMediaAsset").size()>0) paraM.put("smaIds", getIds(reBuildMap, "wt_SeqMediaAsset", "a.resId"));
 
         //重构人员
-        personList=groupDao.queryForListAutoTranform("refPersonById", paraM);
+        personList=contentDao.queryForListAutoTranform("refPersonById", paraM);
         //重构分类
-        cataList=groupDao.queryForListAutoTranform("refCataById", paraM);
+        cataList=contentDao.queryForListAutoTranform("refCataById", paraM);
         //得到发布列表
         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
         //获得播放地址列表
-        //List<Map<String, Object>> playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
+        //List<Map<String, Object>> playUriList=contentDao.queryForListAutoTranform("getPlayListByIds", paraM);
         //得到点击量
-        List<Map<String, Object>> playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
+        List<Map<String, Object>> playCountList=contentDao.queryForListAutoTranform("refPlayCountById", paraM);
         //当前播放列表
         List<Map<String, Object>> playingList=null;
         if (ret1!=null&&ret1.size()>0) {
@@ -491,7 +492,7 @@ public class ContentService {
             paraM.put("weekDay", week);
             paraM.put("sort", 0);
             paraM.put("timeStr", timestr);
-            playingList=groupDao.queryForListAutoTranform("playingBc", paraM);
+            playingList=contentDao.queryForListAutoTranform("playingBc", paraM);
         }
 
         //组装结果信息
@@ -626,38 +627,54 @@ public class ContentService {
      * @param mk 用户标识，可以是登录用户，也可以是手机设备
      * @return
      */
-    public Map<String, Object> getSeqMaInfo(String contentId, int pageSize, int page, MobileUDKey mUdk) {
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getSeqMaInfo(String contentId, int pageSize, int page, int sortType, MobileUDKey mUdk) {
         List<Map<String, Object>> cataList=null;//分类
         List<Map<String, Object>> personList=null;//人员
         Map<String, Object> paraM=new HashMap<String, Object>();
 
-        //0、得到喜欢列表
-        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
+        //0-得到喜欢列表
         List<Map<String, Object>> fList=null;
-        if (_fList!=null&&!_fList.isEmpty()) {
-            fList=new ArrayList<Map<String, Object>>();
-            for (UserFavoritePo ufPo: _fList) {
-                fList.add(ufPo.toHashMapAsBean());
+        if (mUdk!=null) {
+            Map<String, Object> param=new HashMap<String, Object>();
+            param.put("mUdk", mUdk);
+            String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
+            RedisOperService roService=new RedisOperService(redisConn7_2, 11);
+            try {
+                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
+            } finally {
+                if (roService!=null) roService.close();
+                roService=null;
+            }
+            List<Map<String, Object>> _fList=(key==null?null:(List<Map<String, Object>>)JsonUtils.jsonToObj(key, List.class));
+            if (_fList!=null&&!_fList.isEmpty()) {
+                fList=new ArrayList<Map<String, Object>>();
+                for (Map<String, Object> ufPo: _fList) {
+                    fList.add(ufPo);
+                }
             }
         }
         //1、得主内容
-        Map<String, Object> tempMap=groupDao.queryForObjectAutoTranform("getSmById", contentId);
+        Map<String, Object> tempMap=contentDao.queryForObjectAutoTranform("getSmById", contentId);
         if (tempMap==null||tempMap.size()==0) return null;
         paraM.put("resTableName", "wt_SeqMediaAsset");
         paraM.put("ids", " a.resId='"+contentId+"'");
-        cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
-        personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+        cataList=contentDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
+        personList=contentDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
         //2、得到明细内容
-        List<Map<String, Object>> tempList=groupDao.queryForListAutoTranform("getSmSubMedias", contentId);
+        paraM.put("sId", contentId);
+        if (sortType==1) paraM.put("orderByClause", "order by b.columnNum desc, a.cTime desc , a.maTitle desc");
+        else paraM.put("orderByClause", "order by b.columnNum asc, a.cTime asc, a.maTitle asc");
+        Page<Map<String, Object>> pageList=contentDao.pageQueryAutoTranform(null, "getSmSubMediaList", paraM, page, pageSize);
+        List<Map<String, Object>> tempList=null;
+        if (pageList!=null&&pageList.getDataCount()>0) tempList=(List<Map<String, Object>>)pageList.getResult();
         //3、得到发布情况
         List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
-        if (tempList!=null&&tempList.size()>0) {
-            for (Map<String, Object> one: tempList) {
-                Map<String, Object> oneAsset=new HashMap<String, Object>();
-                oneAsset.put("resId", one.get("id"));
-                oneAsset.put("resTableName", "wt_MediaAsset");
-                assetList.add(oneAsset);
-            }
+        for (Map<String, Object> one: tempList) {
+            Map<String, Object> oneAsset=new HashMap<String, Object>();
+            oneAsset.put("resId", one.get("id"));
+            oneAsset.put("resTableName", "wt_MediaAsset");
+            assetList.add(oneAsset);
         }
         Map<String, Object> oneAsset=new HashMap<String, Object>();
         oneAsset.put("resId", contentId);
@@ -666,14 +683,11 @@ public class ContentService {
         List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
         //4、得到点击量
         paraM.put("smaIds", "a.resTableName='wt_SeqMediaAsset' and a.resId='"+contentId+"'");
-        List<Map<String, Object>> playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
-        
+        List<Map<String, Object>> playCountList=contentDao.queryForListAutoTranform("refPlayCountById", paraM);
         //判断专辑是否订阅
         if (subscribeService.isOrNoSubscribe(tempMap.get("id")+"", mUdk)) tempMap.put("subscribe", "1");
         else tempMap.put("subscribe", "0");
-        
-        
-        //5、组装内容
+        //5、组装内容——住内容
         Map<String, Object> retInfo=ContentUtils.convert2Sma(tempMap, personList, cataList, pubChannelList, fList, playCountList);
 
         if (tempList!=null&&tempList.size()>0) {
@@ -685,10 +699,10 @@ public class ContentService {
             paraM.clear();
             paraM.put("resTableName", "wt_MediaAsset");
             paraM.put("ids", ids);
-            cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
-            personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+            cataList=contentDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
+            personList=contentDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
             paraM.put("maIds", "a.resTableName='wt_MediaAsset' and ("+ids+")");
-            playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
+            playCountList=contentDao.queryForListAutoTranform("refPlayCountById", paraM);
 
             List<Map<String, Object>> subList=new ArrayList<Map<String, Object>>();
             //计算页数
@@ -727,7 +741,7 @@ public class ContentService {
             Map<String, Object> param=new HashMap<String, Object>();
             param.put("mUdk", mUdk);
             String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
-            RedisOperService roService=new RedisOperService(redisConn182, 11);
+            RedisOperService roService=new RedisOperService(redisConn7_2, 11);
             try {
                 key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
             } finally {
@@ -743,18 +757,18 @@ public class ContentService {
             }
         }
         //1、得主内容
-        Map<String, Object> tempMap=groupDao.queryForObjectAutoTranform("getMediaById", contentId);
+        Map<String, Object> tempMap=contentDao.queryForObjectAutoTranform("getMediaById", contentId);
         if (tempMap==null||tempMap.size()==0) return null;
         paraM.put("resTableName", "wt_MediaAsset");
         paraM.put("ids", "a.resId='"+contentId+"'");
-        cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
-        personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+        cataList=contentDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
+        personList=contentDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
         paraM.clear();
         paraM.put("maIds", "a.resTableName='wt_MediaAsset' and a.resId='"+contentId+"'");
-        playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
+        playCountList=contentDao.queryForListAutoTranform("refPlayCountById", paraM);
 //        List<Map<String, Object>> playUriList=null;
 //        paraM.put("maIds", "'"+contentId+"'");
-//        playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
+//        playUriList=contentDao.queryForListAutoTranform("getPlayListByIds", paraM);
         //2、得到发布情况
         List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
         Map<String, Object> oneAsset=new HashMap<String, Object>();
@@ -774,6 +788,7 @@ public class ContentService {
      * @param mk 用户标识，可以是登录用户，也可以是手机设备
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> getBcInfo(String contentId, MobileUDKey mUdk) {
         List<Map<String, Object>> cataList=null;//分类
         List<Map<String, Object>> personList=null;//人员
@@ -781,27 +796,39 @@ public class ContentService {
         Map<String, Object> paraM=new HashMap<String, Object>();
 
         //0、得到喜欢列表
-        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
         List<Map<String, Object>> fList=null;
-        if (_fList!=null&&!_fList.isEmpty()) {
-            fList=new ArrayList<Map<String, Object>>();
-            for (UserFavoritePo ufPo: _fList) {
-                fList.add(ufPo.toHashMapAsBean());
+        if (mUdk!=null) {
+            Map<String, Object> param=new HashMap<String, Object>();
+            param.put("mUdk", mUdk);
+            String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
+            RedisOperService roService=new RedisOperService(redisConn7_2, 11);
+            try {
+                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
+            } finally {
+                if (roService!=null) roService.close();
+                roService=null;
+            }
+            List<Map<String, Object>> _fList=(key==null?null:(List<Map<String, Object>>)JsonUtils.jsonToObj(key, List.class));
+            if (_fList!=null&&!_fList.isEmpty()) {
+                fList=new ArrayList<Map<String, Object>>();
+                for (Map<String, Object> ufPo: _fList) {
+                    fList.add(ufPo);
+                }
             }
         }
         //1、得主内容
-        Map<String, Object> tempMap=groupDao.queryForObjectAutoTranform("getBcById", contentId);
+        Map<String, Object> tempMap=contentDao.queryForObjectAutoTranform("getBcById", contentId);
         if (tempMap==null||tempMap.size()==0) return null;
         paraM.put("resTableName", "wt_Broadcast");
         paraM.put("ids", "a.resId='"+contentId+"'");
-        cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
-        personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+        cataList=contentDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
+        personList=contentDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
         paraM.clear();
         paraM.put("maIds", "a.resTableName='wt_Broadcast' and a.resId='"+contentId+"'");
-        playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
+        playCountList=contentDao.queryForListAutoTranform("refPlayCountById", paraM);
 //        List<Map<String, Object>> playUriList=null;
 //        paraM.put("maIds", "'"+contentId+"'");
-//        playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
+//        playUriList=contentDao.queryForListAutoTranform("getPlayListByIds", paraM);
         //2、得到发布情况
         List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
         Map<String, Object> oneAsset=new HashMap<String, Object>();
@@ -821,7 +848,7 @@ public class ContentService {
         paraM.put("weekDay", week);
         paraM.put("sort", 0);
         paraM.put("timeStr", timestr);
-        List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", paraM);
+        List<Map<String, Object>> playingList=contentDao.queryForListAutoTranform("playingBc", paraM);
         
         //4、组装内容
         Map<String, Object> retInfo=ContentUtils.convert2Bc(tempMap, personList, cataList, pubChannelList, fList, playCountList, playingList);
@@ -832,34 +859,28 @@ public class ContentService {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Map<String, Object> getContents(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId,
                                             int pageType, MobileUDKey mUdk, Map<String, Object> filterData) {
-        //1-得到喜欢列表
         Map<String, Object> param=new HashMap<String, Object>();
-        param.put("mUdk", mUdk);
-        String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
         RedisOperService roService=new RedisOperService(redisConn7_2, 11);
-        try {
-            key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
-        } finally {
-            if (roService!=null) roService.close();
-            roService=null;
-        }
-        List<Map<String, Object>> _fList=(key==null?null:(List<Map<String, Object>>)JsonUtils.jsonToObj(key, List.class));
+        //1-得到喜欢列表
+        String key=null;
         List<Map<String, Object>> fList=null;
-        if (_fList!=null&&!_fList.isEmpty()) {
-            fList=new ArrayList<Map<String, Object>>();
-            for (Map<String, Object> ufPo: _fList) {
-                fList.add(ufPo);
+        if (mUdk!=null) {
+            param.put("mUdk", mUdk);
+            key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
+            try {
+                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
+            } finally {
+                if (roService!=null) roService.close();
+                roService=null;
+            }
+            List<Map<String, Object>> _fList=(key==null?null:(List<Map<String, Object>>)JsonUtils.jsonToObj(key, List.class));
+            if (_fList!=null&&!_fList.isEmpty()) {
+                fList=new ArrayList<Map<String, Object>>();
+                for (Map<String, Object> ufPo: _fList) {
+                    fList.add(ufPo);
+                }
             }
         }
-//        //1-得到喜欢列表
-//        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
-//        List<Map<String, Object>> fList=null;
-//        if (_fList!=null&&!_fList.isEmpty()) {
-//            fList=new ArrayList<Map<String, Object>>();
-//            for (UserFavoritePo ufPo: _fList) {
-//                fList.add(ufPo.toHashMapAsBean());
-//            }
-//        }
 
         //2-根据参数得到内容
         key="Contents=CatalogType_CatalogId_ResultType_PageType_MediaType_PageSize_Page_PerSize_BeginCatalogId=FilterData=["+catalogType+"_"+catalogId+"_"+resultType+"_"+pageType+"_"+mediaType+"_"+pageSize+"_"+page+"_"+"_"+perSize+"_"+beginCatalogId+"_"+JsonUtils.objToJson(filterData)+"]";
@@ -1019,69 +1040,70 @@ public class ContentService {
 		return null;
 	}
 
-	public Map<String, Object> getSmSubMedias(String contentId, int page, int pageSize, int sortType, MobileUDKey mUdk) {
-		List<Map<String, Object>> cataList=null;//分类
-        List<Map<String, Object>> personList=null;//人员
-        List<Map<String, Object>> playCountList=null;
-		Map<String, Object> paraM=new HashMap<String, Object>();
-		//0、得到喜欢列表
-        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
-        List<Map<String, Object>> fList=null;
-        if (_fList!=null&&!_fList.isEmpty()) {
-            fList=new ArrayList<Map<String, Object>>();
-            for (UserFavoritePo ufPo: _fList) {
-                fList.add(ufPo.toHashMapAsBean());
-            }
-        }
-		//1、得主内容
-        Map<String, Object> tempMap=groupDao.queryForObjectAutoTranform("getSmById", contentId);
-        if (tempMap==null||tempMap.size()==0) return null;
-        Map<String, Object> retInfo = new HashMap<>();
-        retInfo.put("ContentId", contentId);
-        paraM.put("sId", contentId);
-        if (sortType==1) paraM.put("orderByClause", "order by b.columnNum desc, a.cTime desc , a.maTitle desc");
-		else paraM.put("orderByClause", "order by b.columnNum asc, a.cTime asc, a.maTitle asc");
-        paraM.put("limitByClause", (page-1)*pageSize+","+pageSize);
-        //2、得到明细内容
-        List<Map<String, Object>> tempList=groupDao.queryForListAutoTranform("getSmSubMediaList", paraM);
-        //3、得到发布情况
-        List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
-        if (tempList!=null&&tempList.size()>0) {
-            for (Map<String, Object> one: tempList) {
-                Map<String, Object> oneAsset=new HashMap<String, Object>();
-                oneAsset.put("resId", one.get("id"));
-                oneAsset.put("resTableName", "wt_MediaAsset");
-                assetList.add(oneAsset);
-            }
-        }
-        List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
-        if (tempList!=null&&tempList.size()>0) {
-            String ids="";
-            for (Map<String, Object> one: tempList) {
-                if (one.get("id")!=null) ids+=" or a.resId='"+one.get("id")+"'"; 
-            }
-            ids=ids.substring(4);
-            paraM.clear();
-            paraM.put("resTableName", "wt_MediaAsset");
-            paraM.put("ids", ids);
-            cataList=groupDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
-            personList=groupDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
-            paraM.put("maIds", "a.resTableName='wt_MediaAsset' and ("+ids+")");
-            playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);
-
-            List<Map<String, Object>> subList=new ArrayList<Map<String, Object>>();
-            for (int i=0; i<tempList.size(); i++) {
-                subList.add(ContentUtils.convert2Ma(tempList.get(i), personList, cataList, pubChannelList, fList, playCountList));
-            }
-            retInfo.put("SubList", subList);
-            retInfo.put("PageSize", subList.size());
-            retInfo.put("Page", page);
-            retInfo.put("ContentSubCount", tempList.size());
-        }
-        return retInfo;
-	}
+//	public Map<String, Object> getSmSubMedias(String contentId, int page, int pageSize, int sortType, MobileUDKey mUdk) {
+//		List<Map<String, Object>> cataList=null;//分类
+//        List<Map<String, Object>> personList=null;//人员
+//        List<Map<String, Object>> playCountList=null;
+//		Map<String, Object> paraM=new HashMap<String, Object>();
+//		//0、得到喜欢列表
+//        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
+//        List<Map<String, Object>> fList=null;
+//        if (_fList!=null&&!_fList.isEmpty()) {
+//            fList=new ArrayList<Map<String, Object>>();
+//            for (UserFavoritePo ufPo: _fList) {
+//                fList.add(ufPo.toHashMapAsBean());
+//            }
+//        }
+//		//1、得主内容
+//        Map<String, Object> tempMap=contentDao.queryForObjectAutoTranform("getSmById", contentId);
+//        if (tempMap==null||tempMap.size()==0) return null;
+//        Map<String, Object> retInfo = new HashMap<>();
+//        retInfo.put("ContentId", contentId);
+//        paraM.put("sId", contentId);
+//        if (sortType==1) paraM.put("orderByClause", "order by b.columnNum desc, a.cTime desc , a.maTitle desc");
+//		else paraM.put("orderByClause", "order by b.columnNum asc, a.cTime asc, a.maTitle asc");
+//        paraM.put("limitByClause", (page-1)*pageSize+","+pageSize);
+//        //2、得到明细内容
+//        List<Map<String, Object>> tempList=contentDao.queryForListAutoTranform("getSmSubMediaList", paraM);
+//        //3、得到发布情况
+//        List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
+//        if (tempList!=null&&tempList.size()>0) {
+//            for (Map<String, Object> one: tempList) {
+//                Map<String, Object> oneAsset=new HashMap<String, Object>();
+//                oneAsset.put("resId", one.get("id"));
+//                oneAsset.put("resTableName", "wt_MediaAsset");
+//                assetList.add(oneAsset);
+//            }
+//        }
+//        List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
+//        if (tempList!=null&&tempList.size()>0) {
+//            String ids="";
+//            for (Map<String, Object> one: tempList) {
+//                if (one.get("id")!=null) ids+=" or a.resId='"+one.get("id")+"'"; 
+//            }
+//            ids=ids.substring(4);
+//            paraM.clear();
+//            paraM.put("resTableName", "wt_MediaAsset");
+//            paraM.put("ids", ids);
+//            cataList=contentDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
+//            personList=contentDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+//            paraM.put("maIds", "a.resTableName='wt_MediaAsset' and ("+ids+")");
+//            playCountList=contentDao.queryForListAutoTranform("refPlayCountById", paraM);
+//
+//            List<Map<String, Object>> subList=new ArrayList<Map<String, Object>>();
+//            for (int i=0; i<tempList.size(); i++) {
+//                subList.add(ContentUtils.convert2Ma(tempList.get(i), personList, cataList, pubChannelList, fList, playCountList));
+//            }
+//            retInfo.put("SubList", subList);
+//            retInfo.put("PageSize", subList.size());
+//            retInfo.put("Page", page);
+//            retInfo.put("ContentSubCount", tempList.size());
+//        }
+//        return retInfo;
+//	}
 	
-	public Map<String, Object> searchBySolr(String searchStr, String mediaType, int pageType, int resultType, int page, int pageSize, MobileUDKey mUdk) {
+	@SuppressWarnings("unchecked")
+    public Map<String, Object> searchBySolr(String searchStr, String mediaType, int pageType, int resultType, int page, int pageSize, MobileUDKey mUdk) {
 		try {
 			List<SortClause> solrsorts = SolrUtils.makeSolrSort("score desc");
 			SolrSearchResult sResult = null;
@@ -1122,7 +1144,6 @@ public class ContentService {
 					retLs.add(null);
 					List<UserFavoritePo> ret = favret;
 					fixedThreadPool.execute(new Runnable() {
-						@SuppressWarnings("unchecked")
 						public void run() {
 							String contentid = solrips.get(f).getItem_id();
 							RedisOperService rs = new RedisOperService(redisConn182, 11);
@@ -1645,7 +1666,7 @@ public class ContentService {
                         if (!StringUtils.isNullOrEmptyOrSpace(maSqlSign)) {
                             maSqlSign=maSqlSign.substring(4);
                             paraM.put("maIds", "a.resTableName='wt_MediaAsset' and ("+maSqlSign1.substring(4)+")");
-                            //playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
+                            //playUriList=contentDao.queryForListAutoTranform("getPlayListByIds", paraM);
                         }
                         if (!StringUtils.isNullOrEmptyOrSpace(smaSqlSign)) {//专辑处理
                             smaSqlSign=smaSqlSign.substring(4);
@@ -1656,9 +1677,9 @@ public class ContentService {
                         List<Map<String, Object>> playCountList=null; //播放次数
                         List<Map<String, Object>> playingList=null; //电台播放节目
                         if (!paraM.isEmpty()) {
-                            playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);; //播放次数
-                            cataList=groupDao.queryForListAutoTranform("refCataById", paraM);
-                            personList=groupDao.queryForListAutoTranform("refPersonById", paraM); //人员
+                            playCountList=contentDao.queryForListAutoTranform("refPlayCountById", paraM);; //播放次数
+                            cataList=contentDao.queryForListAutoTranform("refCataById", paraM);
+                            personList=contentDao.queryForListAutoTranform("refPersonById", paraM); //人员
                             if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {
                                 Calendar cal = Calendar.getInstance();
                                 Date date = new Date();
@@ -1671,7 +1692,7 @@ public class ContentService {
                                 paraM.put("weekDay", week);
                                 paraM.put("sort", 0);
                                 paraM.put("timeStr", timestr);
-                                playingList=groupDao.queryForListAutoTranform("playingBc", paraM); //电台播放节目
+                                playingList=contentDao.queryForListAutoTranform("playingBc", paraM); //电台播放节目
                             }
                         }
 
@@ -1956,7 +1977,7 @@ public class ContentService {
                                 if (!StringUtils.isNullOrEmptyOrSpace(maSqlSign)) {
                                     maSqlSign=maSqlSign.substring(4);
                                     paraM.put("maIds", "a.resTableName='wt_MediaAsset' and ("+maSqlSign1.substring(4)+")");
-                                    //playUriList=groupDao.queryForListAutoTranform("getPlayListByIds", paraM);
+                                    //playUriList=contentDao.queryForListAutoTranform("getPlayListByIds", paraM);
                                 }
                                 if (!StringUtils.isNullOrEmptyOrSpace(smaSqlSign)) {//专辑处理
                                     smaSqlSign=smaSqlSign.substring(4);
@@ -1967,9 +1988,9 @@ public class ContentService {
                                 List<Map<String, Object>> playCountList=null; //播放次数
                                 List<Map<String, Object>> playingList=null; //电台播放节目
                                 if (!paraM.isEmpty()) {
-                                    cataList=groupDao.queryForListAutoTranform("refCataById", paraM);
-                                    playCountList=groupDao.queryForListAutoTranform("refPlayCountById", paraM);; //播放次数
-                                    personList=groupDao.queryForListAutoTranform("refPersonById", paraM); //人员
+                                    cataList=contentDao.queryForListAutoTranform("refCataById", paraM);
+                                    playCountList=contentDao.queryForListAutoTranform("refPlayCountById", paraM);; //播放次数
+                                    personList=contentDao.queryForListAutoTranform("refPersonById", paraM); //人员
                                     if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {
                                         Calendar cal = Calendar.getInstance();
                                         Date date = new Date();
@@ -1982,7 +2003,7 @@ public class ContentService {
                                         paraM.put("weekDay", week);
                                         paraM.put("sort", 0);
                                         paraM.put("timeStr", timestr);
-                                        playingList=groupDao.queryForListAutoTranform("playingBc", paraM); //电台播放节目
+                                        playingList=contentDao.queryForListAutoTranform("playingBc", paraM); //电台播放节目
                                     }
                                 }
 

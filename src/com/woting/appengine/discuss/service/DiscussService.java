@@ -15,6 +15,7 @@ import javax.annotation.Resource;
 import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
+import com.spiritdata.framework.core.model.BaseObject;
 import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.util.SequenceUUID;
@@ -31,7 +32,6 @@ import com.woting.cm.core.dict.persis.po.DictRefResPo;
 import com.woting.cm.core.media.MediaType;
 import com.woting.cm.core.media.service.MediaService;
 import com.woting.cm.core.utils.ContentUtils;
-import com.woting.passport.UGA.persis.pojo.GroupPo;
 
 public class DiscussService {
     @Resource(name="defaultDAO")
@@ -43,7 +43,7 @@ public class DiscussService {
     @Resource(name="defaultDAO")
     private MybatisDAO<DictRefResPo> dictRefDao;
     @Resource(name="defaultDAO")
-    private MybatisDAO<GroupPo> groupDao;
+    private MybatisDAO<BaseObject> contentDao;
     @Resource
     private MediaService mediaService;
     @Resource
@@ -55,7 +55,7 @@ public class DiscussService {
         channelAssetDao.setNamespace("A_CHANNELASSET");
         favoriteDao.setNamespace("DA_USERFAVORITE");
         dictRefDao.setNamespace("A_DREFRES");
-        groupDao.setNamespace("WT_GROUP");
+        contentDao.setNamespace("WT_CONTENT");
     }
 
     /**
@@ -317,8 +317,8 @@ public class DiscussService {
                 List<Map<String, Object>> pcml=null;
                 List<Map<String, Object>> personList=null;
                 if (!param.isEmpty()) {
-                    pcml=groupDao.queryForListAutoTranform("refPlayCountById", param);
-                    personList=groupDao.queryForListAutoTranform("refPersonById", param);
+                    pcml=contentDao.queryForListAutoTranform("refPlayCountById", param);
+                    personList=contentDao.queryForListAutoTranform("refPersonById", param);
                 }
 
                 //组织返回值
@@ -365,7 +365,7 @@ public class DiscussService {
                     param.put("weekDay", week);
                     param.put("sort", 0);
                     param.put("timeStr", timestr);
-                    List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", param);
+                    List<Map<String, Object>> playingList=contentDao.queryForListAutoTranform("playingBc", param);
 
                     for (Map<String, Object> bc : bcs) {
                         Map<String, Object> bcm=ContentUtils.convert2Bc(bc, personList, cataml, chaml, fml, pcml, playingList);
@@ -500,8 +500,8 @@ public class DiscussService {
                         List<Map<String, Object>> pcml=null;
                         List<Map<String, Object>> personList=null;
                         if (!param.isEmpty()) {
-                            pcml=groupDao.queryForListAutoTranform("refPlayCountById", param);
-                            personList=groupDao.queryForListAutoTranform("refPersonById", param);
+                            pcml=contentDao.queryForListAutoTranform("refPlayCountById", param);
+                            personList=contentDao.queryForListAutoTranform("refPersonById", param);
                         }
 
                         //组织返回值
@@ -548,7 +548,7 @@ public class DiscussService {
                             param.put("weekDay", week);
                             param.put("sort", 0);
                             param.put("timeStr", timestr);
-                            List<Map<String, Object>> playingList=groupDao.queryForListAutoTranform("playingBc", param);
+                            List<Map<String, Object>> playingList=contentDao.queryForListAutoTranform("playingBc", param);
 
                             for (Map<String, Object> bc : bcs) {
                                 Map<String, Object> bcm=ContentUtils.convert2Bc(bc, personList, cataml, chaml, fml, pcml, playingList);
