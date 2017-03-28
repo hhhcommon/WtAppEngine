@@ -1083,6 +1083,23 @@ public class ContentService {
 	}
 	
 	public Map<String, Object> searchBySolr(String searchStr, String mediaType, int pageType, int resultType, int page, int pageSize, int rootPage, String rootInfo, MobileUDKey mUdk) {
+		Map<String, Object> retMap = new HashMap<>();
+		switch (rootPage) {
+		case 0:retMap = makeSearch(searchStr, mediaType, pageType, resultType, page, pageSize, mUdk);break;
+		case 1:break;
+		case 2:break;
+		case 3:break;
+		case 4:break;
+		case 5:break;
+		case 6:break;
+		case 7:break;
+		case 8:break;
+		default:break;
+		}
+		return retMap;
+	}
+	
+	private Map<String, Object> makeSearch(String searchStr, String mediaType, int pageType, int resultType, int page, int pageSize, MobileUDKey mUdk) {
 		try {
 			List<SortClause> solrsorts = SolrUtils.makeSolrSort("score desc");
 			SolrSearchResult sResult = null;
@@ -1130,21 +1147,20 @@ public class ContentService {
 							String info = null;
 							if (pageType==0) {
 								if (solrips.get(f).getItem_type().equals("SEQU")) {
-//									String malist = rs.get("Content::MediaType_CID::[SEQU_"+contentid+"]::SUBLIST");
-									String malist = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");//rs.get("Content::MediaType_CID::[SEQU_"+contentid+"]::SUBLIST");
+									String malist = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");
 									if (malist!=null) {
 										List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
-										contentid = mas.get(0).replace("Content::MediaType_CID::[AUDIO_", "").replace("]", "");
+										contentid = mas.get(0).replace("Content=MediaType_CID=[AUDIO_", "").replace("]", "");
 										solrips.get(f).setItem_type("AUDIO");
 									}
 								}
 							}
-							info = FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");//rs.get("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::INFO");
+							info = FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
 							if (info!=null) {
 								Map<String, Object> infomap = retLs.get(f);
 								infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
 								String playcount = null;
-								playcount = rs.get("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=PLAYCOUNT");
+								playcount = rs.get("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::PLAYCOUNT");
 								if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
 								else infomap.put("PlayCount", 0);
 								infomap.put("ContentFavorite", 0);
@@ -1152,7 +1168,7 @@ public class ContentService {
 									if (solrips.get(f).getItem_type().equals("AUDIO")) {
 										Map<String, Object> smainfom = (Map<String, Object>) infomap.get("SeqInfo");
 										String smaid = smainfom.get("ContentId").toString();
-										String smainfo = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");//rs.get("Content::MediaType_CID::[SEQU_"+smaid+"]::INFO");
+										String smainfo = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");
 										smainfom = (Map<String, Object>) JsonUtils.jsonToObj(smainfo, Map.class);
 										infomap.put("SeqInfo", smainfom);
 									}
@@ -1192,6 +1208,41 @@ public class ContentService {
 					ret.put("List", retLs);
 		            ret.put("AllCount", sResult.getRecordCount());
 		            return ret;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		return null;
+	}
+	
+	private Map<String, Object> makeSearchBySearch(String searchStr, String mediaType, int pageType, int resultType, int page, int pageSize, String rootInfo, MobileUDKey mUdk) {
+		try {
+			List<SortClause> solrsorts = SolrUtils.makeSolrSort("score desc");
+			SolrSearchResult sResult = null;
+			List<SolrInputPo> solrips = new ArrayList<>();
+			if (resultType==2) {
+				String[] types = {"SEQU","AUDIO"};
+				for (String type : types) {
+					sResult = solrJService.solrSearch(searchStr, solrsorts, "*,score", 1, 5, "item_type:"+type);
+					if (sResult!=null && sResult.getSolrInputPos().size()>0) {
+						solrips.addAll(sResult.getSolrInputPos());
+					}
+				}
+			} else {
+				if (resultType==0) {
+					if (mediaType!=null) {
+						sResult = solrJService.solrSearch(searchStr, solrsorts, "*,score", page, pageSize, "item_type:"+mediaType);
+						if (sResult!=null && sResult.getSolrInputPos().size()>0) {
+							solrips.addAll(sResult.getSolrInputPos());
+					    }
+					} else {
+						sResult = solrJService.solrSearch(searchStr, solrsorts, "*,score", page, pageSize);
+						if (sResult!=null && sResult.getSolrInputPos().size()>0) {
+							solrips.addAll(sResult.getSolrInputPos());
+					    }
+					}
 				}
 			}
 		} catch (Exception e) {
