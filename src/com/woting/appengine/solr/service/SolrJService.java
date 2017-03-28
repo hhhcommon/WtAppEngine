@@ -99,6 +99,8 @@ public class SolrJService {
 		solrQuery.setRows(pageSize);
 		//设置默认搜索域
 //		solrQuery.set("df", "item_keywords");
+//		solrQuery.set("defType", "edismax");
+//		solrQuery.set("mm","80%");
 		if (sorts!=null && sorts.size()>0) {
 			solrQuery.setSorts(sorts);
 		}
