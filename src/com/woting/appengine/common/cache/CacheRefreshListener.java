@@ -36,24 +36,24 @@ public class CacheRefreshListener extends Thread {
             e.printStackTrace();
         }
     }
-}
 
-class RefrshCacheTask extends TimerTask {
-    @Override
-    public void run() {
-        try {
-            ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
-            if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-                VersionService versionService=(VersionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("versionService");
-                if (versionService!=null) {
-                    SystemCache.remove(WtAppEngineConstants.APP_VERSIONCONFIG);
-                    SystemCache.setCache(new CacheEle<VersionConfig>(WtAppEngineConstants.APP_VERSIONCONFIG, "版本设置", versionService.getVerConfig()));
+    class RefrshCacheTask extends TimerTask {
+        @Override
+        public void run() {
+            try {
+                ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+                if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                    VersionService versionService=(VersionService)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("versionService");
+                    if (versionService!=null) {
+                        SystemCache.remove(WtAppEngineConstants.APP_VERSIONCONFIG);
+                        SystemCache.setCache(new CacheEle<VersionConfig>(WtAppEngineConstants.APP_VERSIONCONFIG, "版本设置", versionService.getVerConfig()));
+                    }
+                    
                 }
                 
+            } catch(Exception e) {
+                e.printStackTrace();
             }
-            
-        } catch(Exception e) {
-            e.printStackTrace();
         }
     }
 }
