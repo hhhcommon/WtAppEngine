@@ -23,7 +23,6 @@ import javax.servlet.ServletContext;
 import javax.sql.DataSource;
 
 import org.apache.solr.client.solrj.SolrQuery.SortClause;
-import org.omg.CORBA.StringHolder;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.stereotype.Service;
@@ -677,16 +676,18 @@ public class ContentService {
         paraM.put("sId", contentId);
         if (sortType==1) paraM.put("orderByClause", "order by b.columnNum desc, a.cTime desc , a.maTitle desc");
         else paraM.put("orderByClause", "order by b.columnNum asc, a.cTime asc, a.maTitle asc");
-        Page<Map<String, Object>> pageList=contentDao.pageQueryAutoTranform(null, "getSmSubMediaList", paraM, page, pageSize);
+        Page<Map<String, Object>> pageList=contentDao.pageQueryAutoTranform(null, "getSmSubMedias", paraM, page, pageSize);
         List<Map<String, Object>> tempList=null;
         if (pageList!=null&&pageList.getDataCount()>0) tempList=(List<Map<String, Object>>)pageList.getResult();
         //3、得到发布情况
         List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
-        for (Map<String, Object> one: tempList) {
-            Map<String, Object> oneAsset=new HashMap<String, Object>();
-            oneAsset.put("resId", one.get("id"));
-            oneAsset.put("resTableName", "wt_MediaAsset");
-            assetList.add(oneAsset);
+        if (tempList!=null) {
+            for (Map<String, Object> one: tempList) {
+                Map<String, Object> oneAsset=new HashMap<String, Object>();
+                oneAsset.put("resId", one.get("id"));
+                oneAsset.put("resTableName", "wt_MediaAsset");
+                assetList.add(oneAsset);
+            }
         }
         Map<String, Object> oneAsset=new HashMap<String, Object>();
         oneAsset.put("resId", contentId);
@@ -1050,6 +1051,79 @@ public class ContentService {
 			return m;
 		}
 		return null;
+	}
+
+	/**
+	 * 仅得到专辑下属节目的列表
+	 * @param contentId
+	 * @param page
+	 * @param pageSize
+	 * @param sortType
+	 * @param mUdk
+	 * @return
+	 */
+	public Map<String, Object> getSmSubMedias(String contentId, int page, int pageSize, int sortType, MobileUDKey mUdk) {
+		List<Map<String, Object>> cataList=null;//分类
+        List<Map<String, Object>> personList=null;//人员
+        List<Map<String, Object>> playCountList=null;
+		Map<String, Object> paraM=new HashMap<String, Object>();
+		//0、得到喜欢列表
+        List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
+        List<Map<String, Object>> fList=null;
+        if (_fList!=null&&!_fList.isEmpty()) {
+            fList=new ArrayList<Map<String, Object>>();
+            for (UserFavoritePo ufPo: _fList) {
+                fList.add(ufPo.toHashMapAsBean());
+            }
+        }
+		//1、得主内容
+        Map<String, Object> tempMap=contentDao.queryForObjectAutoTranform("getSmById", contentId);
+        if (tempMap==null||tempMap.size()==0) return null;
+        Map<String, Object> retInfo = new HashMap<>();
+        retInfo.put("ContentId", contentId);
+        paraM.put("sId", contentId);
+        if (sortType==1) paraM.put("orderByClause", "order by b.columnNum desc, a.cTime desc , a.maTitle desc");
+		else paraM.put("orderByClause", "order by b.columnNum asc, a.cTime asc, a.maTitle asc");
+        paraM.put("limitByClause", (page-1)*pageSize+","+pageSize);
+        //2、得到明细内容
+        Page<Map<String, Object>> pageList=contentDao.pageQueryAutoTranform(null, "getSmSubMedias", paraM, page, pageSize);
+        List<Map<String, Object>> tempList=null;
+        if (pageList!=null&&pageList.getDataCount()>0) tempList=(List<Map<String, Object>>)pageList.getResult();
+        //3、得到发布情况
+        List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
+        if (tempList!=null&&tempList.size()>0) {
+            for (Map<String, Object> one: tempList) {
+                Map<String, Object> oneAsset=new HashMap<String, Object>();
+                oneAsset.put("resId", one.get("id"));
+                oneAsset.put("resTableName", "wt_MediaAsset");
+                assetList.add(oneAsset);
+            }
+        }
+        List<Map<String, Object>> pubChannelList=channelService.getPubChannelList(assetList);
+        if (tempList!=null&&tempList.size()>0) {
+            String ids="";
+            for (Map<String, Object> one: tempList) {
+                if (one.get("id")!=null) ids+=" or a.resId='"+one.get("id")+"'"; 
+            }
+            ids=ids.substring(4);
+            paraM.clear();
+            paraM.put("resTableName", "wt_MediaAsset");
+            paraM.put("ids", ids);
+            cataList=contentDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
+            personList=contentDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+            paraM.put("maIds", "a.resTableName='wt_MediaAsset' and ("+ids+")");
+            playCountList=contentDao.queryForListAutoTranform("refPlayCountById", paraM);
+
+            List<Map<String, Object>> subList=new ArrayList<Map<String, Object>>();
+            for (int i=0; i<tempList.size(); i++) {
+                subList.add(ContentUtils.convert2Ma(tempList.get(i), personList, cataList, pubChannelList, fList, playCountList));
+            }
+            retInfo.put("SubList", subList);
+            retInfo.put("PageSize", subList.size());
+            retInfo.put("Page", page);
+            retInfo.put("ContentSubCount", tempList.size());
+        }
+        return retInfo;
 	}
 
 	public Map<String, Object> searchBySolr(String searchStr, String mediaType, int pageType, int resultType, int page, int pageSize, int rootPage, String rootInfo, MobileUDKey mUdk) {
@@ -2386,7 +2460,7 @@ public class ContentService {
      *  					   item_channel
      *                  item_title
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "unused" })
 	private Map<String, Object> getAUDIORecommendSolrInfo(String id) {
     	try {
     		String mainfo = getAUDIOContentInfo(id);
