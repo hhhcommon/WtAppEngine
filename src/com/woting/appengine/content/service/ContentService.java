@@ -23,6 +23,7 @@ import javax.servlet.ServletContext;
 import javax.sql.DataSource;
 
 import org.apache.solr.client.solrj.SolrQuery.SortClause;
+import org.omg.CORBA.StringHolder;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
+import com.woting.appengine.content.AddContentInfoThread;
 import com.woting.appengine.content.utils.FileUtils;
 import com.woting.appengine.favorite.persis.po.UserFavoritePo;
 import com.woting.appengine.favorite.service.FavoriteService;
@@ -58,6 +60,8 @@ import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
+import com.woting.cm.core.dict.model.DictRefRes;
+import com.woting.cm.core.dict.service.DictService;
 import com.woting.cm.core.media.MediaType;
 import com.woting.cm.core.subscribe.service.SubscribeService;
 import com.woting.passport.mobile.MobileUDKey;
@@ -89,6 +93,8 @@ public class ContentService {
     private SolrJService solrJService;
     @Resource
     private WordService wordService;
+    @Resource
+    private DictService dictService;
     
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
@@ -1105,6 +1111,176 @@ public class ContentService {
 							if (pageType==0) {
 								if (solrips.get(f).getItem_type().equals("SEQU")) {
 									String malist = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");
+									if (malist!=null && malist.length()>0) {
+										List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
+										contentid = mas.get(0).replace("Content=MediaType_CID=[AUDIO_", "").replace("]", "");
+										solrips.get(f).setItem_type("AUDIO");
+									} else {
+										addOSSContentInfo(solrips.get(f).getItem_type(), contentid);
+										malist = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");
+										if (malist!=null && malist.length()>0) {
+											List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
+											contentid = mas.get(0).replace("Content=MediaType_CID=[AUDIO_", "").replace("]", "");
+											solrips.get(f).setItem_type("AUDIO");
+										}
+									}
+								}
+							}
+							info = FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
+							if (info!=null && info.length()>0) {
+								Map<String, Object> infomap = retLs.get(f);
+								infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
+								String playcount = null;
+								playcount = rs.get("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=PLAYCOUNT");
+								if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
+								else infomap.put("PlayCount", 0);
+								infomap.put("ContentFavorite", 0);
+								try {
+									if (solrips.get(f).getItem_type().equals("AUDIO")) {
+										Map<String, Object> smainfom = (Map<String, Object>) infomap.get("SeqInfo");
+										String smaid = smainfom.get("ContentId").toString();
+										String smainfo = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");
+										smainfom = (Map<String, Object>) JsonUtils.jsonToObj(smainfo, Map.class);
+										infomap.put("SeqInfo", smainfom);
+									}
+								} catch (Exception e) {}
+								if (ret!=null && ret.size()>0) {
+									for (UserFavoritePo userfav : ret) {
+										if (userfav!=null && userfav.getResId().equals(contentid)) {
+											if ((mediaType.equals("AUDIO") && userfav.getResTableName().equals("wt_MediaAsset")) 
+											|| (mediaType.equals("SEQU") && userfav.getResTableName().equals("wt_SeqMediaAsset")) 
+											|| (mediaType.equals("RADIO") && userfav.getResTableName().equals("wt_Broadcast"))) 
+												infomap.put("ContentFavorite", 1);
+										}
+								    }
+								}
+								retLs.set(f, infomap);
+							} else {
+								addOSSContentInfo(solrips.get(f).getItem_type(), contentid);
+								info = FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
+								if (info!=null && info.length()>0) {
+									Map<String, Object> infomap = retLs.get(f);
+									infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
+									String playcount = null;
+									playcount = rs.get("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=PLAYCOUNT");
+									if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
+									else infomap.put("PlayCount", 0);
+									infomap.put("ContentFavorite", 0);
+									try {
+										if (solrips.get(f).getItem_type().equals("AUDIO")) {
+											Map<String, Object> smainfom = (Map<String, Object>) infomap.get("SeqInfo");
+											String smaid = smainfom.get("ContentId").toString();
+											String smainfo = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");
+											smainfom = (Map<String, Object>) JsonUtils.jsonToObj(smainfo, Map.class);
+											infomap.put("SeqInfo", smainfom);
+										}
+									} catch (Exception e) {}
+									if (ret!=null && ret.size()>0) {
+										for (UserFavoritePo userfav : ret) {
+											if (userfav!=null && userfav.getResId().equals(contentid)) {
+												if ((mediaType.equals("AUDIO") && userfav.getResTableName().equals("wt_MediaAsset")) 
+												|| (mediaType.equals("SEQU") && userfav.getResTableName().equals("wt_SeqMediaAsset")) 
+												|| (mediaType.equals("RADIO") && userfav.getResTableName().equals("wt_Broadcast"))) 
+													infomap.put("ContentFavorite", 1);
+											}
+									    }
+									}
+									retLs.set(f, infomap);
+								}
+							}
+						}
+					});
+				}
+				fixedThreadPool.shutdown();
+				while (true) {
+					Thread.sleep(10);
+					if (fixedThreadPool.isTerminated()) {
+						break;
+					}
+				}
+				if (retLs!=null && retLs.size()>0) {
+					Iterator<Map<String, Object>> it = retLs.iterator();
+					while (it.hasNext()) {
+						Map<String, Object> m = it.next();
+						if (m==null) {
+							it.remove();
+						}
+					}
+					Map<String, Object> ret = new HashMap<>();
+					ret.put("ResultType", "1001");
+					ret.put("List", retLs);
+		            ret.put("AllCount", sResult.getRecordCount());
+		            return ret;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> makeSearchBySearch(String searchStr, String mediaType, int pageType, int resultType, int page, int pageSize, String rootInfo, MobileUDKey mUdk) {
+		try {
+			Map<String, Object> params = new HashMap<>();
+			String audioId = null;
+			if (rootInfo!=null) {
+				String[] kv = rootInfo.split("_");
+				if (kv[0].equals("AUDIO")) {
+					audioId = kv[1];
+				}
+			}
+			Map<String, Object> contentSolrInfo = null;
+			Map<String, Object> ownerSolrInfo = null;
+			if (audioId!=null && audioId.length()>0) contentSolrInfo = getAUDIORecommendSolrInfo(audioId);
+			if (mUdk!=null) ownerSolrInfo = getOwnerRecommendSolrInfo(mUdk);
+			String queryStr = "";
+			queryStr = "item_title:"+searchStr+"^1.1";
+			String channelfqstr = null;
+			String idfqstr = null;
+			if (contentSolrInfo!=null && contentSolrInfo.size()>0) { //提取通过内容获得的推荐信息
+				if (contentSolrInfo.containsKey("item_title")) queryStr += " item_title:"+contentSolrInfo.get("item_title").toString()+"^1";
+				if (contentSolrInfo.containsKey("fqm")) {
+					Map<String, Object> fqm = (Map<String, Object>) contentSolrInfo.get("fqm");
+					if (fqm!=null && fqm.size()>0) {
+						if (fqm.containsKey("id")) idfqstr = fqm.get("id").toString();
+						if (fqm.containsKey("item_channel")) channelfqstr = fqm.get("item_channel").toString();
+					}
+				}
+			}
+			if (ownerSolrInfo!=null && contentSolrInfo.size()>0) {
+				if (ownerSolrInfo.containsKey("item_channel")) channelfqstr += ownerSolrInfo.get("item_channel").toString();
+				if (ownerSolrInfo.containsKey("item_title")) queryStr += " item_title:"+ownerSolrInfo.get("item_title").toString()+"^1";
+			}
+			//TODO
+			List<SolrInputPo> solrips = new ArrayList<>();
+			List<SortClause> solrsorts = SolrUtils.makeSolrSort("score desc");
+			SolrSearchResult sResult = solrJService.solrSearch(2, queryStr, solrsorts, params, "*,score", page, pageSize, idfqstr, channelfqstr, "item_type:AUDIO");
+			if (sResult!=null && sResult.getSolrInputPos().size()>0) {
+				solrips.addAll(sResult.getSolrInputPos());
+		    }
+			
+			List<Map<String, Object>> retLs = new ArrayList<>();
+			if (solrips!=null && solrips.size()>0) {
+				Map<String, Object> mf = new HashMap<>();
+				mf.put("mUdk", mUdk);
+				String fstr = new GetFavoriteList(mf)._getBizData();
+				List<UserFavoritePo> favret = null;
+				if (fstr!=null) favret = (List<UserFavoritePo>) JsonUtils.jsonToObj(fstr, List.class);
+				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
+				for (int i=0;i<solrips.size();i++) {
+					int f = i;
+					retLs.add(null);
+					List<UserFavoritePo> ret = favret;
+					fixedThreadPool.execute(new Runnable() {
+						public void run() {
+							String contentid = solrips.get(f).getItem_id();
+							RedisOperService rs = new RedisOperService(redisConn182, 11);
+							String info = null;
+							if (pageType==0) {
+								if (solrips.get(f).getItem_type().equals("SEQU")) {
+									String malist = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");
 									if (malist!=null) {
 										List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
 										contentid = mas.get(0).replace("Content=MediaType_CID=[AUDIO_", "").replace("]", "");
@@ -1167,192 +1343,6 @@ public class ContentService {
 		            return ret;
 				}
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-		return null;
-	}
-
-	@SuppressWarnings("unchecked")
-	private Map<String, Object> makeSearchBySearch(String searchStr, String mediaType, int pageType, int resultType, int page, int pageSize, String rootInfo, MobileUDKey mUdk) {
-		try {
-			Map<String, Object> params = new HashMap<>();
-			String audiofq = null;
-			if (rootInfo!=null) {
-				String[] kv = rootInfo.split("_");
-				if (kv[0].equals("AUDIO")) {
-					audiofq = "-id:AUDIO_"+kv[1];
-					String audioinfo = getAUDIOContentInfo(kv[1]);
-					if (audioinfo!=null && audioinfo.length()>0) {
-//						String maidstr = "";
-						Map<String, Object> audiomap = (Map<String, Object>) JsonUtils.jsonToObj(audioinfo, Map.class);
-						if (audiomap!=null && audiomap.size()>0) {
-							List<SolrInputPo> solrips = new ArrayList<>();
-							//采集栏目内容
-							List<Map<String, Object>> channelmaps = (List<Map<String, Object>>) audiomap.get("ContentPubChannels");
-							if (channelmaps!=null && channelmaps.size()>0) {
-								for (Map<String, Object> chmap : channelmaps) {
-									String channelName = chmap.get("ChannelName").toString();
-									List<SortClause> solrsorts = SolrUtils.makeSolrSort("item_playcount desc","item_meidasize desc");
-									SolrSearchResult sResult = solrJService.solrSearch(1, null, solrsorts, null, null, 1, 2,"item_channel:"+channelName, audiofq);
-									if (sResult!=null && sResult.getSolrInputPos().size()>0) {
-										solrips.addAll(sResult.getSolrInputPos());
-								    }
-								}
-							}
-							System.out.println(JsonUtils.objToJson(solrips));
-							//采集专辑内容
-							Map<String, Object> smamap = (Map<String, Object>) audiomap.get("SeqInfo");
-						    String smaId = smamap.get("ContentId").toString();
-						    String smasubs = getSEQUSublist(smaId);
-						    List<String> maidlist = (List<String>) JsonUtils.jsonToObj(smasubs, List.class);
-						    if (maidlist!=null && maidlist.size()>0) {
-								String maid = maidlist.get(0);
-								maid = maid.replace("Content=MediaType_CID=[", "").replace("]", "");
-								SolrSearchResult sResult = solrJService.solrSearch(1, null, null, null, null, 1, 1, "id:"+maid, audiofq);
-								if (sResult!=null && sResult.getSolrInputPos().size()>0) {
-									solrips.addAll(sResult.getSolrInputPos());
-							    }
-						    }
-						    int exnum = solrips.size();
-						    int difnum = pageSize-exnum>0?pageSize-exnum:0;
-						    if (difnum>0) {
-						    	 SolrSearchResult sResult = null;
-								String querystr = "";
-								querystr = "item_title:"+searchStr+"^10";
-								Owner o = new Owner(mUdk.getPCDType(), mUdk.getUserId());
-								Map<String, Object> wordmap = wordService.getHotWordsByOwner( o, 15);
-								if (wordmap!=null && wordmap.size()>0) {
-									Set<String> sets = wordmap.keySet();
-									for (String wordStr : sets) {
-										double per = (double) wordmap.get(wordStr);
-										querystr += " item_title:"+wordStr.replace(" ", "")+"^"+(per*10);
-									}
-								}
-								sResult = solrJService.solrSearch(2, querystr, null, params, "*,score", page, difnum, audiofq);
-								if (sResult!=null && sResult.getSolrInputPos().size()>0) {
-									solrips.addAll(sResult.getSolrInputPos());
-							    }
-							}
-						    List<Map<String, Object>> retLs = new ArrayList<>();
-							if (solrips!=null && solrips.size()>0) {
-								Map<String, Object> mf = new HashMap<>();
-								mf.put("mUdk", mUdk);
-								String fstr = new GetFavoriteList(mf)._getBizData();
-								List<UserFavoritePo> favret = null;
-								if (fstr!=null) favret = (List<UserFavoritePo>) JsonUtils.jsonToObj(fstr, List.class);
-								ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
-								for (int i=0;i<solrips.size();i++) {
-									int f = i;
-									retLs.add(null);
-									List<UserFavoritePo> ret = favret;
-									fixedThreadPool.execute(new Runnable() {
-										public void run() {
-											String contentid = solrips.get(f).getItem_id();
-											RedisOperService rs = new RedisOperService(redisConn182, 11);
-											String info = null;
-											if (pageType==0) {
-												if (solrips.get(f).getItem_type().equals("SEQU")) {
-													String malist = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");
-													if (malist!=null) {
-														List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
-														contentid = mas.get(0).replace("Content=MediaType_CID=[AUDIO_", "").replace("]", "");
-														solrips.get(f).setItem_type("AUDIO");
-													}
-												}
-											}
-											info = FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
-											if (info!=null && info.length()>0) {
-												Map<String, Object> infomap = retLs.get(f);
-												infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
-												String playcount = null;
-												playcount = rs.get("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::PLAYCOUNT");
-												if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
-												else infomap.put("PlayCount", 0);
-												infomap.put("ContentFavorite", 0);
-												try {
-													if (solrips.get(f).getItem_type().equals("AUDIO")) {
-														Map<String, Object> smainfom = (Map<String, Object>) infomap.get("SeqInfo");
-														String smaid = smainfom.get("ContentId").toString();
-														String smainfo = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");
-														smainfom = (Map<String, Object>) JsonUtils.jsonToObj(smainfo, Map.class);
-														infomap.put("SeqInfo", smainfom);
-													}
-												} catch (Exception e) {}
-												if (ret!=null && ret.size()>0) {
-													for (UserFavoritePo userfav : ret) {
-														if (userfav!=null && userfav.getResId().equals(contentid)) {
-															if ((mediaType.equals("AUDIO") && userfav.getResTableName().equals("wt_MediaAsset")) 
-															|| (mediaType.equals("SEQU") && userfav.getResTableName().equals("wt_SeqMediaAsset")) 
-															|| (mediaType.equals("RADIO") && userfav.getResTableName().equals("wt_Broadcast"))) 
-																infomap.put("ContentFavorite", 1);
-														}
-												    }
-												}
-												retLs.set(f, infomap);
-											}
-										}
-									});
-								}
-								fixedThreadPool.shutdown();
-								while (true) {
-									Thread.sleep(10);
-									if (fixedThreadPool.isTerminated()) {
-										break;
-									}
-								}
-								if (retLs!=null && retLs.size()>0) {
-									Iterator<Map<String, Object>> it = retLs.iterator();
-									while (it.hasNext()) {
-										Map<String, Object> m = it.next();
-										if (m==null) {
-											it.remove();
-										}
-									}
-									Map<String, Object> ret = new HashMap<>();
-									ret.put("ResultType", "1001");
-									ret.put("List", retLs);
-//						            ret.put("AllCount", sResult.getRecordCount());
-						            return ret;
-								}
-							}
-						}
-					}
-				}
-			}
-			//TODO
-			
-//			if (audiofq!=null) sResult = solrJService.solrSearch(2, querystr, solrsorts, params, "*,score", page, pageSize,audiofq);
-//			else sResult = solrJService.solrSearch(2, querystr, solrsorts, params, "*,score", page, pageSize);
-//			String querystr = "";
-//			querystr = "item_title:"+searchStr+"^10";
-//			Owner o = new Owner(mUdk.getPCDType(), mUdk.getUserId());
-//			Map<String, Object> wordmap = wordService.getHotWordsByOwner( o, 15);
-//			if (wordmap!=null && wordmap.size()>0) {
-//				Set<String> sets = wordmap.keySet();
-//				for (String wordStr : sets) {
-//					double per = (double) wordmap.get(wordStr);
-//					querystr += " item_title:"+wordStr.replace(" ", "")+"^"+(per*10);
-//				}
-//			}
-//			if (audiofq!=null) sResult = solrJService.solrSearch(2, querystr, solrsorts, params, "*,score", page, pageSize,audiofq);
-//			else sResult = solrJService.solrSearch(2, querystr, solrsorts, params, "*,score", page, pageSize);
-//			
-//			if (sResult!=null && sResult.getSolrInputPos().size()>0) {
-//				solrips.addAll(sResult.getSolrInputPos());
-//		    }
-//			if (mediaType!=null) {
-//				sResult = solrJService.solrSearch(searchStr, solrsorts, null, "*,score", page, pageSize, "item_type:"+mediaType);
-//				if (sResult!=null && sResult.getSolrInputPos().size()>0) {
-//					solrips.addAll(sResult.getSolrInputPos());
-//			    }
-//			} else {
-//				sResult = solrJService.solrSearch(searchStr, solrsorts, null, "*,score", page, pageSize);
-//				if (sResult!=null && sResult.getSolrInputPos().size()>0) {
-//					solrips.addAll(sResult.getSolrInputPos());
-//			    }
-//			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -2348,19 +2338,115 @@ public class ContentService {
 //        }
     }
     
+    /**
+     * 通过用户本身进行推荐信息提取
+     * @param mUdk
+     * @return
+     */
     private Map<String, Object> getOwnerRecommendSolrInfo(MobileUDKey mUdk) {
-		String item_title = "";
-		Owner o = new Owner(mUdk.getPCDType(), mUdk.getUserId());
-		Map<String, Object> wordmap = wordService.getHotWordsByOwner(o, 5);
-		if (wordmap!=null && wordmap.size()>0) {
-			Set<String> sets = wordmap.keySet();
-			for (String wordStr : sets) {
-				double per = (double) wordmap.get(wordStr);
-				item_title += " item_title:"+wordStr.replace(" ", "");
+    	try {
+			String item_title = "";
+			Owner o = new Owner(mUdk.getPCDType(), mUdk.getUserId());
+			Map<String, Object> wordmap = wordService.getHotWordsByOwner(o, 5);
+			if (wordmap!=null && wordmap.size()>0) {
+				Set<String> sets = wordmap.keySet();
+				for (String wordStr : sets) {
+					item_title += wordStr.replace(" ", "");
+				}
+			}
+			String item_channel = "";
+			Map<String, Object> param = new HashMap<>();
+			param.put("resTableName", "plat_User");
+			param.put("resId", mUdk.getUserId());
+			param.put("dictMid", "-1");
+			List<DictRefRes> dRefRes = dictService.getDictRefs(param);
+			if (dRefRes!=null && dRefRes.size()>0) {
+				for (DictRefRes dictRefRes : dRefRes) {
+					item_channel += " item_channel:"+dictRefRes.getDd().getNodeName();
+				}
+//				item_channel = item_channel.substring(1);
+			}
+			Map<String, Object> retM = new HashMap<>();
+			if (item_title!=null && item_title.length()>0) retM.put("item_title", item_title);
+			if (item_channel!=null && item_channel.length()>0) retM.put("item_channel", item_channel);
+			if (retM.size()>0) return retM;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		return null;
+    }
+    
+    /**
+     * 通过内容本身进行推荐信息提取
+     * @param id
+     * @return
+     * 					fqm    id
+     *  					   item_channel
+     *                  item_title
+     */
+    @SuppressWarnings("unchecked")
+	private Map<String, Object> getAUDIORecommendSolrInfo(String id) {
+    	try {
+    		String mainfo = getAUDIOContentInfo(id);
+    		if (mainfo!=null && mainfo.length()>0) {
+    			Map<String, Object> retM = new HashMap<>();
+    			Map<String, Object> fqm = new HashMap<>();
+    			String fq = "";
+    			fq = "-id:AUDIO_"+id;
+    			fqm.put("id", fq);
+				Map<String, Object> mamap = (Map<String, Object>) JsonUtils.jsonToObj(mainfo, Map.class);
+				Map<String, Object> smamap = (Map<String, Object>) mamap.get("SeqInfo");
+				String smaId = smamap.get("ContentId").toString(); // 得到专辑的id
+				List<Map<String, Object>> chamap = (List<Map<String, Object>>) mamap.get("ContentPubChannels");
+				
+				String item_channel = "";  // 得到栏目信息
+				if (chamap!=null && chamap.size()>0) {
+					for (Map<String, Object> chmap : chamap) {
+						if (chmap!=null) {
+							item_channel += " item_channel:"+chmap.get("ChannelName").toString();
+						}
+					}
+//					item_channel = item_channel.substring(1);
+					fqm.put("item_channel",item_channel);
+					retM.put("fqm", fqm);
+				}
+				
+				String item_title = "";
+				String kws = null;
+				try {kws = mamap.get("ContentKeyWord").toString();} catch (Exception e) {}
+				if (kws!=null && kws.length()>0) {
+					item_title = kws;
+					retM.put("item_title", item_title);
+				}
+				if (retM!=null && retM.size()>0) {
+					return retM;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		return null;
+    }
+    
+    public void addOSSContentInfo(String type, String id) {
+    	if (type.equals("SEQU")) new AddContentInfoThread(id).addOSS();
+		else if (type.equals("AUDIO")) {
+			try {
+				SolrSearchResult sResult = solrJService.solrSearch(1, null, null, null, null, 1, 1, "item_type:AUDIO", "item_id:"+id);
+				if (sResult!=null && sResult.getSolrInputPos().size()>0) {
+					SolrInputPo solrInputPo = sResult.getSolrInputPos().get(0);
+					sResult = solrJService.solrSearch(1, null, null, null, null, 1, 1, "item_type:SEQU", "item_id:"+solrInputPo.getItem_pid());
+					if (sResult!=null && sResult.getSolrInputPos().size()>0) {
+						solrInputPo = sResult.getSolrInputPos().get(0);
+						new AddContentInfoThread(solrInputPo.getItem_id()).addOSS();
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
-		
-		return null;
     }
     
     public String getAUDIOContentInfo(String id) {

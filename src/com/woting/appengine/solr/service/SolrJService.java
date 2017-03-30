@@ -135,6 +135,9 @@ public class SolrJService {
 			if (solrDocument.containsKey("item_meidasize")) {
 				sPo.setItem_mediasize((long) solrDocument.get("item_meidasize"));
 			}
+			if (solrDocument.containsKey("item_pid")) {
+				sPo.setItem_pid((String) solrDocument.get("item_pid"));
+			}
 			if (solrDocument.containsKey("item_timelong")) {
 				sPo.setItem_timelong((long) solrDocument.get("item_timelong"));
 			}
