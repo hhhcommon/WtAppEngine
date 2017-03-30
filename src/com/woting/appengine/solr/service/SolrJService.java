@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Resource;
 
@@ -85,7 +87,7 @@ public class SolrJService {
 		return null;
 	}
 	
-	public SolrSearchResult solrSearch(String querystr, List<SortClause> sorts, String flstr, int page, int pageSize, String... fqstr) throws Exception {
+	public SolrSearchResult solrSearch(int searchType, String querystr, List<SortClause> sorts, Map<String, Object> params, String flstr, int page, int pageSize, String... fqstr) throws Exception {
 		//创建一个查询对象
 		SolrQuery solrQuery = new SolrQuery();
 		//查询条件
@@ -93,11 +95,18 @@ public class SolrJService {
 			solrQuery.setQuery("*:*");
 		} else {
 			querystr = SolrUtils.makeQueryStr(querystr, true);
-			solrQuery.setQuery("item_title:"+querystr+"^5 item_persons:"+querystr+"^3 item_channel:"+querystr+"^1 item_descn:"+querystr+"^2");
+			if (searchType==1) solrQuery.setQuery("item_title:"+querystr+"^5 item_persons:"+querystr+"^3 item_channel:"+querystr+"^1 item_descn:"+querystr+"^2");
+			else if (searchType==2) solrQuery.setQuery("item_title:"+querystr);
 		}
 		solrQuery.setStart((page -1) * pageSize);
 		solrQuery.setRows(pageSize);
 		//设置默认搜索域
+		if (params!=null && params.size()>0) {
+			Set<String> sets = params.keySet();
+			for (String key : sets) {
+				solrQuery.set(key, params.get(key).toString());
+			}
+		}
 //		solrQuery.set("df", "item_keywords");
 //		solrQuery.set("defType", "edismax");
 //		solrQuery.set("mm","80%");
@@ -125,6 +134,9 @@ public class SolrJService {
 			sPo.setItem_publisher((String) solrDocument.get("item_publisher"));
 			if (solrDocument.containsKey("item_meidasize")) {
 				sPo.setItem_mediasize((long) solrDocument.get("item_meidasize"));
+			}
+			if (solrDocument.containsKey("item_pid")) {
+				sPo.setItem_pid((String) solrDocument.get("item_pid"));
 			}
 			if (solrDocument.containsKey("item_timelong")) {
 				sPo.setItem_timelong((long) solrDocument.get("item_timelong"));

@@ -183,6 +183,35 @@ public class WordService {
             return wordsList;
         }
     }
+    
+    /**
+     * 得到某一用户的私有搜索热词
+     * @param o
+     * @param topSize
+     * @return 查询词:查询次数百分比
+     */
+    public Map<String, Object> getHotWordsByOwner(Owner o, int topSize) {
+    	if (o!=null) {
+    		Map<String, Object> params = new HashMap<>();
+    		params.put("ownerId", o.getOwnerId());
+    		params.put("sortByClause", " CTime desc");
+    		Page<UserWordPo> uwPage = userWordDao.pageQuery("DA_USERWORD.getList", params, 1, topSize);
+    		List<UserWordPo> l = new ArrayList<>();
+    		if (!uwPage.getResult().isEmpty()) {
+				l.addAll(uwPage.getResult());
+				int num = 0;
+				Map<String, Object> retM = new HashMap<>();
+				for (UserWordPo userWordPo : l) {
+					num += userWordPo.getSumNum();
+				}
+				for (UserWordPo userWordPo : l) {
+					retM.put(userWordPo.getWord(), (userWordPo.getSumNum()+0.0)/num);
+				}
+				return retM;
+			}
+    	}
+		return null;
+    }
 
     /**
      * 从数据库表获得数据，并加入装载队列
