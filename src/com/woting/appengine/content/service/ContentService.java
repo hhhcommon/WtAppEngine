@@ -1093,6 +1093,7 @@ public class ContentService {
 			}
 			List<Map<String, Object>> retLs = new ArrayList<>();
 			if (solrips!=null && solrips.size()>0) {
+				System.out.println(JsonUtils.objToJson(solrips));
 				Map<String, Object> mf = new HashMap<>();
 				mf.put("mUdk", mUdk);
 				String fstr = new GetFavoriteList(mf)._getBizData();
