@@ -235,7 +235,7 @@ CREATE TABLE pm_NotifyMsg (
   msgJson       text         NOT NULL  COMMENT '消息本身的序列化结果',
   sendTime      timestamp              COMMENT '第一次发送数据的时间',
   sendInfoJson  text                   COMMENT '每个结点的发送情况',
-  lmTime        timestamp              COMMENT '最后修改时间',
+  lmTime        timestamp    NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
   PRIMARY KEY(id),
   UNIQUE INDEX bizKey(msgId, toUserId) USING BTREE
 )
