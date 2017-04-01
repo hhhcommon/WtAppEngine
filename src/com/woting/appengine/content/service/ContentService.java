@@ -1202,9 +1202,9 @@ public class ContentService {
 								}
 							}
 							info = FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
-							if (info!=null && info.length()>0) {
-								Map<String, Object> infomap = retLs.get(f);
-								infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
+							if (info!=null && info.length()>32) {
+//								Map<String, Object> infomap = retLs.get(f);
+								Map<String, Object> infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
 								String playcount = null;
 								playcount = rs.get("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=PLAYCOUNT");
 								if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
@@ -1233,9 +1233,9 @@ public class ContentService {
 							} else {
 								addOSSContentInfo(solrips.get(f).getItem_type(), contentid);
 								info = FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
-								if (info!=null && info.length()>0) {
-									Map<String, Object> infomap = retLs.get(f);
-									infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
+								if (info!=null && info.length()>32) {
+//									Map<String, Object> infomap = retLs.get(f);
+									Map<String, Object> infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
 									String playcount = null;
 									playcount = rs.get("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=PLAYCOUNT");
 									if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
