@@ -452,17 +452,23 @@ public class GroupService {
         int r=1;
         //删除组
         if (ul.size()<=1) {
-            //删除所有的组内人员信息
-            param.clear();
-            param.put("groupId", groupId);
-            groupDao.delete("deleteGroupUser", param);
-            //删除组
-            groupDao.delete(gp.getGroupId());
-            //处理组邀请信息表，把flag设置为2
-            inviteGroupDao.update("setFlag2", groupId);
-            //删除组内所有成员的别名
-            userAliasService.delAliasInGroup(groupId);
-            r=2;
+            boolean canDissolve=true;
+            if (ul.size()==1) {
+                if (ul.get(0).getUserId().equals(gp.getCreateUserId())) canDissolve=false;
+            }
+            if (canDissolve) {
+                //删除所有的组内人员信息
+                param.clear();
+                param.put("groupId", groupId);
+                groupDao.delete("deleteGroupUser", param);
+                //删除组
+                groupDao.delete(gp.getGroupId());
+                //处理组邀请信息表，把flag设置为2
+                inviteGroupDao.update("setFlag2", groupId);
+                //删除组内所有成员的别名
+                userAliasService.delAliasInGroup(groupId);
+                r=2;
+            }
         } else {
             if (u.getUserId().equals(gp.getAdminUserIds())) {
                 List<Object> gupl=(List<Object>)groupDao.queryForListAutoTranform("getGroupUserByGroupId", groupId);
@@ -757,6 +763,13 @@ public class GroupService {
                         Map<String, Object> dataMap=new HashMap<String, Object>();
                         dataMap.put("FriendId", userId);
                         dataMap.put("OperatorId", userId);
+                        List<Map<String, Object>> beInvitedUserList=new ArrayList<Map<String, Object>>();
+                        ua=beInvitedUserIds.split(",");
+                        for (String beInvitedUserId: ua) {
+                            UserPo u=userDao.getInfoObject("getUserById", beInvitedUserId);
+                            beInvitedUserList.add(u.toHashMap4Mobile());
+                        }
+                        dataMap.put("BeInvitedUserList", beInvitedUserList);
                         if (gp!=null) {
                             Map<String, Object> gMap=new HashMap<String, Object>();
                             gMap.put("GroupId", gp.getGroupId());
@@ -1218,16 +1231,22 @@ public class GroupService {
         }
         //都处理后的处理
         if (ul.size()==1) {//删除组
-            groupDao.delete(gp.getGroupId());
-            //删除所有的组内人员信息
-            param.clear();
-            param.put("groupId", groupId);
-            groupDao.delete("deleteGroupUser", param);
-            //处理组邀请信息表，把flag设置为2
-            inviteGroupDao.update("setFlag2", groupId);
-            ret.put("DeleteGroup", "1");//返回值，告诉调用者，由于组内人员只有1人，所以要删除组
-            //删除组内所有成员的别名
-            userAliasService.delAliasInGroup(groupId);
+            boolean canDissolve=true;
+            if (ul.size()==1) {
+                if (ul.get(0).getUserId().equals(gp.getCreateUserId())) canDissolve=false;
+            }
+            if (canDissolve) {
+                groupDao.delete(gp.getGroupId());
+                //删除所有的组内人员信息
+                param.clear();
+                param.put("groupId", groupId);
+                groupDao.delete("deleteGroupUser", param);
+                //处理组邀请信息表，把flag设置为2
+                inviteGroupDao.update("setFlag2", groupId);
+                ret.put("DeleteGroup", "1");//返回值，告诉调用者，由于组内人员只有1人，所以要删除组
+                //删除组内所有成员的别名
+                userAliasService.delAliasInGroup(groupId);
+            }
         }
 
         @SuppressWarnings("unchecked")

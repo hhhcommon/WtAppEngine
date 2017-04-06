@@ -9,11 +9,15 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
 
+import com.spiritdata.framework.core.cache.CacheEle;
+import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
+import com.woting.WtAppEngineConstants;
+import com.woting.cm.core.channel.mem._CacheChannel;
 import com.woting.cm.core.dict.model.DictDetail;
 import com.woting.cm.core.dict.model.DictModel;
 import com.woting.cm.core.dict.model.DictRefRes;
@@ -107,12 +111,14 @@ public class PreferenceService {
      * @param isOnlyCata =1仅包括分类(这是默认值); =2包括分类和偏好类型
      * @return 保存成功返回1，失败返回0
      */
+    @SuppressWarnings("unchecked")
     public int setPreference(String objId, String prefStr, int flag, int isOnlyCata) {
         if (StringUtils.isNullOrEmptyOrSpace(prefStr)||StringUtils.isNullOrEmptyOrSpace(objId)||(flag!=1&&flag!=2)) return 0;
 
         DictModel pModel=dictService.getDictModelById("6");
         DictModel cModel=dictService.getDictModelById("3");
-
+        CacheEle<_CacheChannel> cacheC=((CacheEle<_CacheChannel>)SystemCache.getCache(WtAppEngineConstants.CACHE_CHANNEL));
+        _CacheChannel cc=cacheC.getContent();
         List<String> prefIds=new ArrayList<String>();
         List<String> cataIds=new ArrayList<String>();
 
@@ -122,6 +128,11 @@ public class PreferenceService {
             if (fields.length==2) {//分类和偏好类型都设置
                 if (fields[0].trim().equals("6")) {
                     if (pModel.dictTree!=null&&pModel.dictTree.findNode(fields[1])!=null) {
+                        prefIds.add(fields[1].trim());
+                    }
+                }
+                if (fields[0].trim().equals("-1")) {
+                    if ((TreeNode<TreeNodeBean>)cc.channelTree.findNode(fields[1])!=null) {
                         prefIds.add(fields[1].trim());
                     }
                 }

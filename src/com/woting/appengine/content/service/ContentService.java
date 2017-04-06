@@ -143,7 +143,7 @@ public class ContentService {
             List<Map<String, Object>> retImgList=new ArrayList<Map<String, Object>>();
             int i=0;
             for (Map<String, Object> m: imgList) {
-                if (++i>size) break;
+                if (++i>size&&size!=-1) break;
                 Map<String, Object> oneImg=new HashMap<String, Object>();
                 String temp=(String)m.get("assetType");
                 MediaType mt=MediaType.buildByTabName(temp);
