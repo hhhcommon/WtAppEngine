@@ -26,7 +26,6 @@ import com.woting.appengine.content.utils.FileUtils;
 public class AddContentInfoThread extends Thread {
 
 	private String smaId;
-	private RedisOperService redis = null;
 	private DataSource DataSource = null;
 	private File file = null;
 	
@@ -34,8 +33,6 @@ public class AddContentInfoThread extends Thread {
 		this.smaId = smaId;
 		ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
         if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-            JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory123");
-            this.redis = new RedisOperService(conn);
             this.DataSource = (DataSource) WebApplicationContextUtils.getWebApplicationContext(sc).getBean("dataSource");
         }
 	}
@@ -54,7 +51,6 @@ public class AddContentInfoThread extends Thread {
 					oneDate.put("ContentSubCount", maIds.size());
 				}
 				writeContentInfo("Content=MediaType_CID=[SEQU_"+smaId+"]=INFO", JsonUtils.objToJson(oneDate));
-//				addRedisInfo("Content::MediaType_CID::[SEQU_"+smaId+"]::INFO", JsonUtils.objToJson(oneDate), 30*24*60*60*1000l);
 			}
 			
 			List<Map<String, Object>> reply = new ArrayList<>();
@@ -67,7 +63,6 @@ public class AddContentInfoThread extends Thread {
 					reply.add(m);
 					retMaIds.add("Content=MediaType_CID=[AUDIO_"+str+"]");
 				}
-//				addRedisInfo("Content::MediaType_CID::[SEQU_"+smaId+"]::SUBLIST", JsonUtils.objToJson(retMaIds), 30*24*60*60*1000l);
 				writeContentInfo("Content=MediaType_CID=[SEQU_"+smaId+"]=SUBLIST", JsonUtils.objToJson(retMaIds));
 			}
 			List<Map<String, Object>> maLs = getMediaAssetInfos(maIds);
@@ -76,7 +71,6 @@ public class AddContentInfoThread extends Thread {
 					Map<String, Object> smam = new HashMap<>();
 					smam.put("ContentId", smaId);
 					map.put("SeqInfo", smam);
-//					addRedisInfo("Content::MediaType_CID::[AUDIO_"+map.get("ContentId")+"]::INFO", JsonUtils.objToJson(map), 30*24*60*60*1000l);
 					writeContentInfo("Content=MediaType_CID=[AUDIO_"+map.get("ContentId")+"]=INFO", JsonUtils.objToJson(map));
 				}
 			}
@@ -87,10 +81,9 @@ public class AddContentInfoThread extends Thread {
 			List<Map<String, Object>> playLs = getPlayCountInfo(reply);
 			if (playLs!=null && playLs.size()>0) {
 				for (Map<String, Object> map : playLs) {
-					addRedisInfo("Content=MediaType_CID=["+map.get("type")+"_"+map.get("id")+"]=PLAYCOUNT", map.get("playcount")+"", 30*24*60*60*1000l);
+					writeContentInfo("Content=MediaType_CID=["+map.get("type")+"_"+map.get("id")+"]=PLAYCOUNT", map.get("playcount")+"");
 				}
 			}
-			redis.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -119,7 +112,7 @@ public class AddContentInfoThread extends Thread {
 					oneDate.put("ContentPubTime", rs.getTimestamp("cTime").getTime());
 					oneDate.put("ContentSubscribe", 0);
 					oneDate.put("ContentFavorite", 0);
-					oneDate.put("ContentShareURL", "http://www.wotingfm.com/dataCenter/zj/"+oneDate.get("ContentId").toString()+"/content.html");
+					oneDate.put("ContentShareURL", "http://www.wotingfm.com/dataCenter/shareH5/mweb/zj/"+oneDate.get("ContentId").toString()+"/content.html");
 				}
 				if (rs!=null) try {rs.close();rs=null;} catch(Exception e) {rs=null;} finally {rs=null;};
 	            if (ps!=null) try {ps.close();ps=null;} catch(Exception e) {ps=null;} finally {ps=null;};
@@ -265,7 +258,7 @@ public class AddContentInfoThread extends Thread {
 						oneDate.put("ContentKeyWord", rs.getString("keyWords"));
 						oneDate.put("ContentTimes", rs.getLong("timeLong"));
 						oneDate.put("ContentPubTime", rs.getTimestamp("cTime").getTime());
-						oneDate.put("ContentShareURL", "http://www.wotingfm.com/dataCenter/jm/"+oneDate.get("ContentId").toString()+"/content.html");
+						oneDate.put("ContentShareURL", "http://www.wotingfm.com/dataCenter/shareH5/mweb/jm/"+oneDate.get("ContentId").toString()+"/content.html");
 						try {
 							String ext = FileNameUtils.getExt(oneDate.containsKey("ContentPlay")?(oneDate.get("ContentPlay").toString()):null);
 					        
@@ -448,18 +441,9 @@ public class AddContentInfoThread extends Thread {
 		return null;
 	}
 	
-	private void addRedisInfo(String key, String info, long timeout) {
-		if (redis!=null && key!=null) {
-			try {
-				redis.set(key, info, timeout);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
 	
 	private void writeContentInfo(String key, String jsonstr) {
-		file = FileUtils.createFile("/opt/dataCenter/contentinfo/"+key+".json");
+		file = FileUtils.createFile("/mnt/contentinfo/"+key+".json");
 		FileUtils.writeFile(jsonstr, file);
 	}
 }
