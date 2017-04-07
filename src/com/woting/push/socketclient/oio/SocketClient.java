@@ -93,6 +93,8 @@ public class SocketClient {
      * 包括创建检测线程，并启动Socet连接
      */
     public void workStart() {
+        toBeStop=false;
+        isClose=false;
         lastReceiveTime=System.currentTimeMillis(); //最后收到服务器消息时间
         healthWatch=new Timer("Socket客户端长连接监控", true);
         healthWatch.scheduleAtFixedRate(new HealthWatch(), 0, scc.getIntervalCheckSocket());
@@ -134,10 +136,10 @@ public class SocketClient {
             this.sendBeat.cancel();
             this.sendBeat=null;
         }
-        if (this.healthWatch!=null) {
-            this.healthWatch.cancel();
-            this.healthWatch=null;
-        }
+//        if (this.healthWatch!=null) {
+//            this.healthWatch.cancel();
+//            this.healthWatch=null;
+//        }
 
         if (sendLogFile!=null) try { sendLogFile.close(); } catch (Exception e) {} finally{ sendLogFile=null; };
         if (recvLogFile!=null) try { recvLogFile.close(); } catch (Exception e) {} finally{ recvLogFile=null; };
@@ -151,7 +153,7 @@ public class SocketClient {
             try { socket.close(); } catch (Exception e) {};
             socket=null;
         }
-
+        toBeStop=false;
         isClose=false;
     }
     private boolean socketOk() {
