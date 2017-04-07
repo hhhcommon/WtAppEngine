@@ -50,22 +50,12 @@ public class FileUtils {
 	}
 	
 	public static void writeContentInfo(String key, String jsonstr) {
-		try {
-			download("http://www.wotingfm.com/dataCenter/contentinfo", key+".json", "/opt/dataCenter/contentinfo/"+key+".json");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		File file = FileUtils.createFile("/opt/dataCenter/contentinfo/"+key+".json");
+		File file = FileUtils.createFile("/mnt/contentinfo/"+key+".json");
 		writeFile(jsonstr, file);
 	}
 	
 	public static String readContentInfo(String key) {
-		try {
-			download("http://www.wotingfm.com/dataCenter/contentinfo/"+key+".json", key+".json", "/opt/dataCenter/contentinfo/");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		File file = FileUtils.createFile("/opt/dataCenter/contentinfo/"+key+".json");
+		File file = FileUtils.createFile("/mnt/contentinfo/"+key+".json");
 		return readFile(file);
 	}
 
