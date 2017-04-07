@@ -92,6 +92,7 @@
     where a.mId=b.id and b.ownerId=#{ownerId,jdbcType=VARCHAR} and b.ownerType=#{ownerType,jdbcType=INTEGER}
     and a.isValidate=1 and b.isValidate=1
     order by a.mId, a.pid, a.sort desc
+    <if test="limitSql!=null">${limitSql}</if>
   </select>
 
   <!-- 获得列表：按所有者 -->

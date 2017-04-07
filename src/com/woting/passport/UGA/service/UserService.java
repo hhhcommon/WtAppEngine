@@ -18,7 +18,6 @@ import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.cm.core.dict.mem._CacheDictionary;
-import com.woting.cm.core.dict.model.DictDetail;
 import com.woting.cm.core.dict.model.DictModel;
 import com.woting.cm.core.dict.model.DictRefRes;
 import com.woting.cm.core.dict.service.DictService;

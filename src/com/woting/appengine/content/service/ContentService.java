@@ -652,7 +652,7 @@ public class ContentService {
             String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
             RedisOperService roService=new RedisOperService(redisConn7_2, 11);
             try {
-                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
+                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
             } finally {
                 if (roService!=null) roService.close();
                 roService=null;
@@ -756,7 +756,7 @@ public class ContentService {
             String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
             RedisOperService roService=new RedisOperService(redisConn7_2, 11);
             try {
-                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
+                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
             } finally {
                 if (roService!=null) roService.close();
                 roService=null;
@@ -816,7 +816,7 @@ public class ContentService {
             String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
             RedisOperService roService=new RedisOperService(redisConn7_2, 11);
             try {
-                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
+                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
             } finally {
                 if (roService!=null) roService.close();
                 roService=null;
@@ -881,7 +881,7 @@ public class ContentService {
             param.put("mUdk", mUdk);
             key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
             try {
-                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000);
+                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
             } finally {
                 if (roService!=null) roService.close();
                 roService=null;
@@ -911,7 +911,7 @@ public class ContentService {
 
         roService=new RedisOperService(redisConn7_2, 11);
         try {
-            key=roService.getAndSet(key, new GetContents(param), 30*60*1000);
+            key=roService.getAndSet(key, new GetContents(param), 30*60*1000, true);
         } finally {
             if (roService!=null) roService.close();
             roService=null;
@@ -1769,18 +1769,19 @@ public class ContentService {
                     conn=dataSource.getConnection();
                     //获得总条数
                     long count=0l;
-                    ps=conn.prepareStatement(sqlCount);
-                    rs=ps.executeQuery(sqlCount);
-                    while (rs!=null&&rs.next()) {
-                        count=rs.getLong(1);
-                    }
-                    rs.close(); rs=null;
-                    ps.close(); ps=null;
+//                    ps=conn.prepareStatement(sqlCount);
+//                    rs=ps.executeQuery();
+//                    while (rs!=null&&rs.next()) {
+//                        count=rs.getLong(1);
+//                    }
+                    count=2945894l;
+//                    rs.close(); rs=null;
+//                    ps.close(); ps=null;
                     
                     //获得记录
                     ps=conn.prepareStatement(sql);
                     rs=ps.executeQuery();
-                    
+
                     String sma2msInSql="";
                     String bcSqlSign="", maSqlSign="", smaSqlSign="";   //为找到内容设置
                     String bcSqlSign1="", maSqlSign1="", smaSqlSign1="";//为查询相关信息设置

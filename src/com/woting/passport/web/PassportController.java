@@ -311,7 +311,8 @@ public class PassportController {
                     return map;
                 }
                 nu.setMainPhoneNum(phonenum);
-            } else {
+            }
+            if (StringUtils.isNullOrEmptyOrSpace(ln)) {
                 UserPo oldUser=userService.getUserByLoginName(ln);
                 if (oldUser!=null) { //重复
                     map.put("ReturnType", "10032");
@@ -320,6 +321,7 @@ public class PassportController {
                 }
                 nu.setLoginName(ln);
             }
+
             nu.setPassword(pwd);
             //2-保存用户
             nu.setCTime(new Timestamp(System.currentTimeMillis()));
