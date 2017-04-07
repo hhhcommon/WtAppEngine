@@ -1365,7 +1365,20 @@ public class PassportController {
             String getValue=redisUdk.getKey_UserPhoneCheck();
             String info=(getValue==null?null:roService.get(getValue));
 
-            if (info==null||info.equals("null")||info.startsWith("OK")) {//错误
+            if (info==null||info.equals("null")) {//错误
+                int random=SpiritRandom.getRandom(new Random(), 1000000, 1999999);
+                String checkNum=(random+"").substring(1);
+                String smsRetNum=SendSMS.sendSms(phoneNum, checkNum, operType==1?"通过手机号注册用户":"通过绑定手机号找回密码");
+                //向Session中加入验证信息
+                try {
+                    roService.set(redisUdk.getKey_UserPhoneCheck(), System.currentTimeMillis()+"="+phoneNum+"="+checkNum, "", 100*1000);
+                } finally {
+                    roService.close();
+                    roService=null;
+                }
+                map.put("ReturnType", "1001");
+                map.put("SmsRetNum", smsRetNum);
+            } else if (info.startsWith("OK")) {
                 map.put("ReturnType", "1002");
                 map.put("Message", "状态错误，未有之前的发送数据，无法重发");
             } else {//正确
