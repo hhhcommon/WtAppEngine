@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="A_CACHEDB">
+  <!-- 对象定义:元数据列模式 -->
+  <resultMap id="BaseResultMap" type="cachedb">
+    <id     column="id"             property="id"             jdbcType="VARCHAR"/>
+    <result column="resTableName"   property="resTableName"   jdbcType="VARCHAR"/>
+    <result column="resId"          property="resId"          jdbcType="VARCHAR"/>
+    <result column="value"          property="value"          jdbcType="VARCHAR"/>
+    <result column="cTime"          property="cTime"          jdbcType="TIMESTAMP"/>
+  </resultMap>
+  
+  <!-- 所有列 -->
+  <sql id="Base_Column_List">
+    id, resTableName, resId, value, cTime
+  </sql>
+  
+  <!-- 条件子句 -->
+  <sql id="WhereClauseByEntiey">
+    <where>
+      <trim prefix="(" suffix=")" prefixOverrides="and">
+        <if test="id!=null"> and id=#{id,jdbcType=VARCHAR}</if>
+        <if test="resTableName!=null"> and resTableName=#{resTableName,jdbcType=VARCHAR}</if>
+        <if test="resId!=null"> and resId=#{resId,jdbcType=VARCHAR}</if>
+        <if test="value!=null"> and value=#{value,jdbcType=VARCHAR}</if>
+        <if test="cTime!=null"> and cTime=#{cTime,jdbcType=TIMESTAMP}</if>
+      </trim>
+    </where>
+  </sql>
+  
+  <!-- 获得记录条数-->
+  <select id="count" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select count(*) from wt_CacheDB <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </select>
+  
+  <!-- 获得列表 -->
+  <select id="getList" resultMap="BaseResultMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_CacheDB
+    <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+    <if test="orderByClause!=null">order by ${orderByClause}</if>
+  </select>
+  
+  <!-- 获得一条数据 -->
+  <select id="getInfoById" resultMap="BaseResultMap" parameterType="java.lang.String">
+    select <include refid="Base_Column_List"/> from wt_CacheDB where id=#{id,jdbcType=VARCHAR}
+  </select>
+  
+  <!-- 新增数据 -->
+  <insert id="insert" parameterType="java.util.Map">
+    insert into wt_CacheDB
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id!=null">id,</if>
+      <if test="resTableName!=null">resTableName,</if>
+      <if test="resId!=null">resId,</if>
+      <if test="value!=null">value,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id!=null">#{id,jdbcType=VARCHAR},</if>
+      <if test="resTableName!=null">#{resTableName,jdbcType=VARCHAR},</if>
+      <if test="resId!=null">#{resId,jdbcType=VARCHAR},</if>
+      <if test="value!=null">#{value,jdbcType=VARCHAR},</if>
+    </trim>
+  </insert>
+  
+  <!-- 修改 根据主键-->
+  <update id="update" parameterType="java.util.Map">
+    update wt_CacheDB
+    <set>
+      <if test="resTableName!=null">resTableName=#{resTableName,jdbcType=VARCHAR},</if>
+      <if test="resId!=null">resId=#{resId,jdbcType=VARCHAR},</if>
+      <if test="value!=null">value=#{value,jdbcType=VARCHAR},</if>
+      <if test="cTime=null">cTime=#{cTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where id=#{id,jdbcType=VARCHAR}
+  </update>
+  
+  <!-- 删除数据 -->
+  <delete id="delete" parameterType="java.lang.String">
+    delete from wt_CacheDB where id=#{id,jdbcType=VARCHAR}
+  </delete>
+  
+  <delete id="deleteByEntity" parameterType="java.util.Map">
+    delete from wt_CacheDB  <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </delete>
+  
+</mapper>

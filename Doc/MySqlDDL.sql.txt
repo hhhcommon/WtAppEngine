@@ -309,7 +309,7 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='017电台节目列表';
 DROP TABLE IF EXISTS wt_MediaAsset;
 CREATE TABLE wt_MediaAsset (
   id             varchar(32)      NOT NULL             COMMENT 'uuid(主键)',
-  maTitle        varchar(100)     NOT NULL             COMMENT '媒体资源名称',
+  maTitle        varchar(300)     NOT NULL             COMMENT '媒体资源名称',
   maPubType      int(1) unsigned                       COMMENT '发布类型：1-组织表,2-文本',
   maPubId        varchar(32)                           COMMENT '发布所属组织',
   maPublisher    varchar(100)                          COMMENT '发布者',
@@ -328,7 +328,9 @@ CREATE TABLE wt_MediaAsset (
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='018媒体资源';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='018媒体资源'
+PARTITION BY KEY(id)
+PARTITIONS 5;
 
 /**019 WT_MASOURCE(资产来源以及播放地址)*/
 DROP TABLE IF EXISTS wt_MaSource;
@@ -365,7 +367,7 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='020资源播放次数统计';
 DROP TABLE IF EXISTS wt_SeqMediaAsset;
 CREATE TABLE wt_SeqMediaAsset (
   id              varchar(32)      NOT NULL             COMMENT 'uuid(主键)',
-  smaTitle        varchar(100)     NOT NULL             COMMENT '专辑资源名称',
+  smaTitle        varchar(300)     NOT NULL             COMMENT '专辑资源名称',
   smaPubType      int(1) unsigned  NOT NULL             COMMENT '发布类型：1-组织表,2-文本',
   smaPubId        varchar(32)      NOT NULL             COMMENT '发布所属组织',
   smaPublisher    varchar(100)                          COMMENT '发布者',
@@ -383,7 +385,9 @@ CREATE TABLE wt_SeqMediaAsset (
   cTime           timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY(id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='021专辑资源';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='021专辑资源'
+PARTITION BY KEY(id)
+PARTITIONS 5;
 
 /**022 WT_SEQMA_REF(专辑与单体媒体对应表)*/
 DROP TABLE IF EXISTS wt_SeqMA_Ref;
@@ -473,9 +477,20 @@ CREATE TABLE wt_ResDict_Ref (
 --  pathIds       varchar(100)   NOT NULL  COMMENT '字典项路径Id',
   cTime         timestamp      NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   UNIQUE INDEX dataIdx (refName, resTableName, resId, dictMid, dictDid) USING HASH,
-  PRIMARY KEY(id)
+  PRIMARY KEY(id,resTableName,resId)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='027资源字典项对应关系';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='027资源字典项对应关系'
+PARTITION by LIST COLUMNS(resTableName)
+SUBPARTITION BY KEY(resId)
+SUBPARTITIONS 5 (
+PARTITION p0 values in ('wt_SeqMediaAsset'),
+PARTITION p1 values in ('wt_MediaAsset'),
+PARTITION p2 values in ('wt_Broadcast'),
+PARTITION p3 values in ('wt_Person'),
+PARTITION p4 values in ('wt_Channel'),
+PARTITION p5 values in ('Device'),
+PARTITION p6 values in ('plat_DictD::6')
+);
 
 /**== 四.6、评论 =============================================*/
 /**028 WT_DISCUSS(内容评论)*/

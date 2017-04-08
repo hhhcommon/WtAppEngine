@@ -44,7 +44,6 @@ import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.appengine.content.AddContentInfoThread;
-import com.woting.appengine.content.utils.FileUtils;
 import com.woting.appengine.favorite.persis.po.UserFavoritePo;
 import com.woting.appengine.favorite.service.FavoriteService;
 import com.woting.appengine.solr.persis.po.SolrInputPo;
@@ -52,11 +51,11 @@ import com.woting.appengine.solr.persis.po.SolrSearchResult;
 import com.woting.appengine.solr.service.SolrJService;
 import com.woting.appengine.solr.utils.SolrUtils;
 import com.woting.cm.core.utils.ContentUtils;
+import com.woting.cm.cachedb.cachedb.service.CacheDBService;
+import com.woting.cm.cachedb.playcountdb.service.PlayCountDBService;
 import com.woting.cm.core.broadcast.persis.po.BCProgrammePo;
 import com.woting.cm.core.broadcast.service.BcProgrammeService;
 import com.woting.cm.core.channel.mem._CacheChannel;
-import com.woting.cm.core.channel.model.Channel;
-import com.woting.cm.core.channel.persis.po.ChannelPo;
 import com.woting.cm.core.channel.service.ChannelService;
 import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
@@ -96,6 +95,10 @@ public class ContentService {
     private WordService wordService;
     @Resource
     private DictService dictService;
+    @Resource
+    private CacheDBService cacheDBService;
+    @Resource
+    private PlayCountDBService playCountDBService;
     
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
@@ -1201,28 +1204,27 @@ public class ContentService {
 							String info = null;
 							if (pageType==0) {
 								if (solrips.get(f).getItem_type().equals("SEQU")) {
-									String malist = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");
+									String malist = cacheDBService.getCacheDBInfo("SEQU_"+contentid+"_SUBLIST");//FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");
 									if (malist!=null) {
 										List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
-										contentid = mas.get(0).replace("Content=MediaType_CID=[AUDIO_", "").replace("]", "");
+										contentid = mas.get(0).replace("AUDIO_", "");
 										solrips.get(f).setItem_type("AUDIO");
 									}
 								}
 							}
-							info = FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
+							info = cacheDBService.getCacheDBInfo(solrips.get(f).getItem_type()+"_"+contentid+"_INFO");//FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
 							if (info!=null && info.length()>0) {
 								Map<String, Object> infomap = retLs.get(f);
 								infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
-								String playcount = null;
-								playcount = FileUtils.readContentInfo("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::PLAYCOUNT");
-								if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
-								else infomap.put("PlayCount", 0);
+								long playcount = 0;
+								playcount = playCountDBService.getPlayCountNum(solrips.get(f).getItem_type()+"_"+contentid+"_PLAYCOUNT");//FileUtils.readContentInfo("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::PLAYCOUNT");
+								infomap.put("PlayCount", playcount);
 								infomap.put("ContentFavorite", 0);
 								try {
 									if (solrips.get(f).getItem_type().equals("AUDIO")) {
 										Map<String, Object> smainfom = (Map<String, Object>) infomap.get("SeqInfo");
 										String smaid = smainfom.get("ContentId").toString();
-										String smainfo = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");
+										String smainfo = cacheDBService.getCacheDBInfo("SEQU_"+smaid+"_INFO");//FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");
 										smainfom = (Map<String, Object>) JsonUtils.jsonToObj(smainfo, Map.class);
 										infomap.put("SeqInfo", smainfom);
 									}
@@ -1318,23 +1320,15 @@ public class ContentService {
 							String info = null;
 							if (pageType==0) {
 								if (solrips.get(f).getItem_type().equals("SEQU")) {
-									String malist = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");
+									String malist = cacheDBService.getCacheDBInfo("SEQU_"+contentid+"_SUBLIST");//FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");
 									if (malist!=null && malist.length()>0) {
 										List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
-										contentid = mas.get(0).replace("Content=MediaType_CID=[AUDIO_", "").replace("]", "");
+										contentid = mas.get(0).replace("AUDIO_", "");
 										solrips.get(f).setItem_type("AUDIO");
-									} else {
-										addOSSContentInfo(solrips.get(f).getItem_type(), contentid);
-										malist = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");
-										if (malist!=null && malist.length()>0) {
-											List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
-											contentid = mas.get(0).replace("Content=MediaType_CID=[AUDIO_", "").replace("]", "");
-											solrips.get(f).setItem_type("AUDIO");
-										}
 									}
 								}
 							}
-							info = FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
+							info = cacheDBService.getCacheDBInfo(solrips.get(f).getItem_type()+"_"+contentid+"_INFO");//FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
 							if (info!=null && info.length()>32) {
 								Map<String, Object> infomap = null;
 								try {
@@ -1343,16 +1337,15 @@ public class ContentService {
 									e.printStackTrace();
 								}
 								
-								String playcount = null;
-								playcount = FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=PLAYCOUNT");
-								if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
-								else infomap.put("PlayCount", 0);
+								long playcount = 0;
+								playcount = playCountDBService.getPlayCountNum(solrips.get(f).getItem_type()+"_"+contentid+"_PLAYCOUNT");//FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=PLAYCOUNT");
+								infomap.put("PlayCount", playcount);
 								infomap.put("ContentFavorite", 0);
 								try {
 									if (solrips.get(f).getItem_type().equals("AUDIO")) {
 										Map<String, Object> smainfom = (Map<String, Object>) infomap.get("SeqInfo");
 										String smaid = smainfom.get("ContentId").toString();
-										String smainfo = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");
+										String smainfo = cacheDBService.getCacheDBInfo("SEQU_"+smaid+"_INFO");//FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");
 										smainfom = (Map<String, Object>) JsonUtils.jsonToObj(smainfo, Map.class);
 										infomap.put("SeqInfo", smainfom);
 									}
@@ -1368,38 +1361,6 @@ public class ContentService {
 								    }
 								}
 								retLs.set(f, infomap);
-							} else {
-								addOSSContentInfo(solrips.get(f).getItem_type(), contentid);
-								info = FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
-								if (info!=null && info.length()>32) {
-//									Map<String, Object> infomap = retLs.get(f);
-									Map<String, Object> infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
-									String playcount = null;
-									playcount = FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=PLAYCOUNT");
-									if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
-									else infomap.put("PlayCount", 0);
-									infomap.put("ContentFavorite", 0);
-									try {
-										if (solrips.get(f).getItem_type().equals("AUDIO")) {
-											Map<String, Object> smainfom = (Map<String, Object>) infomap.get("SeqInfo");
-											String smaid = smainfom.get("ContentId").toString();
-											String smainfo = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");
-											smainfom = (Map<String, Object>) JsonUtils.jsonToObj(smainfo, Map.class);
-											infomap.put("SeqInfo", smainfom);
-										}
-									} catch (Exception e) {}
-									if (ret!=null && ret.size()>0) {
-										for (UserFavoritePo userfav : ret) {
-											if (userfav!=null && userfav.getResId().equals(contentid)) {
-												if ((mediaType.equals("AUDIO") && userfav.getResTableName().equals("wt_MediaAsset")) 
-												|| (mediaType.equals("SEQU") && userfav.getResTableName().equals("wt_SeqMediaAsset")) 
-												|| (mediaType.equals("RADIO") && userfav.getResTableName().equals("wt_Broadcast"))) 
-													infomap.put("ContentFavorite", 1);
-											}
-									    }
-									}
-									retLs.set(f, infomap);
-								}
 							}
 						}
 					});
@@ -1492,28 +1453,27 @@ public class ContentService {
 							String info = null;
 							if (pageType==0) {
 								if (solrips.get(f).getItem_type().equals("SEQU")) {
-									String malist = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");
+									String malist =  cacheDBService.getCacheDBInfo("SEQU_"+contentid+"_SUBLIST");;//FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");
 									if (malist!=null) {
 										List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
-										contentid = mas.get(0).replace("Content=MediaType_CID=[AUDIO_", "").replace("]", "");
+										contentid = mas.get(0).replace("AUDIO_", "");
 										solrips.get(f).setItem_type("AUDIO");
 									}
 								}
 							}
-							info = FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
+							info = cacheDBService.getCacheDBInfo(solrips.get(f).getItem_type()+"_"+contentid+"_INFO");;//FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
 							if (info!=null && info.length()>0) {
 								Map<String, Object> infomap = retLs.get(f);
 								infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
-								String playcount = null;
-								playcount = FileUtils.readContentInfo("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::PLAYCOUNT");
-								if (playcount!=null) infomap.put("PlayCount", Long.valueOf(playcount));
-								else infomap.put("PlayCount", 0);
+								long playcount = 0;
+								playcount = playCountDBService.getPlayCountNum(solrips.get(f).getItem_type()+"_"+contentid+"_PLAYCOUNT");//FileUtils.readContentInfo("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::PLAYCOUNT");
+								infomap.put("PlayCount", playcount);
 								infomap.put("ContentFavorite", 0);
 								try {
 									if (solrips.get(f).getItem_type().equals("AUDIO")) {
 										Map<String, Object> smainfom = (Map<String, Object>) infomap.get("SeqInfo");
 										String smaid = smainfom.get("ContentId").toString();
-										String smainfo = FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");
+										String smainfo = cacheDBService.getCacheDBInfo("SEQU_"+smaid+"_INFO");//FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");
 										smainfom = (Map<String, Object>) JsonUtils.jsonToObj(smainfo, Map.class);
 										infomap.put("SeqInfo", smainfom);
 									}
@@ -2601,7 +2561,7 @@ public class ContentService {
     @SuppressWarnings({ "unchecked", "unused" })
 	private Map<String, Object> getAUDIORecommendSolrInfo(String id) {
     	try {
-    		String mainfo = getAUDIOContentInfo(id);
+    		String mainfo = cacheDBService.getCacheDBInfo("AUDIO_"+id+"_INFO");
     		if (mainfo!=null && mainfo.length()>0) {
     			Map<String, Object> retM = new HashMap<>();
     			Map<String, Object> fqm = new HashMap<>();
@@ -2662,15 +2622,15 @@ public class ContentService {
 		}
     }
     
-    public String getAUDIOContentInfo(String id) {
-        return FileUtils.readContentInfo("Content=MediaType_CID=[AUDIO_"+id+"]=INFO");
-    }
-    
-    public String getSEQUContentInfo(String id) {
-        return FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+id+"]=INFO");
-    }
-    
-    public String getSEQUSublist(String id) {
-    	return FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+id+"]=SUBLIST");
-    }
+//    public String getAUDIOContentInfo(String id) {
+//        return FileUtils.readContentInfo("Content=MediaType_CID=[AUDIO_"+id+"]=INFO");
+//    }
+//    
+//    public String getSEQUContentInfo(String id) {
+//        return FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+id+"]=INFO");
+//    }
+//    
+//    public String getSEQUSublist(String id) {
+//    	return FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+id+"]=SUBLIST");
+//    }
 }
