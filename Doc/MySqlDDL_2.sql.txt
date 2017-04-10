@@ -145,17 +145,26 @@ CREATE TABLE wt_KeyWord (
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='KW01标签库';
 
 /**KW02 标签库对应关系表[WT_KW_REF]*/
-DROP TABLE IF EXISTS wt_Kw_Ref;
-CREATE TABLE wt_Kw_Ref (
+DROP TABLE IF EXISTS wt_Kw_Res;
+CREATE TABLE wt_Kw_Res (
   id             varchar(32)      NOT NULL             COMMENT '关系UUID',
   refName        varchar(200)     NOT NULL             COMMENT '关系名称，例如标签-栏目，标签-专辑',
   kwId           varchar(32)      NOT NULL             COMMENT '标签Id',
   resTableName   varchar(200)     NOT NULL             COMMENT '资源类型表名',
   resId          varchar(32)      NOT NULL             COMMENT '资源Id',
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id,resTableName,resId)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='KW02标签库对应关系表';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='KW02标签库对应关系表'
+PARTITION by LIST COLUMNS(resTableName)
+SUBPARTITION BY KEY(resId)
+SUBPARTITIONS 5 (
+PARTITION p0 values in ('wt_SeqMediaAsset'),
+PARTITION p1 values in ('wt_MediaAsset'),
+PARTITION p2 values in ('wt_Broadcast'),
+PARTITION p3 values in ('wt_Person'),
+PARTITION p3 values in ('wt_Channel')
+);
 
 /** 内容定时发布关系表[WT_CHANNELASSETDATEPUB_RES]*/
 DROP TABLE IF EXISTS wt_ChannelAssetDatePub_Res;
@@ -240,3 +249,47 @@ CREATE TABLE pm_NotifyMsg (
   UNIQUE INDEX bizKey(msgId, toUserId) USING BTREE
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='通知消息记录表';
+
+
+/** 内容快照表[WT_CACHEDB]*/
+DROP TABLE IF EXISTS wt_CacheDB;
+CREATE TABLE wt_CacheDB (
+  id             varchar(64)      NOT NULL             COMMENT 'Key 例如：AUDIO_15b76cdcc7e243c48474dbdcd384c13c_INFO',
+  resTableName   varchar(32)      NOT NULL             COMMENT '类别，AUDIO,SEQU等',
+  resId          varchar(32)      NOT NULL              COMMENT '资源Id',
+  value          longtext         NOT NULL             COMMENT '数据信息',
+  cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='内容快照表';
+
+/** 内容点击量快照表[WT_PLAYCOUNTDB]*/
+DROP TABLE IF EXISTS wt_PlayCountDB;
+CREATE TABLE wt_PlayCountDB (
+  id             varchar(64)      NOT NULL             COMMENT 'Key AUDIO_15b76cdcc7e243c48474dbdcd384c13c_PLAYCOUNT',
+  resTableName   varchar(32)      NOT NULL             COMMENT '类别，AUDIO,SEQU等',
+  resId          varchar(32)      NOT NULL              COMMENT '资源Id',
+  playCount      bigint           NOT NULL             COMMENT '点击量',
+  cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='内容点击量快照表';
+
+/** WT_PERSON_REF(主播对应关系)*/
+DROP TABLE IF EXISTS wt_Person_Ref_New;
+CREATE TABLE wt_Person_Ref_New (
+  id            varchar(32)    NOT NULL                COMMENT 'uuid',
+  refName       varchar(30)    NOT NULL                COMMENT '关系名称，例如主播-节目，主播-专辑，主播-用户',
+  personId      varchar(32)    NOT NULL                COMMENT '用户Id',
+  resTableName  varchar(50)    NOT NULL                COMMENT '资源类型Id：1电台；2单体媒体资源；3专辑资源；4主播',
+  resId         varchar(32)    NOT NULL                COMMENT '资源Id',
+  cTime         timestamp      NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
+  PRIMARY KEY(id,resTableName,resId)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='主播对应关系'
+PARTITION by LIST COLUMNS(resTableName)
+SUBPARTITION BY KEY(resId)
+SUBPARTITIONS 5 (
+PARTITION p0 values in ('wt_SeqMediaAsset'),
+PARTITION p1 values in ('wt_MediaAsset')
+);
