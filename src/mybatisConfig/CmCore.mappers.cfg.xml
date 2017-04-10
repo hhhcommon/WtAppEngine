@@ -23,6 +23,8 @@
     <typeAlias alias="broadcast"      type="com.woting.cm.core.broadcast.persis.po.BroadcastPo"/>
     <typeAlias alias="bcliveflow"     type="com.woting.cm.core.broadcast.persis.po.BCLiveFlowPo"/>
     <typeAlias alias="bcprogramme"    type="com.woting.cm.core.broadcast.persis.po.BCProgrammePo"/>
+    <typeAlias alias="cachedb"           type="com.woting.cm.cachedb.cachedb.persis.po.CacheDBPo"/>
+    <typeAlias alias="playcountdb"       type="com.woting.cm.cachedb.playcountdb.persis.po.PlayCountDBPo"/>
   </typeAliases>
   <!-- SQL文件设置 -->
   <mappers>
@@ -44,5 +46,8 @@
     <mapper resource="com/woting/cm/core/broadcast/persis/sql/BCLiveFlow.mapper.xml"/>
     <!-- 内容汇总 -->
     <mapper resource="com/woting/cm/core/sql/Content.mapper.xml"/>
+    <!-- 内容快照 -->
+    <mapper resource="com/woting/cm/cachedb/cachedb/persis/sql/CacheDB.mapper.xml"/>
+    <mapper resource="com/woting/cm/cachedb/playcountdb/persis/sql/PlayCountDB.mapper.xml"/>
   </mappers>
 </configuration>
