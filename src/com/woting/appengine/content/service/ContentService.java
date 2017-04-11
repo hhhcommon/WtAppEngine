@@ -43,7 +43,7 @@ import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
-import com.woting.appengine.content.AddContentInfoThread;
+import com.woting.appengine.content.AddCacheDBInfoThread;
 import com.woting.appengine.favorite.persis.po.UserFavoritePo;
 import com.woting.appengine.favorite.service.FavoriteService;
 import com.woting.appengine.solr.persis.po.SolrInputPo;
@@ -2603,8 +2603,13 @@ public class ContentService {
 		return null;
     }
     
-    public void addOSSContentInfo(String type, String id) {
-    	if (type.equals("SEQU")) new AddContentInfoThread(id).addOSS();
+    /**
+     * 新增CacheDB表数据
+     * @param type
+     * @param id
+     */
+    public void addCacheDBInfo(String id, String type) {
+    	if (type.equals("SEQU")) new AddCacheDBInfoThread(id).start();
 		else if (type.equals("AUDIO")) {
 			try {
 				SolrSearchResult sResult = solrJService.solrSearch(1, null, null, null, null, 1, 1, "item_type:AUDIO", "item_id:"+id);
@@ -2613,18 +2618,50 @@ public class ContentService {
 					sResult = solrJService.solrSearch(1, null, null, null, null, 1, 1, "item_type:SEQU", "item_id:"+solrInputPo.getItem_pid());
 					if (sResult!=null && sResult.getSolrInputPos().size()>0) {
 						solrInputPo = sResult.getSolrInputPos().get(0);
-						new AddContentInfoThread(solrInputPo.getItem_id()).addOSS();
+						new AddCacheDBInfoThread(solrInputPo.getItem_id()).start();
 					}
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			} catch (Exception e) {}
 		}
     }
     
     /**
+     * 获得内容快照
+     * @param cacheDBIds 例如 AUDIO_00022bbcc4b349f582587c2ef579ae5f_INFO
+     * @param page 当cacheDBId为专辑时，才有效;
+     * @param pageSize 当cacheDBId为专辑时，才有效;
+     * @param isOrNoToLoad 当cacheDB未包含id信息时是否查询
+     * @return
+     *         返回结果包含内容信息，栏目信息，字典信息，播放次数，专辑下级节目信息
+     */
+    public List<Map<String, Object>> getCacheDBList(List<String> cacheDBIds, int page, int pageSize, boolean isOrNoToLoad) {
+    	if (cacheDBIds!=null && cacheDBIds.size()>0) {
+    		List<Map<String, Object>> retList = new ArrayList<>();
+			for (String cacheDBId : cacheDBIds) {
+				if (cacheDBId!=null && cacheDBId.length()>0) {
+					String[] params = cacheDBId.split("_");
+					String type = params[0];
+					String id = params[1];
+					Map<String, Object> retM = getCacheDBInfo(id, type, page, pageSize);
+					if (retM==null) {
+						if (isOrNoToLoad) {
+							if (type.equals("SEQU")) retM = getSeqMaInfo(id, pageSize, page, 1, null);
+							else if (type.equals("AUDIO")) retM = getMaInfo(id, null);
+						}
+						addCacheDBInfo(type, id); //往CacheDB表里添加数据
+					}
+					if (retM!=null && retM.size()>0) {
+						retList.add(retM);
+					}
+				}
+			}
+		}
+		return null;
+    }
+    
+    /**
      * 
-     * @param id 内容Id，目前只限专辑和节目
+     * @param id 内容Id，目前只限专辑和节目,
      * @param type 内容类型，SEQU，AUDIO
      * @param page 
      *            当type='SEQU'时有效，专辑下级节目页码，默认为0
@@ -2651,19 +2688,21 @@ public class ContentService {
 							if (smaSubs.size()>=begNum) {
 								List<String> maIds = smaSubs.subList(begNum, smaSubs.size()>endNum?endNum:(smaSubs.size()-1));
 								if (maIds!=null && maIds.size()>0) {
-									
+									List<Map<String, Object>> audios = cacheDBService.getCacheDBAudios(maIds);
+									if (audios!=null && audios.size()>0) {
+										cacheDBMap.put("SubList", audios);
+									}
 								}
 							}
 							if (!cacheDBMap.containsKey("SubList")) {
 								cacheDBMap.put("SubList", null);
 							}
-							
 						}
 					}
 				}
+				return cacheDBMap;
 			}
 		}
-    	
 		return null;
     }
     

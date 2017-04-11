@@ -40,7 +40,7 @@
     <if test="orderByClause!=null">order by ${orderByClause}</if>
   </select>
   
-  <select id="getListBySQL" resultMap="java.util.Map" parameterType="java.util.Map">
+  <select id="getListBySQL" resultType="java.util.HashMap" parameterType="java.util.Map">
     <if test="SQLClauseBy!=null"> ${SQLClauseBy}</if>
   </select>
   
