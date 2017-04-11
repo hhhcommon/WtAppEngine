@@ -7,11 +7,8 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-
-import org.apache.jasper.tagplugins.jstl.core.ForEach;
-
-import com.greenpineyu.fel.parser.FelParser.conditionalAndExpression_return;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
+import com.spiritdata.framework.util.JsonUtils;
 import com.woting.cm.cachedb.cachedb.persis.po.CacheDBPo;
 
 public class CacheDBService {
@@ -79,11 +76,18 @@ public class CacheDBService {
 				for (Map<String, Object> map : cdbmaps) {
 					try {
 						String retStr = map.get("value").toString();
-						
-						
+						long playNum = Long.valueOf(map.get("playCount").toString());
+						if (retStr!=null && retStr.length()>0) {
+							map = (Map<String, Object>) JsonUtils.jsonToObj(retStr, Map.class);
+							map.put("PlayCount", playNum);
+							retLs.add(map);
+						}
 					} catch (Exception e) {
 						continue;
 					}
+				}
+				if (retLs!=null && retLs.size()>0) {
+					return retLs;
 				}
 			}
 		}

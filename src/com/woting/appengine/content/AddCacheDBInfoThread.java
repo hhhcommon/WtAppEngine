@@ -21,28 +21,36 @@ import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.JsonUtils;
 import com.woting.appengine.content.utils.FileUtils;
+import com.woting.cm.cachedb.cachedb.persis.po.CacheDBPo;
+import com.woting.cm.cachedb.cachedb.service.CacheDBService;
+import com.woting.cm.cachedb.playcountdb.persis.po.PlayCountDBPo;
+import com.woting.cm.cachedb.playcountdb.service.PlayCountDBService;
 
 
-public class AddContentInfoThread extends Thread {
+public class AddCacheDBInfoThread extends Thread {
 
 	private String smaId;
 	private DataSource DataSource = null;
 	private File file = null;
+	private CacheDBService cacheDBService;
+	private PlayCountDBService playCountDBService;
 	
-	public AddContentInfoThread(String smaId) {
+	public AddCacheDBInfoThread(String smaId) {
 		this.smaId = smaId;
 		ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
         if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
             this.DataSource = (DataSource) WebApplicationContextUtils.getWebApplicationContext(sc).getBean("dataSource");
+            this.cacheDBService = (CacheDBService) WebApplicationContextUtils.getWebApplicationContext(sc).getBean("cacheDBService");
+            this.playCountDBService = (PlayCountDBService) WebApplicationContextUtils.getWebApplicationContext(sc).getBean("playCountDBService");
         }
 	}
 	
 	@Override
 	public void run() {
-		addOSS();
+		addCacheDB();
 	}
 	
-	public void addOSS() {
+	public void addCacheDB() {
 		try {
 			Map<String, Object> oneDate = makeSeqMediaAssetInfo(smaId); // 获得专辑相关静态信息
 			List<String> maIds = getSeqMARef(smaId); // 获得专辑下级节目id列表
@@ -50,7 +58,12 @@ public class AddContentInfoThread extends Thread {
 				if (maIds!=null && maIds.size()>0) {
 					oneDate.put("ContentSubCount", maIds.size());
 				}
-				writeContentInfo("Content=MediaType_CID=[SEQU_"+smaId+"]=INFO", JsonUtils.objToJson(oneDate));
+				CacheDBPo cacheDBPo = new CacheDBPo();
+				cacheDBPo.setId("SEQU_"+smaId+"_INFO");
+				cacheDBPo.setResTableName("SEQU");
+				cacheDBPo.setResId(smaId);
+				cacheDBPo.setValue(JsonUtils.objToJson(oneDate));
+				cacheDBService.insertCacheDBPo(cacheDBPo);
 			}
 			
 			List<Map<String, Object>> reply = new ArrayList<>();
@@ -63,7 +76,12 @@ public class AddContentInfoThread extends Thread {
 					reply.add(m);
 					retMaIds.add("Content=MediaType_CID=[AUDIO_"+str+"]");
 				}
-				writeContentInfo("Content=MediaType_CID=[SEQU_"+smaId+"]=SUBLIST", JsonUtils.objToJson(retMaIds));
+				CacheDBPo cacheDBPo = new CacheDBPo();
+				cacheDBPo.setId("SEQU_"+smaId+"_SUBLIST");
+				cacheDBPo.setResTableName("SEQU");
+				cacheDBPo.setResId(smaId);
+				cacheDBPo.setValue(JsonUtils.objToJson(retMaIds));
+				cacheDBService.insertCacheDBPo(cacheDBPo);
 			}
 			List<Map<String, Object>> maLs = getMediaAssetInfos(maIds);
 			if (maLs!=null && maLs.size()>0) {
@@ -71,7 +89,12 @@ public class AddContentInfoThread extends Thread {
 					Map<String, Object> smam = new HashMap<>();
 					smam.put("ContentId", smaId);
 					map.put("SeqInfo", smam);
-					writeContentInfo("Content=MediaType_CID=[AUDIO_"+map.get("ContentId")+"]=INFO", JsonUtils.objToJson(map));
+					CacheDBPo cacheDBPo = new CacheDBPo();
+					cacheDBPo.setId("AUDIO_"+map.get("ContentId")+"_INFO");
+					cacheDBPo.setResTableName("AUDIO");
+					cacheDBPo.setResId(map.get("ContentId")+"");
+					cacheDBPo.setValue(JsonUtils.objToJson(map));
+					cacheDBService.insertCacheDBPo(cacheDBPo);
 				}
 			}
 			Map<String, Object> m = new HashMap<>();
@@ -81,7 +104,12 @@ public class AddContentInfoThread extends Thread {
 			List<Map<String, Object>> playLs = getPlayCountInfo(reply);
 			if (playLs!=null && playLs.size()>0) {
 				for (Map<String, Object> map : playLs) {
-					writeContentInfo("Content=MediaType_CID=["+map.get("type")+"_"+map.get("id")+"]=PLAYCOUNT", map.get("playcount")+"");
+					PlayCountDBPo playCountDBPo = new PlayCountDBPo();
+					playCountDBPo.setId(map.get("type")+"_"+map.get("id")+"_PLAYCOUNT");
+					playCountDBPo.setResTableName(map.get("type")+"");
+					playCountDBPo.setResId(map.get("id").toString());
+					playCountDBPo.setPlayCount(Long.valueOf(map.get("playcount").toString()));
+					playCountDBService.insertPlayCountDBPo(playCountDBPo);
 				}
 			}
 		} catch (Exception e) {
@@ -439,11 +467,5 @@ public class AddContentInfoThread extends Thread {
 	        }
 		}
 		return null;
-	}
-	
-	
-	private void writeContentInfo(String key, String jsonstr) {
-		file = FileUtils.createFile("/mnt/contentinfo/"+key+".json");
-		FileUtils.writeFile(jsonstr, file);
 	}
 }
