@@ -246,9 +246,13 @@ public class UserService implements UgaUserService {
             if (userInfo.get("portraitBig")!=null&&!StringUtils.isNullOrEmptyOrSpace(userInfo.get("portraitBig")+"")) {
                 OKFields+=",PortraitBig";
             }
-            //14-用户小
+            //14-用户小图标
             if (userInfo.get("portraitMini")!=null&&!StringUtils.isNullOrEmptyOrSpace(userInfo.get("portraitMini")+"")) {
                 OKFields+=",PortraitMini";
+            }
+            //15-用户手机号是否公开
+            if (userInfo.get("phoneNumIsPub")!=null&&!StringUtils.isNullOrEmptyOrSpace(userInfo.get("phoneNumIsPub")+"")) {
+                OKFields+=",PhoneNumIsPub";
             }
             //更新
             boolean onlyDict=true;

@@ -2,8 +2,6 @@ package com.woting.appengine.common.web;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -155,7 +153,7 @@ public class CommonController {
             if (!StringUtils.isNullOrEmptyOrSpace(userId)) {
                 UserPo up=userService.getUserById(userId);
                 if (up!=null) {
-                    Map<String, Object> um=up.toDetailInfo();
+                    Map<String, Object> um=up.getDetailInfo();
                     List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", userId);
                     if (dictRefList!=null&&!dictRefList.isEmpty()) {
                         for (DictRefRes drr: dictRefList) {
@@ -167,7 +165,6 @@ public class CommonController {
                             }
                         }
                     }
-                    if (up.getBirthday()!=null) um.put("Age", getAge(up.getBirthday().getTime())+"");
                     map.put("UserInfo", um);
                 }
             }
@@ -1284,16 +1281,4 @@ public class CommonController {
         }
         return map;
     }
-
-    private int getAge(long timestamp) {
-        int age=0;
-        Calendar born=Calendar.getInstance();
-        Calendar now=Calendar.getInstance();
-        now.setTime(new Date());
-        born.setTimeInMillis(timestamp);
-        if (born.after(now)) throw new IllegalArgumentException("生日不能大于今日");
-        age=now.get(Calendar.YEAR) - born.get(Calendar.YEAR);
-        if (now.get(Calendar.DAY_OF_YEAR) < born.get(Calendar.DAY_OF_YEAR)) age -= 1;
-        return age;
-    } 
 }

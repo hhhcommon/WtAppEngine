@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
+import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.util.SequenceUUID;
@@ -110,7 +111,7 @@ public class GroupService {
                 nMsg.setCmdType(2);
                 nMsg.setCommand(10);//组创建通知
                 Map<String, Object> dataMap=new HashMap<String, Object>();
-                dataMap.put("GroupInfo", group.toHashMap());
+                dataMap.put("GroupInfo", group.toHashMap4View());
                 dataMap.put("OperatorId", group.getCreateUserId());
                 MapContent mc=new MapContent(dataMap);
                 nMsg.setMsgContent(mc);
@@ -160,7 +161,7 @@ public class GroupService {
                     sMsg.setCommand(4);//加入成员
                     Map<String, Object> dataMap=new HashMap<String, Object>();
                     dataMap.put("GroupId", g.getGroupId());
-                    dataMap.put("UserInfo", u.toHashMap());
+                    dataMap.put("UserInfo", u.toHashMap4Mobile());
                     MapContent mc=new MapContent(dataMap);
                     sMsg.setMsgContent(mc);
                     sc.addSendMsg(sMsg);
@@ -199,8 +200,31 @@ public class GroupService {
      * @param userId
      * @return 用户组
      */
-    public List<Map<String, Object>> getGroupsByUserId(String userId) {
+    public List<GroupPo> getGroupsByUserId(String userId, int pageSize, int pageIndex) {
         try {
+
+            Page<Map<String, Object>> page=groupDao.pageQueryAutoTranform(null, "getGroupListByUserId", userId, pageIndex, pageSize);
+            if (page!=null&&page.getDataCount()>0) {
+                List<GroupPo> ret=new ArrayList<GroupPo>();
+                for (Map<String, Object> one: page.getResult()) {
+                    GroupPo gp=new GroupPo();
+                    if (one.get("id")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("id")+"")) gp.setGroupId(one.get("id")+"");
+                    if (one.get("groupNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupNum")+"")) gp.setGroupNum(one.get("groupNum")+"");
+                    if (one.get("groupName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupName")+"")) gp.setGroupName(one.get("groupName")+"");
+                    if (one.get("groupSignature")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupSignature")+"")) gp.setGroupSignature(one.get("groupSignature")+"");
+                    if (one.get("groupImg")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupImg")+"")) gp.setGroupImg(one.get("groupImg")+"");
+                    if (one.get("groupType")!=null) try {gp.setGroupType((Integer)one.get("groupType"));} catch(Exception e) {gp.setGroupType(0);};
+                    if (one.get("defaultFreq")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("defaultFreq")+"")) gp.setDefaultFreq(one.get("defaultFreq")+"");
+                    if (one.get("createUserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("createUserId")+"")) gp.setCreateUserId(one.get("createUserId")+"");
+                    if (one.get("groupMasterId")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupMasterId")+"")) gp.setGroupMasterId(one.get("groupMasterId")+"");
+                    if (one.get("adminUserIds")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("adminUserIds")+"")) gp.setAdminUserIds(one.get("adminUserIds")+"");
+                    if (one.get("descn")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("descn")+"")) gp.setDescn(one.get("descn")+"");
+                    if (one.get("groupCount")!=null) try {gp.setGroupCount((Integer)one.get("groupCount"));} catch(Exception e) {gp.setGroupType(0);};
+                    ret.add(gp);
+                }
+                return ret;
+            }
+
             return groupDao.queryForListAutoTranform("getGroupListByUserId", userId);
         } catch (Exception e) {
             e.printStackTrace();
@@ -409,7 +433,7 @@ public class GroupService {
 //            if (!StringUtils.isNullOrEmptyOrSpace((String)g.getAdminUserIds())) gMap.put("GroupManager", g.getAdminUserIds());
 //            gMap.put("GroupCount", g.getGroupCount());
 //            if (!StringUtils.isNullOrEmptyOrSpace((String)g.getDescn())) gMap.put("GroupOriDescn", g.getDescn());
-            dataMap.put("GroupInfo", g.toHashMapAsBean());
+            dataMap.put("GroupInfo", g.toHashMap4View());
             dataMap.put("OperatorId", userId);
             MapContent mc=new MapContent(dataMap);
             nMsg.setMsgContent(mc);
@@ -554,7 +578,7 @@ public class GroupService {
                 nMsg.setCmdType(2);
                 nMsg.setCommand(9);
                 Map<String, Object> dataMap1=new HashMap<String, Object>();
-                dataMap1.put("GroupInfo", gp.toHashMapAsBean());
+                dataMap1.put("GroupInfo", gp.toHashMap4View());
                 MapContent mc1=new MapContent(dataMap1);
                 nMsg.setMsgContent(mc1);
 
@@ -716,13 +740,7 @@ public class GroupService {
                                 Map<String, Object> dataMap=new HashMap<String, Object>();
                                 dataMap.put("FriendId", userId);
                                 dataMap.put("OperatorId", userId);
-                                if (gp!=null) {
-                                    Map<String, Object> gMap=new HashMap<String, Object>();
-                                    gMap.put("GroupId", gp.getGroupId());
-                                    gMap.put("GroupName", gp.getGroupName());
-                                    gMap.put("GroupDescn", gp.getDescn());
-                                    dataMap.put("GroupInfo", gMap);
-                                }
+                                if (gp!=null) dataMap.put("GroupInfo", gp.toHashMap4View());
                                 dataMap.put("InviteTime", inviteTime);
                                 MapContent mc=new MapContent(dataMap);
                                 nMsg.setMsgContent(mc);
@@ -770,13 +788,7 @@ public class GroupService {
                             beInvitedUserList.add(u.toHashMap4Mobile());
                         }
                         dataMap.put("BeInvitedUserList", beInvitedUserList);
-                        if (gp!=null) {
-                            Map<String, Object> gMap=new HashMap<String, Object>();
-                            gMap.put("GroupId", gp.getGroupId());
-                            gMap.put("GroupName", gp.getGroupName());
-                            gMap.put("GroupDescn", gp.getDescn());
-                            dataMap.put("GroupInfo", gMap);
-                        }
+                        if (gp!=null) dataMap.put("GroupInfo", gp.toHashMap4View());
                         dataMap.put("InviteTime", inviteTime);
                         MapContent mc=new MapContent(dataMap);
                         nMsg.setMsgContent(mc);
@@ -873,13 +885,7 @@ public class GroupService {
                 dataMap.put("ApplyUserInfo", um);
                 dataMap.put("OperatorId", userId);
                 GroupPo gp=getGroupById(groupId);
-                if (gp!=null) {
-                    Map<String, Object> gMap=new HashMap<String, Object>();
-                    gMap.put("GroupId", gp.getGroupId());
-                    gMap.put("GroupName", gp.getGroupName());
-                    gMap.put("GroupDescn", gp.getDescn());
-                    dataMap.put("GroupInfo", gMap);
-                }
+                if (gp!=null) dataMap.put("GroupInfo", gp.toHashMap4View());
                 dataMap.put("ApplyTime", System.currentTimeMillis());
                 MapContent mc=new MapContent(dataMap);
                 nMsg.setMsgContent(mc);
@@ -1048,13 +1054,7 @@ public class GroupService {
                 nMsg.setCommand(3);//处理组邀请信息
                 //发送给userId
                 Map<String, Object> dataMap=new HashMap<String, Object>();
-                if (gp!=null) {
-                    Map<String, Object> gMap=new HashMap<String, Object>();
-                    gMap.put("GroupId", gp.getGroupId());
-                    gMap.put("GroupName", gp.getGroupName());
-                    gMap.put("GroupDescn", gp.getDescn());
-                    dataMap.put("GroupInfo", gMap);
-                }
+                if (gp!=null) dataMap.put("GroupInfo", gp.toHashMap4View());
                 dataMap.put("DealType", isRefuse?"2":"1");
                 dataMap.put("InType", type+"");
                 dataMap.put("OperatorId", operId);
@@ -1146,13 +1146,7 @@ public class GroupService {
                 //发送给userId
                 Map<String, Object> dataMap=new HashMap<String, Object>();
                 GroupPo gp=getGroupById(groupId);
-                if (gp!=null) {
-                    Map<String, Object> gMap=new HashMap<String, Object>();
-                    gMap.put("GroupId", gp.getGroupId());
-                    gMap.put("GroupName", gp.getGroupName());
-                    gMap.put("GroupDescn", gp.getDescn());
-                    dataMap.put("GroupInfo", gMap);
-                }
+                if (gp!=null) dataMap.put("GroupInfo", gp.toHashMap4View());
                 UserPo u=userDao.getInfoObject("getUserById", inviteUserId);
                 Map<String, Object> um=u.toHashMap4Mobile();
                 um.remove("PhoneNum");
@@ -1266,12 +1260,7 @@ public class GroupService {
             dataMap.put("GroupId", gp.getGroupId());
             dataMap.put("OperatorId", operId);
             List<Map<String, Object>> userMapList=new ArrayList<Map<String, Object>>();
-            for (UserPo _up: beKickoutUserList) {
-                Map<String, Object> um=_up.toHashMap4Mobile();
-                um.remove("PhoneNum");
-                um.remove("EMail");
-                userMapList.add(um);
-            }
+            for (UserPo _up: beKickoutUserList) userMapList.add(_up.toHashMap4Mobile());
             dataMap.put("UserList", userMapList);
             MapContent mc=new MapContent(dataMap);
             nMsg.setMsgContent(mc);
@@ -1461,10 +1450,7 @@ public class GroupService {
                 dataMap.put("GroupId", gp.getGroupId());
                 dataMap.put("OperatorId", operId);
                 UserPo u=userDao.getInfoObject("getUserById", toUserId);
-                Map<String, Object> um=u.toHashMap4Mobile();
-                um.remove("PhoneNum");
-                um.remove("Email");
-                dataMap.put("NewAdminInfo", um);
+                dataMap.put("NewAdminInfo", u.toHashMap4Mobile());
                 MapContent mc=new MapContent(dataMap);
                 nMsg.setMsgContent(mc);
                 dataMap.put("_TOGROUPS", gp.getGroupId());

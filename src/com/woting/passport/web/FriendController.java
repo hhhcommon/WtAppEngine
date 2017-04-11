@@ -123,8 +123,13 @@ public class FriendController {
                 map.put("Message", "搜索条件不能为空");
                 return map;
             }
+            //3-获取分页信息
+            int page=1;//获取页数
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            int pageSize=10;//得到每页条数
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
             try {
-                List<UserPo> ul=friendService.getStrangers(userId, searchStr);
+                List<UserPo> ul=friendService.getStrangers(userId, searchStr, pageSize, page);
                 if (ul!=null&&ul.size()>0) {
                     List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
                     for (UserPo u: ul) {
@@ -680,7 +685,13 @@ public class FriendController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            List<UserPo> ul=friendService.getFriendList(userId);
+            //3-获取分页信息
+            int page=1;//获取页数
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            int pageSize=10;//得到每页条数
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+
+            List<UserPo> ul=friendService.getFriendList(userId, pageSize, page);
             if (ul!=null&&ul.size()>0) {
                 List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
                 for (UserPo u: ul) {
