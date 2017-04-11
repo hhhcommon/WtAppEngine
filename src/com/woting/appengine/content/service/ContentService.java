@@ -2622,6 +2622,51 @@ public class ContentService {
 		}
     }
     
+    /**
+     * 
+     * @param id 内容Id，目前只限专辑和节目
+     * @param type 内容类型，SEQU，AUDIO
+     * @param page 
+     *            当type='SEQU'时有效，专辑下级节目页码，默认为0
+     * @param pageSize
+     *            当type='SEQU'时有效，专辑下级节目每页页数，默认为0
+     * @return
+     */
+    public Map<String, Object> getCacheDBInfo(String id, String type, int page, int pageSize) {
+    	if (id!=null && type!=null) {
+			if (type.equals("wt_SeqMediaAsset")) type = "SEQU";
+			if (type.equals("wt_MediaAsset")) type = "AUDIO";
+			String cacheDBInfostr = cacheDBService.getCacheDBInfo(type+"_"+id+"_INFO");
+			if (cacheDBInfostr!=null && cacheDBInfostr.length()>0) {
+				Map<String, Object> cacheDBMap = (Map<String, Object>) JsonUtils.jsonToObj(cacheDBInfostr, Map.class);
+				long playcount = playCountDBService.getPlayCountNum(type+"_"+id+"_PLAYCOUNT");
+				cacheDBMap.put("PlayCount", playcount);
+				if (type.equals("SEQU") && page>0 && pageSize>0) {
+					String smaSubList = cacheDBService.getCacheDBInfo(type+"_"+id+"_SUBLIST");
+					if (smaSubList!=null && smaSubList.length()>0) {
+						List<String> smaSubs = (List<String>) JsonUtils.jsonToObj(smaSubList, List.class);
+						if (smaSubs!=null && smaSubs.size()>0) {
+							int begNum = (page-1)*pageSize;
+							int endNum = page*pageSize;
+							if (smaSubs.size()>=begNum) {
+								List<String> maIds = smaSubs.subList(begNum, smaSubs.size()>endNum?endNum:(smaSubs.size()-1));
+								if (maIds!=null && maIds.size()>0) {
+									
+								}
+							}
+							if (!cacheDBMap.containsKey("SubList")) {
+								cacheDBMap.put("SubList", null);
+							}
+							
+						}
+					}
+				}
+			}
+		}
+    	
+		return null;
+    }
+    
 //    public String getAUDIOContentInfo(String id) {
 //        return FileUtils.readContentInfo("Content=MediaType_CID=[AUDIO_"+id+"]=INFO");
 //    }

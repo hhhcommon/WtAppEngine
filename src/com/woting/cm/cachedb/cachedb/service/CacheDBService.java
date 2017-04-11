@@ -1,8 +1,16 @@
 package com.woting.cm.cachedb.cachedb.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import org.apache.jasper.tagplugins.jstl.core.ForEach;
+
+import com.greenpineyu.fel.parser.FelParser.conditionalAndExpression_return;
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
 import com.woting.cm.cachedb.cachedb.persis.po.CacheDBPo;
 
@@ -38,6 +46,46 @@ public class CacheDBService {
 		CacheDBPo cacheDBPo = cacheDBDao.getInfoObject("getInfoById", id);
 		if (cacheDBPo!=null) {
 			return cacheDBPo.getValue();
+		}
+		return null;
+	}
+	
+	/**
+	 * 获得节目列表信息（排序默认List排序）
+	 * @param maIds
+	 * @return
+	 */
+	public List<Map<String, Object>> getCacheDBAudios(List<String> maIds) {
+		if(maIds!=null && maIds.size()>0) {
+			String sql = "SELECT cdb.id,cdb.`value`,pdb.playCount FROM wt_CacheDB cdb"
+					+ " LEFT JOIN wt_PlayCountDB pdb "
+					+ " ON pdb.id = CONCAT('AUDIO_',cdb.resId,'_PLAYCOUNT')";
+			String orIdStr = "";
+			String orderByStr = "";
+			for (String id : maIds) {
+				orIdStr += " or cdb.id = '"+id+"_INFO'";
+				orderByStr += ",'"+id+"_INFO'";
+			}
+			orIdStr = orIdStr.substring(3);
+			sql += " where "+orderByStr;
+			orderByStr  = orderByStr.substring(1);
+			orderByStr = " ORDER BY FIELD(`cdb.id`, "+orderByStr+")";
+			sql += orderByStr;
+			Map<String, Object> m = new HashMap<>();
+			m.put("SQLClauseBy", sql);
+			List<Map<String, Object>> cdbmaps = cacheDBDao.queryForListAutoTranform("getListBySQL", m);
+			if (cdbmaps!=null && cdbmaps.size()>0) {
+				List<Map<String, Object>> retLs = new ArrayList<>();
+				for (Map<String, Object> map : cdbmaps) {
+					try {
+						String retStr = map.get("value").toString();
+						
+						
+					} catch (Exception e) {
+						continue;
+					}
+				}
+			}
 		}
 		return null;
 	}

@@ -256,12 +256,18 @@ DROP TABLE IF EXISTS wt_CacheDB;
 CREATE TABLE wt_CacheDB (
   id             varchar(64)      NOT NULL             COMMENT 'Key 例如：AUDIO_15b76cdcc7e243c48474dbdcd384c13c_INFO',
   resTableName   varchar(32)      NOT NULL             COMMENT '类别，AUDIO,SEQU等',
-  resId          varchar(32)      NOT NULL              COMMENT '资源Id',
+  resId          varchar(32)      NOT NULL             COMMENT '资源Id',
   value          longtext         NOT NULL             COMMENT '数据信息',
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (id,resTableName,resId)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='内容快照表';
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='内容快照表'
+PARTITION by LIST COLUMNS(resTableName)
+SUBPARTITION BY KEY(resId)
+SUBPARTITIONS 5 (
+PARTITION p0 values in ('AUDIO'),
+PARTITION p1 values in ('SEQU')
+);
 
 /** 内容点击量快照表[WT_PLAYCOUNTDB]*/
 DROP TABLE IF EXISTS wt_PlayCountDB;

@@ -40,6 +40,10 @@
     <if test="orderByClause!=null">order by ${orderByClause}</if>
   </select>
   
+  <select id="getListBySQL" resultMap="java.util.Map" parameterType="java.util.Map">
+    <if test="SQLClauseBy!=null"> ${SQLClauseBy}</if>
+  </select>
+  
   <!-- 获得一条数据 -->
   <select id="getInfoById" resultMap="BaseResultMap" parameterType="java.lang.String">
     select <include refid="Base_Column_List"/> from wt_CacheDB where id=#{id,jdbcType=VARCHAR}
