@@ -72,17 +72,19 @@ public class SubscribeService {
 	 * @return =true已订阅;=false为订阅
 	 */
 	public boolean isOrNoSubscribe(String contentId, MobileUDKey mUdk) {
-		Map<String, Object> param=new HashMap<String, Object>();
-		param.put("sId", contentId);
-		if (mUdk.isUser()) {
-            param.put("ownerType", "201"); //登录用户
-            param.put("ownerId", mUdk.getUserId());
-        } else {
-            param.put("ownerType", "202"); //手机设备
-            param.put("ownerId", mUdk.getDeviceId());
-        }
-        if (subscribeDao.getCount(param)>0)
-        	return true;
+		if (mUdk!=null) {
+			Map<String, Object> param=new HashMap<String, Object>();
+			param.put("sId", contentId);
+			if (mUdk.isUser()) {
+	            param.put("ownerType", "201"); //登录用户
+	            param.put("ownerId", mUdk.getUserId());
+	        } else {
+	            param.put("ownerType", "202"); //手机设备
+	            param.put("ownerId", mUdk.getDeviceId());
+	        }
+	        if (subscribeDao.getCount(param)>0)
+	        	return true;
+		}
 		return false;
 	}
 	
