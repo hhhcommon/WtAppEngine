@@ -64,9 +64,9 @@ public class CacheDBService {
 				orderByStr += ",'"+id+"_INFO'";
 			}
 			orIdStr = orIdStr.substring(3);
-			sql += " where "+orderByStr;
+			sql += " where "+orIdStr;
 			orderByStr  = orderByStr.substring(1);
-			orderByStr = " ORDER BY FIELD(`cdb.id`, "+orderByStr+")";
+			orderByStr = " ORDER BY FIELD(cdb.id, "+orderByStr+")";
 			sql += orderByStr;
 			Map<String, Object> m = new HashMap<>();
 			m.put("SQLClauseBy", sql);
