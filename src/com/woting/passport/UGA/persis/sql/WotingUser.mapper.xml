@@ -13,6 +13,7 @@
     <result  column="userSign"       property="userSign"       jdbcType="VARCHAR"/>
     <result  column="password"       property="password"       jdbcType="VARCHAR"/>
     <result  column="mainPhoneNum"   property="mainPhoneNum"   jdbcType="VARCHAR"/>
+    <result  column="phoneNumIsPub"  property="phoneNumIsPub"  jdbcType="INTEGER"/>
     <result  column="mailAddress"    property="mailAddress"    jdbcType="VARCHAR"/>
     <result  column="birthday"       property="birthday"       jdbcType="TIMESTAMP"/>
     <result  column="starSign"       property="starSign"       jdbcType="VARCHAR"/>
@@ -29,11 +30,11 @@
 
   <!-- 所有列 -->
   <sql id="Base_Column_List">
-    id, userName, userNum, loginName, nickName, userSign, password, mainPhoneNum, mailAddress, birthday, starSign, userType, userClass, userState, portraitBig, portraitMini, homepage, descn, cTime, lmTime
+    id, userName, userNum, loginName, nickName, userSign, password, mainPhoneNum, phoneNumIsPub, mailAddress, birthday, starSign, userType, userClass, userState, portraitBig, portraitMini, homepage, descn, cTime, lmTime
   </sql>
   <!-- 所有列 -->
   <sql id="Base_Column_List_A">
-    a.id, a.userName, a.userNum, a.loginName, a.nickName, a.userSign, a.password, a.mainPhoneNum, a.mailAddress, a.birthday, a.starSign, a.userType, a.userClass, a.userState, a.portraitBig, a.portraitMini, a.homepage, a.descn, a.cTime, a.lmTime
+    a.id, a.userName, a.userNum, a.loginName, a.nickName, a.userSign, a.password, a.mainPhoneNum, a.phoneNumIsPub, a.mailAddress, a.birthday, a.starSign, a.userType, a.userClass, a.userState, a.portraitBig, a.portraitMini, a.homepage, a.descn, a.cTime, a.lmTime
   </sql>
 
   <!-- 条件子句 -->
@@ -48,6 +49,7 @@
         <if test="userSign!=null"> and userSign=#{userSign,jdbcType=VARCHAR}</if>
         <if test="password!=null"> and password=#{password,jdbcType=VARCHAR}</if>
         <if test="mainPhoneNum!=null"> and mainPhoneNum=#{mainPhoneNum,jdbcType=VARCHAR}</if>
+        <if test="phoneNumIsPub!=null"> and phoneNumIsPub=#{phoneNumIsPub,jdbcType=INTEGER}</if>
         <if test="mailAddress!=null"> and mailAddress=#{mailAddress,jdbcType=VARCHAR}</if>
         <if test="birthday!=null"> and birthday=#{birthday,jdbcType=TIMESTAMP}</if>
         <if test="starSign!=null"> and starSign=#{starSign,jdbcType=VARCHAR}</if>
@@ -88,15 +90,19 @@
   </select>
   <!-- 获得陌生人列表 -->
   <select id="getStrangers" resultMap="userMap" parameterType="java.util.Map">
+  select * from (
     select <include refid="Base_Column_List_A"/> from plat_User a
     left join (select distinct aUserId from vWt_Friend_Rel) b on a.id=b.aUserId
-    where a.id!='${userId}' and (
+    where a.id!='${userId}' and b.aUserId is null and (
          a.loginName like '%${searchStr}%'
-      or a.userNum like '%${searchStr}%'
-      or a.userName like '%${searchStr}%'
-      or a.nickName like '%${searchStr}%'
-      or a.userSign like '%${searchStr}%'
+      or a.userNum   like '%${searchStr}%'
+      or a.userName  like '%${searchStr}%'
+      or a.nickName  like '%${searchStr}%'
+      or a.userSign  like '%${searchStr}%'
+      or (a.phoneNumIsPub=1 and a.mainPhoneNum like '%${searchStr}%')
     )
+  ) c
+  order by c.nickName, c.userName, c.loginName
   </select>
   <!--
       or a.mailAddress like '%${searchStr}%'
@@ -140,6 +146,7 @@
       <if test="userSign!=null">userSign,</if>
       <if test="password!=null">password,</if>
       <if test="mainPhoneNum!=null">mainPhoneNum,</if>
+      <if test="phoneNumIsPub!=null">phoneNumIsPub,</if>
       <if test="mailAddress!=null">mailAddress,</if>
       <if test="birthday!=null">birthday,</if>
       <if test="starSign!=null">starSign,</if>
@@ -161,6 +168,7 @@
       <if test="userSign!=null">#{userSign,jdbcType=VARCHAR},</if>
       <if test="password!=null">#{password,jdbcType=VARCHAR},</if>
       <if test="mainPhoneNum!=null">#{mainPhoneNum,jdbcType=VARCHAR},</if>
+      <if test="phoneNumIsPub!=null">#{phoneNumIsPub,jdbcType=INTEGER},</if>
       <if test="mailAddress!=null">#{mailAddress,jdbcType=VARCHAR},</if>
       <if test="birthday!=null">#{birthday,jdbcType=TIMESTAMP},</if>
       <if test="starSign!=null">#{starSign,jdbcType=TIMESTAMP},</if>
@@ -185,6 +193,7 @@
       <if test="userSign!=null">userSign=#{userSign,jdbcType=VARCHAR},</if>
       <if test="password!=null">password=#{password,jdbcType=VARCHAR},</if>
       <if test="mainPhoneNum!=null">mainPhoneNum=#{mainPhoneNum,jdbcType=VARCHAR},</if>
+      <if test="phoneNumIsPub!=null">phoneNumIsPub=#{phoneNumIsPub,jdbcType=INTEGER},</if>
       <if test="mailAddress!=null">mailAddress=#{mailAddress,jdbcType=VARCHAR},</if>
       <if test="birthday!=null">birthday=#{birthday,jdbcType=TIMESTAMP},</if>
       <if test="starSign!=null">starSign=#{starSign,jdbcType=VARCHAR},</if>

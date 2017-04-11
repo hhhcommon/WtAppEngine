@@ -339,28 +339,17 @@ public class GroupController {
             }
             if (map.get("ReturnType")!=null) return map;
 
+            //1-获取分页信息
+            int page=1;//获取页数
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            int pageSize=10;//得到每页条数
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+
             //2-得到用户组
-            List<Map<String, Object>> gl=groupService.getGroupsByUserId(userId);
+            List<GroupPo> gl=groupService.getGroupsByUserId(userId, pageSize, page);
             List<Map<String, Object>> rgl=new ArrayList<Map<String, Object>>();
             if (gl!=null&&gl.size()>0) {
-                Map<String, Object> gm;
-                for (Map<String, Object> g:gl) {
-                    gm=new HashMap<String, Object>();
-                    gm.put("GroupId", g.get("id"));
-                    gm.put("GroupNum", g.get("groupNum"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupSignature"))) gm.put("GroupSignature", g.get("groupSignature"));
-                    gm.put("GroupType", g.get("groupType"));
-                    gm.put("GroupName", g.get("groupName"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupImg"))) gm.put("GroupImg", g.get("groupImg"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
-                    gm.put("GroupCount", g.get("groupCount"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("defaultFreq"))) gm.put("GroupFreq", g.get("defaultFreq"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDescn", g.get("descn"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDescn", g.get("groupDescn"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));
-                    rgl.add(gm);
-                }
+                for (GroupPo g:gl) rgl.add(g.toHashMap4View());
                 map.put("ReturnType", "1001");
                 map.put("GroupList", rgl);
             } else {

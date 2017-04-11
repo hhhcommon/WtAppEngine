@@ -15,6 +15,7 @@
     <result  column="pId"             property="PId"             jdbcType="VARCHAR"/>
     <result  column="sort"            property="sort"            jdbcType="INTEGER"/>
     <result  column="createUserId"    property="createUserId"    jdbcType="VARCHAR"/>
+    <result  column="groupMasterId"   property="groupMasterId"   jdbcType="VARCHAR"/>
     <result  column="adminUserIds"    property="adminUserIds"    jdbcType="VARCHAR"/>
     <result  column="defaultFreq"     property="defaultFreq"     jdbcType="VARCHAR"/>
     <result  column="descn"           property="descn"           jdbcType="VARCHAR"/>
@@ -36,7 +37,7 @@
 
   <!-- 所有列 -->
   <sql id="Base_Column_List">
-    id, groupNum, groupName, groupSignature, groupPwd, groupImg, groupType, pId, sort, createUserId, adminUserIds, defaultFreq, descn, cTime, lmTime
+    id, groupNum, groupName, groupSignature, groupPwd, groupImg, groupType, pId, sort, createUserId, groupMasterId, adminUserIds, defaultFreq, descn, cTime, lmTime
   </sql>
 
   <!-- 条件子句 -->
@@ -53,6 +54,7 @@
         <if test="pId!=null"> and pId=#{pId,jdbcType=VARCHAR}</if>
         <if test="sort!=null and sort!=0"> and sort=#{sort,jdbcType=INTEGER}</if>
         <if test="createUserId!=null"> and createUserId=#{createUserId,jdbcType=VARCHAR}</if>
+        <if test="groupMasterId!=null"> and groupMasterId=#{groupMasterId,jdbcType=VARCHAR}</if>
         <if test="adminUserIds!=null"> and adminUserIds=#{adminUserIds,jdbcType=VARCHAR}</if>
         <if test="descn!=null"> and descn=#{descn,jdbcType=VARCHAR}</if>
         <if test="defaultFreq!=null"> and defaultFreq=#{defaultFreq,jdbcType=VARCHAR}</if>
@@ -129,6 +131,7 @@
       <if test="pId!=null">pId,</if>
       <if test="sort!=null and sort!=0">sort,</if>
       <if test="createUserId!=null">createUserId,</if>
+      <if test="groupMasterId!=null">groupMasterId,</if>
       <if test="adminUserIds!=null">adminUserIds,</if>
       <if test="defaultFreq!=null">defaultFreq,</if>
       <if test="descn!=null">descn,</if>
@@ -144,6 +147,7 @@
       <if test="pId!=null">#{pId,jdbcType=VARCHAR},</if>
       <if test="sort!=null and sort!=0">#{sort,jdbcType=INTEGER},</if>
       <if test="createUserId!=null">#{createUserId,jdbcType=VARCHAR},</if>
+      <if test="groupMasterId!=null">#{groupMasterId,jdbcType=VARCHAR},</if>
       <if test="adminUserIds!=null">#{adminUserIds,jdbcType=VARCHAR},</if>
       <if test="defaultFreq!=null">#{defaultFreq,jdbcType=VARCHAR},</if>
       <if test="descn!=null">#{descn,jdbcType=VARCHAR},</if>
@@ -164,6 +168,7 @@
       <if test="pId!=null">pId=#{pId,jdbcType=VARCHAR},</if>
       <if test="sort!=null and sort!=0">sort=#{sort,jdbcType=INTEGER},</if>
       <if test="createUserId!=null">createUserId=#{createUserId,jdbcType=VARCHAR},</if>
+      <if test="groupMasterId!=null">groupMasterId=#{groupMasterId,jdbcType=VARCHAR},</if>
       <if test="adminUserIds!=null">adminUserIds=#{adminUserIds,jdbcType=VARCHAR},</if>
       <if test="defaultFreq!=null">defaultFreq=#{defaultFreq,jdbcType=VARCHAR},</if>
       <if test="descn!=null">descn=#{descn,jdbcType=VARCHAR},</if>

@@ -3,8 +3,6 @@ package com.woting.passport.web;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +30,7 @@ import com.woting.cm.core.dict.service.DictService;
 import com.woting.dataanal.gather.API.ApiGatherUtils;
 import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
 import com.woting.dataanal.gather.API.persis.pojo.ApiLogPo;
+import com.woting.passport.UGA.persis.pojo.GroupPo;
 import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.GroupService;
 import com.woting.passport.UGA.service.UserService;
@@ -180,7 +179,7 @@ public class PassportController {
             //4-返回成功，若没有IMEI也返回成功
             map.put("ReturnType", "1001");
             if (u!=null) {
-                Map<String, Object> um=u.toDetailInfo();
+                Map<String, Object> um=u.getDetailInfo();
                 List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", u.getUserId());
                 if (dictRefList!=null&&!dictRefList.isEmpty()) {
                     for (DictRefRes drr: dictRefList) {
@@ -192,7 +191,6 @@ public class PassportController {
                         }
                     }
                 }
-                if (u.getBirthday()!=null) um.put("Age", getAge(u.getBirthday().getTime())+"");
                 map.put("ReturnType", "1001");
                 map.put("UserInfo", um);
             }
@@ -471,8 +469,7 @@ public class PassportController {
             mUdk.setUserId(_userId);
             RedisUserDeviceKey redisUdk=new RedisUserDeviceKey(mUdk);
             RedisOperService roService=new RedisOperService(redisConn, 4);
-            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService,
-                    new BlockLockConfig(5, 2, 0, 50));
+            ExpirableBlockKey rLock=RedisBlockLock.lock(redisUdk.getKey_Lock(), roService, new BlockLockConfig(5, 2, 0, 50));
             try {
                 sessionService.registUser(mUdk, (UserPo)rm.get("userInfo"));
                 //3.2-保存使用情况
@@ -944,7 +941,7 @@ public class PassportController {
             } else {
                 UserPo up=userService.getUserById(userId);
                 if (up!=null) {
-                    Map<String, Object> um=up.toDetailInfo();
+                    Map<String, Object> um=up.getDetailInfo();
                     List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", userId);
                     if (dictRefList!=null&&!dictRefList.isEmpty()) {
                         for (DictRefRes drr: dictRefList) {
@@ -956,7 +953,6 @@ public class PassportController {
                             }
                         }
                     }
-                    if (up.getBirthday()!=null) um.put("Age", getAge(up.getBirthday().getTime())+"");
                     map.put("ReturnType", "1001");
                     map.put("UserInfo", um);
                 } else {
@@ -1643,46 +1639,35 @@ public class PassportController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            //2-得到用户组及好友
+            //2-获取分页信息
+            int page=1;//获取页数
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            int pageSize=10;//得到每页条数
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+
+            //3-得到用户组及好友
             int size=0;
-            List<Map<String, Object>> gl=groupService.getGroupsByUserId(userId);
+            List<GroupPo> gl=groupService.getGroupsByUserId(userId, pageSize, page);
             Map<String, Object> topItem=new HashMap<String, Object>();//一个分类
             if (gl!=null&&gl.size()>0) size=gl.size();
             topItem.put("Type", "group");
             topItem.put("Name", "群组");
-            topItem.put("PageSize", size);
+            topItem.put("PageSize", pageSize);
             topItem.put("AllSize", size);
             if (size>0) {
                 List<Map<String, Object>> rgl=new ArrayList<Map<String, Object>>();
-                Map<String, Object> gm;
-                for (Map<String, Object> g:gl) {
-                    gm=new HashMap<String, Object>();
-                    gm.put("GroupId", g.get("id"));
-                    gm.put("GroupNum", g.get("groupNum"));
-                    gm.put("GroupType", g.get("groupType"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupImg"))) gm.put("GroupImg", g.get("groupImg"));
-                    gm.put("GroupName", g.get("groupName"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupSignature"))) gm.put("GroupSignature", g.get("groupSignature"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
-                    gm.put("GroupCount", g.get("groupCount"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("defaultFreq"))) gm.put("GroupFreq", g.get("defaultFreq"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDescn", g.get("descn"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDescn", g.get("groupDescn"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));
-                    rgl.add(gm);
-                }
+                for (GroupPo g:gl) rgl.add(g.toHashMap4View());
                 topItem.put("Groups", rgl);
             }
             map.put("GroupList", topItem);
 
             size=0;
-            List<UserPo> ul=friendService.getFriendList(userId);
+            List<UserPo> ul=friendService.getFriendList(userId, pageSize, page);
             if (ul!=null&&ul.size()>0) size=ul.size();
             topItem=new HashMap<String, Object>();//一个分类
             topItem.put("Type", "user");
             topItem.put("Name", "好友");
-            topItem.put("PageSize", size);
+            topItem.put("PageSize", pageSize);
             topItem.put("AllSize", size);
             if (size>0) {
                 List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
@@ -1813,6 +1798,7 @@ public class PassportController {
             String email=(m.get("MailAddr")==null?null:m.get("MailAddr")+"");
             String userNum=(m.get("UserNum")==null?null:m.get("UserNum")+"");
             String phoneNum=(m.get("PhoneNum")==null?null:m.get("PhoneNum")+"");
+            String phoneIsPub=(m.get("PhoneNumIsPub")==null?null:m.get("PhoneNumIsPub")+"");
             updateInfo.put("userId", userId);
             if (!StringUtils.isNullOrEmptyOrSpace(nickName)) updateInfo.put("nickName", nickName);
             if (!StringUtils.isNullOrEmptyOrSpace(userSign)) updateInfo.put("userSign", userSign);
@@ -1827,6 +1813,7 @@ public class PassportController {
             if (!StringUtils.isNullOrEmptyOrSpace(email)) updateInfo.put("email", email);
             if (!StringUtils.isNullOrEmptyOrSpace(userNum)) updateInfo.put("userNum", userNum);
             if (!StringUtils.isNullOrEmptyOrSpace(phoneNum)) updateInfo.put("phoneNum", phoneNum);
+            if (!StringUtils.isNullOrEmptyOrSpace(phoneNum)) updateInfo.put("phoneNumIsPub", phoneIsPub);
 
             updateInfo=userService.updateUser(updateInfo);
             if (updateInfo==null) {
@@ -1978,16 +1965,4 @@ public class PassportController {
     private int getNewUserNumber() {
         return SpiritRandom.getRandom(new Random(), 0, 999999);
     }
-
-    private int getAge(long timestamp) {
-        int age=0;
-        Calendar born=Calendar.getInstance();
-        Calendar now=Calendar.getInstance();
-        now.setTime(new Date());
-        born.setTimeInMillis(timestamp);
-        if (born.after(now)) throw new IllegalArgumentException("生日不能大于今日");
-        age=now.get(Calendar.YEAR) - born.get(Calendar.YEAR);
-        if (now.get(Calendar.DAY_OF_YEAR) < born.get(Calendar.DAY_OF_YEAR)) age -= 1;
-        return age;
-    } 
 }

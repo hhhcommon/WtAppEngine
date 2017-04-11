@@ -1,6 +1,7 @@
 package com.woting.passport.friend.service;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
+import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
 import com.woting.push.core.message.MsgNormal;
@@ -51,14 +53,19 @@ public class FriendService {
      * @param searchStr 查找字符串
      * @return 陌生人列表或空
      */
-    public List<UserPo> getStrangers(String userId, String searchStr) {
+    public List<UserPo> getStrangers(String userId, String searchStr, int pageSize, int pageIndex) {
         if (StringUtils.isNullOrEmptyOrSpace(userId)) return null;
         if (StringUtils.isNullOrEmptyOrSpace(searchStr)) return null;
         Map<String, Object> param=new HashMap<String, Object>();
         try {
             param.put("userId", userId);
             param.put("searchStr", searchStr);
-            return userDao.queryForList("getStrangers", param);
+            Page<UserPo> page=userDao.pageQuery(null, "getStrangers", param, pageIndex, pageSize);
+            if (page!=null&&page.getDataCount()>0) {
+                List<UserPo> ret=new ArrayList<UserPo>();
+                ret.addAll(page.getResult());
+                return ret;
+            }
         } catch(Exception e) {
             e.printStackTrace();
         }
@@ -108,8 +115,7 @@ public class FriendService {
                 info.put("InviteCount", ifPo.getInviteVector());
                 //获得对方信息
                 UserPo u=userDao.getInfoObject("getUserById", ifPo.getaUserId());
-                info.put("InvitorName", u.getLoginName());
-                info.put("InvitorPortrait", u.getPortraitMini());
+                info.put("InvitorInfo", u.toHashMap4Mobile());
                 m.put("InviteInfo", info);
                 canContinue=false;
             }
@@ -180,11 +186,7 @@ public class FriendService {
                 dataMap.put("InviteMsg", inviteMsg);
                 dataMap.put("InviteTime", System.currentTimeMillis());
                 UserPo u=userDao.getInfoObject("getUserById", userId);
-                Map<String, Object> um=u.toHashMap4Mobile();
-                um.remove("PhoneNum");
-                um.remove("Email");
-                um.remove("Email");
-                dataMap.put("InviteUserInfo", um);
+                dataMap.put("InviteUserInfo", u.toHashMap4Mobile());
                 MapContent mc=new MapContent(dataMap);
                 nMsg.setMsgContent(mc);
 
@@ -209,8 +211,38 @@ public class FriendService {
         try {
             Map<String, Object> param=new HashMap<String, Object>();
             param.put("userId", userId);
-            List<Map<String, Object>> ret=inviteFriendDao.queryForListAutoTranform("queryInvitedMeList", param);
-            if (ret!=null&&ret.size()>0) return ret;
+            List<Map<String, Object>> _ret=inviteFriendDao.queryForListAutoTranform("queryInvitedMeList", param);
+            if (_ret!=null&&_ret.size()>0) {
+                List<Map<String, Object>> ret=new ArrayList<Map<String, Object>>(_ret.size());
+                for (int i=0; i<_ret.size(); i++) {
+                    Map<String, Object> one=_ret.get(i);
+                    UserPo up=new UserPo();
+                    up.setUserId(userId);
+                    if (one.get("userName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("userName")+"")) up.setUserName(one.get("userName")+"");
+                    if (one.get("userNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("userNum")+"")) up.setUserNum(one.get("userNum")+"");
+                    if (one.get("loginName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("loginName")+"")) up.setLoginName(one.get("loginName")+"");
+                    if (one.get("nickName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("nickName")+"")) up.setNickName(one.get("nickName")+"");
+                    if (one.get("userSign")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("userSign")+"")) up.setUserSign(one.get("userSign")+"");
+                    if (one.get("mainPhoneNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("mainPhoneNum")+"")) up.setMainPhoneNum(one.get("mainPhoneNum")+"");
+                    if (one.get("phoneNumIsPub")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("mainPhoneNum")+"")) up.setPhoneNumIsPub((one.get("mainPhoneNum")+"").equals("1"));
+                    if (one.get("mailAddress")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("mailAddress")+"")) up.setMailAddress(one.get("mailAddress")+"");
+                    if (one.get("birthday")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("birthday")+"")) up.setBirthday((Timestamp)one.get("birthday"));
+                    if (one.get("starSign")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("starSign")+"")) up.setStarSign(one.get("starSign")+"");
+                    if (one.get("userType")!=null) try {up.setUserType((Integer)one.get("userType"));} catch(Exception e) {up.setUserType(0);};
+                    if (one.get("userClass")!=null) try {up.setUserClass((Integer)one.get("userClass"));} catch(Exception e) {up.setUserClass(0);};
+                    if (one.get("userState")!=null) try {up.setUserState((Integer)one.get("userState"));} catch(Exception e) {up.setUserState(0);};
+                    if (one.get("portraitBig")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("portraitBig")+"")) up.setPortraitBig(one.get("portraitBig")+"");
+                    if (one.get("portraitMini")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("portraitMini")+"")) up.setPortraitMini(one.get("portraitMini")+"");
+                    if (one.get("homepage")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("homepage")+"")) up.setHomepage(one.get("homepage")+"");
+                    if (one.get("descn")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("descn")+"")) up.setDescn(one.get("descn")+"");
+                    Map<String, Object> _one=new HashMap<String, Object>();
+                    _one=up.toHashMap4Mobile();
+                    _one.put("InviteMessage", one.get("inviteMessage"));
+                    _one.put("InviteTime", one.get("inviteTime"));
+                    ret.add(_one);
+                }
+                return ret;
+            }
         } catch(Exception e) {
             e.printStackTrace();
         }
@@ -282,11 +314,7 @@ public class FriendService {
                     dataMap.put("DealTime", System.currentTimeMillis());
                     //加入被邀请人信息
                     UserPo u=userDao.getInfoObject("getUserById", userId);
-                    Map<String, Object> um=u.toHashMap4Mobile();
-                    um.remove("PhoneNum");
-                    um.remove("Email");
-                    um.remove("Email");
-                    dataMap.put("BeInvitedUserInfo", um);
+                    dataMap.put("BeInvitedUserInfo", u.toHashMap4Mobile());
                     MapContent mc=new MapContent(dataMap);
                     nMsg.setMsgContent(mc);
 
@@ -362,13 +390,18 @@ public class FriendService {
      * @param userId 我的用户Id
      * @return 好友用户列表，除了用户信息外
      */
-    public List<UserPo> getFriendList(String userId) {
+    public List<UserPo> getFriendList(String userId, int pageSize, int pageIndex) {
         if (StringUtils.isNullOrEmptyOrSpace(userId)) return null;
         try {
             Map<String, Object> param=new HashMap<String, Object>();
             param.put("userId", userId);
-            List<UserPo> ret=userDao.queryForList("getFriends", param);
-            if (ret!=null&&ret.size()>0) return ret;
+
+            Page<UserPo> page=userDao.pageQuery(null, "getFriends", param, pageIndex, pageSize);
+            if (page!=null&&page.getDataCount()>0) {
+                List<UserPo> ret=new ArrayList<UserPo>();
+                ret.addAll(page.getResult());
+                return ret;
+            }
         } catch(Exception e) {
             e.printStackTrace();
         }

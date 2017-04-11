@@ -1,6 +1,8 @@
 package com.woting.passport.UGA.persis.pojo;
 
 import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,10 +18,11 @@ public class UserPo extends UgaUser {
     private Timestamp birthday; //生日
     private String starSign; //星座
     private String mainPhoneNum; //用户主手机号码，用户可能有多个手机号码
+    private int phoneNumIsPub; //是否允许手机号码搜索或公布手机号码:0不公开；1公开
     private String mailAddress; //用户邮箱
-    private int userType; //用户分类：1=普通用户;2=编辑用户
-    private int userClass; //用户分类：1=普通用户;2=编辑用户
-    private int userState;//用户状态，0~2
+    private int userType; //用户分类：对应OwnerType，1xx::系统:100-我们自己的系统(cm/crawl/push等);101-其他系统(wt_Organize表中的Id);2xx::用户:200-后台系统用户;201-前端用户-wt_Member表中的用户Id
+    private int userClass; //用户类型，现在还没有用，比如是一般用户还是管理原等
+    private int userState;//用户状态，0-2,0代表未激活的用户，1代表已激用户，2代表失效用户,3根据邮箱找密码的用户
     private String portraitBig;//用户头像大
     private String portraitMini;//用户头像小
     private String homepage; //用户主页
@@ -123,6 +126,18 @@ public class UserPo extends UgaUser {
     public void setStarSign(String starSign) {
         this.starSign = starSign;
     }
+    public void setPhoneNumIsPub(boolean isPub) {
+        this.phoneNumIsPub=isPub?1:0;
+    }
+    public void setPhoneNumIsPub(int phoneNumIsPub) {
+        this.phoneNumIsPub = phoneNumIsPub;
+    }
+    public boolean isPubPhoneNum() {
+        return phoneNumIsPub==1;
+    }
+    public int getPhoneNumIsPub() {
+        return phoneNumIsPub;
+    }
 
     public Map<String, Object> toHashMap4Mobile() {
         Map<String, Object> retM = new HashMap<String, Object>();
@@ -132,8 +147,7 @@ public class UserPo extends UgaUser {
         if (!StringUtils.isNullOrEmptyOrSpace(this.userSign)) retM.put("UserSign", this.userSign);
         if (!StringUtils.isNullOrEmptyOrSpace(this.loginName)) retM.put("UserName", this.loginName);
         if (!StringUtils.isNullOrEmptyOrSpace(this.nickName)) retM.put("NickName", this.nickName);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.mainPhoneNum)) retM.put("PhoneNum", this.mainPhoneNum);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.mailAddress)) retM.put("Email", this.mailAddress);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.mainPhoneNum)&&this.isPubPhoneNum()) retM.put("PhoneNum", this.mainPhoneNum);
         if (!StringUtils.isNullOrEmptyOrSpace(this.descn)) retM.put("Descn", this.descn);
         if (!StringUtils.isNullOrEmptyOrSpace(this.portraitBig)) retM.put("PortraitBig", this.portraitBig);
         if (!StringUtils.isNullOrEmptyOrSpace(this.portraitMini)) retM.put("PortraitMini", this.portraitMini);
@@ -142,27 +156,41 @@ public class UserPo extends UgaUser {
 
     /**
      * 转换为详细信息
-     * @return 详细信息内容，形式如下：
+     * @return 详细信息内容
      * 
      */
-    public Map<String, Object> toDetailInfo() {
+    public Map<String, Object> getDetailInfo() {
         Map<String, Object> retM = new HashMap<String, Object>();
         if (!StringUtils.isNullOrEmptyOrSpace(this.userId)) retM.put("UserId", this.userId);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.userNum)) retM.put("UserNum", this.userNum);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.loginName)) retM.put("UserName", this.loginName);
         if (!StringUtils.isNullOrEmptyOrSpace(this.userName)) retM.put("RealName", this.userName);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.nickName)) retM.put("NickName", this.nickName);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.userNum)) retM.put("UserNum", this.userNum);
         if (!StringUtils.isNullOrEmptyOrSpace(this.userSign)) retM.put("UserSign", this.userSign);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.loginName)) retM.put("UserName", this.loginName);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.nickName)) retM.put("NickName", this.nickName);
         //Sex
         //Region
-        if (this.birthday!=null) retM.put("Birthday", this.birthday.getTime());
-        //Age
+        if (this.birthday!=null) {
+            retM.put("Birthday", this.birthday.getTime());
+            retM.put("Age", getAge());
+        }
         if (!StringUtils.isNullOrEmptyOrSpace(this.starSign)) retM.put("StarSign", this.starSign);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.mainPhoneNum)) retM.put("PhoneNum", this.mainPhoneNum);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.mainPhoneNum)&&this.isPubPhoneNum()) retM.put("PhoneNum", this.mainPhoneNum);
         if (!StringUtils.isNullOrEmptyOrSpace(this.mailAddress)) retM.put("Email", this.mailAddress);
         if (!StringUtils.isNullOrEmptyOrSpace(this.portraitBig)) retM.put("PortraitBig", this.portraitBig);
         if (!StringUtils.isNullOrEmptyOrSpace(this.portraitMini)) retM.put("PortraitMini", this.portraitMini);
         if (!StringUtils.isNullOrEmptyOrSpace(this.descn)) retM.put("Descn", this.descn);
         return retM;
     }
+
+    private int getAge() {
+        int age=0;
+        Calendar born=Calendar.getInstance();
+        Calendar now=Calendar.getInstance();
+        now.setTime(new Date());
+        born.setTimeInMillis(this.birthday.getTime());
+        if (born.after(now)) throw new IllegalArgumentException("生日不能大于今日");
+        age=now.get(Calendar.YEAR) - born.get(Calendar.YEAR);
+        if (now.get(Calendar.DAY_OF_YEAR) < born.get(Calendar.DAY_OF_YEAR)) age -= 1;
+        return age;
+    } 
 }
