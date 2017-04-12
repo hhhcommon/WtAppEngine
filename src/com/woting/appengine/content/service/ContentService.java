@@ -2621,7 +2621,7 @@ public class ContentService {
 						new AddCacheDBInfoThread(solrInputPo.getItem_id()).start();
 					}
 				}
-			} catch (Exception e) {}
+			} catch (Exception e) {e.printStackTrace();}
 		}
     }
     
@@ -2637,23 +2637,56 @@ public class ContentService {
     public List<Map<String, Object>> getCacheDBList(List<String> cacheDBIds, int page, int pageSize, boolean isOrNoToLoad) {
     	if (cacheDBIds!=null && cacheDBIds.size()>0) {
     		List<Map<String, Object>> retList = new ArrayList<>();
-			for (String cacheDBId : cacheDBIds) {
-				if (cacheDBId!=null && cacheDBId.length()>0) {
-					String[] params = cacheDBId.split("_");
-					String type = params[0];
-					String id = params[1];
-					Map<String, Object> retM = getCacheDBInfo(id, type, page, pageSize);
-					if (retM==null) {
-						if (isOrNoToLoad) {
-							if (type.equals("SEQU")) retM = getSeqMaInfo(id, pageSize, page, 1, null);
-							else if (type.equals("AUDIO")) retM = getMaInfo(id, null);
+    		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(cacheDBIds.size());
+    		for (int i = 0; i < cacheDBIds.size(); i++) {
+    			int f = i;
+				fixedThreadPool.execute(new Runnable() {
+					public void run() {
+						try {
+							String cacheDBId = cacheDBIds.get(f);
+							retList.add(null);
+							if (cacheDBId!=null && cacheDBId.length()>0) {
+								String[] params = cacheDBId.split("_");
+								String type = params[0];
+								String id = params[1];
+								Map<String, Object> retM = getCacheDBInfo(id, type, page, pageSize);
+								if (retM==null) {
+									if (isOrNoToLoad) {
+										if (type.equals("SEQU")) retM = getSeqMaInfo(id, pageSize, page, 1, null);
+										else if (type.equals("AUDIO")) retM = getMaInfo(id, null);
+									}
+									addCacheDBInfo(id, type); //往CacheDB表里添加数据
+								}
+								
+								if (retM!=null && retM.size()>0) {
+									retList.set(f, retM);
+								}
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
-						addCacheDBInfo(type, id); //往CacheDB表里添加数据
 					}
-					if (retM!=null && retM.size()>0) {
-						retList.add(retM);
+				});
+			}
+    		
+    		fixedThreadPool.shutdown();
+			while (true) {
+				try {
+					Thread.sleep(20);
+				} catch (Exception e) {e.printStackTrace();}
+				if (fixedThreadPool.isTerminated()) {
+					break;
+				}
+			}
+			if (retList!=null && retList.size()>0) {
+				Iterator<Map<String, Object>> it = retList.iterator();
+				while (it.hasNext()) {
+					Map<String, Object> m = it.next();
+					if (m==null) {
+						it.remove();
 					}
 				}
+				return retList;
 			}
 		}
 		return null;
@@ -2698,6 +2731,16 @@ public class ContentService {
 								cacheDBMap.put("SubList", null);
 							}
 						}
+					}
+				} else {
+					if (type.equals("AUDIO")) {
+						try {
+							Map<String, Object> smamap = (Map<String, Object>) cacheDBMap.get("SeqInfo");
+						    String smaId = smamap.get("ContentId").toString();
+						    String smastr = cacheDBService.getCacheDBInfo("SEQU_"+smaId+"_INFO");
+						    smamap = (Map<String, Object>) JsonUtils.jsonToObj(smastr, Map.class);
+						    cacheDBMap.put("SeqInfo", smamap);
+						} catch (Exception e) {}
 					}
 				}
 				return cacheDBMap;

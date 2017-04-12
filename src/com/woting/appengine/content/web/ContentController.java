@@ -1460,29 +1460,4 @@ public class ContentController {
             } catch (InterruptedException e) {}
         }
     }
-    
-    @RequestMapping(value = "cs.do")
-	@ResponseBody
-    public Map<String, Object> csDBInfo(HttpServletRequest request) {
-		Map<String, Object> map = new HashMap<String, Object>();
-		Map<String, Object> m = RequestUtils.getDataFromRequest(request);
-		String ids = m.get("Ids") + "";
-		if (StringUtils.isNullOrEmptyOrSpace(ids) || ids.toLowerCase().equals("null")) {
-			map.put("ReturnType", "1011");
-			map.put("Message", "无内容ID");
-			return map;
-		}
-		if (ids!=null && ids.length()>0) {
-			List<String> cachedbs = (List<String>) JsonUtils.jsonToObj(ids, List.class);
-			List<Map<String, Object>> ls = contentService.getCacheDBList(cachedbs, 0, 0, false);
-			if (ls!=null && ls.size()>0) {
-				map.put("List", ls);
-				return map;
-			}
-		}
-		map.put("ReturnType", "1011");
-		map.put("Message", "查询失败");
-		
-		return map;
-	}
 }
