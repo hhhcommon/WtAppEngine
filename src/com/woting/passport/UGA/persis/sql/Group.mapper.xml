@@ -86,7 +86,7 @@
 
   <!-- 得到某用户所属的用户组 -->
   <select id="getGroupListByUserId"  resultType="java.util.HashMap" parameterType="java.lang.String">
-    select a.*, b.groupCount, c.* from plat_Group a,
+    select a.*, b.groupCount from plat_Group a,
     (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b,
     (select * from plat_GroupUser where userId=#{value, jdbcType=VARCHAR}) c
     where a.id=b.groupId and a.id=c.groupId
