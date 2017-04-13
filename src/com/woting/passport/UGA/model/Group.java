@@ -17,15 +17,6 @@ import com.woting.passport.UGA.persis.pojo.UserPo;
 public class Group extends GroupPo implements  ModelSwapPo {
     private static final long serialVersionUID = 7365795273402631290L;
 
-    private String innerPhoneNum;  //内部电话号吗
-    public String getInnerPhoneNum() {
-        if (StringUtils.isNullOrEmptyOrSpace(this.innerPhoneNum)) return "3000";
-        return innerPhoneNum;
-    }
-    public void setInnerPhoneNum(String innerPhoneNum) {
-        this.innerPhoneNum = innerPhoneNum;
-    }
-
     @Override
     public void buildFromPo(Object po) {
         if (po==null) throw new Plat0006CException("Po对象为空，无法从空对象得到概念/逻辑对象！");
@@ -47,6 +38,8 @@ public class Group extends GroupPo implements  ModelSwapPo {
         this.setDescn(_po.getDescn());
         this.setCTime(_po.getCTime());
         this.setLmTime(_po.getLmTime());
+        this.setGroupAlias(_po.getGroupAlias());
+        this.setGroupDescn(_po.getGroupDescn());
     }
     @Override
     public Object convert2Po() {
@@ -68,6 +61,8 @@ public class Group extends GroupPo implements  ModelSwapPo {
         ret.setDescn(this.getDescn());
         ret.setCTime(this.getCTime());
         ret.setLmTime(this.getLmTime());
+        ret.setGroupAlias(this.getGroupAlias());
+        ret.setGroupDescn(this.getGroupDescn());
         return ret;
     }
 

@@ -11,6 +11,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Controller;
 import com.spiritdata.framework.core.web.AbstractFileUploadController;
+import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
@@ -192,13 +193,14 @@ public class FileUploadController extends AbstractFileUploadController {
         FileUtils.copyFile(new File(srcFileName), new File(STOREPATH+destFileName));
         File f=new File(STOREPATH+destFileName);
         if (f.isFile()) {
+            String _destFileName=FileNameUtils.getPureFileName(destFileName);
             //按照文件格式标准，转存图片
-            String img150path=destFileName+".150_150.png";
-            String img300path=destFileName+".300_300.png";
-            String img450path=destFileName+".450_450.png";
-            Thumbnails.of(new File(srcFileName)).size(150, 150).toFile(STOREPATH+img150path);
-            Thumbnails.of(new File(srcFileName)).size(300, 300).toFile(STOREPATH+img300path);
-            Thumbnails.of(new File(srcFileName)).size(450, 450).toFile(STOREPATH+img450path);
+            String img150path=_destFileName+".150_150.png";
+            String img300path=_destFileName+".300_300.png";
+            String img450path=_destFileName+".450_450.png";
+            Thumbnails.of(new File(srcFileName)).size(150, 150).toFile(FileNameUtils.concatPath(STOREPATH, img150path));
+            Thumbnails.of(new File(srcFileName)).size(300, 300).toFile(FileNameUtils.concatPath(STOREPATH, img300path));
+            Thumbnails.of(new File(srcFileName)).size(450, 450).toFile(FileNameUtils.concatPath(STOREPATH, img450path));
         }
     }
 }

@@ -236,18 +236,9 @@ public class GroupController {
             if (retFlag==1) {
                 //组织返回值
                 map.put("ReturnType", "1001");
-                Map<String, String> groupMap=new HashMap<String, String>();
-                groupMap.put("GroupId", g.getGroupId());
-                groupMap.put("GroupNum", g.getGroupNum());
-                if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupSignature())) groupMap.put("GroupSignature", g.getGroupSignature());
-                groupMap.put("GroupType", g.getGroupType()+"");
-                groupMap.put("GroupName", g.getGroupName());
-                if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupImg())) groupMap.put("GroupImg", g.getGroupImg());
-                if (!StringUtils.isNullOrEmptyOrSpace(g.getCreateUserId())) groupMap.put("GroupCreator", g.getCreateUserId());
-                if (!StringUtils.isNullOrEmptyOrSpace(g.getAdminUserIds())) groupMap.put("GroupManager", g.getAdminUserIds());
-                if (!StringUtils.isNullOrEmptyOrSpace(g.getDefaultFreq())) groupMap.put("GroupFreq", g.getDefaultFreq());
-                if (!StringUtils.isNullOrEmptyOrSpace(g.getDescn())) groupMap.put("GroupDescn", g.getDescn());
-                groupMap.put("GroupCount", ml.size()+"");
+                g.setGroupCount(ml.size());
+                g.toHashMap4View();
+                Map<String, Object> groupMap=g.toHashMap4View();
                 groupMap.put("CreateTime", System.currentTimeMillis()+"");
                 map.put("GroupInfo", groupMap);
             } else {
@@ -453,8 +444,14 @@ public class GroupController {
             }
             if (map.get("ReturnType")!=null) return map;
 
+            //1-获取分页信息
+            int page=1;//获取页数
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            int pageSize=10;//得到每页条数
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+
             //2-得到用户组
-            List<Map<String, Object>> gl=groupService.getCreateGroupsByUserId(userId);
+            List<Map<String, Object>> gl=groupService.getCreateGroupsByUserId(userId, pageSize, page);
             List<Map<String, Object>> rgl=new ArrayList<Map<String, Object>>();
             if (gl!=null&&gl.size()>0) {
                 Map<String, Object> gm;
@@ -468,6 +465,128 @@ public class GroupController {
                     gm.put("GroupName", g.get("groupName"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupSignature"))) gm.put("GroupSignature", g.get("groupSignature"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupMasterId"))) gm.put("GroupMasterId", g.get("groupMasterId"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
+                    gm.put("GroupCount", g.get("groupCount"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("defaultFreq"))) gm.put("GroupFreq", g.get("defaultFreq"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("descn"))) gm.put("GroupOriDescn", g.get("descn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupDescn"))) gm.put("GroupMyDescn", g.get("groupDescn"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupAlias"))) gm.put("GroupMyAlias", g.get("groupAlias"));
+                    rgl.add(gm);
+                }
+                map.put("ReturnType", "1001");
+                map.put("GroupList", rgl);
+            } else {
+                map.put("ReturnType", "1011");
+                map.put("Message", "无所属用户组");
+            }
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
+            return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
+        }
+    }
+
+    /**
+     * 获得我所创建的用户组
+     */
+    @RequestMapping(value="getManageGroupList.do")
+    @ResponseBody
+    public Map<String,Object> getManageGroupList(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("2.2.3-passport/group/getCreateGroupList");
+        alPo.setObjType("005");//用户组对象
+        alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
+
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            String userId="";
+            MobileUDKey mUdk=null;
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
+                }
+                mUdk=mp.getUserDeviceKey();
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/getManageGroupList");
+                    if ((retM.get("ReturnType")+"").equals("2003")) {
+                        map.put("ReturnType", "200");
+                        map.put("Message", "需要登录");
+                    } else {
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
+                    }
+                    userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
+                } else {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
+                }
+            }
+            //数据收集处理==2
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
+            }
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //2-得到用户组
+            List<Map<String, Object>> gl=groupService.getCreateGroupsByUserId(userId, 0, 0);
+            List<Map<String, Object>> rgl=new ArrayList<Map<String, Object>>();
+            if (gl!=null&&gl.size()>0) {
+                Map<String, Object> gm;
+                for (Map<String, Object> g:gl) {
+                    gm=new HashMap<String, Object>();
+                    gm=new HashMap<String, Object>();
+                    gm.put("GroupId", g.get("id"));
+                    gm.put("GroupNum", g.get("groupNum"));
+                    gm.put("GroupType", g.get("groupType"));
+                    gm.put("GroupImg", g.get("groupImg"));
+                    gm.put("GroupName", g.get("groupName"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupSignature"))) gm.put("GroupSignature", g.get("groupSignature"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("createUserId"))) gm.put("GroupCreator", g.get("createUserId"));
+                    if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("groupMasterId"))) gm.put("GroupMasterId", g.get("groupMasterId"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("adminUserIds"))) gm.put("GroupManager", g.get("adminUserIds"));
                     gm.put("GroupCount", g.get("groupCount"));
                     if (!StringUtils.isNullOrEmptyOrSpace((String)g.get("defaultFreq"))) gm.put("GroupFreq", g.get("defaultFreq"));

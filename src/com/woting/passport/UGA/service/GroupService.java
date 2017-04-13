@@ -201,35 +201,46 @@ public class GroupService {
      * @return 用户组
      */
     public List<GroupPo> getGroupsByUserId(String userId, int pageSize, int pageIndex) {
-        try {
-
-            Page<Map<String, Object>> page=groupDao.pageQueryAutoTranform(null, "getGroupListByUserId", userId, pageIndex, pageSize);
+        List<GroupPo> ret=new ArrayList<GroupPo>();
+        if (pageIndex>0) {
+            Page<GroupPo> page=groupDao.pageQuery(null, "getGroupListByUserId", userId, pageIndex, pageSize);
             if (page!=null&&page.getDataCount()>0) {
-                List<GroupPo> ret=new ArrayList<GroupPo>();
-                for (Map<String, Object> one: page.getResult()) {
-                    GroupPo gp=new GroupPo();
-                    if (one.get("id")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("id")+"")) gp.setGroupId(one.get("id")+"");
-                    if (one.get("groupNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupNum")+"")) gp.setGroupNum(one.get("groupNum")+"");
-                    if (one.get("groupName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupName")+"")) gp.setGroupName(one.get("groupName")+"");
-                    if (one.get("groupSignature")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupSignature")+"")) gp.setGroupSignature(one.get("groupSignature")+"");
-                    if (one.get("groupImg")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupImg")+"")) gp.setGroupImg(one.get("groupImg")+"");
-                    if (one.get("groupType")!=null) try {gp.setGroupType((Integer)one.get("groupType"));} catch(Exception e) {gp.setGroupType(0);};
-                    if (one.get("defaultFreq")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("defaultFreq")+"")) gp.setDefaultFreq(one.get("defaultFreq")+"");
-                    if (one.get("createUserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("createUserId")+"")) gp.setCreateUserId(one.get("createUserId")+"");
-                    if (one.get("groupMasterId")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupMasterId")+"")) gp.setGroupMasterId(one.get("groupMasterId")+"");
-                    if (one.get("adminUserIds")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("adminUserIds")+"")) gp.setAdminUserIds(one.get("adminUserIds")+"");
-                    if (one.get("descn")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("descn")+"")) gp.setDescn(one.get("descn")+"");
-                    if (one.get("groupCount")!=null) try {gp.setGroupCount((Integer)one.get("groupCount"));} catch(Exception e) {gp.setGroupType(0);};
-                    ret.add(gp);
+                for (GroupPo one: page.getResult()) {
+                    ret.add(one);
                 }
-                return ret;
             }
-
-            return groupDao.queryForListAutoTranform("getGroupListByUserId", userId);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } else {
+            ret=groupDao.queryForList("getGroupListByUserId", userId);
         }
-        return null;
+        return ret;
+//        try {
+//          Page<Map<String, Object>> page=groupDao.pageQueryAutoTranform(null, "getGroupListByUserId", userId, pageIndex, pageSize);
+//          if (page!=null&&page.getDataCount()>0) {
+//              List<GroupPo> ret=new ArrayList<GroupPo>();
+//              for (Map<String, Object> one: page.getResult()) {
+//                  GroupPo gp=new GroupPo();
+//                  if (one.get("id")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("id")+"")) gp.setGroupId(one.get("id")+"");
+//                  if (one.get("groupNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupNum")+"")) gp.setGroupNum(one.get("groupNum")+"");
+//                  if (one.get("groupName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupName")+"")) gp.setGroupName(one.get("groupName")+"");
+//                  if (one.get("groupSignature")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupSignature")+"")) gp.setGroupSignature(one.get("groupSignature")+"");
+//                  if (one.get("groupImg")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupImg")+"")) gp.setGroupImg(one.get("groupImg")+"");
+//                  if (one.get("groupType")!=null) try {gp.setGroupType(Integer.parseInt(""+one.get("groupType")));} catch(Exception e) {gp.setGroupType(0);};
+//                  if (one.get("defaultFreq")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("defaultFreq")+"")) gp.setDefaultFreq(one.get("defaultFreq")+"");
+//                  if (one.get("createUserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("createUserId")+"")) gp.setCreateUserId(one.get("createUserId")+"");
+//                  if (one.get("groupMasterId")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupMasterId")+"")) gp.setGroupMasterId(one.get("groupMasterId")+"");
+//                  if (one.get("adminUserIds")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("adminUserIds")+"")) gp.setAdminUserIds(one.get("adminUserIds")+"");
+//                  if (one.get("descn")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("descn")+"")) gp.setDescn(one.get("descn")+"");
+//                  if (one.get("groupCount")!=null) try {gp.setGroupCount(Integer.parseInt(""+one.get("groupCount")));} catch(Exception e) {gp.setGroupCount(0);};
+//                  ret.add(gp);
+//              }
+//              return ret;
+//          }
+//
+//          return groupDao.queryForListAutoTranform("getGroupListByUserId", userId);
+//      } catch (Exception e) {
+//          e.printStackTrace();
+//      }
+//      return null;
     }
 
     /**
@@ -237,7 +248,7 @@ public class GroupService {
      * @param userId
      * @return 用户组
      */
-    public List<Map<String, Object>> getCreateGroupsByUserId(String userId) {
+    public List<Map<String, Object>> getCreateGroupsByUserId(String userId, int pageSize, int pageIndex) {
         try {
             return groupDao.queryForListAutoTranform("getCreateGroupListByUserId", userId);
         } catch (Exception e) {
