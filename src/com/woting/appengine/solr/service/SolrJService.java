@@ -97,6 +97,7 @@ public class SolrJService {
 			querystr = SolrUtils.makeQueryStr(querystr, true);
 			if (searchType==1) solrQuery.setQuery("item_title:"+querystr+"^5 item_persons:"+querystr+"^3 item_channel:"+querystr+"^1 item_descn:"+querystr+"^2");
 			else if (searchType==2) solrQuery.setQuery("item_title:"+querystr);
+			else if (searchType==3) solrQuery.setQuery(querystr);
 		}
 		solrQuery.setStart((page -1) * pageSize);
 		solrQuery.setRows(pageSize);

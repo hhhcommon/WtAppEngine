@@ -1139,6 +1139,10 @@ public class ContentService {
 			case 3:
 			case 4:retMap = makeSearchBySearch(searchStr, mediaType, pageType, resultType, page, pageSize, rootInfo, mUdk);break;
 			case 2:retMap = makeSearchByChannel(searchStr, mediaType, pageType, resultType, page, pageSize, rootInfo, mUdk);break;
+			case 5:retMap = makeSearch(searchStr, mediaType, pageType, resultType, page, pageSize, mUdk);break;
+			case 6:retMap = makeSearch(searchStr, mediaType, pageType, resultType, page, pageSize, mUdk);break;
+			case 7:retMap = makeSearchByPerson(searchStr, mediaType, pageType, resultType, page, pageSize, rootInfo, mUdk);break;
+			case 8:retMap = makeSearch(searchStr, mediaType, pageType, resultType, page, pageSize, mUdk);break;
 			default:break;
 		}
 		if (retMap==null || retMap.size()<1) {
@@ -1148,6 +1152,113 @@ public class ContentService {
 		return retMap;
 	}
 	
+	private Map<String, Object> makeSearchByPerson(String searchStr, String mediaType, int pageType, int resultType,
+			int page, int pageSize, String rootInfo, MobileUDKey mUdk) {
+		try {
+			String personId = null;
+			if (rootInfo!=null) {
+				String[] kv = rootInfo.split("_");
+				if (kv[0].equals("PERSON")) {
+					personId = kv[1];
+				}
+			}
+			searchStr = "item:title:"+searchStr;
+			if (personId!=null && personId.length()>0) {
+				searchStr += " item_person:"+personId;
+			}
+			List<SolrInputPo> solrips = new ArrayList<>();
+			List<SortClause> solrsorts = SolrUtils.makeSolrSort("score desc");
+			SolrSearchResult sResult = solrJService.solrSearch(3, searchStr, solrsorts, null, "*,score", page, pageSize, "item_type:SEQU");
+			if (sResult!=null && sResult.getSolrInputPos().size()>0) {
+				solrips.addAll(sResult.getSolrInputPos());
+		    }
+			
+			List<Map<String, Object>> retLs = new ArrayList<>();
+			if (solrips!=null && solrips.size()>0) {
+				Map<String, Object> mf = new HashMap<>();
+				mf.put("mUdk", mUdk);
+				String fstr = new GetFavoriteList(mf)._getBizData();
+				List<UserFavoritePo> favret = null;
+				if (fstr!=null) favret = (List<UserFavoritePo>) JsonUtils.jsonToObj(fstr, List.class);
+				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
+				for (int i=0;i<solrips.size();i++) {
+					int f = i;
+					retLs.add(null);
+					List<UserFavoritePo> ret = favret;
+					fixedThreadPool.execute(new Runnable() {
+						public void run() {
+							String contentid = solrips.get(f).getItem_id();
+							String info = null;
+							if (pageType==0) {
+								if (solrips.get(f).getItem_type().equals("SEQU")) {
+									String malist = cacheDBService.getCacheDBInfo("SEQU_"+contentid+"_SUBLIST");
+									if (malist!=null) {
+										List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
+										contentid = mas.get(0).replace("AUDIO_", "");
+										solrips.get(f).setItem_type("AUDIO");
+									}
+								}
+							}
+							info = cacheDBService.getCacheDBInfo(solrips.get(f).getItem_type()+"_"+contentid+"_INFO");
+							if (info!=null && info.length()>0) {
+								Map<String, Object> infomap = retLs.get(f);
+								infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
+								long playcount = 0;
+								playcount = playCountDBService.getPlayCountNum(solrips.get(f).getItem_type()+"_"+contentid+"_PLAYCOUNT");
+								infomap.put("PlayCount", playcount);
+								infomap.put("ContentFavorite", 0);
+								try {
+									if (solrips.get(f).getItem_type().equals("AUDIO")) {
+										Map<String, Object> smainfom = (Map<String, Object>) infomap.get("SeqInfo");
+										String smaid = smainfom.get("ContentId").toString();
+										String smainfo = cacheDBService.getCacheDBInfo("SEQU_"+smaid+"_INFO");
+										smainfom = (Map<String, Object>) JsonUtils.jsonToObj(smainfo, Map.class);
+										infomap.put("SeqInfo", smainfom);
+									}
+								} catch (Exception e) {}
+								if (ret!=null && ret.size()>0) {
+									for (UserFavoritePo userfav : ret) {
+										if (userfav!=null && userfav.getResId().equals(contentid)) {
+											if ((mediaType.equals("AUDIO") && userfav.getResTableName().equals("wt_MediaAsset")) 
+											|| (mediaType.equals("SEQU") && userfav.getResTableName().equals("wt_SeqMediaAsset")) 
+											|| (mediaType.equals("RADIO") && userfav.getResTableName().equals("wt_Broadcast"))) 
+												infomap.put("ContentFavorite", 1);
+										}
+								    }
+								}
+								retLs.set(f, infomap);
+							}
+						}
+					});
+				}
+				fixedThreadPool.shutdown();
+				while (true) {
+					Thread.sleep(10);
+					if (fixedThreadPool.isTerminated()) {
+						break;
+					}
+				}
+				if (retLs!=null && retLs.size()>0) {
+					Iterator<Map<String, Object>> it = retLs.iterator();
+					while (it.hasNext()) {
+						Map<String, Object> m = it.next();
+						if (m==null) {
+							it.remove();
+						}
+					}
+					Map<String, Object> ret = new HashMap<>();
+					ret.put("ResultType", "1001");
+					ret.put("List", retLs);
+		            ret.put("AllCount", sResult.getRecordCount());
+		            return ret;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> makeSearchByChannel(String searchStr, String mediaType, int pageType, int resultType, int page, int pageSize, String rootInfo, MobileUDKey mUdk) {
 		try {
@@ -1204,7 +1315,7 @@ public class ContentService {
 							String info = null;
 							if (pageType==0) {
 								if (solrips.get(f).getItem_type().equals("SEQU")) {
-									String malist = cacheDBService.getCacheDBInfo("SEQU_"+contentid+"_SUBLIST");//FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+contentid+"]=SUBLIST");
+									String malist = cacheDBService.getCacheDBInfo("SEQU_"+contentid+"_SUBLIST");
 									if (malist!=null) {
 										List<String> mas = (List<String>) JsonUtils.jsonToObj(malist, List.class);
 										contentid = mas.get(0).replace("AUDIO_", "");
@@ -1212,19 +1323,19 @@ public class ContentService {
 									}
 								}
 							}
-							info = cacheDBService.getCacheDBInfo(solrips.get(f).getItem_type()+"_"+contentid+"_INFO");//FileUtils.readContentInfo("Content=MediaType_CID=["+solrips.get(f).getItem_type()+"_"+contentid+"]=INFO");
+							info = cacheDBService.getCacheDBInfo(solrips.get(f).getItem_type()+"_"+contentid+"_INFO");
 							if (info!=null && info.length()>0) {
 								Map<String, Object> infomap = retLs.get(f);
 								infomap = (Map<String, Object>) JsonUtils.jsonToObj(info, Map.class);
 								long playcount = 0;
-								playcount = playCountDBService.getPlayCountNum(solrips.get(f).getItem_type()+"_"+contentid+"_PLAYCOUNT");//FileUtils.readContentInfo("Content::MediaType_CID::["+solrips.get(f).getItem_type()+"_"+contentid+"]::PLAYCOUNT");
+								playcount = playCountDBService.getPlayCountNum(solrips.get(f).getItem_type()+"_"+contentid+"_PLAYCOUNT");
 								infomap.put("PlayCount", playcount);
 								infomap.put("ContentFavorite", 0);
 								try {
 									if (solrips.get(f).getItem_type().equals("AUDIO")) {
 										Map<String, Object> smainfom = (Map<String, Object>) infomap.get("SeqInfo");
 										String smaid = smainfom.get("ContentId").toString();
-										String smainfo = cacheDBService.getCacheDBInfo("SEQU_"+smaid+"_INFO");//FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+smaid+"]=INFO");
+										String smainfo = cacheDBService.getCacheDBInfo("SEQU_"+smaid+"_INFO");
 										smainfom = (Map<String, Object>) JsonUtils.jsonToObj(smainfo, Map.class);
 										infomap.put("SeqInfo", smainfom);
 									}
