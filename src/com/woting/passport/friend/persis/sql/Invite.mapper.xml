@@ -55,9 +55,10 @@
   </select>
 
   <!-- 获得邀请我的列表列表 -->
-  <select id="queryInvitedMeList" resultType="java.util.HashMap" parameterType="java.util.Map">
+  <select id="queryInvitedMeList" resultType="java.util.HashMap" parameterType="java.lang.String">
     select b.*, a.inviteMessage, a.inviteTime from wt_FriendInvite a, plat_User b
-    where b.id=a.aUserId and acceptFlag=0 and a.bUserId='${userId}'
+    where b.id=a.aUserId and acceptFlag=0 and a.bUserId=#{value, jdbcType=VARCHAR}
+    order by a.inviteTime asc
   </select>
 
   <!-- 获得一条数据 -->

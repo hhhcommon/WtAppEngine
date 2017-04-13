@@ -2,7 +2,6 @@ package com.woting.passport.web;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,7 +123,7 @@ public class FriendController {
                 return map;
             }
             //3-获取分页信息
-            int page=1;//获取页数
+            int page=0;//获取页数
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
             int pageSize=10;//得到每页条数
             try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
@@ -351,21 +350,16 @@ public class FriendController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            List<Map<String, Object>> ul=friendService.getInvitedMeList(userId);
+            //2-获取分页信息
+            int page=0;//获取页数
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            int pageSize=10;//得到每页条数
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+
+            List<Map<String, Object>> ul=friendService.getInvitedMeList(userId, pageSize, page);
             if (ul!=null&&ul.size()>0) {
-                List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
-                Map<String, Object> um;
-                for (Map<String, Object> u: ul) {
-                    um=new HashMap<String, Object>();
-                    um.put("UserId", u.get("id"));
-                    um.put("UserName", u.get("loginName"));
-                    um.put("InviteMesage", u.get("inviteMessage"));
-                    um.put("Portrait", u.get("portraitMini"));
-                    um.put("InviteTime", ((Date)u.get("inviteTime")).getTime()+"");
-                    rul.add(um);
-                }
                 map.put("ReturnType", "1001");
-                map.put("UserList", rul);
+                map.put("UserList", ul);
             } else {
                 map.put("ReturnType", "1011");
                 map.put("Message", "邀请我的信息都已处理");
@@ -686,7 +680,7 @@ public class FriendController {
             if (map.get("ReturnType")!=null) return map;
 
             //3-获取分页信息
-            int page=1;//获取页数
+            int page=0;//获取页数
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
             int pageSize=10;//得到每页条数
             try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
@@ -700,8 +694,8 @@ public class FriendController {
                     UserAliasKey uak=new UserAliasKey("FRIEND", userId, u.getUserId());
                     UserAliasPo uap=uamm.getOneUserAlias(uak);
                     if (uap!=null) {
-                        userViewM.put("UserAliasName", StringUtils.isNullOrEmptyOrSpace(uap.getAliasName())?u.getLoginName():uap.getAliasName());
-                        userViewM.put("UserAliasDescn", uap.getAliasDescn());
+                        if (uap.getAliasName()!=null&&!StringUtils.isNullOrEmptyOrSpace(uap.getAliasName())) userViewM.put("UserAliasName",uap.getAliasName());
+                        if (uap.getAliasDescn()!=null&&!StringUtils.isNullOrEmptyOrSpace(uap.getAliasDescn())) userViewM.put("UserAliasDescn",uap.getAliasDescn());
                     }
                     if (!u.getUserId().equals(userId)) rul.add(userViewM);
                 }

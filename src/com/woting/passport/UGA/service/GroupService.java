@@ -197,67 +197,112 @@ public class GroupService {
 
     /**
      * 根据用户ID,得到用户组
-     * @param userId
+     * @param userId 我的用户Id
+     * @param pageSize 每页有几条记录
+     * @param pageIndex 页码，若为0,则得到所有内容
      * @return 用户组
      */
     public List<GroupPo> getGroupsByUserId(String userId, int pageSize, int pageIndex) {
-        try {
+        if (StringUtils.isNullOrEmptyOrSpace(userId)) return null;
 
-            Page<Map<String, Object>> page=groupDao.pageQueryAutoTranform(null, "getGroupListByUserId", userId, pageIndex, pageSize);
+        List<GroupPo> ret=null;
+        if (pageIndex==0) ret=groupDao.queryForList("getGroupListByUserId", userId);
+        else {
+            Page<GroupPo> page=groupDao.pageQuery(null, "getGroupListByUserId", userId, pageIndex, pageSize);
             if (page!=null&&page.getDataCount()>0) {
-                List<GroupPo> ret=new ArrayList<GroupPo>();
-                for (Map<String, Object> one: page.getResult()) {
-                    GroupPo gp=new GroupPo();
-                    if (one.get("id")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("id")+"")) gp.setGroupId(one.get("id")+"");
-                    if (one.get("groupNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupNum")+"")) gp.setGroupNum(one.get("groupNum")+"");
-                    if (one.get("groupName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupName")+"")) gp.setGroupName(one.get("groupName")+"");
-                    if (one.get("groupSignature")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupSignature")+"")) gp.setGroupSignature(one.get("groupSignature")+"");
-                    if (one.get("groupImg")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupImg")+"")) gp.setGroupImg(one.get("groupImg")+"");
-                    if (one.get("groupType")!=null) try {gp.setGroupType((Integer)one.get("groupType"));} catch(Exception e) {gp.setGroupType(0);};
-                    if (one.get("defaultFreq")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("defaultFreq")+"")) gp.setDefaultFreq(one.get("defaultFreq")+"");
-                    if (one.get("createUserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("createUserId")+"")) gp.setCreateUserId(one.get("createUserId")+"");
-                    if (one.get("groupMasterId")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupMasterId")+"")) gp.setGroupMasterId(one.get("groupMasterId")+"");
-                    if (one.get("adminUserIds")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("adminUserIds")+"")) gp.setAdminUserIds(one.get("adminUserIds")+"");
-                    if (one.get("descn")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("descn")+"")) gp.setDescn(one.get("descn")+"");
-                    if (one.get("groupCount")!=null) try {gp.setGroupCount((Integer)one.get("groupCount"));} catch(Exception e) {gp.setGroupType(0);};
-                    ret.add(gp);
-                }
-                return ret;
+                ret=new ArrayList<GroupPo>();
+                ret.addAll(page.getResult());
             }
-
-            return groupDao.queryForListAutoTranform("getGroupListByUserId", userId);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return null;
+        return (ret==null||ret.isEmpty())?null:ret;
     }
 
     /**
-     * 根据用户ID,得到用户组
+     * 根据用户ID,得到用户所创建的组
      * @param userId
+     * @param pageSize 每页有几条记录
+     * @param pageIndex 页码，若为0,则得到所有内容
      * @return 用户组
      */
-    public List<Map<String, Object>> getCreateGroupsByUserId(String userId) {
-        try {
-            return groupDao.queryForListAutoTranform("getCreateGroupListByUserId", userId);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public List<GroupPo> getCreateGroupsByUserId(String userId, int pageSize, int pageIndex) {
+        if (StringUtils.isNullOrEmptyOrSpace(userId)) return null;
+
+        List<GroupPo> ret=null;
+        if (pageIndex==0) ret=groupDao.queryForList("getCreateGroupListByUserId", userId);
+        else {
+            Page<GroupPo> page=groupDao.pageQuery(null, "getCreateGroupListByUserId", userId, pageIndex, pageSize);
+            if (page!=null&&page.getDataCount()>0) {
+                ret=new ArrayList<GroupPo>();
+                ret.addAll(page.getResult());
+            }
         }
-        return null;
+        return (ret==null||ret.isEmpty())?null:ret;
+    }
+
+    /**
+     * 根据用户ID,得到用户能管理的组
+     * @param userId
+     * @param pageSize 每页有几条记录
+     * @param pageIndex 页码，若为0,则得到所有内容
+     * @return 用户组
+     */
+    public List<GroupPo> getManageGroupsByUserId(String userId, int pageSize, int pageIndex) {
+        if (StringUtils.isNullOrEmptyOrSpace(userId)) return null;
+
+        List<GroupPo> ret=null;
+        if (pageIndex==0) ret=groupDao.queryForList("getManageGroupListByUserId", userId);
+        else {
+            Page<GroupPo> page=groupDao.pageQuery(null, "getManageGroupListByUserId", userId, pageIndex, pageSize);
+            if (page!=null&&page.getDataCount()>0) {
+                ret=new ArrayList<GroupPo>();
+                ret.addAll(page.getResult());
+            }
+        }
+        return (ret==null||ret.isEmpty())?null:ret;
+    }
+
+    /**
+     * 根据用户ID,得到用户能管理的组
+     * @param userId
+     * @param pageSize 每页有几条记录
+     * @param pageIndex 页码，若为0,则得到所有内容
+     * @return 用户组
+     */
+    public List<GroupPo> getMasterGroupsByUserId(String userId, int pageSize, int pageIndex) {
+        if (StringUtils.isNullOrEmptyOrSpace(userId)) return null;
+
+        List<GroupPo> ret=null;
+        if (pageIndex==0) ret=groupDao.queryForList("getMasterGroupListByUserId", userId);
+        else {
+            Page<GroupPo> page=groupDao.pageQuery(null, "getMasterGroupListByUserId", userId, pageIndex, pageSize);
+            if (page!=null&&page.getDataCount()>0) {
+                ret=new ArrayList<GroupPo>();
+                ret.addAll(page.getResult());
+            }
+        }
+        return (ret==null||ret.isEmpty())?null:ret;
     }
 
     /**
      * 获得用户组中的用户
      * @param groupId 用户组Id
+     * @param pageSize 每页有几条记录
+     * @param pageIndex 页码，若为0,则得到所有内容
      * @return 用户组中的用户
      */
-    public List<UserPo> getGroupMembers(String groupId) {
-        try {
-            return userDao.queryForList("getGroupMembers", groupId);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public List<UserPo> getGroupMembers(String groupId, int pageSize, int pageIndex) {
+        if (StringUtils.isNullOrEmptyOrSpace(groupId)) return null;
+
+        List<UserPo> ret=null;
+        if (pageIndex==0) ret=userDao.queryForList("getGroupMembers", groupId);
+        else {
+            Page<UserPo> page=userDao.pageQuery(null, "getGroupMembers", groupId, pageIndex, pageSize);
+            if (page!=null&&page.getDataCount()>0) {
+                ret=new ArrayList<UserPo>();
+                ret.addAll(page.getResult());
+            }
         }
-        return null;
+        return (ret==null||ret.isEmpty())?null:ret;
     }
 
     //以下为号码组================================
@@ -650,7 +695,7 @@ public class GroupService {
         Map<String, Object> m=new HashMap<String, Object>();
 
         //1、判断邀请人是否在组
-        List<UserPo> gul=getGroupMembers(groupId);
+        List<UserPo> gul=getGroupMembers(groupId, 0, 0);//获得所有组成员
         boolean find=false; //邀请者是否在组
         if (gul!=null&&!gul.isEmpty()) {
             for (UserPo up: gul) {
@@ -660,6 +705,7 @@ public class GroupService {
                 }
             }
         }
+
         if (!find) {
             m.put("ReturnType", "1006");
             m.put("RefuseMsg", "邀请人不在用户组");
@@ -673,7 +719,7 @@ public class GroupService {
             Map<String, Object> param=new HashMap<String, Object>();
             param.put("aUserId", userId);
             param.put("groupId", groupId);
-            List<InviteGroupPo> igl=inviteGroupDao.queryForList("getInvitingGroupList", param);
+            List<InviteGroupPo> igl=inviteGroupDao.queryForList("getInvitingGroupList", param);//我的邀请列表：所有人，我邀请进入这个组的其他人，包括所有的历史
 
             List<Map<String, String>> resultList=new ArrayList<Map<String, String>>();
             resultM.put("ResultList", resultList);
@@ -718,12 +764,12 @@ public class GroupService {
                         igp.setInviteMessage(inviteMsg);
                         igp.setInviteVector(1);
                         igp.setManagerFlag(0);
-                        //如果是系统管理员，要自动设置为已经管理员审核
+                        //如果是管理员所邀请的，就不用再被其他管理员审核了
                         if (isManaager==1) igp.setManagerFlag(1);
                         inviteGroupDao.insert(igp);
                         oneResult.put("InviteCount", "1");
 
-                        if (gp.getGroupType()!=0) {//不是验证群
+                        if (gp.getGroupType()!=0) {//不是验证群，直接发给被邀请者
                             @SuppressWarnings("unchecked")
                             SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
                             if (sc!=null) {
@@ -811,31 +857,27 @@ public class GroupService {
      * @param applyMsg 申请信息
      * @return
      */
-    public Map<String, Object> applyGroup(String userId, String groupId, String adminId, String applyMsg) {
+    public Map<String, Object> applyGroup(String userId, String groupId, String adminIds, String applyMsg) {
         Map<String, Object> m=new HashMap<String, Object>();
         Map<String, Object> param=new HashMap<String, Object>();
         boolean canContinue=true;
 
         //1、判断是否已经在组
-        List<UserPo> gul=getGroupMembers(groupId);
-        boolean find=false;//申请者是否在组
-        if (gul!=null&&!gul.isEmpty()) {
-            for (UserPo up: gul) {
-                if (up.getUserId().equals(userId)) {
-                    find=true;
-                    break;
-                }
-            }
-        }
+        param.put("userId", userId);
+        param.put("groupId", groupId);
+        boolean find=(groupDao.getCount("getUserInGroup", param)>0);
+        param.clear();
+
         if (find) {
             m.put("ReturnType", "1005");
             m.put("RefuseMsg", "申请人已在用户组");
             canContinue=false;
         }
 
+        GroupPo gp=this.getGroupById(groupId);
         //2、判断是否已经申请
         if (canContinue) {
-            param.put("aUserId", adminId);
+            param.put("aUserId", gp.getCreateUserId());
             param.put("bUserId", userId);
             param.put("groupId", groupId);
             List<InviteGroupPo> igl=inviteGroupDao.queryForList("getApplyList", param);
@@ -844,8 +886,8 @@ public class GroupService {
                     if (igp.getAcceptFlag()==0) {
                         m.put("ReturnType", "1006");
                         m.put("RefuseMsg", "您已申请");
-                        inviteGroupDao.update("againApply", igp.getId());
                         m.put("ApplyCount", Math.abs(igp.getInviteVector()-1));
+                        inviteGroupDao.update("againApply", igp.getId());
                         canContinue=false;
                         break;
                     }
@@ -855,7 +897,7 @@ public class GroupService {
         if (canContinue) {
             InviteGroupPo igp= new InviteGroupPo();
             igp.setId(SequenceUUID.getUUIDSubSegment(4));
-            igp.setaUserId(adminId);
+            igp.setaUserId(gp.getCreateUserId());
             igp.setbUserId(userId);
             igp.setGroupId(groupId);
             igp.setInviteMessage(applyMsg);
@@ -877,20 +919,15 @@ public class GroupService {
                 nMsg.setCmdType(2);
                 nMsg.setCommand(2);//处理组邀请信息
                 Map<String, Object> dataMap=new HashMap<String, Object>();
-                UserPo u=userDao.getInfoObject("getUserById", userId);
-                Map<String, Object> um=u.toHashMap4Mobile();
-                um.remove("PhoneNum");
-                um.remove("Email");
-                um.remove("Email");
-                dataMap.put("ApplyUserInfo", um);
                 dataMap.put("OperatorId", userId);
-                GroupPo gp=getGroupById(groupId);
-                if (gp!=null) dataMap.put("GroupInfo", gp.toHashMap4View());
+                UserPo u=userDao.getInfoObject("getUserById", userId);
+                dataMap.put("ApplyUserInfo", u.toHashMap4Mobile());
+                dataMap.put("GroupInfo", gp.toHashMap4View());
                 dataMap.put("ApplyTime", System.currentTimeMillis());
                 MapContent mc=new MapContent(dataMap);
                 nMsg.setMsgContent(mc);
 
-                dataMap.put("_TOUSERS", adminId);
+                dataMap.put("_TOUSERS", gp.getAdminUserIds());
                 dataMap.put("_AFFIRMTYPE", "3");
                 sc.addSendMsg(nMsg);
             }
@@ -1407,23 +1444,18 @@ public class GroupService {
      * @return
      */
     public Map<String, Object> changGroupAdminner(GroupPo gp, String toUserId, String operId) {
-        List<UserPo> upl=getGroupMembers(gp.getGroupId());
+        Map<String, Object> param=new HashMap<String, Object>();
+        //1、判断是否已经在组
+        param.put("userId", toUserId);
+        param.put("groupId", gp.getGroupId());
+        boolean find=(groupDao.getCount("getUserInGroup", param)>0);
+        param.clear();
 
         Map<String, Object> ret=new HashMap<String, Object>();
-        boolean find=false;
-        if (upl!=null&&!upl.isEmpty()) {
-            for (UserPo _up:upl) {
-                if (_up.getUserId().equals(toUserId)) {
-                    find=true;
-                    break;
-                }
-            }
-        }
         if (!find) {
             ret.put("ReturnType", "10041");
             ret.put("Message", "被移交用户不在该组");
         } else {
-            Map<String, Object> param=new HashMap<String, Object>();
             param.put("groupId", gp.getGroupId());
             param.put("adminUserIds", toUserId);
             groupDao.update(param);
@@ -1443,10 +1475,6 @@ public class GroupService {
                 nMsg.setCmdType(2);
                 nMsg.setCommand(7);
                 Map<String, Object> dataMap=new HashMap<String, Object>();
-//                Map<String, Object> gMap=new HashMap<String, Object>();
-//                gMap.put("GroupId", gp.getGroupId());
-//                gMap.put("GroupName", gp.getGroupName());
-//                gMap.put("GroupDescn", gp.getDescn());
                 dataMap.put("GroupId", gp.getGroupId());
                 dataMap.put("OperatorId", operId);
                 UserPo u=userDao.getInfoObject("getUserById", toUserId);
@@ -1462,7 +1490,6 @@ public class GroupService {
     }
 
     public Map<String, Object> updateGroupUser(Map<String, String> param, String userId, GroupPo gp) {
-        List<UserPo> upl=getGroupMembers(gp.getGroupId());
         String updateUserId=param.get("updateUserId");
 
         Map<String, Object> ret=new HashMap<String, Object>();
@@ -1470,15 +1497,14 @@ public class GroupService {
             ret.put("ReturnType", "1006");
             ret.put("Message", "修改人和被修改人不能是同一个人");
         } else {
-            boolean find=false;
-            boolean find2=false;
-            if (upl!=null&&!upl.isEmpty()) {
-                for (UserPo _up:upl) {
-                    if (!find) find=_up.getUserId().equals(updateUserId);
-                    if (!find2) find2=_up.getUserId().equals(userId);
-                    if (find&&find2) break;
-                }
-            }
+            Map<String, Object> paraM=new HashMap<String, Object>();
+            //1、判断是否已经在组
+            paraM.put("groupId", gp.getGroupId());
+            paraM.put("userId", updateUserId);
+            boolean find=(groupDao.getCount("getUserInGroup", paraM)>0);
+            paraM.put("userId", userId);
+            boolean find2=(groupDao.getCount("getUserInGroup", paraM)>0);
+
             if (!find) {
                 ret.put("ReturnType", "10041");
                 ret.put("Message", "被修改用户不在该组");

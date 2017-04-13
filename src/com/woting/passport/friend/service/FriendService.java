@@ -2,6 +2,7 @@ package com.woting.passport.friend.service;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,25 +52,28 @@ public class FriendService {
      * 得到陌生人列表
      * @param userId 本人Id
      * @param searchStr 查找字符串
+     * @param pageSize 每页有几条记录
+     * @param pageIndex 页码，若为0,则得到所有内容
      * @return 陌生人列表或空
      */
     public List<UserPo> getStrangers(String userId, String searchStr, int pageSize, int pageIndex) {
         if (StringUtils.isNullOrEmptyOrSpace(userId)) return null;
         if (StringUtils.isNullOrEmptyOrSpace(searchStr)) return null;
+
         Map<String, Object> param=new HashMap<String, Object>();
-        try {
-            param.put("userId", userId);
-            param.put("searchStr", searchStr);
+        param.put("userId", userId);
+        param.put("searchStr", searchStr);
+
+        List<UserPo> ret=null;
+        if (pageIndex==0) ret=userDao.queryForList("getStrangers", param);
+        else {
             Page<UserPo> page=userDao.pageQuery(null, "getStrangers", param, pageIndex, pageSize);
             if (page!=null&&page.getDataCount()>0) {
-                List<UserPo> ret=new ArrayList<UserPo>();
+                ret=new ArrayList<UserPo>();
                 ret.addAll(page.getResult());
-                return ret;
             }
-        } catch(Exception e) {
-            e.printStackTrace();
         }
-        return null;
+        return (ret==null||ret.isEmpty())?null:ret;
     }
 
     /**
@@ -204,49 +208,54 @@ public class FriendService {
     /**
      * 得到邀请我的用户列表
      * @param userId 我的用户Id
+     * @param pageSize 每页有几条记录
+     * @param pageIndex 页码，若为0,则得到所有内容
      * @return 用户列表，除了用户信息外，还包括邀请相关的信息，如inviteTime,inviteMessage
      */
-    public List<Map<String, Object>> getInvitedMeList(String userId) {
+    public List<Map<String, Object>> getInvitedMeList(String userId, int pageSize, int pageIndex) {
         if (StringUtils.isNullOrEmptyOrSpace(userId)) return null;
-        try {
-            Map<String, Object> param=new HashMap<String, Object>();
-            param.put("userId", userId);
-            List<Map<String, Object>> _ret=inviteFriendDao.queryForListAutoTranform("queryInvitedMeList", param);
-            if (_ret!=null&&_ret.size()>0) {
-                List<Map<String, Object>> ret=new ArrayList<Map<String, Object>>(_ret.size());
-                for (int i=0; i<_ret.size(); i++) {
-                    Map<String, Object> one=_ret.get(i);
-                    UserPo up=new UserPo();
-                    up.setUserId(userId);
-                    if (one.get("userName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("userName")+"")) up.setUserName(one.get("userName")+"");
-                    if (one.get("userNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("userNum")+"")) up.setUserNum(one.get("userNum")+"");
-                    if (one.get("loginName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("loginName")+"")) up.setLoginName(one.get("loginName")+"");
-                    if (one.get("nickName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("nickName")+"")) up.setNickName(one.get("nickName")+"");
-                    if (one.get("userSign")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("userSign")+"")) up.setUserSign(one.get("userSign")+"");
-                    if (one.get("mainPhoneNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("mainPhoneNum")+"")) up.setMainPhoneNum(one.get("mainPhoneNum")+"");
-                    if (one.get("phoneNumIsPub")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("mainPhoneNum")+"")) up.setPhoneNumIsPub((one.get("mainPhoneNum")+"").equals("1"));
-                    if (one.get("mailAddress")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("mailAddress")+"")) up.setMailAddress(one.get("mailAddress")+"");
-                    if (one.get("birthday")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("birthday")+"")) up.setBirthday((Timestamp)one.get("birthday"));
-                    if (one.get("starSign")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("starSign")+"")) up.setStarSign(one.get("starSign")+"");
-                    if (one.get("userType")!=null) try {up.setUserType((Integer)one.get("userType"));} catch(Exception e) {up.setUserType(0);};
-                    if (one.get("userClass")!=null) try {up.setUserClass((Integer)one.get("userClass"));} catch(Exception e) {up.setUserClass(0);};
-                    if (one.get("userState")!=null) try {up.setUserState((Integer)one.get("userState"));} catch(Exception e) {up.setUserState(0);};
-                    if (one.get("portraitBig")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("portraitBig")+"")) up.setPortraitBig(one.get("portraitBig")+"");
-                    if (one.get("portraitMini")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("portraitMini")+"")) up.setPortraitMini(one.get("portraitMini")+"");
-                    if (one.get("homepage")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("homepage")+"")) up.setHomepage(one.get("homepage")+"");
-                    if (one.get("descn")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("descn")+"")) up.setDescn(one.get("descn")+"");
-                    Map<String, Object> _one=new HashMap<String, Object>();
-                    _one=up.toHashMap4Mobile();
-                    _one.put("InviteMessage", one.get("inviteMessage"));
-                    _one.put("InviteTime", one.get("inviteTime"));
-                    ret.add(_one);
-                }
-                return ret;
+
+        List<Map<String, Object>> _ret=null;
+        if (pageIndex==0) _ret=inviteFriendDao.queryForListAutoTranform("queryInvitedMeList", userId);
+        else {
+            Page<Map<String, Object>> page=userDao.pageQueryAutoTranform(null, "queryInvitedMeList", userId, pageIndex, pageSize);
+            if (page!=null&&page.getDataCount()>0) {
+                _ret=new ArrayList<Map<String, Object>>();
+                _ret.addAll(page.getResult());
             }
-        } catch(Exception e) {
-            e.printStackTrace();
         }
-        return null;
+
+        if (_ret==null||_ret.isEmpty()) return null;
+
+        List<Map<String, Object>> ret=new ArrayList<Map<String, Object>>(_ret.size());
+        for (int i=0; i<_ret.size(); i++) {
+            Map<String, Object> one=_ret.get(i);
+            UserPo up=new UserPo();
+            up.setUserId(userId);
+            if (one.get("userName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("userName")+"")) up.setUserName(one.get("userName")+"");
+            if (one.get("userNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("userNum")+"")) up.setUserNum(one.get("userNum")+"");
+            if (one.get("loginName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("loginName")+"")) up.setLoginName(one.get("loginName")+"");
+            if (one.get("nickName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("nickName")+"")) up.setNickName(one.get("nickName")+"");
+            if (one.get("userSign")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("userSign")+"")) up.setUserSign(one.get("userSign")+"");
+            if (one.get("mainPhoneNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("mainPhoneNum")+"")) up.setMainPhoneNum(one.get("mainPhoneNum")+"");
+            if (one.get("phoneNumIsPub")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("mainPhoneNum")+"")) up.setPhoneNumIsPub((one.get("mainPhoneNum")+"").equals("1"));
+            if (one.get("mailAddress")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("mailAddress")+"")) up.setMailAddress(one.get("mailAddress")+"");
+            if (one.get("birthday")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("birthday")+"")) up.setBirthday((Timestamp)one.get("birthday"));
+            if (one.get("starSign")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("starSign")+"")) up.setStarSign(one.get("starSign")+"");
+            if (one.get("userType")!=null) try {up.setUserType((Integer)one.get("userType"));} catch(Exception e) {up.setUserType(0);};
+            if (one.get("userClass")!=null) try {up.setUserClass((Integer)one.get("userClass"));} catch(Exception e) {up.setUserClass(0);};
+            if (one.get("userState")!=null) try {up.setUserState((Integer)one.get("userState"));} catch(Exception e) {up.setUserState(0);};
+            if (one.get("portraitBig")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("portraitBig")+"")) up.setPortraitBig(one.get("portraitBig")+"");
+            if (one.get("portraitMini")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("portraitMini")+"")) up.setPortraitMini(one.get("portraitMini")+"");
+            if (one.get("homepage")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("homepage")+"")) up.setHomepage(one.get("homepage")+"");
+            if (one.get("descn")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("descn")+"")) up.setDescn(one.get("descn")+"");
+            Map<String, Object> _one=new HashMap<String, Object>();
+            _one=up.toHashMap4Mobile();
+            _one.put("InviteMessage", one.get("inviteMessage"));
+            _one.put("InviteTime", ((Date)one.get("inviteTime")).getTime());
+            ret.add(_one);
+        }
+        return ret;
     }
 
     /**
@@ -388,24 +397,23 @@ public class FriendService {
     /**
      * 得到好友列表
      * @param userId 我的用户Id
+     * @param pageSize 每页有几条记录
+     * @param pageIndex 页码，若为0,则得到所有内容
      * @return 好友用户列表，除了用户信息外
      */
     public List<UserPo> getFriendList(String userId, int pageSize, int pageIndex) {
         if (StringUtils.isNullOrEmptyOrSpace(userId)) return null;
-        try {
-            Map<String, Object> param=new HashMap<String, Object>();
-            param.put("userId", userId);
 
-            Page<UserPo> page=userDao.pageQuery(null, "getFriends", param, pageIndex, pageSize);
+        List<UserPo> ret=null;
+        if (pageIndex==0) ret=userDao.queryForList("getFriends", userId);
+        else {
+            Page<UserPo> page=userDao.pageQuery(null, "getFriends", userId, pageIndex, pageSize);
             if (page!=null&&page.getDataCount()>0) {
-                List<UserPo> ret=new ArrayList<UserPo>();
+                ret=new ArrayList<UserPo>();
                 ret.addAll(page.getResult());
-                return ret;
             }
-        } catch(Exception e) {
-            e.printStackTrace();
         }
-        return null;
+        return (ret==null||ret.isEmpty())?null:ret;
     }
 
     /**

@@ -21,7 +21,9 @@
     <result  column="descn"           property="descn"           jdbcType="VARCHAR"/>
     <result  column="cTime"           property="CTime"           jdbcType="TIMESTAMP"/>
     <result  column="lmTime"          property="lmTime"          jdbcType="TIMESTAMP"/>
-    <result  column="groupCount"      property="groupCount"      jdbcType="INTEGER"/>
+    <result  column="groupCount"      property="groupCount"      jdbcType="INTEGER"/><!-- 来自子表plat_GroupUser -->
+    <result  column="groupAlias"      property="groupAlias"      jdbcType="VARCHAR"/><!-- 来自子表plat_GroupUser -->
+    <result  column="groupDescn"      property="groupDescn"      jdbcType="VARCHAR"/><!-- 来自子表plat_GroupUser -->
   </resultMap>
 
   <!-- 对象定义:组用户信息 -->
@@ -35,6 +37,7 @@
     <result  column="cTime"        property="CTime"        jdbcType="TIMESTAMP"/>
   </resultMap>
 
+  <!-- 以下用户组============================================ -->
   <!-- 所有列 -->
   <sql id="Base_Column_List">
     id, groupNum, groupName, groupSignature, groupPwd, groupImg, groupType, pId, sort, createUserId, groupMasterId, adminUserIds, defaultFreq, descn, cTime, lmTime
@@ -56,67 +59,13 @@
         <if test="createUserId!=null"> and createUserId=#{createUserId,jdbcType=VARCHAR}</if>
         <if test="groupMasterId!=null"> and groupMasterId=#{groupMasterId,jdbcType=VARCHAR}</if>
         <if test="adminUserIds!=null"> and adminUserIds=#{adminUserIds,jdbcType=VARCHAR}</if>
-        <if test="descn!=null"> and descn=#{descn,jdbcType=VARCHAR}</if>
         <if test="defaultFreq!=null"> and defaultFreq=#{defaultFreq,jdbcType=VARCHAR}</if>
+        <if test="descn!=null"> and descn=#{descn,jdbcType=VARCHAR}</if>
         <if test="CTime!=null"> and cTime=#{CTime,jdbcType=TIMESTAMP}</if>
         <if test="lmTime!=null"> and lmTime=#{lmTime,jdbcType=TIMESTAMP}</if>
       </trim>
     </where>
   </sql>
-
-  <!-- 获得记录条数-->
-  <select id="getCount" parameterType="java.util.Map" resultType="java.lang.Integer">
-    select count(*) from plat_Group <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
-  </select>
-
-  <!-- 获得列表 -->
-  <select id="getList" resultMap="groupMap" parameterType="java.util.Map">
-    select <include refid="Base_Column_List"/> from plat_Group
-    <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
-    <if test="orderByClause!=null">order by ${orderByClause}</if>
-  </select>
-
-  <!-- 获得一条数据 -->
-  <select id="getInfo" resultMap="groupMap" parameterType="java.util.Map">
-    select <include refid="Base_Column_List"/> from plat_Group <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
-  </select>
-  <select id="getGroupById" resultMap="groupMap" parameterType="java.lang.String">
-    select <include refid="Base_Column_List"/> from plat_Group where id=#{value,jdbcType=VARCHAR}
-  </select>
-
-  <!-- 得到某用户所属的用户组 -->
-  <select id="getGroupListByUserId"  resultType="java.util.HashMap" parameterType="java.lang.String">
-    select a.*, b.groupCount from plat_Group a,
-    (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b,
-    (select * from plat_GroupUser where userId=#{value, jdbcType=VARCHAR}) c
-    where a.id=b.groupId and a.id=c.groupId
-  </select>
-
-  <!-- 得到某用户所创建的用户组 -->
-  <select id="getCreateGroupListByUserId"  resultType="java.util.HashMap" parameterType="java.lang.String">
-    select a.*, b.groupCount, c.* from plat_Group a,
-    (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b,
-    (select * from plat_GroupUser where userId=#{value, jdbcType=VARCHAR}) c
-    where a.id=b.groupId and a.createUserId=#{value, jdbcType=VARCHAR} and a.id=c.groupId
-  </select>
-  <!-- 得到某用户所创建的用户组的数量 -->
-  <select id="getCreateGroupCount" resultType="java.lang.Integer" parameterType="java.lang.String">
-    select count(*) from plat_Group where createUserId=#{value, jdbcType=VARCHAR} and groupType=1
-  </select>
-  <!-- 得到某用户所创建的用户组的数量 -->
-  <select id="getCreateGroupLimitTimeCount" resultType="java.lang.Integer" parameterType="java.util.Map">
-  <![CDATA[
-    select count(*) from plat_Group where createUserId=#{userId, jdbcType=VARCHAR} and CTime>#{lastTimeMinutes, jdbcType=TIMESTAMP} and groupType=1
-  ]]>
-  </select>
-  <!-- 判断所给定的组号是否重复 -->
-  <select id="existGroupNum" resultType="java.lang.Integer" parameterType="java.lang.String">
-    select count(*) from plat_Group where groupNum=#{value, jdbcType=VARCHAR}
-  </select>
-  <!-- 用户是否已在组 -->
-  <select id="existUserInGroup" resultType="java.lang.Integer" parameterType="java.lang.String">
-    select count(*) from plat_GroupUser where groupId=#{groupId, jdbcType=VARCHAR} and userId=#{userId, jdbcType=VARCHAR}
-  </select>
 
   <!-- 新增数据 -->
   <insert id="insert" parameterType="java.util.Map"> insert into plat_Group
@@ -177,6 +126,79 @@
     where id=#{groupId,jdbcType=VARCHAR}
   </update>
 
+  <!-- 获得记录条数-->
+  <select id="getCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select count(*) from plat_Group <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </select>
+  <select id="getUserInGroup" parameterType="java.util.Map" resultType="java.lang.Integer">
+    select count(*) from plat_GroupUser where userId=#{userId,jdbcType=VARCHAR} and groupId=#{groupId,jdbcType=VARCHAR}
+  </select>
+
+  <!-- 获得列表 -->
+  <select id="getList" resultMap="groupMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from plat_Group
+    <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+    <if test="orderByClause!=null">order by ${orderByClause}</if>
+  </select>
+
+  <!-- 获得一条数据 -->
+  <select id="getInfo" resultMap="groupMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from plat_Group <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+  </select>
+  <select id="getGroupById" resultMap="groupMap" parameterType="java.lang.String">
+    select <include refid="Base_Column_List"/> from plat_Group where id=#{value,jdbcType=VARCHAR}
+  </select>
+
+  <!-- 得到某用户所属的用户组 -->
+  <select id="getGroupListByUserId" resultMap="groupMap" parameterType="java.lang.String">
+    select a.*, b.groupCount, c.groupAlias, c.groupDescn  from plat_Group a,
+    (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b,
+    (select * from plat_GroupUser where userId=#{value, jdbcType=VARCHAR}) c
+    where a.id=b.groupId and a.id=c.groupId
+  </select>
+
+  <!-- 得到某用户所创建的用户组 -->
+  <select id="getCreateGroupListByUserId" resultMap="groupMap" parameterType="java.lang.String">
+    select a.*, b.groupCount, c.groupAlias, c.groupDescn from plat_Group a,
+    (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b,
+    (select * from plat_GroupUser where userId=#{value, jdbcType=VARCHAR}) c
+    where a.id=b.groupId and a.createUserId=#{value, jdbcType=VARCHAR} and a.id=c.groupId
+  </select>
+  <!-- 得到某用户所创建的用户组的数量 -->
+  <select id="getCreateGroupCount" resultType="java.lang.Integer" parameterType="java.lang.String">
+    select count(*) from plat_Group where createUserId=#{value, jdbcType=VARCHAR} and groupType=1
+  </select>
+  <!-- 得到某用户所创建的用户组的数量 -->
+  <select id="getCreateGroupLimitTimeCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+  <![CDATA[
+    select count(*) from plat_Group where createUserId=#{userId, jdbcType=VARCHAR} and CTime>#{lastTimeMinutes, jdbcType=TIMESTAMP} and groupType=1
+  ]]>
+  </select>
+  <!-- 判断所给定的组号是否重复 -->
+  <select id="existGroupNum" resultType="java.lang.Integer" parameterType="java.lang.String">
+    select count(*) from plat_Group where groupNum=#{value, jdbcType=VARCHAR}
+  </select>
+  <!-- 用户是否已在组 -->
+  <select id="existUserInGroup" resultType="java.lang.Integer" parameterType="java.lang.String">
+    select count(*) from plat_GroupUser where groupId=#{groupId, jdbcType=VARCHAR} and userId=#{userId, jdbcType=VARCHAR}
+  </select>
+
+  <!-- 得到某用户所能管理的组 -->
+  <select id="getManageGroupListByUserId" resultMap="groupMap" parameterType="java.lang.String">
+    select a.*, b.groupCount, c.groupAlias, c.groupDescn from plat_Group a,
+    (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b,
+    (select * from plat_GroupUser where userId=#{value, jdbcType=VARCHAR}) c
+    where a.id=b.groupId and a.adminUserIds like '%${value}%' and a.id=c.groupId
+  </select>
+
+  <!-- 得到某用户为群主的组 -->
+  <select id="getMasterGroupListByUserId" resultMap="groupMap" parameterType="java.lang.String">
+    select a.*, b.groupCount, c.groupAlias, c.groupDescn from plat_Group a,
+    (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b,
+    (select * from plat_GroupUser where userId=#{value, jdbcType=VARCHAR}) c
+    where a.id=b.groupId and a.groupMasterId=#{value, jdbcType=VARCHAR} and a.id=c.groupId
+  </select>
+
   <!-- 删除数据 -->
   <delete id="delete" parameterType="java.lang.String">
     delete from plat_Group where id=#{userId,jdbcType=VARCHAR}
@@ -185,6 +207,7 @@
     delete from plat_Group <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </delete>
 
+  <!-- 以下组内用户============================================ -->
   <!-- 新增数据 -->
   <insert id="insertGroupUser" parameterType="java.util.Map">
     insert into plat_GroupUser

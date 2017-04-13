@@ -82,11 +82,10 @@
     <if test="orderByClause!=null">order by ${orderByClause}</if>
   </select>
   <!-- 获得好友列表 -->
-  <select id="getFriends" resultMap="userMap" parameterType="java.util.Map">
+  <select id="getFriends" resultMap="userMap" parameterType="java.lang.String">
     select <include refid="Base_Column_List_A"/> from plat_User a, vWt_Friend_Rel b
-    where a.id=b.bUserId and b.aUserId='${userId}'
+    where a.id=b.bUserId and b.aUserId=#{value, jdbcType=VARCHAR}
     order by b.inviteTime desc
-    <if test="orderByClause!=null">order by ${orderByClause}</if>
   </select>
   <!-- 获得陌生人列表 -->
   <select id="getStrangers" resultMap="userMap" parameterType="java.util.Map">

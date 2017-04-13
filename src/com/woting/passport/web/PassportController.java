@@ -1640,7 +1640,7 @@ public class PassportController {
             if (map.get("ReturnType")!=null) return map;
 
             //2-获取分页信息
-            int page=1;//获取页数
+            int page=0;//获取页数
             try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
             int pageSize=10;//得到每页条数
             try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
@@ -1677,8 +1677,8 @@ public class PassportController {
                     UserAliasKey uak=new UserAliasKey("FRIEND", userId, u.getUserId());
                     UserAliasPo uap=uamm.getOneUserAlias(uak);
                     if (uap!=null) {
-                        userViewM.put("UserAliasName", StringUtils.isNullOrEmptyOrSpace(uap.getAliasName())?u.getLoginName():uap.getAliasName());
-                        userViewM.put("UserAliasDescn", uap.getAliasDescn());
+                        if (uap.getAliasName()!=null&&!StringUtils.isNullOrEmptyOrSpace(uap.getAliasName())) userViewM.put("UserAliasName",uap.getAliasName());
+                        if (uap.getAliasDescn()!=null&&!StringUtils.isNullOrEmptyOrSpace(uap.getAliasDescn())) userViewM.put("UserAliasDescn",uap.getAliasDescn());
                     }
                     if (!u.getUserId().equals(userId)) rul.add(userViewM);
                 }
