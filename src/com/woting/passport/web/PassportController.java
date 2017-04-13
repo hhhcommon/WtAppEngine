@@ -1813,7 +1813,7 @@ public class PassportController {
             if (!StringUtils.isNullOrEmptyOrSpace(email)) updateInfo.put("email", email);
             if (!StringUtils.isNullOrEmptyOrSpace(userNum)) updateInfo.put("userNum", userNum);
             if (!StringUtils.isNullOrEmptyOrSpace(phoneNum)) updateInfo.put("phoneNum", phoneNum);
-            if (!StringUtils.isNullOrEmptyOrSpace(phoneNum)) updateInfo.put("phoneNumIsPub", phoneIsPub);
+            if (!StringUtils.isNullOrEmptyOrSpace(phoneIsPub)) updateInfo.put("phoneNumIsPub", phoneIsPub);
 
             updateInfo=userService.updateUser(updateInfo);
             if (updateInfo==null) {

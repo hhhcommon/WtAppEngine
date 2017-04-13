@@ -225,29 +225,35 @@ public class GroupController {
             if (groupType==2) g.setGroupPwd(groupPwd);
             g.setCreateUserId(userId);
             g.setAdminUserIds(userId);
+            g.setGroupMasterId(userId);
             g.setGroupType(groupType);
             g.setUserList(ml);
             if (!StringUtils.isNullOrEmptyOrSpace(groupDescn)) g.setDescn(groupDescn);
             if (!StringUtils.isNullOrEmptyOrSpace(groupSignature)) g.setGroupSignature(groupSignature);
             if (!StringUtils.isNullOrEmptyOrSpace(groupFreq)) g.setDefaultFreq(groupFreq);
 
-            groupService.insertGroup(g);
-            //组织返回值
-            map.put("ReturnType", "1001");
-            Map<String, String> groupMap=new HashMap<String, String>();
-            groupMap.put("GroupId", g.getGroupId());
-            groupMap.put("GroupNum", g.getGroupNum());
-            if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupSignature())) groupMap.put("GroupSignature", g.getGroupSignature());
-            groupMap.put("GroupType", g.getGroupType()+"");
-            groupMap.put("GroupName", g.getGroupName());
-            if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupImg())) groupMap.put("GroupImg", g.getGroupImg());
-            if (!StringUtils.isNullOrEmptyOrSpace(g.getCreateUserId())) groupMap.put("GroupCreator", g.getCreateUserId());
-            if (!StringUtils.isNullOrEmptyOrSpace(g.getAdminUserIds())) groupMap.put("GroupManager", g.getAdminUserIds());
-            if (!StringUtils.isNullOrEmptyOrSpace(g.getDefaultFreq())) groupMap.put("GroupFreq", g.getDefaultFreq());
-            if (!StringUtils.isNullOrEmptyOrSpace(g.getDescn())) groupMap.put("GroupDescn", g.getDescn());
-            groupMap.put("GroupCount", ml.size()+"");
-            groupMap.put("CreateTime", System.currentTimeMillis()+"");
-            map.put("GroupInfo", groupMap);
+            int retFlag=groupService.insertGroup(g);
+            if (retFlag==1) {
+                //组织返回值
+                map.put("ReturnType", "1001");
+                Map<String, String> groupMap=new HashMap<String, String>();
+                groupMap.put("GroupId", g.getGroupId());
+                groupMap.put("GroupNum", g.getGroupNum());
+                if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupSignature())) groupMap.put("GroupSignature", g.getGroupSignature());
+                groupMap.put("GroupType", g.getGroupType()+"");
+                groupMap.put("GroupName", g.getGroupName());
+                if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupImg())) groupMap.put("GroupImg", g.getGroupImg());
+                if (!StringUtils.isNullOrEmptyOrSpace(g.getCreateUserId())) groupMap.put("GroupCreator", g.getCreateUserId());
+                if (!StringUtils.isNullOrEmptyOrSpace(g.getAdminUserIds())) groupMap.put("GroupManager", g.getAdminUserIds());
+                if (!StringUtils.isNullOrEmptyOrSpace(g.getDefaultFreq())) groupMap.put("GroupFreq", g.getDefaultFreq());
+                if (!StringUtils.isNullOrEmptyOrSpace(g.getDescn())) groupMap.put("GroupDescn", g.getDescn());
+                groupMap.put("GroupCount", ml.size()+"");
+                groupMap.put("CreateTime", System.currentTimeMillis()+"");
+                map.put("GroupInfo", groupMap);
+            } else {
+                map.put("ReturnType", "1020");
+                map.put("Message", "创建组失败");
+            }
             return map;
         } catch(Exception e) {
             e.printStackTrace();
