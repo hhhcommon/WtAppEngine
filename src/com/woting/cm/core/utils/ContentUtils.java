@@ -106,6 +106,7 @@ public abstract class ContentUtils {
         retM.put("ContentPlay", one.get("maURL"));//P08-公共：主播放Url，这个应该从其他地方来，现在先这样//TODO
         retM.put("ContentURI", "content/getContentInfo.do?MediaType=AUDIO&ContentId="+retM.get("ContentId"));
         retM.put("ContentShareURL", getShareUrl_JM(preAddr, one.get("id")+""));//分享地址
+        try {retM.put("ColumnNum", one.get("columnNum"));} catch (Exception e) {}
 //        retM.put("ContentSource", one.get("maSource"));//P09-公共：来源名称
 //        retM.put("ContentURIS", null);//P10-公共：其他播放地址列表，目前为空
         String ext = FileNameUtils.getExt(one.containsKey("maURL")?(one.get("maURL")+""):null);

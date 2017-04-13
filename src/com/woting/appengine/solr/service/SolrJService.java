@@ -108,6 +108,7 @@ public class SolrJService {
 				solrQuery.set(key, params.get(key).toString());
 			}
 		}
+		
 //		solrQuery.set("df", "item_keywords");
 //		solrQuery.set("defType", "edismax");
 //		solrQuery.set("mm","80%");
@@ -120,45 +121,50 @@ public class SolrJService {
 		if (fqstr!=null && fqstr.length>0) {
 			solrQuery.addFilterQuery(fqstr);
 		}
+//		solrQuery.set("group", "true");//&group=true&group.field=item_descn
+//		solrQuery.set("group.field", "item_title");
 		//根据查询条件搜索索引库
 		QueryResponse response = httpSolrServer.query(solrQuery);
 		//获取内容列表
 		SolrDocumentList documentList = response.getResults();
 		//内容列表
 		List<SolrInputPo> solrs = new ArrayList<>();
-		for (SolrDocument solrDocument : documentList) {
-			SolrInputPo sPo = new SolrInputPo();
-			sPo.setId(solrDocument.get("id").toString());
-			sPo.setItem_id((String) solrDocument.get("item_id"));
-			sPo.setItem_title((String) solrDocument.get("item_title"));
-			sPo.setItem_type((String) solrDocument.get("item_type"));
-			sPo.setItem_publisher((String) solrDocument.get("item_publisher"));
-			if (solrDocument.containsKey("item_meidasize")) {
-				sPo.setItem_mediasize((long) solrDocument.get("item_meidasize"));
+		if (documentList!=null && documentList.size()>0) {
+			for (SolrDocument solrDocument : documentList) {
+				SolrInputPo sPo = new SolrInputPo();
+				sPo.setId(solrDocument.get("id").toString());
+				sPo.setItem_id((String) solrDocument.get("item_id"));
+				sPo.setItem_title((String) solrDocument.get("item_title"));
+				sPo.setItem_type((String) solrDocument.get("item_type"));
+				sPo.setItem_publisher((String) solrDocument.get("item_publisher"));
+				if (solrDocument.containsKey("item_meidasize")) {
+					sPo.setItem_mediasize((long) solrDocument.get("item_meidasize"));
+				}
+				if (solrDocument.containsKey("item_pid")) {
+					sPo.setItem_pid((String) solrDocument.get("item_pid"));
+				}
+				if (solrDocument.containsKey("item_timelong")) {
+					sPo.setItem_timelong((long) solrDocument.get("item_timelong"));
+				}
+				solrs.add(sPo);
 			}
-			if (solrDocument.containsKey("item_pid")) {
-				sPo.setItem_pid((String) solrDocument.get("item_pid"));
+			SolrSearchResult result = new SolrSearchResult();
+			//列表
+			result.setSolrInputPos(solrs);
+			//总记录数据
+			result.setRecordCount(documentList.getNumFound());
+			
+			//计算分页
+			Long recordCount = result.getRecordCount();
+			int pageCount = (int) (recordCount / pageSize);
+			if (recordCount % pageSize > 0) {
+				pageCount++;
 			}
-			if (solrDocument.containsKey("item_timelong")) {
-				sPo.setItem_timelong((long) solrDocument.get("item_timelong"));
-			}
-			solrs.add(sPo);
+			result.setPageCount(pageCount);
+			result.setCurPage(page);
+			return result;
 		}
-		SolrSearchResult result = new SolrSearchResult();
-		//列表
-		result.setSolrInputPos(solrs);
-		//总记录数据
-		result.setRecordCount(documentList.getNumFound());
-		
-		//计算分页
-		Long recordCount = result.getRecordCount();
-		int pageCount = (int) (recordCount / pageSize);
-		if (recordCount % pageSize > 0) {
-			pageCount++;
-		}
-		result.setPageCount(pageCount);
-		result.setCurPage(page);
-		return result;
+		return null;
 	}
 	
 	public List<String> getAnalysis(String sentence) {
