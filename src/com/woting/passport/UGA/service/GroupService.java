@@ -98,28 +98,30 @@ public class GroupService {
             }
             group.setCTime(new Timestamp(System.currentTimeMillis()));
 
-            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
-            if (sc!=null) {
-                //通知消息
-                MsgNormal nMsg=new MsgNormal();
-                nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                nMsg.setFromType(1);
-                nMsg.setToType(1);
-                nMsg.setMsgType(0);
-                nMsg.setAffirm(1);
-                nMsg.setBizType(0x04);
-                nMsg.setCmdType(2);
-                nMsg.setCommand(10);//组创建通知
-                Map<String, Object> dataMap=new HashMap<String, Object>();
-                dataMap.put("GroupInfo", group.toHashMap4View());
-                dataMap.put("OperatorId", group.getCreateUserId());
-                MapContent mc=new MapContent(dataMap);
-                nMsg.setMsgContent(mc);
+            if (group.getUserList()!=null&&group.getUserList().size()>1) {
+                SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                if (sc!=null) {
+                    //通知消息
+                    MsgNormal nMsg=new MsgNormal();
+                    nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                    nMsg.setFromType(0);
+                    nMsg.setToType(0);
+                    nMsg.setMsgType(0);
+                    nMsg.setAffirm(1);
+                    nMsg.setBizType(0x04);
+                    nMsg.setCmdType(2);
+                    nMsg.setCommand(10);//组创建通知
+                    Map<String, Object> dataMap=new HashMap<String, Object>();
+                    dataMap.put("GroupInfo", group.toHashMap4View());
+                    dataMap.put("OperatorId", group.getCreateUserId());
+                    MapContent mc=new MapContent(dataMap);
+                    nMsg.setMsgContent(mc);
 
-                dataMap.put("_TOGROUPS", group.getGroupId());
-                dataMap.put("_NOUSERS", group.getCreateUserId());
-                dataMap.put("_AFFIRMTYPE", "3");
-                sc.addSendMsg(nMsg);
+                    dataMap.put("_TOGROUPS", group.getGroupId());
+                    dataMap.put("_NOUSERS", group.getCreateUserId());
+                    dataMap.put("_AFFIRMTYPE", "3");
+                    sc.addSendMsg(nMsg);
+                }
             }
             i=1;
         } catch (Exception e) {
@@ -152,8 +154,8 @@ public class GroupService {
                     //同步消息：加入组内成员
                     MsgNormal sMsg=new MsgNormal();
                     sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                    sMsg.setFromType(1);
-                    sMsg.setToType(1);
+                    sMsg.setFromType(0);
+                    sMsg.setToType(0);
                     sMsg.setMsgType(0);
                     sMsg.setAffirm(1);
                     sMsg.setBizType(0x08);
@@ -169,8 +171,8 @@ public class GroupService {
                     //通知消息
                     MsgNormal nMsg=new MsgNormal();
                     nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                    nMsg.setFromType(1);
-                    nMsg.setToType(1);
+                    nMsg.setFromType(0);
+                    nMsg.setToType(0);
                     nMsg.setMsgType(0);
                     nMsg.setAffirm(1);
                     nMsg.setBizType(0x04);
@@ -419,7 +421,7 @@ public class GroupService {
      */
     public void updateGroup(Map<String, Object> newInfo, String userId, GroupPo g) {
         boolean changed=false;
-        if (g.getAdminUserIds().equals(userId)) { //修改组本身信息
+        if (g.getAdminUserIds().indexOf(userId)!=-1) { //修改组本身信息
             if (newInfo.get("groupDescn")!=null) g.setDescn(newInfo.get("groupDescn")+"");
             if (newInfo.get("groupName")!=null) g.setGroupName(newInfo.get("groupName")+"");
             if (newInfo.get("groupSignature")!=null) g.setGroupSignature(newInfo.get("groupSignature")+"");
@@ -443,8 +445,8 @@ public class GroupService {
             //同步消息：组信息修改
             MsgNormal sMsg=new MsgNormal();
             sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            sMsg.setFromType(1);
-            sMsg.setToType(1);
+            sMsg.setFromType(0);
+            sMsg.setToType(0);
             sMsg.setMsgType(0);
             sMsg.setAffirm(1);
             sMsg.setBizType(0x08);
@@ -459,30 +461,18 @@ public class GroupService {
             //通知消息
             MsgNormal nMsg=new MsgNormal();
             nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            nMsg.setFromType(1);
-            nMsg.setToType(1);
+            nMsg.setFromType(0);
+            nMsg.setToType(0);
             nMsg.setMsgType(0);
             nMsg.setAffirm(1);
             nMsg.setBizType(0x04);
             nMsg.setCmdType(2);
             nMsg.setCommand(9);
             Map<String, Object> dataMap=new HashMap<String, Object>();
-//            Map<String, Object> gMap=new HashMap<String, Object>();
-//            gMap.put("GroupId", g.getGroupId());
-//            gMap.put("GroupNum", g.getGroupNum());
-//            gMap.put("GroupType", g.getGroupType());
-//            if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupSignature())) gMap.put("GroupSignature", g.getGroupSignature());
-//            if (!StringUtils.isNullOrEmptyOrSpace(g.getGroupImg())) gMap.put("GroupImg", g.getGroupImg());
-//            gMap.put("GroupName", g.getGroupName());
-//            if (!StringUtils.isNullOrEmptyOrSpace(g.getCreateUserId())) gMap.put("GroupCreator", g.getCreateUserId());
-//            if (!StringUtils.isNullOrEmptyOrSpace((String)g.getAdminUserIds())) gMap.put("GroupManager", g.getAdminUserIds());
-//            gMap.put("GroupCount", g.getGroupCount());
-//            if (!StringUtils.isNullOrEmptyOrSpace((String)g.getDescn())) gMap.put("GroupOriDescn", g.getDescn());
             dataMap.put("GroupInfo", g.toHashMap4View());
             dataMap.put("OperatorId", userId);
             MapContent mc=new MapContent(dataMap);
             nMsg.setMsgContent(mc);
-
             dataMap.put("_TOGROUPS", g.getGroupId());
             dataMap.put("_AFFIRMTYPE", "0");//不需要任何回复
             sc.addSendMsg(nMsg);
@@ -560,8 +550,8 @@ public class GroupService {
                 //同步消息：删除组用户
                 MsgNormal sMsg=new MsgNormal();
                 sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                sMsg.setFromType(1);
-                sMsg.setToType(1);
+                sMsg.setFromType(0);
+                sMsg.setToType(0);
                 sMsg.setMsgType(0);
                 sMsg.setAffirm(1);
                 sMsg.setBizType(0x08);
@@ -578,8 +568,8 @@ public class GroupService {
                 //通知消息：删除组用户
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                nMsg.setFromType(1);
-                nMsg.setToType(1);
+                nMsg.setFromType(0);
+                nMsg.setToType(0);
                 nMsg.setMsgType(0);
                 nMsg.setAffirm(1);
                 nMsg.setBizType(0x04);
@@ -599,8 +589,8 @@ public class GroupService {
                 //同步消息：组信息修改
                 MsgNormal sMsg=new MsgNormal();
                 sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                sMsg.setFromType(1);
-                sMsg.setToType(1);
+                sMsg.setFromType(0);
+                sMsg.setToType(0);
                 sMsg.setMsgType(0);
                 sMsg.setAffirm(1);
                 sMsg.setBizType(0x08);
@@ -615,8 +605,8 @@ public class GroupService {
                 //通知消息：组信息修改
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                nMsg.setFromType(1);
-                nMsg.setToType(1);
+                nMsg.setFromType(0);
+                nMsg.setToType(0);
                 nMsg.setMsgType(0);
                 nMsg.setAffirm(1);
                 nMsg.setBizType(0x04);
@@ -636,8 +626,8 @@ public class GroupService {
                 //同步消息：组信息修改
                 MsgNormal sMsg=new MsgNormal();
                 sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                sMsg.setFromType(1);
-                sMsg.setToType(1);
+                sMsg.setFromType(0);
+                sMsg.setToType(0);
                 sMsg.setMsgType(0);
                 sMsg.setAffirm(1);
                 sMsg.setBizType(0x08);
@@ -659,8 +649,8 @@ public class GroupService {
                 if (!StringUtils.isNullOrEmptyOrSpace(toUser)) {
                     MsgNormal nMsg=new MsgNormal();
                     nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                    nMsg.setFromType(1);
-                    nMsg.setToType(1);
+                    nMsg.setFromType(0);
+                    nMsg.setToType(0);
                     nMsg.setMsgType(0);
                     nMsg.setAffirm(1);
                     nMsg.setBizType(0x04);
@@ -778,8 +768,8 @@ public class GroupService {
                             if (sc!=null) {
                                 MsgNormal nMsg=new MsgNormal();
                                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                                nMsg.setFromType(1);
-                                nMsg.setToType(1);
+                                nMsg.setFromType(0);
+                                nMsg.setToType(0);
                                 nMsg.setMsgType(0);
                                 nMsg.setAffirm(1);
                                 nMsg.setBizType(0x04);
@@ -819,8 +809,8 @@ public class GroupService {
                     if (sc!=null) {
                         MsgNormal nMsg=new MsgNormal();
                         nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                        nMsg.setFromType(1);
-                        nMsg.setToType(1);
+                        nMsg.setFromType(0);
+                        nMsg.setToType(0);
                         nMsg.setMsgType(0);
                         nMsg.setAffirm(1);
                         nMsg.setBizType(0x04);
@@ -922,8 +912,8 @@ public class GroupService {
             if (sc!=null) {
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                nMsg.setFromType(1);
-                nMsg.setToType(1);
+                nMsg.setFromType(0);
+                nMsg.setToType(0);
                 nMsg.setMsgType(0);
                 nMsg.setAffirm(1);
                 nMsg.setBizType(0x04);
@@ -1093,8 +1083,8 @@ public class GroupService {
                 //发送消息
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                nMsg.setFromType(1);
-                nMsg.setToType(1);
+                nMsg.setFromType(0);
+                nMsg.setToType(0);
                 nMsg.setMsgType(0);
                 nMsg.setAffirm(1);
                 nMsg.setBizType(0x04);
@@ -1184,8 +1174,8 @@ public class GroupService {
                 //通知：发送消息
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                nMsg.setFromType(1);
-                nMsg.setToType(1);
+                nMsg.setFromType(0);
+                nMsg.setToType(0);
                 nMsg.setMsgType(0);
                 nMsg.setAffirm(1);
                 nMsg.setBizType(0x04);
@@ -1297,8 +1287,8 @@ public class GroupService {
             //通知
             MsgNormal nMsg=new MsgNormal();
             nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            nMsg.setFromType(1);
-            nMsg.setToType(1);
+            nMsg.setFromType(0);
+            nMsg.setToType(0);
             nMsg.setMsgType(0);
             nMsg.setAffirm(1);
             nMsg.setBizType(0x04);
@@ -1320,8 +1310,8 @@ public class GroupService {
             //同步消息：删除组用户
             MsgNormal sMsg=new MsgNormal();
             sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            sMsg.setFromType(1);
-            sMsg.setToType(1);
+            sMsg.setFromType(0);
+            sMsg.setToType(0);
             sMsg.setMsgType(0);
             sMsg.setAffirm(1);
             sMsg.setBizType(0x08);
@@ -1342,8 +1332,8 @@ public class GroupService {
             //同步消息：组信息修改
             MsgNormal sMsg=new MsgNormal();
             sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            sMsg.setFromType(1);
-            sMsg.setToType(1);
+            sMsg.setFromType(0);
+            sMsg.setToType(0);
             sMsg.setMsgType(0);
             sMsg.setAffirm(1);
             sMsg.setBizType(0x08);
@@ -1365,8 +1355,8 @@ public class GroupService {
             if (StringUtils.isNullOrEmptyOrSpace(toUser)) {
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                nMsg.setFromType(1);
-                nMsg.setToType(1);
+                nMsg.setFromType(0);
+                nMsg.setToType(0);
                 nMsg.setMsgType(0);
                 nMsg.setAffirm(1);
                 nMsg.setBizType(0x04);
@@ -1411,8 +1401,8 @@ public class GroupService {
             //通知:告诉大家
             MsgNormal nMsg=new MsgNormal();
             nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            nMsg.setFromType(1);
-            nMsg.setToType(1);
+            nMsg.setFromType(0);
+            nMsg.setToType(0);
             nMsg.setMsgType(0);
             nMsg.setAffirm(1);
             nMsg.setBizType(0x04);
@@ -1431,8 +1421,8 @@ public class GroupService {
             //同步消息：删除组内成员
             MsgNormal sMsg=new MsgNormal();
             sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            sMsg.setFromType(1);
-            sMsg.setToType(1);
+            sMsg.setFromType(0);
+            sMsg.setToType(0);
             sMsg.setMsgType(0);
             sMsg.setAffirm(1);
             sMsg.setBizType(0x08);
@@ -1467,34 +1457,198 @@ public class GroupService {
             ret.put("ReturnType", "10041");
             ret.put("Message", "被移交用户不在该组");
         } else {
+            String[] admins=StringUtils.isNullOrEmptyOrSpace(gp.getAdminUserIds())?null:gp.getAdminUserIds().split(",");
+            //自己是管理员吗？
+            int i=0;
+            for (;i<admins.length;i++) if (admins[i].equals(operId)) break;
+            if (i==admins.length) {//自己不是管理员，无权操作
+                ret.put("ReturnType", "10021");
+                ret.put("Message", "用户不是该组的管理员！");
+            } else {
+                int j=0;
+                //判断被移交用户是否已经是管理员了
+                for (;j<admins.length;j++) if (admins[j].equals(toUserId)) break;
+                if (j<admins.length) {//====================================被移交用户已经是管理员了
+                    ret.put("ReturnType", "10011");
+                    ret.put("Message", "被移交用户已经是管理员了");
+                    //把自己移除
+                    String[] _admins=new String[admins.length-1];
+                    for (; j<admins.length; j++) {
+                        if (j==i) ;
+                        else if (j>i) _admins[j-1]=admins[j];
+                        else _admins[j]=admins[j];
+                    }
+                    admins=_admins;
+                } else {//==================================================被移交用户不是管理员
+                    ret.put("ReturnType", "1001");
+                    admins[i]=toUserId;
+                }
+                //获得新的管理员Id列表
+                String newAdminUserIds="";
+                for (String _admin: admins) newAdminUserIds+=","+_admin;
+                newAdminUserIds=newAdminUserIds.substring(1);
+
+                param.put("groupId", gp.getGroupId());
+                gp.setAdminUserIds(newAdminUserIds);
+                param.put("adminUserIds", newAdminUserIds);
+                groupDao.update(param);
+
+                @SuppressWarnings("unchecked")
+                SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                if (sc!=null) {
+                    if (ret.get("ReturnType").equals("1001")) { //发送给被移交的用户
+                        //通知消息：权限转移消息
+                        MsgNormal nMsg=new MsgNormal();
+                        nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                        nMsg.setFromType(0);
+                        nMsg.setToType(0);
+                        nMsg.setMsgType(0);
+                        nMsg.setAffirm(1);
+                        nMsg.setBizType(0x04);
+                        nMsg.setCmdType(2);
+                        nMsg.setCommand(7);
+                        Map<String, Object> dataMap=new HashMap<String, Object>();
+                        dataMap.put("GroupId", gp.getGroupId());
+                        dataMap.put("OperatorId", operId);
+                        MapContent mc=new MapContent(dataMap);
+                        nMsg.setMsgContent(mc);
+                        dataMap.put("_TOUSERS", toUserId);
+                        dataMap.put("_AFFIRMTYPE", "0");//不需要任何回复
+                        sc.addSendMsg(nMsg);
+                    }
+                    //把用户组修改信息发给组内所有的人
+                    //同步消息：组信息修改
+                    MsgNormal sMsg=new MsgNormal();
+                    sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                    sMsg.setFromType(0);
+                    sMsg.setToType(0);
+                    sMsg.setMsgType(0);
+                    sMsg.setAffirm(1);
+                    sMsg.setBizType(0x08);
+                    sMsg.setCmdType(2);//组
+                    sMsg.setCommand(2);//更改
+                    Map<String, Object> dataMap1=new HashMap<String, Object>();
+                    dataMap1.put("GroupId", gp.getGroupId());
+                    MapContent mc1=new MapContent(dataMap1);
+                    sMsg.setMsgContent(mc1);
+                    sc.addSendMsg(sMsg);
+
+                    //通知消息
+                    MsgNormal nMsg=new MsgNormal();
+                    nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                    nMsg.setFromType(0);
+                    nMsg.setToType(0);
+                    nMsg.setMsgType(0);
+                    nMsg.setAffirm(1);
+                    nMsg.setBizType(0x04);
+                    nMsg.setCmdType(2);
+                    nMsg.setCommand(9);
+                    Map<String, Object> dataMap=new HashMap<String, Object>();
+                    dataMap.put("OperatorId", operId);
+                    dataMap.put("GroupId", gp.getGroupId());
+                    dataMap.put("GroupInfo", gp.toHashMap4View());
+                    dataMap.put("Type", "ChangeAdmin");
+                    dataMap.put("GiveupAdminId", operId);
+                    UserPo u=userDao.getInfoObject("getUserById", toUserId);
+                    dataMap.put("NewAdminInfo", u.toHashMap4Mobile());
+                    MapContent mc=new MapContent(dataMap);
+                    nMsg.setMsgContent(mc);
+                    dataMap.put("_TOGROUPS", gp.getGroupId());
+                    dataMap.put("_NOUSERS", toUserId+","+operId);
+                    dataMap.put("_AFFIRMTYPE", "0");//不需要任何回复
+                    sc.addSendMsg(nMsg);
+                }
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * 移交群主权限，移交后，自己仍然是管理员
+     * @param gp 组对象
+     * @param toUserId 被移交用户Id
+     * @param operId 操作者Id，当前群主，执行此操作后，就不是群主了
+     * @return
+     */
+    public Map<String, Object> changGroupMaster(GroupPo gp, String toUserId, String operId) {
+        Map<String, Object> param=new HashMap<String, Object>();
+        //1、判断是否已经在组
+        param.put("userId", toUserId);
+        param.put("groupId", gp.getGroupId());
+        boolean find=(groupDao.getCount("getUserInGroup", param)>0);
+        param.clear();
+
+        Map<String, Object> ret=new HashMap<String, Object>();
+        if (!find) {
+            ret.put("ReturnType", "10041");
+            ret.put("Message", "被移交用户不在该组");
+        } else {
             param.put("groupId", gp.getGroupId());
-            param.put("adminUserIds", toUserId);
+            param.put("groupMasterId", toUserId);
             groupDao.update(param);
             ret.put("ReturnType", "1001");
 
             @SuppressWarnings("unchecked")
             SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
             if (sc!=null) {
-                //通知消息：权限转移消息
+                //通知消息：权限转移消息，告诉被移交者
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                nMsg.setFromType(1);
+                nMsg.setFromType(0);
                 nMsg.setToType(0);
                 nMsg.setMsgType(0);
                 nMsg.setAffirm(1);
                 nMsg.setBizType(0x04);
                 nMsg.setCmdType(2);
-                nMsg.setCommand(7);
+                nMsg.setCommand(0x0B);
                 Map<String, Object> dataMap=new HashMap<String, Object>();
                 dataMap.put("GroupId", gp.getGroupId());
                 dataMap.put("OperatorId", operId);
-                UserPo u=userDao.getInfoObject("getUserById", toUserId);
-                dataMap.put("NewAdminInfo", u.toHashMap4Mobile());
                 MapContent mc=new MapContent(dataMap);
                 nMsg.setMsgContent(mc);
-                dataMap.put("_TOGROUPS", gp.getGroupId());
+                dataMap.put("_TOUSERS", toUserId);
                 dataMap.put("_AFFIRMTYPE", "0");//不需要任何回复
                 sc.addSendMsg(nMsg);
+
+                //同步消息：组信息修改
+                MsgNormal sMsg=new MsgNormal();
+                sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                sMsg.setFromType(0);
+                sMsg.setToType(0);
+                sMsg.setMsgType(0);
+                sMsg.setAffirm(1);
+                sMsg.setBizType(0x08);
+                sMsg.setCmdType(2);//组
+                sMsg.setCommand(2);//更改
+                Map<String, Object> dataMap1=new HashMap<String, Object>();
+                dataMap1.put("GroupId", gp.getGroupId());
+                MapContent mc1=new MapContent(dataMap1);
+                sMsg.setMsgContent(mc1);
+                sc.addSendMsg(sMsg);
+
+                //通知消息：修改——群主
+                MsgNormal nMsg1=new MsgNormal();
+                nMsg1.setFromType(0);
+                nMsg1.setToType(0);
+                nMsg1.setMsgType(0);
+                nMsg1.setAffirm(1);
+                nMsg1.setBizType(0x04);
+                nMsg1.setCmdType(2);
+                nMsg1.setCommand(9);
+                Map<String, Object> dataMap2=new HashMap<String, Object>();
+                dataMap2.put("OperatorId", operId);
+                dataMap2.put("GroupId", gp.getGroupId());
+                dataMap2.put("GroupInfo", gp.toHashMap4View());
+                dataMap2.put("Type", "ChangeMaster");
+                dataMap2.put("GiveupMasterId", operId);
+                UserPo u=userDao.getInfoObject("getUserById", toUserId);
+                dataMap2.put("NewMasterInfo", u.toHashMap4Mobile());
+                MapContent mc2=new MapContent(dataMap);
+                nMsg1.setMsgContent(mc2);
+                dataMap2.put("_TOGROUPS", gp.getGroupId());
+                dataMap2.put("_NOUSERS", toUserId+","+operId);
+                dataMap2.put("_AFFIRMTYPE", "0");//不需要任何回复
+                sc.addSendMsg(nMsg1);
             }
         }
         return ret;

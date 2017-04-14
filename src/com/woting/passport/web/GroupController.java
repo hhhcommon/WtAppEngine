@@ -2285,7 +2285,7 @@ public class GroupController {
                     if (gp.getAdminUserIds()==null) {
                         map.put("ReturnType", "10032");
                         map.put("Message", "该群未设置管理员！");
-                    } if (!gp.getAdminUserIds().equals(userId)) {
+                    } else if (gp.getAdminUserIds().indexOf(userId)!=-1) {
                         map.put("ReturnType", "10021");
                         map.put("Message", "用户不是该组的管理员！");
                     }
@@ -2677,11 +2677,10 @@ public class GroupController {
                     if (gp.getGroupType()!=2) {
                         map.put("ReturnType", "1004");
                         map.put("Message", "非密码组，无法修改密码");
-                    }
-                    if (gp.getAdminUserIds()==null) {
+                    } else if (gp.getAdminUserIds()==null) {
                         map.put("ReturnType", "10032");
                         map.put("Message", "该群未设置管理员！");
-                    } if (!gp.getAdminUserIds().equals(userId)) {
+                    } else if (!gp.getAdminUserIds().equals(userId)) {
                         map.put("ReturnType", "1005");
                         map.put("Message", "不是组管理员，无权修改密码");
                     }
@@ -3132,6 +3131,133 @@ public class GroupController {
 
             map.putAll(groupService.updateGroupUser(param, userId, gp));
             map.put("ReturnType", "1001");
+            return map;
+        } catch(Exception e) {
+            e.printStackTrace();
+            map.put("ReturnType", "T");
+            map.put("TClass", e.getClass().getName());
+            map.put("Message", StringUtils.getAllMessage(e));
+            alPo.setDealFlag(2);
+            return map;
+        } finally {
+            //数据收集处理=3
+            alPo.setEndTime(new Timestamp(System.currentTimeMillis()));
+            alPo.setReturnData(JsonUtils.objToJson(map));
+            try {
+                ApiGatherMemory.getInstance().put2Queue(alPo);
+            } catch (InterruptedException e) {}
+        }
+    }
+
+
+    /**
+     * 群主权限手工移交
+     */
+    @RequestMapping(value="changGroupMaster.do")
+    @ResponseBody
+    public Map<String,Object> changGroupMaster(HttpServletRequest request) {
+        //数据收集处理==1
+        ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
+        alPo.setApiName("2.2.23-passport/group/changGroupMaster");
+        alPo.setObjType("005");//用户组对象
+        alPo.setDealFlag(1);//处理成功
+        alPo.setOwnerType(201);
+        alPo.setOwnerId("--");
+
+        Map<String,Object> map=new HashMap<String, Object>();
+        try {
+            //0-获取参数
+            String userId="";
+            MobileUDKey mUdk=null;
+            Map<String, Object> m=RequestUtils.getDataFromRequest(request);
+            alPo.setReqParam(JsonUtils.objToJson(m));
+            if (m==null||m.size()==0) {
+                map.put("ReturnType", "0000");
+                map.put("Message", "无法获取需要的参数");
+            } else {
+                MobileParam mp=MobileParam.build(m);
+                if (StringUtils.isNullOrEmptyOrSpace(mp.getImei())&&DeviceType.buildDtByPCDType(StringUtils.isNullOrEmptyOrSpace(mp.getPCDType())?-1:Integer.parseInt(mp.getPCDType()))==DeviceType.PC) { //是PC端来的请求
+                    mp.setImei(request.getSession().getId());
+                }
+                mUdk=mp.getUserDeviceKey();
+                if (mUdk!=null) {
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/changGroupMaster");
+                    if ((retM.get("ReturnType")+"").equals("2003")) {
+                        map.put("ReturnType", "200");
+                        map.put("Message", "需要登录");
+                    } else {
+                        map.putAll(retM);
+                        if ((retM.get("ReturnType")+"").equals("1001")) map.remove("ReturnType");
+                    }
+                    userId=retM.get("UserId")==null?null:retM.get("UserId")+"";
+                } else {
+                    map.put("ReturnType", "0000");
+                    map.put("Message", "无法获取需要的参数");
+                }
+            }
+            //数据收集处理==2
+            if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                alPo.setOwnerId(map.get("UserId")+"");
+            } else {
+                //过客
+                if (mUdk!=null) alPo.setOwnerId(mUdk.getDeviceId());
+                else alPo.setOwnerId("0");
+            }
+            if (mUdk!=null) {
+                alPo.setDeviceType(mUdk.getPCDType());
+                alPo.setDeviceId(mUdk.getDeviceId());
+            }
+            if (m!=null) {
+                if (mUdk!=null&&DeviceType.buildDtByPCDType(mUdk.getPCDType())==DeviceType.PC) {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setExploreVer(m.get("MobileClass")+"");
+                    }
+                    if (m.get("exploreName")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("exploreName")+"")) {
+                        alPo.setExploreName(m.get("exploreName")+"");
+                    }
+                } else {
+                    if (m.get("MobileClass")!=null&&!StringUtils.isNullOrEmptyOrSpace(m.get("MobileClass")+"")) {
+                        alPo.setDeviceClass(m.get("MobileClass")+"");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //1-处理用户组Id
+            GroupPo gp=null;
+            String groupId=(m.get("GroupId")==null?null:m.get("GroupId")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(groupId)) {
+                map.put("ReturnType", "1003");
+                map.put("Message", "无法获取组Id");
+            } else {
+                gp=groupService.getGroupById(groupId);
+                if (gp==null) {
+                    map.put("ReturnType", "1003");
+                    map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
+                } else {
+                    if (!gp.getGroupMasterId().equals(userId)) {
+                        map.put("ReturnType", "10021");
+                        map.put("Message", "用户不是该组的管理员！");
+                    }
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //2-被移交用户Id
+            String toUserId=(m.get("ToUserId")==null?null:m.get("ToUserId")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(toUserId)) {
+                map.put("ReturnType", "1004");
+                map.put("Message", "无法获取被移交用户Id");
+            } else {
+                if (toUserId.equals(userId)) {
+                    map.put("ReturnType", "1005");
+                    map.put("Message", "自己不能把权限移交给自己");
+                }
+            }
+            if (map.get("ReturnType")!=null) return map;
+
+            //3-处理
+            map.putAll(groupService.changGroupMaster(gp, toUserId, userId));
             return map;
         } catch(Exception e) {
             e.printStackTrace();

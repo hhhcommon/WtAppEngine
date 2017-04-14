@@ -157,7 +157,6 @@ public class UserPo extends UgaUser {
     /**
      * 转换为详细信息
      * @return 详细信息内容
-     * 
      */
     public Map<String, Object> getDetailInfo() {
         Map<String, Object> retM = new HashMap<String, Object>();
@@ -174,7 +173,7 @@ public class UserPo extends UgaUser {
             retM.put("Age", getAge());
         }
         if (!StringUtils.isNullOrEmptyOrSpace(this.starSign)) retM.put("StarSign", this.starSign);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.mainPhoneNum)&&this.isPubPhoneNum()) retM.put("PhoneNum", this.mainPhoneNum);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.mainPhoneNum)) retM.put("PhoneNum", this.mainPhoneNum);
         if (!StringUtils.isNullOrEmptyOrSpace(this.mailAddress)) retM.put("Email", this.mailAddress);
         retM.put("PhoneNumIsPub", this.phoneNumIsPub);
         if (!StringUtils.isNullOrEmptyOrSpace(this.portraitBig)) retM.put("PortraitBig", this.portraitBig);
