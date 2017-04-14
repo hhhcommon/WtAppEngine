@@ -218,7 +218,7 @@ public class FriendService {
         List<Map<String, Object>> _ret=null;
         if (pageIndex==0) _ret=inviteFriendDao.queryForListAutoTranform("queryInvitedMeList", userId);
         else {
-            Page<Map<String, Object>> page=userDao.pageQueryAutoTranform(null, "queryInvitedMeList", userId, pageIndex, pageSize);
+            Page<Map<String, Object>> page=inviteFriendDao.pageQueryAutoTranform(null, "queryInvitedMeList", userId, pageIndex, pageSize);
             if (page!=null&&page.getDataCount()>0) {
                 _ret=new ArrayList<Map<String, Object>>();
                 _ret.addAll(page.getResult());
@@ -231,7 +231,7 @@ public class FriendService {
         for (int i=0; i<_ret.size(); i++) {
             Map<String, Object> one=_ret.get(i);
             UserPo up=new UserPo();
-            up.setUserId(userId);
+            up.setUserId(""+one.get("id"));
             if (one.get("userName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("userName")+"")) up.setUserName(one.get("userName")+"");
             if (one.get("userNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("userNum")+"")) up.setUserNum(one.get("userNum")+"");
             if (one.get("loginName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("loginName")+"")) up.setLoginName(one.get("loginName")+"");

@@ -148,11 +148,11 @@
     </set>
     where id=#{id,jdbcType=VARCHAR}
   </update>
-  <update id="againInvite" parameterType="java.lang.String">
-    update wt_GroupInvite set inviteTime=now(), inviteVector=inviteVector+1 where id=#{value,jdbcType=VARCHAR}
+  <update id="againInvite" parameterType="java.util.Map">
+    update wt_GroupInvite set acceptFlag=0, inviteTime=now(), managerFlag=#{isManager,jdbcType=VARCHAR}, inviteVector=inviteVector+1 where id=#{id,jdbcType=VARCHAR}
   </update>
   <update id="againApply" parameterType="java.lang.String">
-    update wt_GroupInvite set inviteTime=now(), inviteVector=inviteVector-1 where id=#{value,jdbcType=VARCHAR}
+    update wt_GroupInvite set acceptFlag=0, inviteTime=now(), inviteVector=inviteVector-1 where id=#{value,jdbcType=VARCHAR}
   </update>
   <update id="setFlag2" parameterType="java.lang.String">
     update wt_GroupInvite set flag=2 where groupId=#{value,jdbcType=VARCHAR}

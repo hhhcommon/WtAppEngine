@@ -691,7 +691,7 @@ public class GroupService {
      * @param isManager 是否是管理员
      * @return
      */
-    public Map<String, Object> inviteGroup(String userId, String beInvitedUserIds, String groupId, String inviteMsg, int isManaager) {
+    public Map<String, Object> inviteGroup(String userId, String beInvitedUserIds, String groupId, String inviteMsg, int isManager) {
         Map<String, Object> m=new HashMap<String, Object>();
 
         //1、判断邀请人是否在组
@@ -752,8 +752,11 @@ public class GroupService {
                             }
                         }
                     }
-                    if (igp!=null) {
-                        inviteGroupDao.update("againInvite", igp.getId());
+                    if (igp!=null) {//注意：在邀请表中，一个人可以邀请另一个人多次，但表中只记录最新的一次
+                        param.clear();
+                        param.put("id", igp.getId());
+                        param.put("isManager", isManager);
+                        inviteGroupDao.update("againInvite", param);
                         oneResult.put("InviteCount", (igp.getInviteVector()+1)+"");
                     } else {
                         igp= new InviteGroupPo();
@@ -765,7 +768,7 @@ public class GroupService {
                         igp.setInviteVector(1);
                         igp.setManagerFlag(0);
                         //如果是管理员所邀请的，就不用再被其他管理员审核了
-                        if (isManaager==1) igp.setManagerFlag(1);
+                        if (isManager==1) igp.setManagerFlag(1);
                         inviteGroupDao.insert(igp);
                         oneResult.put("InviteCount", "1");
 
@@ -801,7 +804,7 @@ public class GroupService {
                 resultList.add(oneResult);
             }
 
-            if (gp.getGroupType()==0&&resultList.size()>0) { //验证审核群，需要先发给管理员
+            if (gp.getGroupType()==0&&resultList.size()>0&&isManager!=1) { //验证审核群，需要先发给管理员
                 String inviteSuccessUsers="";
                 for (int i=0; i<resultList.size(); i++) {
                     Map<String, String> oneResult=resultList.get(i);
@@ -876,13 +879,17 @@ public class GroupService {
 
         GroupPo gp=this.getGroupById(groupId);
         //2、判断是否已经申请
+        boolean isInDb=false;
+        String inDbId=null;
         if (canContinue) {
             param.put("aUserId", gp.getCreateUserId());
             param.put("bUserId", userId);
             param.put("groupId", groupId);
             List<InviteGroupPo> igl=inviteGroupDao.queryForList("getApplyList", param);
             if (igl!=null&&igl.size()>0) {
+                isInDb=true;
                 for (InviteGroupPo igp: igl) {
+                    inDbId=igp.getId();
                     if (igp.getAcceptFlag()==0) {
                         m.put("ReturnType", "1006");
                         m.put("RefuseMsg", "您已申请");
@@ -895,17 +902,21 @@ public class GroupService {
             }
         }
         if (canContinue) {
-            InviteGroupPo igp= new InviteGroupPo();
-            igp.setId(SequenceUUID.getUUIDSubSegment(4));
-            igp.setaUserId(gp.getCreateUserId());
-            igp.setbUserId(userId);
-            igp.setGroupId(groupId);
-            igp.setInviteMessage(applyMsg);
-            igp.setInviteVector(-1);
-            inviteGroupDao.insert(igp);
+            if (isInDb&&!StringUtils.isNullOrEmptyOrSpace(inDbId)) {
+                inviteGroupDao.update("againApply", inDbId);
+            } else {
+                InviteGroupPo igp= new InviteGroupPo();
+                igp.setId(SequenceUUID.getUUIDSubSegment(4));
+                igp.setaUserId(gp.getCreateUserId());
+                igp.setbUserId(userId);
+                igp.setGroupId(groupId);
+                igp.setInviteMessage(applyMsg);
+                igp.setInviteVector(-1);
+                inviteGroupDao.insert(igp);
+            }
             m.put("ReturnType", "1001");
 
-            //发送通知类消息
+            //发送通知类消息，给所有的管理员
             @SuppressWarnings("unchecked")
             SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
             if (sc!=null) {
@@ -917,7 +928,7 @@ public class GroupService {
                 nMsg.setAffirm(1);
                 nMsg.setBizType(0x04);
                 nMsg.setCmdType(2);
-                nMsg.setCommand(2);//处理组邀请信息
+                nMsg.setCommand(2);//处理组申请信息
                 Map<String, Object> dataMap=new HashMap<String, Object>();
                 dataMap.put("OperatorId", userId);
                 UserPo u=userDao.getInfoObject("getUserById", userId);
