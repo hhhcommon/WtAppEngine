@@ -113,6 +113,12 @@
   <select id="getGroupMembers" resultMap="userMap" parameterType="java.lang.String">
     select <include refid="Base_Column_List_A"/> from plat_User a, plat_GroupUser b where a.id=b.userId and b.groupId=#{value, jdbcType=VARCHAR}
   </select>
+  <select id="getGroupMembers" resultMap="userMap" parameterType="java.lang.String">
+    select <include refid="Base_Column_List_A"/> from plat_User a, plat_GroupUser b where a.id=b.userId and b.groupId=#{value, jdbcType=VARCHAR}
+  </select>
+  <select id="getGroupMembersByORIDSQL" resultMap="userMap" parameterType="java.lang.String">
+    select <include refid="Base_Column_List_A"/> from plat_User a, plat_GroupUser b where a.id=b.userId and ${value}
+  </select>
 
   <!-- 获得一条数据 -->
   <select id="getInfo" resultMap="userMap" parameterType="java.util.Map">
