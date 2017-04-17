@@ -169,20 +169,6 @@
     delete from wt_GroupInvite <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
   </delete>
 
-  <!-- 邀请我的组的列表 -->
-  <select id="inviteMeGroupList" resultType="java.util.HashMap" parameterType="java.lang.String">
-    select a.inviteMessage, a.inviteVector, b.groupName, b.descn groupDescn, b.groupSignature,
-      b.groupName, b.descn groupDescn, b.groupImg, b.groupNum, c.id userId, a.inviteTime, b.id groupId,
-      c.loginName, c.mailAddress, c.mainPhoneNum, c.descn userDescn, c.portraitBig, c.portraitMini
-    from wt_GroupInvite a, plat_Group b, plat_User c
-  <![CDATA[
-    where a.groupId=b.id and a.aUserId=c.id and a.flag=1 and a.acceptFlag=0 and a.inviteVector>0
-  ]]>
-    and (b.groupType!=0 or (b.groupType=0 and a.managerFlag=1))
-    and a.bUserId=#{value,jdbcType=VARCHAR}
-    order by a.inviteTime desc
-  </select>
-
   <!-- 需审核的用户邀请信息 -->
   <select id="needCheckInviteUserGroupList" resultType="java.util.HashMap" parameterType="java.lang.String">
     select a.inviteMessage, a.inviteVector, b.groupName, b.descn groupDescn, b.groupSignature, a.aUserId inviteUserId,

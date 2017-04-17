@@ -192,7 +192,7 @@ public class UserService implements UgaUserService {
                     drr.setDd(regionNode);
                     flag=dictService.bindDictRef(drr, 1);
                     if (flag==1||flag==4) OKFields+=",Region";
-                    else noMap.put("Sex", "地区保存错误");
+                    else noMap.put("Region", "地区保存错误");
                 }
             }
             //5-生日Birthday
@@ -203,21 +203,17 @@ public class UserService implements UgaUserService {
             if (userInfo.get("starSign")!=null&&!StringUtils.isNullOrEmptyOrSpace(userInfo.get("starSign")+"")) {
                 OKFields+=",StarSign";
             }
-            //7-星座StarSign
-            if (userInfo.get("starSign")!=null&&!StringUtils.isNullOrEmptyOrSpace(userInfo.get("starSign")+"")) {
-                OKFields+=",StarSign";
-            }
-            //8-邮件Email
+            //7-邮件Email
             if (userInfo.get("email")!=null&&!StringUtils.isNullOrEmptyOrSpace(userInfo.get("email")+"")) {
                 userInfo.put("mailAddress", userInfo.get("email"));
                 userInfo.remove("email");
                 OKFields+=",Email";
             }
-            //9-主页Homepage
+            //8-主页Homepage
             if (userInfo.get("homePage")!=null&&!StringUtils.isNullOrEmptyOrSpace(userInfo.get("homePage")+"")) {
                 OKFields+=",Homepage";
             }
-            //10-用户号
+            //9-用户号
             if (userInfo.get("userNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(userInfo.get("userNum")+"")) {
                 flag=this.decideUserNum(userInfo.get("userId")+"", userInfo.get("userNum")+"");
                 if (flag==1) OKFields+=",UserNum";
@@ -232,25 +228,25 @@ public class UserService implements UgaUserService {
                     userInfo.remove("userNum");
                 }
             }
-            //11-用户密码
+            //10-用户密码
             if (userInfo.get("password")!=null&&!StringUtils.isNullOrEmptyOrSpace(userInfo.get("password")+"")) {
                 OKFields+=",Password";
             }
-            //12-手机号码
+            //11-手机号码
             if (userInfo.get("phoneNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(userInfo.get("phoneNum")+"")) {
                 userInfo.put("mainPhoneNum", userInfo.get("phoneNum"));
                 userInfo.remove("phoneNum");
                 OKFields+=",PhoneNum";
             }
-            //13-用户大图标
+            //12-用户大图标
             if (userInfo.get("portraitBig")!=null&&!StringUtils.isNullOrEmptyOrSpace(userInfo.get("portraitBig")+"")) {
                 OKFields+=",PortraitBig";
             }
-            //14-用户小图标
+            //13-用户小图标
             if (userInfo.get("portraitMini")!=null&&!StringUtils.isNullOrEmptyOrSpace(userInfo.get("portraitMini")+"")) {
                 OKFields+=",PortraitMini";
             }
-            //15-用户手机号是否公开
+            //14-用户手机号是否公开
             if (userInfo.get("phoneNumIsPub")!=null&&!StringUtils.isNullOrEmptyOrSpace(userInfo.get("phoneNumIsPub")+"")) {
                 OKFields+=",PhoneNumIsPub";
             }

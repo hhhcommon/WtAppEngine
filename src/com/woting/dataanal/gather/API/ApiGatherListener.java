@@ -46,13 +46,13 @@ public class ApiGatherListener extends Thread {
     public void run() {
         try {
             sleep(5000);//多少毫秒后启动任务处理，先让系统的其他启动任务完成，这里设置死为10秒钟
-            System.out.println("===============================");
-            System.out.println(this.getName()+"线程开始执行");
-            System.out.println("===============================");
-
-            System.out.println("1-初始化日志队列");
+//            System.out.println("===============================");
+//            System.out.println(this.getName()+"线程开始执行");
+//            System.out.println("===============================");
+//
+//            System.out.println("1-初始化日志队列");
             ApiGatherMemory agm = ApiGatherMemory.getInstance();
-            System.out.println("2-启动["+this.getName()+"]过程");
+//            System.out.println("2-启动["+this.getName()+"]过程");
 
             int i=0;
             while (this.alService==null&&i++<5) {

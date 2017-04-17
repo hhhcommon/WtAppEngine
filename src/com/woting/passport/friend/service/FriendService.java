@@ -179,8 +179,8 @@ public class FriendService {
                 //通知消息
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                nMsg.setFromType(1);
-                nMsg.setToType(1);
+                nMsg.setFromType(0);
+                nMsg.setToType(0);
                 nMsg.setMsgType(0);
                 nMsg.setAffirm(0);
                 nMsg.setBizType(0x04);
@@ -310,8 +310,8 @@ public class FriendService {
                     //通知：发送消息——给邀请人
                     MsgNormal nMsg=new MsgNormal();
                     nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                    nMsg.setFromType(1);
-                    nMsg.setToType(1);
+                    nMsg.setFromType(0);
+                    nMsg.setToType(0);
                     nMsg.setMsgType(0);
                     nMsg.setAffirm(0);
                     nMsg.setBizType(0x04);
@@ -373,8 +373,8 @@ public class FriendService {
                 //通知：发送消息
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                nMsg.setFromType(1);
-                nMsg.setToType(1);
+                nMsg.setFromType(0);
+                nMsg.setToType(0);
                 nMsg.setMsgType(0);
                 nMsg.setAffirm(0);
                 nMsg.setBizType(0x04);
