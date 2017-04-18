@@ -179,11 +179,10 @@ public class DictService {
     /**
      * 绑定字典与资源的关系
      * @param drr 字典资源关系
-     * @param type 0=可多个;1=唯一
      * @return 新增的字典项Id；1-成功；2-未找到字典组；3-未找到父亲结点；4-已存在，不用插入；0-不存在
      */
     @SuppressWarnings("unchecked")
-    public int bindDictRef(DictRefRes drr, int type) {
+    public int bindDictRef(DictRefRes drr) {
         try {
             CacheEle<_CacheDictionary> cache=((CacheEle<_CacheDictionary>)SystemCache.getCache(WtAppEngineConstants.CACHE_DICT));
             _CacheDictionary cd=cache.getContent();
@@ -215,10 +214,11 @@ public class DictService {
                 }
             }
             if (exist) {//update
-                return dictRefDao.update(newDrrPo);
+                dictRefDao.update(newDrrPo);
             } else {//insert
-                return dictRefDao.insert(newDrrPo);//可以重复
+                dictRefDao.insert(newDrrPo);//可以重复
             }
+            return 1;
         } catch(Exception e) {
             e.printStackTrace();
         }
