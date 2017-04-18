@@ -15,6 +15,30 @@
     http://www.springframework.org/schema/aop
     http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
   
+  <!-- 符合Spring3.5之后的配置；支持自动把object转变为json串的配置 -->
+  <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>
+  <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+    <property name="messageConverters">
+      <list>
+        <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+          <property name ="supportedMediaTypes">    
+            <list>
+              <value>text/plain;charset=UTF-8</value>
+              <value>text/html;charset=UTF-8</value>
+            </list>
+          </property>
+        </bean>
+        <bean class="com.woting.ext.spring.MappingJackson2HttpMessageConverterFactory">
+          <property name="supportedMediaTypes">
+            <list>
+              <value>application/json;charset=UTF-8</value>
+            </list>
+          </property>
+        </bean>
+      </list>
+    </property>
+  </bean>
+  
   <context:component-scan base-package="com.woting" use-default-filters="false">
     <context:include-filter type="regex" expression=".*.web.*Controller"/>
   </context:component-scan>

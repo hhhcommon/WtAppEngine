@@ -179,8 +179,6 @@ public abstract class ContentUtils {
         if (retM.get("ContentPubTime")==null || retM.get("ContentPubTime").equals("null")) {
 			retM.put("ContentPubTime", one.get("cTime"));
 		}
-        
-        
         return retM;
     }
 

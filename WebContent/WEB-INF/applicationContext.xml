@@ -169,7 +169,19 @@
     <property name="password" value="${redis.password}"/>
     <property name="poolConfig" ref="poolConfig"/>
   </bean>
-
+  
+  <!-- oss功能 -->
+  <bean id="ossconfig" class="com.woting.cm.core.oss.persis.po.OssConfigPo" scope="prototype">
+    <property name="Endpoint" value="${oss.Endpoint}"/>
+    <property name="AccessKeyId" value="${oss.AccessKeyId}"/>
+    <property name="AccessKeySecret" value="${oss.AccessKeySecret}"/>
+    <property name="BucketName" value="${oss.BucketName}"/>
+    <property name="TempFile" value="${oss.TempFile}"/>
+  </bean>
+  <!-- map2json功能 -->
+  <bean id="map2json" class="com.woting.cm.core.map2json.persis.po.Map2JsonPo" scope="prototype">
+    <property name="replaceStr" value="${map2json.replaceStr}"/>
+  </bean>
   <!-- 以下为jsonConf配置信息 -->
   <!--Uga缓存：平台 -->
 <!--   <bean id="loadJsonConfig" class="com.woting.appengine.LoadJsonConfig" scope="prototype" init-method="loadConfig"> -->
