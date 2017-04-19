@@ -274,6 +274,41 @@ public class OssUtils {
 		return null;
 	}
 	
+	/**
+	 * 
+	 * @param key 图片Object
+	 * @param WidhtResizePer 宽缩放大小
+	 * @param HighResizePer 高缩放大小
+	 * @return
+	 */
+	public static InputStream makePictureResize(String key, int WidhtResizePer, int HighResizePer) {
+		OSSClient ossClient = null;
+		try {
+			OssConfigPo ossConfigPo = (OssConfigPo) getBean("ossconfig");
+			if (ossConfigPo!=null) {
+				ossClient = new OSSClient(ossConfigPo.getEndpoint(), ossConfigPo.getAccessKeyId(), ossConfigPo.getAccessKeySecret());
+				if (ossClient!=null) {
+					String style = "image/resize,m_lfit,w_"+WidhtResizePer+",h_"+HighResizePer+",limit_0/auto-orient,0/quality,q_100";  
+					GetObjectRequest request = new GetObjectRequest(ossConfigPo.getBucketName(), key);
+					request.setProcess(style);
+					OSSObject ossObject = ossClient.getObject(request);
+					if (ossObject!=null) {
+					    InputStream in = ossObject.getObjectContent();
+						if (in!=null) {
+							return in;
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			if (ossClient!=null) ossClient.shutdown();
+		}
+		return null;
+	}
+	
 	private static boolean writeFile(String jsonstr, File file) {
 		try {
 			OutputStreamWriter write = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");

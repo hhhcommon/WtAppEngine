@@ -2,6 +2,7 @@ package com.woting.appengine.common.web;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +16,7 @@ import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.StringUtils;
+import com.woting.cm.core.oss.utils.OssUtils;
 import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
 import com.woting.dataanal.gather.API.persis.pojo.ApiLogPo;
 import com.woting.passport.UGA.persis.pojo.GroupPo;
@@ -25,12 +27,10 @@ import com.woting.passport.mobile.MobileUDKey;
 import com.woting.passport.session.DeviceType;
 import com.woting.passport.session.SessionService;
 
-import net.coobird.thumbnailator.Thumbnails;
-
 @Controller
 public class FileUploadController extends AbstractFileUploadController {
-    public static final String PREFIX_URL="http://www.wotingfm.com/dataCenter/userimg"; //URL前缀
-    public static final String STOREPATH="/opt/dataCenter/userimg"; //存储目录
+    public static final String PREFIX_URL="http://ac.wotingfm.com/userimg"; //URL前缀
+    public static final String STOREPATH="userimg"; //"/opt/dataCenter/userimg"; //存储目录
 
     @Resource
     private UserService userService;
@@ -140,8 +140,8 @@ public class FileUploadController extends AbstractFileUploadController {
                     //文件保存到数据库中
                     Map<String, Object> updateInfo=new HashMap<String, Object>();
                     updateInfo.put("userId", userId);
-                    updateInfo.put("portraitBig", PREFIX_URL+storeFile);
-                    updateInfo.put("portraitMini", PREFIX_URL+storeFile);
+                    updateInfo.put("portraitBig", "##img##"+STOREPATH+storeFile);
+                    updateInfo.put("portraitMini", "##img##"+STOREPATH+storeFile);
                     userService.updateUser(updateInfo);
                     datamap.put("ReturnType", "1001");
                     datamap.put("PortraitBig", PREFIX_URL+storeFile);
@@ -163,7 +163,7 @@ public class FileUploadController extends AbstractFileUploadController {
                         copyFiles(tempFileName, storeFile);
                         //图片文件缩略存储
                         //文件保存到数据库中
-                        g.setGroupImg(PREFIX_URL+storeFile);
+                        g.setGroupImg("##img##"+STOREPATH+storeFile);
                         groupService.updateGroup(g);
                         datamap.put("ReturnType", "1001");
                         datamap.put("GroupImg", PREFIX_URL+storeFile);
@@ -190,17 +190,25 @@ public class FileUploadController extends AbstractFileUploadController {
 
     private void copyFiles(String srcFileName, String destFileName) throws IOException {
         //拷贝到指定目录，原始图片
-        FileUtils.copyFile(new File(srcFileName), new File(STOREPATH+destFileName));
-        File f=new File(STOREPATH+destFileName);
-        if (f.isFile()) {
+//        FileUtils.copyFile(new File(srcFileName), new File(STOREPATH+destFileName));
+        boolean isok = OssUtils.upLoadObject(STOREPATH+destFileName, new File(srcFileName), true); //ECS文件移到OS里
+//        File f=new File(STOREPATH+destFileName);
+        if (isok) {
             String _destFileName=FileNameUtils.getPureFileName(destFileName);
             //按照文件格式标准，转存图片
             String img150path=_destFileName+".150_150.png";
             String img300path=_destFileName+".300_300.png";
             String img450path=_destFileName+".450_450.png";
-            Thumbnails.of(new File(srcFileName)).size(150, 150).toFile(FileNameUtils.concatPath(STOREPATH, img150path));
-            Thumbnails.of(new File(srcFileName)).size(300, 300).toFile(FileNameUtils.concatPath(STOREPATH, img300path));
-            Thumbnails.of(new File(srcFileName)).size(450, 450).toFile(FileNameUtils.concatPath(STOREPATH, img450path));
+            InputStream in = null;
+            in = OssUtils.makePictureResize(destFileName, 150);
+            if (in!=null) OssUtils.upLoadObject(img150path, in);
+            in = OssUtils.makePictureResize(destFileName, 300);
+            if (in!=null) OssUtils.upLoadObject(img300path, in);
+            in = OssUtils.makePictureResize(destFileName, 450);
+            if (in!=null) OssUtils.upLoadObject(img450path, in);
+//            Thumbnails.of(new File(srcFileName)).size(150, 150).toFile(FileNameUtils.concatPath(STOREPATH, img150path));
+//            Thumbnails.of(new File(srcFileName)).size(300, 300).toFile(FileNameUtils.concatPath(STOREPATH, img300path));
+//            Thumbnails.of(new File(srcFileName)).size(450, 450).toFile(FileNameUtils.concatPath(STOREPATH, img450path));
         }
     }
 }
