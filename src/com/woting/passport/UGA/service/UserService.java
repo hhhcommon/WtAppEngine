@@ -171,7 +171,7 @@ public class UserService implements UgaUserService {
                     noMap.put("Sex", "用户性别编码错误");
                 } else {
                     drr.setDd(sexNode);
-                    flag=dictService.bindDictRef(drr, 1);
+                    flag=dictService.bindDictRef(drr);
                     if (flag==1||flag==4) OKFields+=",Sex";
                     else noMap.put("Sex", "用户性别保存错误");
                 }
@@ -190,7 +190,7 @@ public class UserService implements UgaUserService {
                     noMap.put("Region", "地区编码错误");
                 } else {
                     drr.setDd(regionNode);
-                    flag=dictService.bindDictRef(drr, 1);
+                    flag=dictService.bindDictRef(drr);
                     if (flag==1||flag==4) OKFields+=",Region";
                     else noMap.put("Region", "地区保存错误");
                 }

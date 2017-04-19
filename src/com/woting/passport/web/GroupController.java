@@ -1379,30 +1379,19 @@ public class GroupController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            List<Map<String, Object>> aul=groupService.getApplyUserList(groupId);
-            List<Map<String, Object>> rAul=new ArrayList<Map<String, Object>>();
+            //2-获取分页信息
+            int page=0;//获取页数
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            int pageSize=10;//得到每页条数
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+
+            List<Map<String, Object>> aul=groupService.getApplyUserList(groupId, pageSize, page);
             if (aul!=null&&aul.size()>0) {
-                Map<String, Object> au;
-                for (Map<String, Object> one:aul) {
-                    au=new HashMap<String, Object>();
-                    au.put("GroupId", one.get("groupId"));
-                    au.put("GroupName", one.get("groupName"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupSignature"))) au.put("GgroupSignature", one.get("groupSignature"));
-                    au.put("ApplyTime",((Date)one.get("inviteTime")).getTime()+"");
-                    au.put("UserId", one.get("applyUserId"));
-                    au.put("UserName", one.get("loginName"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("userDescn"))) au.put("UserDescn", one.get("userDescn"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mailAddress"))) au.put("Email", one.get("mailAddress"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mainPhoneNum"))) au.put("PhoneNum", one.get("mainPhoneNum"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("portraitBig"))) au.put("PortraitBig", one.get("portraitBig"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("portraitMini"))) au.put("PortraitMini", one.get("portraitMini"));
-                    rAul.add(au);
-                }
                 map.put("ReturnType", "1001");
-                map.put("UserList", rAul);
+                map.put("UserList", aul);
             } else {
                 map.put("ReturnType", "1011");
-                map.put("Message", "无所属用户组");
+                map.put("Message", "该用户组下没有申请人列表");
             }
             return map;
         } catch(Exception e) {
@@ -1495,30 +1484,19 @@ public class GroupController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            List<Map<String, Object>> eauGl=groupService.getExistApplyUserGroupList(userId);
-            List<Map<String, Object>> rEauGl=new ArrayList<Map<String, Object>>();
+            //1-获取分页信息
+            int page=0;//获取页数
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            int pageSize=10;//得到每页条数
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+
+            List<Map<String, Object>> eauGl=groupService.getExistApplyUserGroupList(userId, pageSize, page);
             if (eauGl!=null&&eauGl.size()>0) {
-                Map<String, Object> gInfo;
-                for (Map<String, Object> one:eauGl) {
-                    gInfo=new HashMap<String, Object>();
-                    gInfo.put("GroupId", one.get("groupId"));
-                    gInfo.put("GroupNum", one.get("groupNum"));
-                    gInfo.put("GroupType", one.get("groupType"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupImg"))) gInfo.put("GroupImg", one.get("groupImg"));
-                    gInfo.put("GroupName", one.get("groupName"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupSignature"))) gInfo.put("GgroupSignature", one.get("groupSignature"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("createUserId"))) gInfo.put("GroupCreator", one.get("createUserId"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("adminUserIds"))) gInfo.put("GroupManager", one.get("adminUserIds"));
-                    gInfo.put("GroupCount", one.get("groupCount"));
-                    if (one.get("inviteCount")!=null) gInfo.put("InviteCount", one.get("inviteCount"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("descn"))) gInfo.put("GroupDescn", one.get("descn"));
-                    rEauGl.add(gInfo);
-                }
                 map.put("ReturnType", "1001");
-                map.put("GroupList", rEauGl);
+                map.put("GroupList", eauGl);
             } else {
                 map.put("ReturnType", "1011");
-                map.put("Message", "无所属用户组");
+                map.put("Message", "该用户组下没有申请人列表");
             }
             return map;
         } catch(Exception e) {
@@ -2026,7 +2004,7 @@ public class GroupController {
                     if (gp.getAdminUserIds()==null) {
                         map.put("ReturnType", "10032");
                         map.put("Message", "该群未设置管理员！");
-                    } else if (gp.getAdminUserIds().indexOf(userId)==-1) {
+                    } else if (!gp.getAdminUserIds().equals(userId)) {
                         map.put("ReturnType", "10021");
                         map.put("Message", "用户不是该组的管理员！");
                     }
@@ -2151,7 +2129,7 @@ public class GroupController {
                     if (gp.getAdminUserIds()==null) {
                         map.put("ReturnType", "10032");
                         map.put("Message", "该群未设置管理员！");
-                    } else  if (gp.getAdminUserIds().indexOf(userId)==-1) {
+                    } else  if (!gp.getAdminUserIds().equals(userId)) {
                         map.put("ReturnType", "10021");
                         map.put("Message", "用户不是该组的管理员！");
                     }
@@ -2805,7 +2783,7 @@ public class GroupController {
                     if (gp.getAdminUserIds()==null) {
                         map.put("ReturnType", "10032");
                         map.put("Message", "该群未设置管理员！");
-                    } else if (gp.getAdminUserIds().indexOf(userId)==-1) {
+                    } else if (!gp.getAdminUserIds().equals(userId)) {
                         map.put("ReturnType", "10021");
                         map.put("Message", "用户不是该组的管理员！");
                     }
@@ -3260,12 +3238,12 @@ public class GroupController {
     /**
      * 群主设置管理员
      */
-    @RequestMapping(value="setGroupMaster.do")
+    @RequestMapping(value="setGroupAdmin.do")
     @ResponseBody
     public Map<String,Object> setGroupMaster(HttpServletRequest request) {
         //数据收集处理==1
         ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
-        alPo.setApiName("2.2.24-passport/group/setGroupMaster");
+        alPo.setApiName("2.2.24-passport/group/setGroupAdmin");
         alPo.setObjType("005");//用户组对象
         alPo.setDealFlag(1);//处理成功
         alPo.setOwnerType(201);
@@ -3288,7 +3266,7 @@ public class GroupController {
                 }
                 mUdk=mp.getUserDeviceKey();
                 if (mUdk!=null) {
-                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/setGroupMaster");
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/setGroupAdmin");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
                         map.put("Message", "需要登录");
