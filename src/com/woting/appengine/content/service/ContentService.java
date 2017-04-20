@@ -1541,7 +1541,7 @@ public class ContentService {
 			//TODO
 			List<SolrInputPo> solrips = new ArrayList<>();
 			List<SortClause> solrsorts = SolrUtils.makeSolrSort("score desc");
-			SolrSearchResult sResult = solrJService.solrSearch(2, queryStr, solrsorts, params, "*,score", page, pageSize, idfqstr, channelfqstr, "item_type:AUDIO");
+			SolrSearchResult sResult = solrJService.solrSearch(2, queryStr, solrsorts, params, "*,score", page, pageSize, idfqstr, channelfqstr, "item_type:AUDIO","-item_title:"+searchStr);
 			if (sResult!=null && sResult.getSolrInputPos().size()>0) {
 				solrips.addAll(sResult.getSolrInputPos());
 		    }
