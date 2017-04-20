@@ -100,7 +100,10 @@ public class GroupService {
             group.setCTime(new Timestamp(System.currentTimeMillis()));
 
             if (group.getUserList()!=null&&group.getUserList().size()>1) {
-                SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                SocketClient sc=null;
+                try {
+                    sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                } catch(Exception e) {}
                 if (sc!=null) {
                     //通知消息
                     MsgNormal nMsg=new MsgNormal();
@@ -136,6 +139,7 @@ public class GroupService {
      * @param g 用户组
      * @param u 用户
      */
+    @SuppressWarnings("unchecked")
     public int insertGroupUser(GroupPo g, UserPo u, int isSelfIn, boolean isMsg, String operId) {
         GroupUserPo gu=new GroupUserPo();
         gu.setId(SequenceUUID.getUUIDSubSegment(4));
@@ -149,8 +153,10 @@ public class GroupService {
             groupDao.insert("insertGroupUser", gu);
             i=1;
             if (isMsg) {
-                @SuppressWarnings("unchecked")
-                SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                SocketClient sc=null;
+                try {
+                    sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                } catch(Exception e) {}
                 if (sc!=null) {
                     //同步消息：加入组内成员
                     MsgNormal sMsg=new MsgNormal();
@@ -414,6 +420,7 @@ public class GroupService {
      * @param g 所修改的组对象
      * @return 更新用户成功返回1，否则返回0
      */
+    @SuppressWarnings("unchecked")
     public void updateGroup(Map<String, Object> newInfo, String userId, GroupPo g) {
         boolean changed=false;
         if (g.getAdminUserIds().indexOf(userId)!=-1) { //修改组本身信息
@@ -434,8 +441,10 @@ public class GroupService {
         }
         if (!changed) return ;
 
-        @SuppressWarnings("unchecked")
-        SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+        SocketClient sc=null;
+        try {
+            sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+        } catch(Exception e) {}
         if (sc!=null) {
             //同步消息：组信息修改
             MsgNormal sMsg=new MsgNormal();
@@ -482,6 +491,7 @@ public class GroupService {
      * @param user 退出的用户
      * @return 0用户不在组，1退出组，2退出组并删除组
      */
+    @SuppressWarnings("unchecked")
     public int exitUserFromGroup(GroupPo gp, UserPo u) {
         String groupId=(gp==null?null:gp.getGroupId());
         String userId=(u==null?null:u.getUserId());
@@ -580,8 +590,10 @@ public class GroupService {
         groupDao.update(updateGp);
         gp.setAdminUserIds(adminUserIds);
 
-        @SuppressWarnings("unchecked")
-        SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+        SocketClient sc=null;
+        try {
+            sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+        } catch(Exception e) {}
         if (sc!=null) {
             if (r==2) {//删除用户组
                 //同步消息：组信息修改
@@ -735,6 +747,7 @@ public class GroupService {
      * @param isManager 是否是管理员
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> inviteGroup(String userId, String beInvitedUserIds, String groupId, String inviteMsg, int isManager) {
         Map<String, Object> m=new HashMap<String, Object>();
 
@@ -817,8 +830,10 @@ public class GroupService {
                         oneResult.put("InviteCount", "1");
 
                         if (gp.getGroupType()!=0||isManager==1) {//不是验证群，直接发给被邀请者
-                            @SuppressWarnings("unchecked")
-                            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                            SocketClient sc=null;
+                            try {
+                                sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                            } catch(Exception e) {}
                             if (sc!=null) {
                                 MsgNormal nMsg=new MsgNormal();
                                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -857,8 +872,10 @@ public class GroupService {
                 }
                 inviteSuccessUsers=inviteSuccessUsers.length()>0?inviteSuccessUsers.substring(1):inviteSuccessUsers;
                 if (inviteSuccessUsers.length()>0) {
-                    @SuppressWarnings("unchecked")
-                    SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                    SocketClient sc=null;
+                    try {
+                        sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                    } catch(Exception e) {}
                     if (sc!=null) {
                         MsgNormal nMsg=new MsgNormal();
                         nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -903,6 +920,7 @@ public class GroupService {
      * @param applyMsg 申请信息
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> applyGroup(String userId, String groupId, String adminIds, String applyMsg) {
         Map<String, Object> m=new HashMap<String, Object>();
         Map<String, Object> param=new HashMap<String, Object>();
@@ -954,8 +972,10 @@ public class GroupService {
             m.put("ReturnType", "1001");
 
             //发送通知类消息，给所有的管理员
-            @SuppressWarnings("unchecked")
-            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+            SocketClient sc=null;
+            try {
+                sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+            } catch(Exception e) {}
             if (sc!=null) {
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -1276,6 +1296,7 @@ public class GroupService {
      * @param type 1邀请;2申请
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> dealInvite(String userId, String inviteUserId, String groupId, boolean isRefuse, String refuseMsg, int type, String operId) {
         Map<String, Object> m=new HashMap<String, Object>();
         Map<String, Object> param=new HashMap<String, Object>();
@@ -1315,8 +1336,10 @@ public class GroupService {
             inviteGroupDao.update("sameUserInviteDeal", igPo);
             inviteGroupDao.update(igPo);//更新组邀请信息
 
-            @SuppressWarnings("unchecked")
-            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+            SocketClient sc=null;
+            try {
+                sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+            } catch(Exception e) {}
             if (sc!=null) {
                 //发送消息：告知申请人或被邀请人
                 MsgNormal nMsg=new MsgNormal();
@@ -1359,6 +1382,7 @@ public class GroupService {
      * @param refuseMsg 拒绝理由
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> dealCheck(String inviteUserId, String beInvitedUserId, String groupId, boolean isRefuse, String refuseMsg, String operId) {
         Map<String, Object> m=new HashMap<String, Object>();
         if (userDao.getInfoObject("getUserById", inviteUserId)==null) {
@@ -1405,8 +1429,10 @@ public class GroupService {
                 m.put("ReturnType", "1001");
             }
 
-            @SuppressWarnings("unchecked")
-            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+            SocketClient sc=null;
+            try {
+                sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+            } catch(Exception e) {}
             if (sc!=null) {
                 //通知：发送消息
                 MsgNormal nMsg=new MsgNormal();
@@ -1484,6 +1510,7 @@ public class GroupService {
      * @param userIds 用户Id，用逗号隔开
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> kickoutGroup(GroupPo gp, String userIds, String operId) {
         String groupId=gp.getGroupId();
         List<UserPo> ul=userDao.queryForList("getGroupMembers", groupId);
@@ -1551,8 +1578,10 @@ public class GroupService {
         }
 
         if (beKickoutUserList==null||beKickoutUserList.isEmpty()) return ret;
-        @SuppressWarnings("unchecked")
-        SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+        SocketClient sc=null;
+        try {
+            sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+        } catch(Exception e) {}
         if (sc!=null) {
             String toUser="";
             if (ul!=null&&!ul.isEmpty()) for (int i=0;i<ul.size(); i++) toUser+=","+ul.get(i).getUserId();
@@ -1642,6 +1671,7 @@ public class GroupService {
      * @param gp 被解散的组
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> dissolve(GroupPo gp, String operId) {
         String groupId=gp.getGroupId();
 
@@ -1656,8 +1686,10 @@ public class GroupService {
         //删除组内所有成员的别名
         userAliasService.delAliasInGroup(groupId);
 
-        @SuppressWarnings("unchecked")
-        SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+        SocketClient sc=null;
+        try {
+            sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+        } catch(Exception e) {}
         if (sc!=null) {
             //通知:告诉大家
             MsgNormal nMsg=new MsgNormal();
@@ -1704,6 +1736,7 @@ public class GroupService {
      * @param toUserId 被移交用户Id
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> changGroupAdminner(GroupPo gp, String toUserId, String operId) {
         Map<String, Object> ret=new HashMap<String, Object>();
         //1、判断是否已经在组
@@ -1748,8 +1781,10 @@ public class GroupService {
                 param.put("adminUserIds", newAdminUserIds);
                 groupDao.update(param);
 
-                @SuppressWarnings("unchecked")
-                SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                SocketClient sc=null;
+                try {
+                    sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                } catch(Exception e) {}
                 if (sc!=null) {
                     if (ret.get("ReturnType").equals("1001")) { //发送给被移交的用户
                         //通知消息：权限转移消息
@@ -1824,6 +1859,7 @@ public class GroupService {
      * @param operId 操作者Id，当前群主，执行此操作后，就不是群主了
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> changGroupMaster(GroupPo gp, String toUserId, String operId) {
         Map<String, Object> ret=new HashMap<String, Object>();
         //1、判断是否已经在组
@@ -1837,8 +1873,10 @@ public class GroupService {
             groupDao.update(param);
             ret.put("ReturnType", "1001");
 
-            @SuppressWarnings("unchecked")
-            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+            SocketClient sc=null;
+            try {
+                sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+            } catch(Exception e) {}
             if (sc!=null) {
                 //通知消息：权限转移消息，告诉被移交者
                 MsgNormal nMsg=new MsgNormal();
@@ -1876,6 +1914,7 @@ public class GroupService {
                 sc.addSendMsg(sMsg);
                 //通知消息：修改——群主
                 MsgNormal nMsg1=new MsgNormal();
+                nMsg1.setMsgId(SequenceUUID.getUUIDSubSegment(4));
                 nMsg1.setFromType(0);
                 nMsg1.setToType(0);
                 nMsg1.setMsgType(0);
@@ -1959,14 +1998,15 @@ public class GroupService {
     }
 
     /**
-     * 移交群主权限，移交后，自己仍然是管理员
+     * 群主设置管理员
      * @param gp 组对象
      * @param addAdminUserIds 增加的管理员的Id列表，用逗号隔开；
      * @param delAdminUserIds 删除的管理员的Id列表，用逗号隔开；
      * @param operId 操作者Id，当前群主，执行此操作后，就不是群主了
      * @return
      */
-    public Map<String, Object> setGroupMaster(GroupPo gp, String addAdminUserIds, String delAdminUserIds, String operId) {
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> setGroupAdmin(GroupPo gp, String addAdminUserIds, String delAdminUserIds, String operId) {
         Map<String, Object> ret=new HashMap<String, Object>();
 
         List<Map<String, Object>> addList=initResultList(addAdminUserIds);
@@ -2034,7 +2074,7 @@ public class GroupService {
                         for (;i<users.size(); i++) if (users.get(i).getUserId().equals(tempUserId)) break;
                         find=(i<users.size());
                     }
-                    if (find) {//未找到
+                    if (!find) {//未找到
                         oneAdd.put("ReturnType", "1002");
                         oneAdd.put("Message", "用户不是该组成员");
                     } else {//找到
@@ -2054,7 +2094,7 @@ public class GroupService {
                         for (;i<users.size(); i++) if (users.get(i).getUserId().equals(tempUserId)) break;
                         find=(i<users.size());
                     }
-                    if (find) {//未找到
+                    if (!find) {//未找到
                         oneDel.put("ReturnType", "1002");
                         oneDel.put("Message", "用户不是该组成员");
                     } else {//找到
@@ -2073,7 +2113,7 @@ public class GroupService {
                 if (!oneAdd.get("ReturnType").equals("1005")&&allOk) allOk=false;
                 if (oneAdd.get("ReturnType").equals("1005")) {
                     if (nowAdminUserIds.indexOf(oneAdd.get("UserId")+"")==-1) {
-                        nowAdminUserIds+=oneAdd.get("UserId");
+                        nowAdminUserIds+=","+oneAdd.get("UserId");
                     } else {
                         oneAdd.put("ReturnType", "10011");
                         oneAdd.put("Message", "用户已经是管理员，不必添加");
@@ -2101,7 +2141,7 @@ public class GroupService {
         //七、更新数据库
         GroupPo uGp=new GroupPo();
         uGp.setGroupId(gp.getGroupId());
-        uGp.setAdminUserIds(nowAdminUserIds);
+        uGp.setAdminUserIds(nowAdminUserIds.substring(1));
         int flag=this.updateGroup(uGp);
         if (flag==0) ret.put("ReturnType","1005");
         else {
@@ -2109,17 +2149,25 @@ public class GroupService {
             //八、第五次扫描，把正确的内容调整过来
             if (addList!=null) {//增加的列表
                 for (Map<String, Object> oneAdd: addList) {
-                    if (oneAdd.get("ReturnType").equals("1005")) oneAdd.put("ReturnType", "1001");
+                    if (oneAdd.get("ReturnType").equals("1005")) {
+                        oneAdd.put("ReturnType", "1001");
+                        oneAdd.remove("Message");
+                    }
                 }
             }
             if (delList!=null) {//删除的列表
                 for (Map<String, Object> oneDel: delList) {
-                    if (oneDel.get("ReturnType").equals("1005")) oneDel.put("ReturnType", "1001");
+                    if (oneDel.get("ReturnType").equals("1005")) {
+                        oneDel.put("ReturnType", "1001");
+                        oneDel.remove("Message");
+                    }
                 }
             }
             //九、根据处理结果发送相关的消息
-            @SuppressWarnings("unchecked")
-            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+            SocketClient sc=null;
+            try {
+                sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+            } catch(Exception e) {}
             if (sc!=null) {
                 //9.1、第六次扫描，把正确的内容发送出去，并得到_NOUSERS
                 String _NOUSERS="";
@@ -2190,6 +2238,7 @@ public class GroupService {
                 sc.addSendMsg(sMsg);
                 //通知消息：设置——管理员
                 MsgNormal nMsg1=new MsgNormal();
+                nMsg1.setMsgId(SequenceUUID.getUUIDSubSegment(4));
                 nMsg1.setFromType(0);
                 nMsg1.setToType(0);
                 nMsg1.setMsgType(0);
@@ -2206,7 +2255,7 @@ public class GroupService {
                 MapContent mc2=new MapContent(dataMap2);
                 nMsg1.setMsgContent(mc2);
                 dataMap2.put("_TOGROUPS", gp.getGroupId());
-                dataMap2.put("_NOUSERS", _NOUSERS.substring(1));
+                if (!StringUtils.isNullOrEmptyOrSpace(_NOUSERS)) dataMap2.put("_NOUSERS", _NOUSERS.substring(1));
                 dataMap2.put("_AFFIRMTYPE", "0");//不需要任何回复
                 sc.addSendMsg(nMsg1);
             }

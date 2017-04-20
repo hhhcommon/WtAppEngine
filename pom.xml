@@ -7,7 +7,7 @@
   <!-- 配置编码格式，与eclpse的IDE环境编码格式匹配 -->
   <!-- D:\workIDE\projects\WtAppEngine || E:\work\gitworkspace || D:\WBWorkDir\WtAppEngine-->
   <properties>
-    <projectDir>D:\WBWorkDir\WtAppEngine</projectDir>
+    <projectDir>D:\workIDE\projects\WtAppEngine</projectDir>
   </properties>
 
   <parent>

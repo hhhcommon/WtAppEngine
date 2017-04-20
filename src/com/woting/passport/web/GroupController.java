@@ -3316,7 +3316,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //3-处理
-            map.putAll(groupService.setGroupMaster(gp, addAdminUserIds, delAdminUserIds, userId));
+            map.putAll(groupService.setGroupAdmin(gp, addAdminUserIds, delAdminUserIds, userId));
             return map;
         } catch(Exception e) {
             e.printStackTrace();

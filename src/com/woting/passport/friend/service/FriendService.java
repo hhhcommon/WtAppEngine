@@ -83,6 +83,7 @@ public class FriendService {
      * @param inviteMsg 邀请信息
      * @return 陌生人列表或空
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> inviteFriend(String userId, String beInvitedUserId, String inviteMsg) {
         Map<String, Object> m=new HashMap<String, Object>();
         Map<String, Object> param=new HashMap<String, Object>();
@@ -173,8 +174,10 @@ public class FriendService {
             if (!isUpdate) inviteFriendDao.insert(ifPo);
             else inviteFriendDao.update(ifPo);
 
-            @SuppressWarnings("unchecked")
-            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+            SocketClient sc=null;
+            try {
+                sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+            } catch(Exception e) {}
             if (sc!=null) {
                 //通知消息
                 MsgNormal nMsg=new MsgNormal();
@@ -266,6 +269,7 @@ public class FriendService {
      * @param refuseMsg 决绝理由
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> deal(String userId, String inviteUserId, boolean isRefuse, String refuseMsg) {
         Map<String, Object> m=new HashMap<String, Object>();
         InviteFriendPo ifPo=null;
@@ -304,8 +308,10 @@ public class FriendService {
                 }
                 inviteFriendDao.update(ifPo);
 
-                @SuppressWarnings("unchecked")
-                SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                SocketClient sc=null;
+                try {
+                    sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+                } catch(Exception e) {}
                 if (sc!=null) {
                     //通知：发送消息——给邀请人
                     MsgNormal nMsg=new MsgNormal();
@@ -344,6 +350,7 @@ public class FriendService {
      * @param friendUserId 被删除人Id
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> del(String userId, String friendUserId) {
         Map<String, Object> ret=new HashMap<String, Object>();
         Map<String, Object> param=new HashMap<String, Object>();
@@ -367,8 +374,10 @@ public class FriendService {
             userAliasService.del(uak);
             ret.put("ReturnType", "1001");
 
-            @SuppressWarnings("unchecked")
-            SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+            SocketClient sc=null;
+            try {
+                sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
+            } catch(Exception e) {}
             if (sc!=null) {
                 //通知：发送消息
                 MsgNormal nMsg=new MsgNormal();
