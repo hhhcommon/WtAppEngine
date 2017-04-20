@@ -176,7 +176,7 @@ public class OssUtils {
 		return false;
 	}
 	
-	public static InputStream getObjectToInputStream(String key) {
+	public static File getObjectToFile(String key) {
 		OSSClient ossClient = null;
 		try {
 			OssConfigPo ossConfigPo = (OssConfigPo) getBean("ossconfig");
@@ -185,58 +185,78 @@ public class OssUtils {
 				if (ossClient!=null) {
 					OSSObject ossObject = ossClient.getObject(ossConfigPo.getBucketName(), key);
 					if (ossObject!=null) {
-						InputStream in = ossObject.getObjectContent();
+						InputStream in = ossObject.getObjectContent();					
 						if (in!=null) {
-							return in;
+							String name = key.substring(key.lastIndexOf("/"), key.length());
+							File file = createFile(ossConfigPo.getTempFile()+name);
+							if (writeFile(in, file)) {
+								return file;
+							}
 						}
 					}
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
 		} finally {
 			if (ossClient!=null) ossClient.shutdown();
 		}
 		return null;
 	}
 	
-	public static File getObjectToFile(String key) {
-		InputStream is = getObjectToInputStream(key);
-		OssConfigPo ossConfigPo = (OssConfigPo) getBean("ossconfig");
-		if (is!=null && ossConfigPo!=null) {
-			try {
-				String name = key.substring(key.lastIndexOf("/"), key.length());
-				File file = createFile(ossConfigPo.getTempFile()+name);
-				if (writeFile(is, file)) {
-					return file;
+	public static String getObjectToString(String key) {
+		OSSClient ossClient = null;
+		try {
+			OssConfigPo ossConfigPo = (OssConfigPo) getBean("ossconfig");
+			if (ossConfigPo!=null) {
+				ossClient = new OSSClient(ossConfigPo.getEndpoint(), ossConfigPo.getAccessKeyId(), ossConfigPo.getAccessKeySecret());
+				if (ossClient!=null) {
+					OSSObject ossObject = ossClient.getObject(ossConfigPo.getBucketName(), key);
+					if (ossObject!=null) {
+						InputStream in = ossObject.getObjectContent();					
+						if (in!=null) {
+							BufferedReader is = new BufferedReader(new InputStreamReader(in));
+							StringBuffer buffer = new StringBuffer();
+							String line = "";
+							while ((line = is.readLine()) != null){
+								buffer.append(line);
+							}
+							is.close();
+							in.close();
+							return buffer.toString();
+						}
+					}
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (ossClient!=null) ossClient.shutdown();
 		}
 		return null;
 	}
 	
-	public static String getObjectToString(String key) {
-		InputStream is = getObjectToInputStream(key);
-		if (is!=null) {
-			try {
-				BufferedReader in = new BufferedReader(new InputStreamReader(is));
-				StringBuffer buffer = new StringBuffer();
-				String line = "";
-				while ((line = in.readLine()) != null){
-					buffer.append(line);
+	/**
+	 * 判断文件是否存在
+	 * @param key
+	 * @return
+	 */
+	public static boolean exists(String key) {
+		OSSClient ossClient = null;
+		try {
+			OssConfigPo ossConfigPo = (OssConfigPo) getBean("ossconfig");
+			if (ossConfigPo!=null) {
+				ossClient = new OSSClient(ossConfigPo.getEndpoint(), ossConfigPo.getAccessKeyId(), ossConfigPo.getAccessKeySecret());
+				if (ossClient!=null) {
+					return ossClient.doesObjectExist(ossConfigPo.getBucketName(), key);
 				}
-				is.close();
-				return buffer.toString();
-			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (ossClient!=null) ossClient.shutdown();
 		}
-		return null;
+		return false;
 	}
 	
 	/**
@@ -246,7 +266,7 @@ public class OssUtils {
 	 * @return
 	 * 默认进行格式转换，转为png格式
 	 */
-	public static InputStream makePictureResize(String key, int ResizePer) {
+	public static boolean makePictureResize(String key,String newkey, int ResizePer) {
 		OSSClient ossClient = null;
 		try {
 			OssConfigPo ossConfigPo = (OssConfigPo) getBean("ossconfig");
@@ -260,18 +280,26 @@ public class OssUtils {
 					if (ossObject!=null) {
 					    InputStream in = ossObject.getObjectContent();
 						if (in!=null) {
-							return in;
+							ObjectMetadata meta = new ObjectMetadata();
+							meta.setCacheControl("no-cache");
+							meta.setHeader("Pragma", "no-cache");
+							meta.setContentType("text/html");
+							ossClient.putObject(ossConfigPo.getBucketName(), newkey, in, meta);
+							if (ossClient.doesObjectExist(ossConfigPo.getBucketName(), newkey)) {
+								in.close();
+								return true;
+							}
 						}
 					}
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
+			return false;
 		} finally {
 			if (ossClient!=null) ossClient.shutdown();
 		}
-		return null;
+		return false;
 	}
 	
 	/**
@@ -281,7 +309,7 @@ public class OssUtils {
 	 * @param HighResizePer 高缩放大小
 	 * @return
 	 */
-	public static InputStream makePictureResize(String key, int WidhtResizePer, int HighResizePer) {
+	public static boolean makePictureResize(String key, String newkey, int WidhtResizePer, int HighResizePer) {
 		OSSClient ossClient = null;
 		try {
 			OssConfigPo ossConfigPo = (OssConfigPo) getBean("ossconfig");
@@ -295,18 +323,26 @@ public class OssUtils {
 					if (ossObject!=null) {
 					    InputStream in = ossObject.getObjectContent();
 						if (in!=null) {
-							return in;
+							ObjectMetadata meta = new ObjectMetadata();
+							meta.setCacheControl("no-cache");
+							meta.setHeader("Pragma", "no-cache");
+							meta.setContentType("text/html");
+							ossClient.putObject(ossConfigPo.getBucketName(), newkey, in, meta);
+							if (ossClient.doesObjectExist(ossConfigPo.getBucketName(), newkey)) {
+								in.close();
+								return true;
+							}
 						}
 					}
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
+			return false;
 		} finally {
 			if (ossClient!=null) ossClient.shutdown();
 		}
-		return null;
+		return false;
 	}
 	
 	private static boolean writeFile(String jsonstr, File file) {

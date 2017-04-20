@@ -199,13 +199,9 @@ public class FileUploadController extends AbstractFileUploadController {
             String img150path=_destFileName+".150_150.png";
             String img300path=_destFileName+".300_300.png";
             String img450path=_destFileName+".450_450.png";
-            InputStream in = null;
-            in = OssUtils.makePictureResize(destFileName, 150);
-            if (in!=null) OssUtils.upLoadObject(img150path, in);
-            in = OssUtils.makePictureResize(destFileName, 300);
-            if (in!=null) OssUtils.upLoadObject(img300path, in);
-            in = OssUtils.makePictureResize(destFileName, 450);
-            if (in!=null) OssUtils.upLoadObject(img450path, in);
+            OssUtils.makePictureResize(destFileName, img150path, 150);
+            OssUtils.makePictureResize(destFileName, img300path, 300);
+            OssUtils.makePictureResize(destFileName, img450path, 450);
 //            Thumbnails.of(new File(srcFileName)).size(150, 150).toFile(FileNameUtils.concatPath(STOREPATH, img150path));
 //            Thumbnails.of(new File(srcFileName)).size(300, 300).toFile(FileNameUtils.concatPath(STOREPATH, img300path));
 //            Thumbnails.of(new File(srcFileName)).size(450, 450).toFile(FileNameUtils.concatPath(STOREPATH, img450path));
