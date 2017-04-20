@@ -165,4 +165,26 @@ public class GroupPo extends BaseObject {
 
         return retM;
     }
+
+    public Map<String, Object> toHashMap4ViewWithPwd() {
+        Map<String, Object> retM=new HashMap<String, Object>();
+
+        retM.put("GroupId", this.groupId);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.groupNum)) retM.put("GroupNum", this.groupNum);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.groupName)) retM.put("GroupName", this.groupName);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.groupSignature)) retM.put("GroupSignature", this.groupSignature);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.groupImg)) retM.put("GroupImg", this.groupImg);
+        retM.put("GroupType", this.groupType);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.createUserId)) retM.put("GroupCreator", this.createUserId);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.groupMasterId)) retM.put("GroupMasterId", this.groupMasterId);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.adminUserIds)) retM.put("GroupManager", this.adminUserIds);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.defaultFreq)) retM.put("GroupFreq", this.defaultFreq);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.descn)) retM.put("GroupOriDescn", this.descn);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.groupPwd)) retM.put("GroupPassword", this.groupPwd);
+        retM.put("GroupCount", this.groupCount);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.groupAlias)) retM.put("GroupMyAlias", this.groupAlias);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.groupDescn)) retM.put("GroupMyDescn", this.groupDescn);
+
+        return retM;
+    }
 }

@@ -1656,7 +1656,10 @@ public class PassportController {
             topItem.put("AllSize", size);
             if (size>0) {
                 List<Map<String, Object>> rgl=new ArrayList<Map<String, Object>>();
-                for (GroupPo g:gl) rgl.add(g.toHashMap4View());
+                for (GroupPo g:gl) {
+                    if (g.getAdminUserIds().indexOf(userId)!=-1||g.getGroupMasterId().equals(userId)) rgl.add(g.toHashMap4ViewWithPwd());
+                    else rgl.add(g.toHashMap4View());
+                }
                 topItem.put("Groups", rgl);
             }
             map.put("GroupList", topItem);

@@ -168,7 +168,6 @@ public class GroupService {
                     MapContent mc=new MapContent(dataMap);
                     sMsg.setMsgContent(mc);
                     sc.addSendMsg(sMsg);
-
                     //通知消息
                     MsgNormal nMsg=new MsgNormal();
                     nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -187,7 +186,7 @@ public class GroupService {
                     nMsg.setMsgContent(mc1);
 
                     dataMap1.put("_TOGROUPS", g.getGroupId());
-                    dataMap1.put("_NOUSERS", u.getUserId());
+                    dataMap1.put("_NOUSERS", u.getUserId()+","+operId);
                     dataMap.put("_AFFIRMTYPE", "3");
                     sc.addSendMsg(nMsg);
                 }
@@ -453,7 +452,6 @@ public class GroupService {
             MapContent mc1=new MapContent(dataMap1);
             sMsg.setMsgContent(mc1);
             sc.addSendMsg(sMsg);
-
             //通知消息
             MsgNormal nMsg=new MsgNormal();
             nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -467,6 +465,7 @@ public class GroupService {
             Map<String, Object> dataMap=new HashMap<String, Object>();
             dataMap.put("GroupInfo", g.toHashMap4View());
             dataMap.put("OperatorId", userId);
+            dataMap.put("Type", "Update");
             MapContent mc=new MapContent(dataMap);
             nMsg.setMsgContent(mc);
             dataMap.put("_TOGROUPS", g.getGroupId());
@@ -487,6 +486,7 @@ public class GroupService {
         String groupId=(gp==null?null:gp.getGroupId());
         String userId=(u==null?null:u.getUserId());
         if (StringUtils.isNullOrEmptyOrSpace(userId)||StringUtils.isNullOrEmptyOrSpace(groupId)) return 0;
+
         List<UserPo> ul=userDao.queryForList("getGroupMembers", groupId);
         int i=-1;
         if (ul!=null&&!ul.isEmpty()) {
@@ -561,6 +561,7 @@ public class GroupService {
             if (gup!=null&&i<gupl.size()) {//找到了
                 if (r==3) {//自动移交群主
                     updateGp.setGroupMasterId(gup.getUserId());//群主
+                    gp.setGroupMasterId(gup.getUserId());
                 }
                 beSetUserid=gup.getUserId();
                 adminUserIds=beSetUserid;//加入管理员
@@ -577,6 +578,7 @@ public class GroupService {
         }
         updateGp.setAdminUserIds(adminUserIds);
         groupDao.update(updateGp);
+        gp.setAdminUserIds(adminUserIds);
 
         @SuppressWarnings("unchecked")
         SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
@@ -597,14 +599,9 @@ public class GroupService {
                 MapContent mc=new MapContent(dataMap);
                 sMsg.setMsgContent(mc);
                 sc.addSendMsg(sMsg);
-
                 //通知消息：组信息修改
                 String toUser="";
-                if (ul!=null&&!ul.isEmpty()) {
-                    for (i=0;i<ul.size(); i++) {
-                        toUser+=","+ul.get(i).getUserId();
-                    }
-                }
+                if (ul!=null&&!ul.isEmpty()) for (i=0;i<ul.size(); i++) toUser+=","+ul.get(i).getUserId();
                 if (!StringUtils.isNullOrEmptyOrSpace(toUser)) {
                     MsgNormal nMsg=new MsgNormal();
                     nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -639,7 +636,7 @@ public class GroupService {
                 sMsg.setCommand(5);//删除组内用户
                 Map<String, Object> dataMap=new HashMap<String, Object>();
                 dataMap.put("GroupId", gp.getGroupId());
-                dataMap.put("UserId", u.getUserId());
+                dataMap.put("UserIds", u.getUserId());
                 dataMap.put("OperatorId", u.getUserId());
                 MapContent mc=new MapContent(dataMap);
                 sMsg.setMsgContent(mc);
@@ -660,8 +657,8 @@ public class GroupService {
                         dataMap1.put("OperatorId", userId);
                         MapContent mc1=new MapContent(dataMap1);
                         nMsg.setMsgContent(mc1);
-                        dataMap.put("_TOUSERS", beSetUserid);
-                        dataMap.put("_AFFIRMTYPE", "0");//不需要任何回复
+                        dataMap1.put("_TOUSERS", beSetUserid);
+                        dataMap1.put("_AFFIRMTYPE", "0");//不需要任何回复
                         sc.addSendMsg(nMsg);
                     }
                 } else if (r==5) {//告诉被移交人，你已经是管理员了
@@ -674,74 +671,36 @@ public class GroupService {
                         nMsg.setAffirm(1);
                         nMsg.setBizType(0x04);
                         nMsg.setCmdType(2);
-                        nMsg.setCommand(0x0B);
+                        nMsg.setCommand(7);
                         Map<String, Object> dataMap1=new HashMap<String, Object>();
                         dataMap1.put("GroupId", gp.getGroupId());
                         dataMap1.put("OperatorId", userId);
                         MapContent mc1=new MapContent(dataMap1);
                         nMsg.setMsgContent(mc1);
-                        dataMap.put("_TOUSERS", beSetUserid);
-                        dataMap.put("_AFFIRMTYPE", "0");//不需要任何回复
+                        dataMap1.put("_TOUSERS", beSetUserid);
+                        dataMap1.put("_AFFIRMTYPE", "0");//不需要任何回复
                         sc.addSendMsg(nMsg);
                     }
                 }
-            }
-            if (r==3||r==1) {//删除组用户
-                //同步消息：删除组用户
-                MsgNormal sMsg=new MsgNormal();
-                sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                sMsg.setFromType(0);
-                sMsg.setToType(0);
-                sMsg.setMsgType(0);
-                sMsg.setAffirm(1);
-                sMsg.setBizType(0x08);
-                sMsg.setCmdType(2);//组
-                sMsg.setCommand(5);//删除组内用户
-                Map<String, Object> dataMap=new HashMap<String, Object>();
-                dataMap.put("GroupId", gp.getGroupId());
-                dataMap.put("UserId", u.getUserId());
-                dataMap.put("OperatorId", u.getUserId());
-                MapContent mc=new MapContent(dataMap);
-                sMsg.setMsgContent(mc);
-                sc.addSendMsg(sMsg);
-
-                //通知消息：删除组用户
-                MsgNormal nMsg=new MsgNormal();
-                nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                nMsg.setFromType(0);
-                nMsg.setToType(0);
-                nMsg.setMsgType(0);
-                nMsg.setAffirm(1);
-                nMsg.setBizType(0x04);
-                nMsg.setCmdType(2);
-                nMsg.setCommand(5);
+                //告诉组内其他人，我退出了
+                MsgNormal extGroupMsg=new MsgNormal();
+                extGroupMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                extGroupMsg.setFromType(0);
+                extGroupMsg.setToType(0);
+                extGroupMsg.setMsgType(0);
+                extGroupMsg.setAffirm(1);
+                extGroupMsg.setBizType(0x04);
+                extGroupMsg.setCmdType(2);
+                extGroupMsg.setCommand(5);
                 Map<String, Object> dataMap1=new HashMap<String, Object>();
-                dataMap1.put("GroupId", gp.getGroupId());
-                dataMap1.put("UserInfo", u.toHashMap4Mobile());
+                dataMap1.put("GroupId", groupId);
+                dataMap1.put("OperatorId", userId);
+                dataMap1.put("UserIds", userId);
                 MapContent mc1=new MapContent(dataMap1);
-                nMsg.setMsgContent(mc1);
-
-                dataMap1.put("_TOGROUPS", gp.getGroupId());
+                extGroupMsg.setMsgContent(mc1);
+                dataMap.put("_TOGROUPS", groupId);
                 dataMap.put("_AFFIRMTYPE", "3");
-                sc.addSendMsg(nMsg);
-            }
-            if (r==3) {//更改用户
-                //同步消息：组信息修改
-                MsgNormal sMsg=new MsgNormal();
-                sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                sMsg.setFromType(0);
-                sMsg.setToType(0);
-                sMsg.setMsgType(0);
-                sMsg.setAffirm(1);
-                sMsg.setBizType(0x08);
-                sMsg.setCmdType(2);//组
-                sMsg.setCommand(2);//更改
-                Map<String, Object> dataMap=new HashMap<String, Object>();
-                dataMap.put("GroupId", gp.getGroupId());
-                MapContent mc=new MapContent(dataMap);
-                sMsg.setMsgContent(mc);
-                sc.addSendMsg(sMsg);
-
+                sc.addSendMsg(extGroupMsg);
                 //通知消息：组信息修改
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -752,14 +711,15 @@ public class GroupService {
                 nMsg.setBizType(0x04);
                 nMsg.setCmdType(2);
                 nMsg.setCommand(9);
-                Map<String, Object> dataMap1=new HashMap<String, Object>();
-                dataMap1.put("GroupInfo", gp.toHashMap4View());
-                MapContent mc1=new MapContent(dataMap1);
-                nMsg.setMsgContent(mc1);
-
-                dataMap1.put("_TOGROUPS", gp.getGroupId());
-                dataMap1.put("_NOUSERS", u.getUserId());
-                dataMap.put("_AFFIRMTYPE", "0");//不需要任何回复
+                Map<String, Object> dataMap2=new HashMap<String, Object>();
+                dataMap2.put("GroupInfo", gp.toHashMap4View());
+                dataMap2.put("GroupId", groupId);
+                dataMap2.put("OperatorId", userId);
+                dataMap2.put("Type", "ExitGroup");
+                MapContent mc2=new MapContent(dataMap2);
+                nMsg.setMsgContent(mc2);
+                dataMap2.put("_TOGROUPS", groupId);
+                dataMap2.put("_AFFIRMTYPE", "3");
                 sc.addSendMsg(nMsg);
             }
         }
@@ -779,7 +739,7 @@ public class GroupService {
         Map<String, Object> m=new HashMap<String, Object>();
 
         //1、判断邀请人是否在组
-        List<UserPo> gul=getGroupMembers(groupId, 0, 0);//获得所有组成员
+        List<UserPo> gul=userDao.queryForList("getGroupMembers", groupId);//获得所有组成员
         boolean find=false; //邀请者是否在组
         if (gul!=null&&!gul.isEmpty()) {
             for (UserPo up: gul) {
@@ -1026,9 +986,11 @@ public class GroupService {
     /**
      * 搜索用户组
      * @param searchStr 搜索的字符串
+     * @param pageSize 每页有几条记录
+     * @param pageIndex 页码，若为0,则得到所有内容
      * @return 用户列表
      */
-    public List<Group> searchGroup(String searchStr) {
+    public List<Group> searchGroup(String searchStr, int pageSize, int pageIndex) {
         List<Group> ret=new ArrayList<Group>();
         Map<String, List<Group>> _tempM=new HashMap<String, List<Group>>();
         int max=0, min=0;
@@ -1045,7 +1007,17 @@ public class GroupService {
         for (int i=max; i>=min; i--) {
             if (_tempM.get(i+"")!=null) ret.addAll(_tempM.get(i+""));
         }
-        return ret;
+        if (pageIndex==0) return ret;
+        else {
+            int _pageIndex=pageIndex<0?1:pageIndex;
+            int _beginIndex=(_pageIndex-1)*pageSize;
+            List<Group> retPage=new ArrayList<Group>();
+            for (int i=0; i<pageSize; i++) {
+                if (_beginIndex+i==ret.size()) break;
+                retPage.add(ret.get(_beginIndex+i));
+            }
+            return retPage.isEmpty()?null:retPage;
+        }
     }
     private int searchScore(String searchStr, Group g) {
         int ret=0;
@@ -1120,7 +1092,8 @@ public class GroupService {
             if (one.get("groupAlias")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupAlias")+"")) gp.setGroupAlias(one.get("groupAlias")+"");
             if (one.get("groupDescn")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupDescn")+"")) gp.setAdminUserIds(one.get("groupDescn")+"");
             Map<String, Object> _one=new HashMap<String, Object>();
-            _one=gp.toHashMap4View();
+            if (gp.getAdminUserIds().indexOf(userId)!=-1||gp.getGroupMasterId().equals(userId)) _one=gp.toHashMap4ViewWithPwd();
+            else _one=gp.toHashMap4View();
             if (one.get("inviteMessage")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("inviteMessage")+"")) _one.put("InviteMessage", one.get("inviteMessage"));
             _one.put("InviteTime", ((Date)one.get("inviteTime")).getTime());
             _one.put("InviteCount", one.get("inviteVector"));
@@ -1137,12 +1110,58 @@ public class GroupService {
     }
 
     /**
-     * 获得邀请我的组的列表
+     * 获得需要我审核的邀请人列表
+     * @param pageSize 每页有几条记录
+     * @param pageIndex 页码，若为0,则得到所有内容
      * @param userId
      * @return
      */
-    public List<Map<String, Object>> getNeedCheckInviteUserGroupList(String groupId) {
-        return inviteGroupDao.queryForListAutoTranform("needCheckInviteUserGroupList", groupId);
+    public List<Map<String, Object>> getNeedCheckInviteUserGroupList(String groupId, int pageSize, int pageIndex) {
+        if (StringUtils.isNullOrEmptyOrSpace(groupId)) return null;
+//        return inviteGroupDao.queryForListAutoTranform("needCheckInviteUserGroupList", groupId);
+
+        List<Map<String, Object>> _ret=null;
+        if (pageIndex==0) _ret=inviteGroupDao.queryForListAutoTranform("needCheckInviteUserGroupList", groupId);
+        else {
+            Page<Map<String, Object>> page=inviteGroupDao.pageQueryAutoTranform(null, "needCheckInviteUserGroupList", groupId, pageIndex, pageSize);
+            if (page!=null&&page.getDataCount()>0) {
+                _ret=new ArrayList<Map<String, Object>>();
+                _ret.addAll(page.getResult());
+            }
+        }
+        List<Map<String, Object>> ret=new ArrayList<Map<String, Object>>(_ret.size());
+        for (int i=0; i<_ret.size(); i++) {
+            Map<String, Object> one=_ret.get(i);
+            UserPo up=new UserPo();
+            up.setUserId(""+one.get("id"));
+            if (one.get("userName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("userName")+"")) up.setUserName(one.get("userName")+"");
+            if (one.get("userNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("userNum")+"")) up.setUserNum(one.get("userNum")+"");
+            if (one.get("loginName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("loginName")+"")) up.setLoginName(one.get("loginName")+"");
+            if (one.get("nickName")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("nickName")+"")) up.setNickName(one.get("nickName")+"");
+            if (one.get("userSign")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("userSign")+"")) up.setUserSign(one.get("userSign")+"");
+            if (one.get("mainPhoneNum")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("mainPhoneNum")+"")) up.setMainPhoneNum(one.get("mainPhoneNum")+"");
+            if (one.get("phoneNumIsPub")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("mainPhoneNum")+"")) up.setPhoneNumIsPub((one.get("mainPhoneNum")+"").equals("1"));
+            if (one.get("mailAddress")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("mailAddress")+"")) up.setMailAddress(one.get("mailAddress")+"");
+            if (one.get("birthday")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("birthday")+"")) up.setBirthday((Timestamp)one.get("birthday"));
+            if (one.get("starSign")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("starSign")+"")) up.setStarSign(one.get("starSign")+"");
+            if (one.get("userType")!=null) try {up.setUserType((Integer)one.get("userType"));} catch(Exception e) {up.setUserType(0);};
+            if (one.get("userClass")!=null) try {up.setUserClass((Integer)one.get("userClass"));} catch(Exception e) {up.setUserClass(0);};
+            if (one.get("userState")!=null) try {up.setUserState((Integer)one.get("userState"));} catch(Exception e) {up.setUserState(0);};
+            if (one.get("phoneNumIsPub")!=null) try {up.setPhoneNumIsPub((Integer)one.get("phoneNumIsPub"));} catch(Exception e) {up.setPhoneNumIsPub(0);};
+            if (one.get("portraitBig")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("portraitBig")+"")) up.setPortraitBig(one.get("portraitBig")+"");
+            if (one.get("portraitMini")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("portraitMini")+"")) up.setPortraitMini(one.get("portraitMini")+"");
+            if (one.get("homepage")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("homepage")+"")) up.setHomepage(one.get("homepage")+"");
+            if (one.get("descn")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("descn")+"")) up.setDescn(one.get("descn")+"");
+            Map<String, Object> _one=new HashMap<String, Object>();
+            _one=up.toHashMap4Mobile();
+            _one.put("InviteTime", ((Date)one.get("inviteTime")).getTime()+"");
+            _one.put("InviteCount", one.get("inviteVector"));
+            _one.put("InviteUserId", one.get("inviteUserId"));
+            _one.put("BeInviteUserId", one.get("userId"));
+            _one.remove("UserId");
+            ret.add(_one);
+        }
+        return ret;
     }
 
     /**
@@ -1184,6 +1203,7 @@ public class GroupService {
             if (one.get("userType")!=null) try {up.setUserType((Integer)one.get("userType"));} catch(Exception e) {up.setUserType(0);};
             if (one.get("userClass")!=null) try {up.setUserClass((Integer)one.get("userClass"));} catch(Exception e) {up.setUserClass(0);};
             if (one.get("userState")!=null) try {up.setUserState((Integer)one.get("userState"));} catch(Exception e) {up.setUserState(0);};
+            if (one.get("phoneNumIsPub")!=null) try {up.setPhoneNumIsPub((Integer)one.get("phoneNumIsPub"));} catch(Exception e) {up.setPhoneNumIsPub(0);};
             if (one.get("portraitBig")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("portraitBig")+"")) up.setPortraitBig(one.get("portraitBig")+"");
             if (one.get("portraitMini")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("portraitMini")+"")) up.setPortraitMini(one.get("portraitMini")+"");
             if (one.get("homepage")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("homepage")+"")) up.setHomepage(one.get("homepage")+"");
@@ -1234,12 +1254,13 @@ public class GroupService {
             if (one.get("adminUserIds")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("adminUserIds")+"")) gp.setAdminUserIds(one.get("adminUserIds")+"");
             if (one.get("defaultFreq")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("defaultFreq")+"")) gp.setDefaultFreq(one.get("defaultFreq")+"");
             if (one.get("descn")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("descn")+"")) gp.setDescn(one.get("descn")+"");
-            if (one.get("descn")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("descn")+"")) gp.setDescn(one.get("descn")+"");
+            if (one.get("groupPwd")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupPwd")+"")) gp.setGroupPwd(one.get("groupPwd")+"");
             if (one.get("groupCount")!=null) try {gp.setGroupCount((Integer)one.get("groupCount"));} catch(Exception e) {gp.setGroupCount(0);};
             if (one.get("groupAlias")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupAlias")+"")) gp.setGroupAlias(one.get("groupAlias")+"");
             if (one.get("groupDescn")!=null&&!StringUtils.isNullOrEmptyOrSpace(one.get("groupDescn")+"")) gp.setAdminUserIds(one.get("groupDescn")+"");
             Map<String, Object> _one=new HashMap<String, Object>();
-            _one=gp.toHashMap4View();
+            if (gp.getAdminUserIds().indexOf(userId)!=-1||gp.getGroupMasterId().equals(userId)) _one=gp.toHashMap4ViewWithPwd();
+            else _one=gp.toHashMap4View();
             ret.add(_one);
         }
         return ret;
@@ -1324,47 +1345,6 @@ public class GroupService {
                 }
                 dataMap.put("_AFFIRMTYPE", "3");
                 sc.addSendMsg(nMsg);
-
-                if (!isRefuse) {//接受
-                    //同步消息：组信息修改
-                    MsgNormal sMsg=new MsgNormal();
-                    sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                    sMsg.setFromType(0);
-                    sMsg.setToType(0);
-                    sMsg.setMsgType(0);
-                    sMsg.setAffirm(1);
-                    sMsg.setBizType(0x08);
-                    sMsg.setCmdType(2);//组
-                    sMsg.setCommand(2);//更改
-                    Map<String, Object> dataMap1=new HashMap<String, Object>();
-                    dataMap1.put("GroupId", gp.getGroupId());
-                    MapContent mc1=new MapContent(dataMap1);
-                    sMsg.setMsgContent(mc1);
-                    sc.addSendMsg(sMsg);
-                    //通知消息
-                    MsgNormal nMsg1=new MsgNormal();
-                    nMsg1.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-                    nMsg1.setFromType(0);
-                    nMsg1.setToType(0);
-                    nMsg1.setMsgType(0);
-                    nMsg1.setAffirm(1);
-                    nMsg1.setBizType(0x04);
-                    nMsg1.setCmdType(2);
-                    nMsg1.setCommand(9);
-                    Map<String, Object> dataMap2=new HashMap<String, Object>();
-                    dataMap2.put("OperatorId", operId);
-                    dataMap2.put("GroupId", gp.getGroupId());
-                    dataMap2.put("Type", (type==1?"invite":"apply")+"Pass");
-                    dataMap2.put("GiveupAdminId", operId);
-                    UserPo u=userDao.getInfoObject("getUserById", (type==1?inviteUserId:userId));
-                    dataMap.put((type==1?"Invite":"Apply")+"UserInfo", u.toHashMap4Mobile());
-                    MapContent mc2=new MapContent(dataMap2);
-                    nMsg1.setMsgContent(mc2);
-                    dataMap2.put("_TOGROUPS", gp.getGroupId());
-                    dataMap2.put("_NOUSERS", userId+","+inviteUserId);
-                    dataMap2.put("_AFFIRMTYPE", "0");//不需要任何回复
-                    sc.addSendMsg(nMsg1);
-                }
             }
         }
         return m;
@@ -1516,15 +1496,20 @@ public class GroupService {
         ret.put("DeleteGroup", "0");
         List<Map<String, String>> resultList=new ArrayList<Map<String, String>>();
         ret.put("ResultList", resultList);
-        String[] ua=userIds.split(",");
 
+        boolean operIsMaster=gp.getGroupMasterId().equals(operId);
+        String[] ua=userIds.split(",");
         for (String userId: ua) {
             Map<String, String> oneResult=new HashMap<String, String>();
+            resultList.add(oneResult);
             String _userId=userId.trim();
             oneResult.put("UserId", _userId);
-            resultList.add(oneResult);
-            if (gp.getAdminUserIds().equals(_userId)) {
+            if (gp.getAdminUserIds().indexOf(_userId)!=-1&&!operIsMaster) {
                 oneResult.put("DealType", "2");
+                continue;
+            }
+            if (operIsMaster&&operId.equals(_userId)) {
+                oneResult.put("DealType", "4");
                 continue;
             }
             int i=-1;
@@ -1551,97 +1536,84 @@ public class GroupService {
             }
         }
         //都处理后的处理
-        if (ul.size()==1) {//删除组
-            boolean canDissolve=true;
-            if (ul.size()==1) {
-                if (ul.get(0).getUserId().equals(gp.getCreateUserId())) canDissolve=false;
-            }
-            if (canDissolve) {
-                groupDao.delete(gp.getGroupId());
-                //删除所有的组内人员信息
-                param.clear();
-                param.put("groupId", groupId);
-                groupDao.delete("deleteGroupUser", param);
-                //处理组邀请信息表，把flag设置为2
-                inviteGroupDao.update("setFlag2", groupId);
-                ret.put("DeleteGroup", "1");//返回值，告诉调用者，由于组内人员只有1人，所以要删除组
-                //删除组内所有成员的别名
-                userAliasService.delAliasInGroup(groupId);
-            }
+        boolean canDissolve=(ul.size()==0)||(ul.size()==1&&!(ul.get(0).getUserId().equals(gp.getCreateUserId())));
+        if (canDissolve) {
+            //删除所有的组内人员信息
+            param.clear();
+            param.put("groupId", groupId);
+            groupDao.delete("deleteGroupUser", param);
+            //删除组
+            groupDao.delete(gp.getGroupId());
+            //处理组邀请信息表，把flag设置为2
+            inviteGroupDao.update("setFlag2", groupId);
+            //删除组内所有成员的别名
+            userAliasService.delAliasInGroup(groupId);
         }
 
+        if (beKickoutUserList==null||beKickoutUserList.isEmpty()) return ret;
         @SuppressWarnings("unchecked")
         SocketClient sc=((CacheEle<SocketClient>)SystemCache.getCache(WtAppEngineConstants.SOCKET_OBJ)).getContent();
-        if (beKickoutUserList!=null&&!beKickoutUserList.isEmpty()&&sc!=null) {
-            //通知
-            MsgNormal nMsg=new MsgNormal();
-            nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            nMsg.setFromType(0);
-            nMsg.setToType(0);
-            nMsg.setMsgType(0);
-            nMsg.setAffirm(1);
-            nMsg.setBizType(0x04);
-            nMsg.setCmdType(2);
-            nMsg.setCommand(5);//退组用户消息
-            Map<String, Object> dataMap=new HashMap<String, Object>();
-            dataMap.put("GroupId", gp.getGroupId());
-            dataMap.put("OperatorId", operId);
-            List<Map<String, Object>> userMapList=new ArrayList<Map<String, Object>>();
-            for (UserPo _up: beKickoutUserList) userMapList.add(_up.toHashMap4Mobile());
-            dataMap.put("UserList", userMapList);
-            MapContent mc=new MapContent(dataMap);
-            nMsg.setMsgContent(mc);
-            dataMap.put("_TOGROUPS", gp.getGroupId());
-            dataMap.put("_TOUSERS", userIds);
-            dataMap.put("_AFFIRMTYPE", "3");
-            sc.addSendMsg(nMsg);
-
-            //同步消息：删除组用户
-            MsgNormal sMsg=new MsgNormal();
-            sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            sMsg.setFromType(0);
-            sMsg.setToType(0);
-            sMsg.setMsgType(0);
-            sMsg.setAffirm(1);
-            sMsg.setBizType(0x08);
-            sMsg.setCmdType(2);//组
-            sMsg.setCommand(5);//删除组内用户
-            Map<String, Object> dataMap1=new HashMap<String, Object>();
-            dataMap1.put("GroupId", gp.getGroupId());
-            String _userIds="";
-            for (UserPo _up: beKickoutUserList) {
-                _userIds+=","+_up.getUserId();
-            }
-            dataMap1.put("UserIds", _userIds.substring(1));
-            MapContent mc1=new MapContent(dataMap1);
-            sMsg.setMsgContent(mc1);
-            sc.addSendMsg(sMsg);
-        }
-        if (ul.size()==1&&sc!=null) {
-            //同步消息：组信息修改
-            MsgNormal sMsg=new MsgNormal();
-            sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
-            sMsg.setFromType(0);
-            sMsg.setToType(0);
-            sMsg.setMsgType(0);
-            sMsg.setAffirm(1);
-            sMsg.setBizType(0x08);
-            sMsg.setCmdType(2);//组
-            sMsg.setCommand(3);//删除
-            Map<String, Object> dataMap=new HashMap<String, Object>();
-            dataMap.put("GroupId", gp.getGroupId());
-            MapContent mc=new MapContent(dataMap);
-            sMsg.setMsgContent(mc);
-            sc.addSendMsg(sMsg);
-
-            //通知消息：组信息修改
+        if (sc!=null) {
             String toUser="";
-            if (ul!=null&&!ul.isEmpty()) {
-                for (int i=0;i<ul.size(); i++) {
-                    toUser+=","+ul.get(i).getUserId();
+            if (ul!=null&&!ul.isEmpty()) for (int i=0;i<ul.size(); i++) toUser+=","+ul.get(i).getUserId();
+            for (int i=0;i<beKickoutUserList.size(); i++) toUser+=","+beKickoutUserList.get(i).getUserId();
+            if (canDissolve) {//删除用户组
+                //同步消息：组信息修改
+                MsgNormal sMsg=new MsgNormal();
+                sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                sMsg.setFromType(0);
+                sMsg.setToType(0);
+                sMsg.setMsgType(0);
+                sMsg.setAffirm(1);
+                sMsg.setBizType(0x08);
+                sMsg.setCmdType(2);//组
+                sMsg.setCommand(3);//删除
+                Map<String, Object> dataMap=new HashMap<String, Object>();
+                dataMap.put("GroupId", gp.getGroupId());
+                MapContent mc=new MapContent(dataMap);
+                sMsg.setMsgContent(mc);
+                sc.addSendMsg(sMsg);
+                //通知消息：组信息修改
+                if (!StringUtils.isNullOrEmptyOrSpace(toUser)) {
+                    MsgNormal nMsg=new MsgNormal();
+                    nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                    nMsg.setFromType(0);
+                    nMsg.setToType(0);
+                    nMsg.setMsgType(0);
+                    nMsg.setAffirm(1);
+                    nMsg.setBizType(0x04);
+                    nMsg.setCmdType(2);
+                    nMsg.setCommand(6);//删除组，或解散组
+                    Map<String, Object> dataMap1=new HashMap<String, Object>();
+                    dataMap1.put("GroupId", gp.getGroupId());
+                    dataMap1.put("OperatorId", operId);
+                    dataMap1.put("DelReason", "2");//=2因为退组而删除组;=1直接删除组
+                    MapContent mc1=new MapContent(dataMap1);
+                    nMsg.setMsgContent(mc1);
+                    dataMap1.put("_TOUSERS", toUser.substring(1));
+                    dataMap.put("_AFFIRMTYPE", "3");
+                    sc.addSendMsg(nMsg);
                 }
-            }
-            if (StringUtils.isNullOrEmptyOrSpace(toUser)) {
+            } else {
+                //同步消息：删除组用户
+                MsgNormal sMsg=new MsgNormal();
+                sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
+                sMsg.setFromType(0);
+                sMsg.setToType(0);
+                sMsg.setMsgType(0);
+                sMsg.setAffirm(1);
+                sMsg.setBizType(0x08);
+                sMsg.setCmdType(2);//组
+                sMsg.setCommand(5);//删除组内用户
+                Map<String, Object> dataMap1=new HashMap<String, Object>();
+                dataMap1.put("GroupId", gp.getGroupId());
+                String _userIds="";
+                for (UserPo _up: beKickoutUserList) _userIds+=","+_up.getUserId();
+                dataMap1.put("UserIds", _userIds.substring(1));
+                MapContent mc1=new MapContent(dataMap1);
+                sMsg.setMsgContent(mc1);
+                sc.addSendMsg(sMsg);
+                //通知——谁退出了用户组
                 MsgNormal nMsg=new MsgNormal();
                 nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
                 nMsg.setFromType(0);
@@ -1650,14 +1622,14 @@ public class GroupService {
                 nMsg.setAffirm(1);
                 nMsg.setBizType(0x04);
                 nMsg.setCmdType(2);
-                nMsg.setCommand(6);//删除组，或解散组
-                Map<String, Object> dataMap1=new HashMap<String, Object>();
-                dataMap1.put("GroupId", gp.getGroupId());
-                dataMap1.put("OperatorId", operId);
-                dataMap1.put("DelReason", "2");//=2因为退组而删除组;=1直接删除组
-                MapContent mc1=new MapContent(dataMap1);
-                nMsg.setMsgContent(mc1);
-                dataMap1.put("_TOUSERS", toUser.substring(1));
+                nMsg.setCommand(5);//退组用户消息
+                Map<String, Object> dataMap=new HashMap<String, Object>();
+                dataMap.put("GroupId", gp.getGroupId());
+                dataMap.put("OperatorId", operId);
+                dataMap.put("UserIds", _userIds.substring(1));
+                MapContent mc=new MapContent(dataMap);
+                nMsg.setMsgContent(mc);
+                dataMap.put("_TOUSERS", toUser.substring(1));
                 dataMap.put("_AFFIRMTYPE", "3");
                 sc.addSendMsg(nMsg);
             }
@@ -1706,8 +1678,7 @@ public class GroupService {
             dataMap.put("_TOGROUPS", gp.getGroupId());
             dataMap.put("_AFFIRMTYPE", "3");
             sc.addSendMsg(nMsg);
-
-            //同步消息：删除组内成员
+            //同步消息：解散
             MsgNormal sMsg=new MsgNormal();
             sMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
             sMsg.setFromType(0);
@@ -1816,7 +1787,6 @@ public class GroupService {
                     MapContent mc1=new MapContent(dataMap1);
                     sMsg.setMsgContent(mc1);
                     sc.addSendMsg(sMsg);
-
                     //通知消息
                     MsgNormal nMsg=new MsgNormal();
                     nMsg.setMsgId(SequenceUUID.getUUIDSubSegment(4));
@@ -1828,9 +1798,9 @@ public class GroupService {
                     nMsg.setCmdType(2);
                     nMsg.setCommand(9);
                     Map<String, Object> dataMap=new HashMap<String, Object>();
+                    dataMap.put("GroupInfo", gp.toHashMap4View());
                     dataMap.put("OperatorId", operId);
                     dataMap.put("GroupId", gp.getGroupId());
-                    dataMap.put("GroupInfo", gp.toHashMap4View());
                     dataMap.put("Type", "ChangeAdmin");
                     dataMap.put("GiveupAdminId", operId);
                     UserPo u=userDao.getInfoObject("getUserById", toUserId);
@@ -1914,6 +1884,7 @@ public class GroupService {
                 nMsg1.setCmdType(2);
                 nMsg1.setCommand(9);
                 Map<String, Object> dataMap2=new HashMap<String, Object>();
+                dataMap2.put("GroupInfo", gp.toHashMap4View());
                 dataMap2.put("OperatorId", operId);
                 dataMap2.put("GroupId", gp.getGroupId());
                 dataMap2.put("Type", "ChangeMaster");
@@ -2227,6 +2198,7 @@ public class GroupService {
                 nMsg1.setCmdType(2);
                 nMsg1.setCommand(9);
                 Map<String, Object> dataMap2=new HashMap<String, Object>();
+                dataMap2.put("GroupInfo", gp.toHashMap4View());
                 dataMap2.put("OperatorId", operId);
                 dataMap2.put("GroupId", gp.getGroupId());
                 dataMap2.put("Type", "SetAdminUserIds");
