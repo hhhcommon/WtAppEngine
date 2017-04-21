@@ -2044,7 +2044,7 @@ public class GroupService {
         if (delList!=null) {//删除的列表
             for (Map<String, Object> oneDel: delList) {
                 if (oneDel.get("ReturnType")==null) {//处理这些记录
-                    if (oneDel.get("UserId").equals(operId)) inDBorSql+=" or b.userId='"+oneDel.get("UserId")+"'";
+                    if (!oneDel.get("UserId").equals(operId)) inDBorSql+=" or b.userId='"+oneDel.get("UserId")+"'";
                     else {
                         oneDel.put("ReturnType", "1003");
                         oneDel.put("Message", "群主不能把自己的管理员权限删除");
