@@ -12,15 +12,12 @@ import java.util.Map;
 import javax.servlet.ServletContext;
 import javax.sql.DataSource;
 
-import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.SystemCache;
-import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.FileNameUtils;
 import com.spiritdata.framework.util.JsonUtils;
-import com.woting.appengine.content.utils.FileUtils;
 import com.woting.cm.cachedb.cachedb.persis.po.CacheDBPo;
 import com.woting.cm.cachedb.cachedb.service.CacheDBService;
 import com.woting.cm.cachedb.playcountdb.persis.po.PlayCountDBPo;
@@ -31,7 +28,6 @@ public class AddCacheDBInfoThread extends Thread {
 
 	private String smaId;
 	private DataSource DataSource = null;
-	private File file = null;
 	private CacheDBService cacheDBService;
 	private PlayCountDBService playCountDBService;
 	
@@ -133,14 +129,14 @@ public class AddCacheDBInfoThread extends Thread {
 					oneDate.put("ContentId", rs.getString("id"));
 					oneDate.put("ContentPub", rs.getString("smaPublisher"));
 					oneDate.put("MediaType", "SEQU");
-					oneDate.put("ContentDesc", rs.getString("descn"));
+					oneDate.put("ContentDescn", rs.getString("descn"));
 					oneDate.put("ContentImg", rs.getString("smaImg"));
 					oneDate.put("ContentKeyWord", rs.getString("keyWords"));
 					oneDate.put("CTime", rs.getTimestamp("cTime").getTime());
 					oneDate.put("ContentPubTime", rs.getTimestamp("cTime").getTime());
 					oneDate.put("ContentSubscribe", 0);
 					oneDate.put("ContentFavorite", 0);
-					oneDate.put("ContentShareURL", "http://www.wotingfm.com/dataCenter/shareH5/mweb/zj/"+oneDate.get("ContentId").toString()+"/content.html");
+					oneDate.put("ContentShareURL", "http://www.wotingfm.com/share/mweb/zj/"+oneDate.get("ContentId").toString()+"/content.html");
 				}
 				if (rs!=null) try {rs.close();rs=null;} catch(Exception e) {rs=null;} finally {rs=null;};
 	            if (ps!=null) try {ps.close();ps=null;} catch(Exception e) {ps=null;} finally {ps=null;};
@@ -279,14 +275,14 @@ public class AddCacheDBInfoThread extends Thread {
 						oneDate.put("ContentId", rs.getString("id"));
 						oneDate.put("ContentPub", rs.getString("maPublisher"));
 						oneDate.put("MediaType", "AUDIO");
-						oneDate.put("ContentDesc", rs.getString("descn"));
+						oneDate.put("ContentDescn", rs.getString("descn"));
 						oneDate.put("ContentImg", rs.getString("maImg"));
 						oneDate.put("CTime", rs.getTimestamp("cTime").getTime());
 						oneDate.put("ContentPlay", rs.getString("playURI"));
 						oneDate.put("ContentKeyWord", rs.getString("keyWords"));
 						oneDate.put("ContentTimes", rs.getLong("timeLong"));
 						oneDate.put("ContentPubTime", rs.getTimestamp("cTime").getTime());
-						oneDate.put("ContentShareURL", "http://www.wotingfm.com/dataCenter/shareH5/mweb/jm/"+oneDate.get("ContentId").toString()+"/content.html");
+						oneDate.put("ContentShareURL", "http://www.wotingfm.com/share/mweb/jm/"+oneDate.get("ContentId").toString()+"/content.html");
 						try {
 							String ext = FileNameUtils.getExt(oneDate.containsKey("ContentPlay")?(oneDate.get("ContentPlay").toString()):null);
 					        
