@@ -921,25 +921,11 @@ public class ContentService {
             if (roService!=null) roService.close();
             roService=null;
         }
-//        try {
-//            String _result=roService.get(key);
-//            if (_result==null) {
-//                rt=getContents1(catalogType, catalogId, resultType, mediaType, perSize, pageSize, page, beginCatalogId, pageType, mUdk, filterData);
-//                if (rt!=null) {
-//                    roService.set(key, JsonUtils.objToJson(rt), 60*1000*60);
-//                }
-//            } else {
-//                rt=(Map<String, Object>)JsonUtils.jsonToObj(_result, Map.class);
-//            }
-//        } finally {
-//            if (roService!=null) roService.close();
-//            roService=null;
-//        }
         if (key==null) return null;
         param=(Map)JsonUtils.jsonToObj(key, Map.class);
+
         //加入喜欢
         if (fList==null||fList.size()==0) return param;
-
         resultType=0;
         try {resultType=Integer.parseInt(""+param.get("ResultType"));} catch(Exception e) {};
         if (resultType==1) {
