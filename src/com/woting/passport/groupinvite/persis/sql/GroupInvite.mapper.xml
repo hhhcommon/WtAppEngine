@@ -172,8 +172,7 @@
   <!-- 需审核的用户邀请信息 -->
   <select id="needCheckInviteUserGroupList" resultType="java.util.HashMap" parameterType="java.lang.String">
     select a.inviteMessage, a.inviteVector, b.groupName, b.descn groupDescn, b.groupSignature, a.aUserId inviteUserId,
-      b.groupName, b.descn groupDescn, b.groupImg, b.groupNum, c.id userId, a.inviteTime,
-      c.loginName, c.mailAddress, c.mainPhoneNum, c.descn userDescn, c.portraitBig, c.portraitMini
+      b.groupName, b.descn groupDescn, b.groupImg, b.groupNum, c.id userId, a.inviteTime, c.*
     from wt_GroupInvite a, plat_Group b, plat_User c
   <![CDATA[
     where a.groupId=b.id and a.bUserId=c.id and a.flag=1 and a.acceptFlag=0 and a.inviteVector>0
@@ -185,8 +184,7 @@
 
   <!-- 某用户组的申请人列表信息 -->
   <select id="applyUserList" resultType="java.util.HashMap" parameterType="java.lang.String">
-    select a.inviteMessage, a.inviteVector, b.groupName, b.id groupId, b.groupSignature, a.inviteTime,
-    c.id applyUserId, c.*
+    select a.inviteMessage, a.inviteVector, b.groupName, b.id groupId, b.groupSignature, a.inviteTime, c.id applyUserId, c.*
     from wt_GroupInvite a, plat_Group b, plat_User c
   <![CDATA[
     where a.groupId=b.id and a.bUserId=c.id and a.flag=1 and a.acceptFlag=0 and a.inviteVector<0

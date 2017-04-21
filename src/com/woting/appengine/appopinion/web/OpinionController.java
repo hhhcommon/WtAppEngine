@@ -226,7 +226,13 @@ public class OpinionController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            List<AppOpinion> ol=opinionsService.getOpinionsByOnwerId(userId, mUdk.getDeviceId());
+            //1-获取分页信息
+            int page=0;//获取页数
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            int pageSize=10;//得到每页条数
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+
+            List<AppOpinion> ol=opinionsService.getOpinionsByOnwerId(userId, mUdk.getDeviceId(), pageSize, page);
             if (ol!=null&&ol.size()>0) {
                 map.put("ReturnType", "1001");
                 map.put("OpinionList", convertAppOpinon4View(ol));

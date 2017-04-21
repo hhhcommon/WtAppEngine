@@ -9,7 +9,9 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import com.spiritdata.framework.core.dao.mybatis.MybatisDAO;
+import com.spiritdata.framework.core.model.Page;
 import com.spiritdata.framework.util.SequenceUUID;
+import com.spiritdata.framework.util.StringUtils;
 import com.woting.appengine.appopinion.model.AppOpinion;
 import com.woting.appengine.appopinion.persis.pojo.AppOpinionPo;
 import com.woting.appengine.appopinion.persis.pojo.AppReOpinionPo;
@@ -61,43 +63,54 @@ public class AppOpinionService {
      * 根据用户指标（userId或Imei）得到意见及反馈列表
      * @param userId 用户Id
      * @param imei 设备编码
+     * @param pageSize 每页有几条记录
+     * @param pageIndex 页码，若为0,则得到所有内容
      * @return 意见及反馈列表
      */
-    public List<AppOpinion> getOpinionsByOnwerId(String userId, String imei) {
+    public List<AppOpinion> getOpinionsByOnwerId(String userId, String imei, int pageSize, int pageIndex) {
+        if (StringUtils.isNullOrEmptyOrSpace(userId)||StringUtils.isNullOrEmptyOrSpace(userId)) return null;
         try {
-            Map<String, String> param = new HashMap<String, String>();
+            Map<String, String> param=new HashMap<String, String>();
             param.put("userId", userId);
             param.put("imei", imei);
-            List<AppOpinionPo> ol = this.opinionDao.queryForList("getListByUserId", param);
-            if (ol!=null&&ol.size()>0) {
-                List<AppOpinion> ret = new ArrayList<AppOpinion>();
-                AppOpinion item = null;
-                List<AppReOpinionPo> rol = this.reOpinionDao.queryForList("getListByUserId", param);
-                if (rol!=null&&rol.size()>0) {
-                    int i=0;
-                    AppReOpinionPo arop=rol.get(i);
-                    for (AppOpinionPo op: ol) {
-                        item=new AppOpinion();
-                        item.buildFromPo(op);
-                        if (i<rol.size()) {
-                            while (arop.getOpinionId().equals(op.getId())) {
-                                item.addOneRe(arop);
-                                if (++i==rol.size()) break;
-                                arop=rol.get(i);
-                            }
-                        }
-                        ret.add(item);
-                    }
-                } else {
-                    for (AppOpinionPo op: ol) {
-                        item=new AppOpinion();
-                        item.buildFromPo(op);
-                        ret.add(item);
-                    }
+
+            List<AppOpinionPo> _ret=null;
+            if (pageIndex==0) _ret=opinionDao.queryForListAutoTranform("getListByUserId", param);
+            else {
+                Page<AppOpinionPo> page=opinionDao.pageQueryAutoTranform(null, "getListByUserId", param, pageIndex, pageSize);
+                if (page!=null&&page.getDataCount()>0) {
+                    _ret=new ArrayList<AppOpinionPo>();
+                    _ret.addAll(page.getResult());
                 }
-                return ret;
             }
-            return null;
+            if (_ret==null||_ret.isEmpty()) return null;
+
+            List<AppOpinion> ret = new ArrayList<AppOpinion>();
+            AppOpinion item = null;
+            List<AppReOpinionPo> rol = this.reOpinionDao.queryForList("getListByUserId", param);
+            if (rol!=null&&rol.size()>0) {
+                int i=0;
+                AppReOpinionPo arop=rol.get(i);
+                for (AppOpinionPo op: _ret) {
+                    item=new AppOpinion();
+                    item.buildFromPo(op);
+                    if (i<rol.size()) {
+                        while (arop.getOpinionId().equals(op.getId())) {
+                            item.addOneRe(arop);
+                            if (++i==rol.size()) break;
+                            arop=rol.get(i);
+                        }
+                    }
+                    ret.add(item);
+                }
+            } else {
+                for (AppOpinionPo op: _ret) {
+                    item=new AppOpinion();
+                    item.buildFromPo(op);
+                    ret.add(item);
+                }
+            }
+            return ret;
         } catch (Exception e) {
             e.printStackTrace();
         }

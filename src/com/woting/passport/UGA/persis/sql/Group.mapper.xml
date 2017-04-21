@@ -141,7 +141,9 @@
       plat_Group a, 
       (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b
     where a.id=b.groupId
-    <if test="_parameter!=null">and (<include refid="WhereClauseByEntiey"/>)</if>
+    <if test="_parameter!=null">
+      <if test="orderByClause==null">and (<include refid="WhereClauseByEntiey"/>)</if>
+    </if>
     <if test="orderByClause!=null">order by ${orderByClause}</if>
   </select>
 
@@ -152,7 +154,9 @@
       plat_Group a,
       (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b
     where a.id=b.groupId
-    <if test="_parameter!=null">and (<include refid="WhereClauseByEntiey"/>)</if>
+    <if test="_parameter!=null">
+      <if test="orderByClause==null">and (<include refid="WhereClauseByEntiey"/>)</if>
+    </if>
   </select>
   <select id="getGroupById" resultMap="groupMap" parameterType="java.lang.String">
     select <include refid="Base_Column_List"/>, b.groupCount, null groupAlias, null groupDescn
