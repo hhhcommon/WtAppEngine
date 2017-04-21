@@ -1896,7 +1896,7 @@ public class ContentService {
                     }
                     if (orSql.length()>0) sql+=" and ("+orSql+")";
                     if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
-                    if (catalogType.equals("-1")) sql+=" group by a.assetType,a.assetId,a.flowFlag order by a.sort desc, a.pubTime desc";//栏目
+                    if (catalogType.equals("-1")) sql+=" group by a.assetType,a.assetId,a.flowFlag order by a.loopSort desc, a.sort desc, a.pubTime desc";//栏目
                     else sql+="  order by field(a.dictDid,"+orderBySql+") ,cTime desc";//分类
                 } else {
                     if (catalogType.equals("-1")&&f_catalogType.equals("-1")) {//按发布栏目,用发布栏目过滤

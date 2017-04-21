@@ -2,7 +2,6 @@ package com.woting.appengine.common.web;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +28,7 @@ import com.woting.passport.session.SessionService;
 
 @Controller
 public class FileUploadController extends AbstractFileUploadController {
-    public static final String PREFIX_URL="http://ac.wotingfm.com/userimg"; //URL前缀
+    public static final String PREFIX_URL="http://ac.wotingfm.com/userimg/"; //URL前缀
     public static final String STOREPATH="userimg"; //"/opt/dataCenter/userimg"; //存储目录
 
     @Resource
@@ -134,14 +133,14 @@ public class FileUploadController extends AbstractFileUploadController {
             String extName=p.get("ExtName")+"";
             if (fType.equals("UserP")) {//========================================处理用户头像
                 try {
-                    String storeFile="/user_"+SequenceUUID.getUUIDSubSegment(2)+(extName.startsWith(".")?extName:"."+extName);
+                    String storeFile="user_"+SequenceUUID.getUUIDSubSegment(2)+(extName.startsWith(".")?extName:"."+extName);
                     copyFiles(tempFileName, storeFile);
                     //图片文件缩略存储
                     //文件保存到数据库中
                     Map<String, Object> updateInfo=new HashMap<String, Object>();
                     updateInfo.put("userId", userId);
-                    updateInfo.put("portraitBig", "##img##"+STOREPATH+storeFile);
-                    updateInfo.put("portraitMini", "##img##"+STOREPATH+storeFile);
+                    updateInfo.put("portraitBig", "##userimg##"+storeFile);
+                    updateInfo.put("portraitMini", "##userimg##"+storeFile);
                     userService.updateUser(updateInfo);
                     datamap.put("ReturnType", "1001");
                     datamap.put("PortraitBig", PREFIX_URL+storeFile);
@@ -159,11 +158,11 @@ public class FileUploadController extends AbstractFileUploadController {
                     datamap.put("Message", "根据Id无法获取用户组，不能保存图片");
                 } else {
                     try {
-                        String storeFile="/group_"+SequenceUUID.getUUIDSubSegment(2)+(extName.startsWith(".")?extName:"."+extName);
+                        String storeFile="group_"+SequenceUUID.getUUIDSubSegment(2)+(extName.startsWith(".")?extName:"."+extName);
                         copyFiles(tempFileName, storeFile);
                         //图片文件缩略存储
                         //文件保存到数据库中
-                        g.setGroupImg("##img##"+STOREPATH+storeFile);
+                        g.setGroupImg("##userimg##"+storeFile);
                         groupService.updateGroup(g);
                         datamap.put("ReturnType", "1001");
                         datamap.put("GroupImg", PREFIX_URL+storeFile);
@@ -191,7 +190,7 @@ public class FileUploadController extends AbstractFileUploadController {
     private void copyFiles(String srcFileName, String destFileName) throws IOException {
         //拷贝到指定目录，原始图片
 //        FileUtils.copyFile(new File(srcFileName), new File(STOREPATH+destFileName));
-        boolean isok = OssUtils.upLoadObject(STOREPATH+destFileName, new File(srcFileName), true); //ECS文件移到OS里
+        boolean isok = OssUtils.upLoadObject(FileNameUtils.concatPath(STOREPATH, destFileName), new File(srcFileName), true); //ECS文件移到OS里
 //        File f=new File(STOREPATH+destFileName);
         if (isok) {
             String _destFileName=FileNameUtils.getPureFileName(destFileName);
