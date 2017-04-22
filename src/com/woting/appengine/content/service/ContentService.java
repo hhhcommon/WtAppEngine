@@ -1650,11 +1650,12 @@ public class ContentService {
     class GetContents extends GetBizData {
         private String catalogType;
         private String catalogId;
-        private int resultType;
+        private int resultType;//=3仅列表返回；1=按下级分类；2=按媒体类型
         private int pageType;
         private String mediaType;
         private int pageSize;
         private int page;
+        //以下两个参数仅仅在resultType=1/2时这个参数才有意义
         private int perSize;
         private String beginCatalogId;
         private Map<String, Object> filterData;
@@ -1683,12 +1684,11 @@ public class ContentService {
         @Override
         public String _getBizData() {
             Map<String, Object> ret=new HashMap<String, Object>();
-            //2-根据参数获得范围
-            //2.1-根据分类获得根
+            //1-根据参数获得范围
+            //1.1-根据分类获得根
             TreeNode<? extends TreeNodeBean> root=null;
-            if (catalogType.equals("-1")) {
-                root=_cc.channelTree;
-            } else {
+            if (catalogType.equals("-1")) root=_cc.channelTree;
+            else {
                 DictModel dm=_cd.getDictModelById(catalogType);
                 if (dm!=null&&dm.dictTree!=null) root=dm.dictTree;
             }
@@ -1699,7 +1699,9 @@ public class ContentService {
             //3-得到分类id的语句
             String idCName="dictDid", typeCName="resTableName", resIdCName="resId";
             if (catalogType.equals("-1")) {
-                idCName="channelId";typeCName="assetType";resIdCName="assetId";
+                idCName="channelId";
+                typeCName="assetType";
+                resIdCName="assetId";
             }
             //4-获得过滤内容
             String filterStr="";
@@ -1714,9 +1716,8 @@ public class ContentService {
                 TreeNode<? extends TreeNodeBean> _root=null;
                 if (!StringUtils.isNullOrEmptyOrSpace(f_catalogType)) {
                     //根据分类获得根
-                    if (f_catalogType.equals("-1")) {
-                        _root=_cc.channelTree;
-                    } else {
+                    if (f_catalogType.equals("-1")) _root=_cc.channelTree;
+                    else {
                         DictModel dm=_cd.getDictModelById(f_catalogType);
                         if (dm!=null&&dm.dictTree!=null) _root=dm.dictTree;
                     }
@@ -1867,19 +1868,19 @@ public class ContentService {
                 if (orSql.length()>0) orSql=orSql.substring(4);
 
                 //得到获得数据条数的Sql
-                String sqlCount=null;
-                if (catalogType.equals("-1")) {//按发布栏目
-                    sqlCount="select count(distinct a.assetType,a.assetId) from wt_ChannelAsset a where a.isValidate=1 and a.flowFlag=2";
-                } else {//按分类
-                    sqlCount="select count(distinct a.resTableName,a.resId) from wt_ResDict_Ref a where ( a.dictMid='"+catalogType+"'";
-                    if (catalogType.equals("1") || catalogType.equals("2")) {
-                        sqlCount+=" or a.dictMid='9' )";
-                    } else {
-                        sqlCount+=")";
-                    }
-                }
-                if (orSql.length()>0) sqlCount+=" and ("+orSql+")";
-                if (mediaFilterSql.length()>0) sqlCount+=" and ("+mediaFilterSql+")";
+//                String sqlCount=null;
+//                if (catalogType.equals("-1")) {//按发布栏目
+//                    sqlCount="select count(distinct a.assetType,a.assetId) from wt_ChannelAsset a where a.isValidate=1 and a.flowFlag=2";
+//                } else {//按分类
+//                    sqlCount="select count(distinct a.resTableName,a.resId) from wt_ResDict_Ref a where ( a.dictMid='"+catalogType+"'";
+//                    if (catalogType.equals("1") || catalogType.equals("2")) {
+//                        sqlCount+=" or a.dictMid='9' )";
+//                    } else {
+//                        sqlCount+=")";
+//                    }
+//                }
+//                if (orSql.length()>0) sqlCount+=" and ("+orSql+")";
+//                if (mediaFilterSql.length()>0) sqlCount+=" and ("+mediaFilterSql+")";
 
                 //得到获得具体数据的Sql
                 String sql=null;

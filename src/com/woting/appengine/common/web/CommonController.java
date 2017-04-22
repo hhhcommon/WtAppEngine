@@ -368,7 +368,7 @@ public class CommonController {
             int returnType=1;
             try {returnType=Integer.parseInt(m.get("ReturnType")+"");} catch(Exception e) {}
 
-            Owner o=new Owner(201, mUdk.getUserId());
+            Owner o=new Owner(201, mUdk.getUserId()==null?mUdk.getDeviceId():mUdk.getUserId());
             List<String>[] retls=wordService.getHotWords(o, returnType, wordSize);
             if (retls==null||retls.length==0) map.put("ReturnType", "1011");
             else {

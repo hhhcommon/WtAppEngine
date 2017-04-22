@@ -9,7 +9,6 @@ import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.woting.searchword.monitor.DealLoadQueue;
 import com.woting.searchword.monitor.DealOnlineQueue;
-import com.woting.searchword.monitor.LoadWord;
 import com.woting.searchword.service.WordService;
 
 /**
@@ -40,15 +39,11 @@ public class SearchWordListener extends Thread {
             }
             if (SearchWordListener.wordService!=null) {
                 //从数据库加载队列输入内容
-                (new LoadWord(SearchWordListener.wordService)).start();
-
-                long interval_1=10*1000l, interval_2=60*60*1000l; 
-                //启动在线监控
-                (new Timer("在线搜索词队列监控，每隔["+interval_1+"]毫秒执行", true))
-                .schedule(new DealOnlineQueue(SearchWordListener.wordService), new Date(), interval_1);
+                SearchWordListener.wordService.loadUserWord();
                 //启动加载监控
-                (new Timer("装载搜索词队列监控，每隔["+interval_2+"]毫秒执行", true))
-                .schedule(new DealLoadQueue(SearchWordListener.wordService), new Date(), interval_2);
+                (new DealLoadQueue(SearchWordListener.wordService)).start();
+                //启动在线监控
+                (new DealOnlineQueue(SearchWordListener.wordService)).start();
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
