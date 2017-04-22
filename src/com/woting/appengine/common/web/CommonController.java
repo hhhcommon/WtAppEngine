@@ -152,21 +152,7 @@ public class CommonController {
             String userId=map.get("UserId")==null?null:map.get("UserId")+"";
             if (!StringUtils.isNullOrEmptyOrSpace(userId)) {
                 UserPo up=userService.getUserById(userId);
-                if (up!=null) {
-                    Map<String, Object> um=up.getDetailInfo();
-                    List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", userId);
-                    if (dictRefList!=null&&!dictRefList.isEmpty()) {
-                        for (DictRefRes drr: dictRefList) {
-                            if (drr.getDm().getId().equals("8")) {//性别
-                                um.put("Sex", drr.getDd().getNodeName());
-                            } else
-                            if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
-                                um.put("Region", drr.getDd().getTreePathName());
-                            }
-                        }
-                    }
-                    map.put("UserInfo", um);
-                }
+                if (up!=null) map.put("UserInfo", up.getDetailInfo());
             }
             return map;
         } catch(Exception e) {

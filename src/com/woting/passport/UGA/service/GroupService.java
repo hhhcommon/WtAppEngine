@@ -1127,7 +1127,7 @@ public class GroupService {
             String inviteUserId=one.get("userId")+"";
             _one.put("InviteUserId", inviteUserId);
             try {
-                UserPo up=userDao.getInfoObject("getUserById", userId);
+                UserPo up=userDao.getInfoObject("getUserById", inviteUserId);
                 if (up!=null) _one.put("InviteUserInfo", up.toHashMap4Mobile());
             } catch(Exception e) {
             }

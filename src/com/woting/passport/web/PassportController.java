@@ -25,7 +25,6 @@ import com.spiritdata.framework.ext.redis.lock.RedisBlockLock;
 import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.RequestUtils;
-import com.woting.cm.core.dict.model.DictRefRes;
 import com.woting.cm.core.dict.service.DictService;
 import com.woting.dataanal.gather.API.ApiGatherUtils;
 import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
@@ -179,20 +178,8 @@ public class PassportController {
             //4-返回成功，若没有IMEI也返回成功
             map.put("ReturnType", "1001");
             if (u!=null) {
-                Map<String, Object> um=u.getDetailInfo();
-                List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", u.getUserId());
-                if (dictRefList!=null&&!dictRefList.isEmpty()) {
-                    for (DictRefRes drr: dictRefList) {
-                        if (drr.getDm().getId().equals("8")) {//性别
-                            um.put("Sex", drr.getDd().getNodeName());
-                        } else
-                        if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
-                            um.put("Region", drr.getDd().getTreePathName());
-                        }
-                    }
-                }
                 map.put("ReturnType", "1001");
-                map.put("UserInfo", um);
+                map.put("UserInfo", u.getDetailInfo());
             }
             return map;
         } catch(Exception e) {
@@ -941,20 +928,8 @@ public class PassportController {
             } else {
                 UserPo up=userService.getUserById(userId);
                 if (up!=null) {
-                    Map<String, Object> um=up.getDetailInfo();
-                    List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", userId);
-                    if (dictRefList!=null&&!dictRefList.isEmpty()) {
-                        for (DictRefRes drr: dictRefList) {
-                            if (drr.getDm().getId().equals("8")) {//性别
-                                um.put("Sex", drr.getDd().getNodeName());
-                            } else
-                            if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
-                                um.put("Region", drr.getDd().getTreePathName());
-                            }
-                        }
-                    }
                     map.put("ReturnType", "1001");
-                    map.put("UserInfo", um);
+                    map.put("UserInfo", up.getDetailInfo());
                 } else {
                     map.put("ReturnType", "1011");
                     map.put("Message", "无对应的用户信息");
