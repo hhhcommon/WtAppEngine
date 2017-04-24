@@ -51,8 +51,11 @@
   <select id="getInfoById" resultMap="BaseResultMap" parameterType="java.lang.String">
     select <include refid="Base_Column_List"/> from wt_MobileUsed where id=#{id,jdbcType=VARCHAR}
   </select>
-  <select id="getUsedInfo" resultMap="BaseResultMap" parameterType="java.util.Map">
-    select <include refid="Base_Column_List"/> from wt_MobileUsed where imei=#{imei,jdbcType=VARCHAR} and pcdType=#{PCDType,jdbcType=INTEGER} order by lmtime desc limit 1
+  <select id="getUserUsedInDevice" resultMap="BaseResultMap" parameterType="java.util.Map">
+    select <include refid="Base_Column_List"/> from wt_MobileUsed
+    where imei=#{imei,jdbcType=VARCHAR} and pcdType=#{PCDType,jdbcType=INTEGER} and status=1
+    order by lmTime desc
+    limit 1
   </select>
 
   <!-- 新增数据 -->
@@ -88,12 +91,8 @@
 
   <!-- 修改 根据IMEI-->
   <update id="updateByIMEI" parameterType="java.util.Map">
-    update wt_MobileUsed
-    <set>
-      <if test="userId!=null">userId=#{userId,jdbcType=VARCHAR},</if>
-      <if test="status!=null and status!=0">status=#{status,jdbcType=INTEGER},</if>
-    </set>
-    where imei=#{imei,jdbcType=VARCHAR} and pcdType=#{PCDType,jdbcType=INTEGER}
+    update wt_MobileUsed set status=#{status,jdbcType=INTEGER}
+    where imei=#{imei,jdbcType=VARCHAR} and pcdType=#{PCDType,jdbcType=INTEGER} and userId=#{userId,jdbcType=VARCHAR}
   </update>
   <!-- 调整用户登录情况 -->
   <update id="adjustByIMEI" parameterType="java.util.Map">
