@@ -228,6 +228,7 @@ CREATE TABLE wt_ChannelMap_Ref (
   srcMid     varchar(32)   NOT NULL  COMMENT '中间库栏目(字典)组Id',
   srcDid     varchar(32)   NOT NULL  COMMENT '中间库栏目(字典)项Id',
   srcName    varchar(32)   NOT NULL  COMMENT '中间库平台名称——对应pubisher',
+  isValidate int(1) unsigned  NOT NULL  DEFAULT 1  COMMENT '是否生效(1-生效,2-删除过程)',
   cTime      timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   PRIMARY KEY (id)
 )

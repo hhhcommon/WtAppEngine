@@ -10,7 +10,7 @@
     <result  column="resId"          property="resId"          jdbcType="VARCHAR"/>
     <result  column="playCount"      property="playCount"      jdbcType="VARCHAR"/>
     <result  column="publisher"      property="publisher"      jdbcType="VARCHAR"/>
-    <result  column="cTime"          property="CTime"          jdbcType="TIMESTAMP"/>
+    <result  column="cTime"          property="cTime"          jdbcType="TIMESTAMP"/>
   </resultMap>
   
    <!-- 所有列 -->
@@ -56,6 +56,10 @@
     <if test="_parameter!=null"> <include refid="WhereClauseByEntiey"/></if>
     <if test="whereSql!=null"> and ${whereSql}</if>
     <if test="sortByClause!=null">order by ${sortByClause}</if>
+  </select>
+  
+  <select id="getMediaPlayCountLatest" parameterType="java.util.Map" resultMap="baseResultMap">
+	select <include refid="Base_Column_List"/> from wt_MediaPlayCount where resId=#{resId,jdbcType=VARCHAR} and resTableName=#{resTableName,jdbcType=VARCHAR} order by cTime desc
   </select>
   
   <!-- 修改 根据主键-->
