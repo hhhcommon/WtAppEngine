@@ -52,16 +52,18 @@ public class SearchWordMemory {
 
     /**
      * 从加载搜索词队列获得一个搜索词
+     * @throws InterruptedException 
      */
-    public String pollFromLoadQueue() {
-        return wordLoadQueue.poll();
+    public String takeFromLoadQueue() throws InterruptedException {
+        return wordLoadQueue.take();
     }
 
     /**
      * 从在线搜索词队列获得一个搜索词
+     * @throws InterruptedException 
      */
-    public String pollFromOnlineQueue() {
-        return wordOnlineQueue.poll();
+    public String takeFromOnlineQueue() throws InterruptedException {
+        return wordOnlineQueue.take();
     }
 
     /**

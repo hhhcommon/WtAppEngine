@@ -4,10 +4,17 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.UGA.UgaUser;
+import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.util.StringUtils;
+import com.woting.cm.core.dict.model.DictRefRes;
+import com.woting.cm.core.dict.service.DictService;
 
 public class UserPo extends UgaUser {
     private static final long serialVersionUID = 400373602903981461L;
@@ -151,6 +158,24 @@ public class UserPo extends UgaUser {
         if (!StringUtils.isNullOrEmptyOrSpace(this.descn)) retM.put("Descn", this.descn);
         if (!StringUtils.isNullOrEmptyOrSpace(this.portraitBig)) retM.put("PortraitBig", this.portraitBig);
         if (!StringUtils.isNullOrEmptyOrSpace(this.portraitMini)) retM.put("PortraitMini", this.portraitMini);
+        DictService dictService=null;
+        ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+        if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+            dictService=(DictService) WebApplicationContextUtils.getWebApplicationContext(sc).getBean("dictService");
+        }
+        if (dictService!=null) {
+            List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", this.userId);
+            if (dictRefList!=null&&!dictRefList.isEmpty()) {
+                for (DictRefRes drr: dictRefList) {
+                    if (drr.getDm().getId().equals("8")) {//性别
+                        retM.put("Sex", drr.getDd().getNodeName());
+                    } else
+                    if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
+                        retM.put("Region", drr.getDd().getTreePathName());
+                    }
+                }
+            }
+        }
         return retM;
     }
 
@@ -166,8 +191,24 @@ public class UserPo extends UgaUser {
         if (!StringUtils.isNullOrEmptyOrSpace(this.userSign)) retM.put("UserSign", this.userSign);
         if (!StringUtils.isNullOrEmptyOrSpace(this.loginName)) retM.put("UserName", this.loginName);
         if (!StringUtils.isNullOrEmptyOrSpace(this.nickName)) retM.put("NickName", this.nickName);
-        //Sex
-        //Region
+        DictService dictService=null;
+        ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+        if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+            dictService=(DictService) WebApplicationContextUtils.getWebApplicationContext(sc).getBean("dictService");
+        }
+        if (dictService!=null) {
+            List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", this.userId);
+            if (dictRefList!=null&&!dictRefList.isEmpty()) {
+                for (DictRefRes drr: dictRefList) {
+                    if (drr.getDm().getId().equals("8")) {//性别
+                        retM.put("Sex", drr.getDd().getNodeName());
+                    } else
+                    if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
+                        retM.put("Region", drr.getDd().getTreePathName());
+                    }
+                }
+            }
+        }
         if (this.birthday!=null) {
             retM.put("Birthday", this.birthday.getTime());
             retM.put("Age", getAge());

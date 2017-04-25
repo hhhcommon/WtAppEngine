@@ -549,46 +549,53 @@ public class GroupService {
                 }
             }
         }
-        //把管理员从管理员串中删除掉：若是管理员的话
         String beSetUserid=null;//被移交人
-        String adminUserIds=gp.getAdminUserIds();
-        int pos1=-1, pos2=-1;
-        pos1=adminUserIds.indexOf(userId);
-        if (pos1!=-1) {
-            pos2=adminUserIds.indexOf(",", pos1);
-            if (pos2==-1) adminUserIds=adminUserIds.substring(0, pos1-1);
-            else adminUserIds=adminUserIds.substring(0, pos1-1)+adminUserIds.substring(pos2);
-        }
-        GroupPo updateGp=new GroupPo();
-        updateGp.setGroupId(groupId);
-        List<Object> gupl=(List<Object>)groupDao.queryForListAutoTranform("getUserInGroupRefListByGroupId", groupId);
-        GroupUserPo gup=null;
-        if (r==3||r==5) {//移交到其他一般组员
-            for (i=1; i<gupl.size(); i++) {//找到其他一般组员
-                gup=(GroupUserPo)gupl.get(i);
-                if (!gup.getUserId().equals(userId)) break;
-            }
-            if (gup!=null&&i<gupl.size()) {//找到了
-                if (r==3) {//自动移交群主
-                    updateGp.setGroupMasterId(gup.getUserId());//群主
-                    gp.setGroupMasterId(gup.getUserId());
+        if (r!=2) {
+            //把管理员从管理员串中删除掉：若是管理员的话
+            String adminUserIds=gp.getAdminUserIds();
+            int pos1=-1, pos2=-1;
+            pos1=adminUserIds.indexOf(userId);
+            if (pos1!=-1) {
+                pos2=adminUserIds.indexOf(",", pos1);
+                if (pos2==-1) adminUserIds=adminUserIds.substring(0, pos1-1);
+                else {
+                    if (pos1>0) adminUserIds=adminUserIds.substring(0, pos1-1)+adminUserIds.substring(pos2);
+                    else adminUserIds=adminUserIds.substring(pos2+1);
                 }
-                beSetUserid=gup.getUserId();
-                adminUserIds=beSetUserid;//加入管理员
             }
-        } else if (r==4) {//移交群主到其他管理员
-            for (i=1; i<gupl.size(); i++) {//找到其他管理员
-                gup=(GroupUserPo)gupl.get(i);
-                if (!gup.getUserId().equals(userId)&&adminUserIds.indexOf(gup.getUserId())!=-1) break;
+
+            
+            GroupPo updateGp=new GroupPo();
+            updateGp.setGroupId(groupId);
+            List<Object> gupl=(List<Object>)groupDao.queryForListAutoTranform("getUserInGroupRefListByGroupId", groupId);
+            GroupUserPo gup=null;
+            if (r==3||r==5) {//移交到其他一般组员
+                for (i=1; i<gupl.size(); i++) {//找到其他一般组员
+                    gup=(GroupUserPo)gupl.get(i);
+                    if (!gup.getUserId().equals(userId)) break;
+                }
+                if (gup!=null&&i<gupl.size()) {//找到了
+                    if (r==3) {//自动移交群主
+                        updateGp.setGroupMasterId(gup.getUserId());//群主
+                        gp.setGroupMasterId(gup.getUserId());
+                    }
+                    beSetUserid=gup.getUserId();
+                    adminUserIds=beSetUserid;//加入管理员
+                }
+            } else if (r==4) {//移交群主到其他管理员
+                for (i=1; i<gupl.size(); i++) {//找到其他管理员
+                    gup=(GroupUserPo)gupl.get(i);
+                    if (!gup.getUserId().equals(userId)&&adminUserIds.indexOf(gup.getUserId())!=-1) break;
+                }
+                if (gup!=null&&i<gupl.size()) {//找到了
+                    beSetUserid=gup.getUserId();
+                    updateGp.setGroupMasterId(beSetUserid);//自动移交群主
+                }
             }
-            if (gup!=null&&i<gupl.size()) {//找到了
-                beSetUserid=gup.getUserId();
-                updateGp.setGroupMasterId(beSetUserid);//自动移交群主
-            }
+            updateGp.setAdminUserIds(adminUserIds);
+            groupDao.update(updateGp);
+            gp.setAdminUserIds(adminUserIds);
         }
-        updateGp.setAdminUserIds(adminUserIds);
-        groupDao.update(updateGp);
-        gp.setAdminUserIds(adminUserIds);
 
         SocketClient sc=null;
         try {
@@ -1120,7 +1127,7 @@ public class GroupService {
             String inviteUserId=one.get("userId")+"";
             _one.put("InviteUserId", inviteUserId);
             try {
-                UserPo up=userDao.getInfoObject("getUserById", userId);
+                UserPo up=userDao.getInfoObject("getUserById", inviteUserId);
                 if (up!=null) _one.put("InviteUserInfo", up.toHashMap4Mobile());
             } catch(Exception e) {
             }
@@ -1470,7 +1477,10 @@ public class GroupService {
                 if (pos1!=-1) {
                     pos2=toAdmins.indexOf(",", pos1);
                     if (pos2==-1) toAdmins=toAdmins.substring(0, pos1-1);
-                    else toAdmins=toAdmins.substring(0, pos1-1)+toAdmins.substring(pos2);
+                    else {
+                        if (pos1>0) toAdmins=toAdmins.substring(0, pos1-1)+toAdmins.substring(pos2);
+                        else toAdmins=toAdmins.substring(pos2+1);
+                    }
                 }
                 toAdmins+=","+inviteUserId;
                 dataMap.put("_TOUSERS", toAdmins);
@@ -2130,7 +2140,10 @@ public class GroupService {
                     if (pos1!=-1) {
                         pos2=nowAdminUserIds.indexOf(",", pos1);
                         if (pos2==-1) nowAdminUserIds=nowAdminUserIds.substring(0, pos1-1);
-                        else nowAdminUserIds=nowAdminUserIds.substring(0, pos1-1)+nowAdminUserIds.substring(pos2);
+                        else {
+                            if (pos1>0) nowAdminUserIds=nowAdminUserIds.substring(0, pos1-1)+nowAdminUserIds.substring(pos2);
+                            else nowAdminUserIds=nowAdminUserIds.substring(pos2+1);
+                        }
                     } else {
                         oneDel.put("ReturnType", "10011");
                         oneDel.put("Message", "用户不是管理员，无需删除");

@@ -152,21 +152,7 @@ public class CommonController {
             String userId=map.get("UserId")==null?null:map.get("UserId")+"";
             if (!StringUtils.isNullOrEmptyOrSpace(userId)) {
                 UserPo up=userService.getUserById(userId);
-                if (up!=null) {
-                    Map<String, Object> um=up.getDetailInfo();
-                    List<DictRefRes> dictRefList=dictService.getDictRefs("plat_User", userId);
-                    if (dictRefList!=null&&!dictRefList.isEmpty()) {
-                        for (DictRefRes drr: dictRefList) {
-                            if (drr.getDm().getId().equals("8")) {//性别
-                                um.put("Sex", drr.getDd().getNodeName());
-                            } else
-                            if (drr.getDm().getId().equals("2")&&drr.getRefName().equals("地区")) {
-                                um.put("Region", drr.getDd().getTreePathName());
-                            }
-                        }
-                    }
-                    map.put("UserInfo", um);
-                }
+                if (up!=null) map.put("UserInfo", up.getDetailInfo());
             }
             return map;
         } catch(Exception e) {
@@ -368,7 +354,7 @@ public class CommonController {
             int returnType=1;
             try {returnType=Integer.parseInt(m.get("ReturnType")+"");} catch(Exception e) {}
 
-            Owner o=new Owner(201, mUdk.getUserId());
+            Owner o=new Owner(201, mUdk.getUserId()==null?mUdk.getDeviceId():mUdk.getUserId());
             List<String>[] retls=wordService.getHotWords(o, returnType, wordSize);
             if (retls==null||retls.length==0) map.put("ReturnType", "1011");
             else {
