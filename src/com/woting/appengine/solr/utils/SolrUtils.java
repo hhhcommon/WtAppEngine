@@ -120,4 +120,51 @@ public abstract class SolrUtils {
 		}
 		return null;
 	}
+
+
+	public static SolrInputPo convert2SolrInput(Object obj, String pid, String persons, String chstr, long playcount) {
+		if (obj instanceof SeqMediaAssetPo) {
+			SeqMediaAssetPo sma = (SeqMediaAssetPo) obj;
+			SolrInputPo sPo = new SolrInputPo();
+			sPo.setId("SEQU_"+sma.getId());
+			sPo.setItem_id(sma.getId());
+			sPo.setItem_title(sma.getSmaTitle());
+			sPo.setItem_type("SEQU");
+			sPo.setItem_mediasize(sma.getSmaAllCount());
+			sPo.setItem_publisher(sma.getSmaPublisher());
+			if (chstr!=null) {
+				sPo.setItem_channel(chstr);
+			}
+			sPo.setItem_descn(sma.getDescn());
+			if (persons!=null) {
+				sPo.setItem_persons(persons);
+			}
+			sPo.setItem_playcount(playcount);
+			return sPo;
+		} else {
+			if (obj instanceof MediaAssetPo) {
+				MediaAssetPo ma = (MediaAssetPo) obj;
+				SolrInputPo sPo = new SolrInputPo();
+				sPo.setId("AUDIO_"+ma.getId());
+				sPo.setItem_id(ma.getId());
+				if (pid!=null) {
+					sPo.setItem_pid(pid);
+				}
+				if (persons!=null) {
+					sPo.setItem_persons(persons);
+				}
+				sPo.setItem_title(ma.getMaTitle());
+				sPo.setItem_publisher(ma.getMaPublisher());
+				sPo.setItem_descn(ma.getDescn());
+				sPo.setItem_timelong(ma.getTimeLong());
+				if (chstr!=null) {
+					sPo.setItem_channel(chstr);
+				}
+				sPo.setItem_playcount(playcount);
+				sPo.setItem_type("AUDIO");
+				return sPo;
+			}
+		}
+		return null;
+	}
 }
