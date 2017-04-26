@@ -1722,6 +1722,7 @@ public class ContentService {
         @SuppressWarnings("unchecked")
         @Override
         public String _getBizData() {
+            System.out.println("============================001=="+System.currentTimeMillis());
             Map<String, Object> ret=new HashMap<String, Object>();
             //1-根据参数获得范围
             //1.1-根据分类获得根
@@ -1736,11 +1737,11 @@ public class ContentService {
             if (root==null) return null;
             if (root.isLeaf()) resultType=3;
             //1.3-得到分类id的语句
-            String idCName="dictDid", typeCName="resTableName", resIdCName="resId";
-            if (catalogType.equals("-1")) {
-                idCName="channelId";
-                typeCName="assetType";
-                resIdCName="assetId";
+            String idCName="channelId", typeCName="assetType", resIdCName="assetId";
+            if (!catalogType.equals("-1")) {
+                idCName="dictDid";
+                typeCName="resTableName";
+                resIdCName="resId";
             }
             //4-获得过滤内容
             String filterStr="";
@@ -1847,17 +1848,18 @@ public class ContentService {
 
             List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();//指标列表
             if (resultType==3) {//按列表处理
-                //得到所有下级结点的Id
-                allTn=TreeUtils.getDeepList(root);
                 //得到分类id的语句
                 String orSql="";
                 String orderBySql = "";
-                orSql+=" or a."+idCName+"='"+root.getId()+"'";
-                orderBySql += "'"+root.getId()+"'";
-                if (allTn!=null&&!allTn.isEmpty()) {
-                    for (TreeNode<? extends TreeNodeBean> tn: allTn) {
-                        orSql+=" or a."+idCName+"='"+tn.getId()+"'";
-                        orderBySql += ",'"+tn.getId()+"'";
+                if (!root.isRoot()) {
+                    allTn=TreeUtils.getDeepList(root);
+                    orSql+=" or a."+idCName+"='"+root.getId()+"'";
+                    orderBySql += "'"+root.getId()+"'";
+                    if (allTn!=null&&!allTn.isEmpty()) {
+                        for (TreeNode<? extends TreeNodeBean> tn: allTn) {
+                            orSql+=" or a."+idCName+"='"+tn.getId()+"'";
+                            orderBySql += ",'"+tn.getId()+"'";
+                        }
                     }
                 }
                 if ((mediaType!=null && mediaType.equals("RADIO")) || catalogType.equals("2")) {
@@ -1925,7 +1927,7 @@ public class ContentService {
                 String sql=null;
                 if (StringUtils.isNullOrEmptyOrSpace(filterSql_inwhere)) {
                     if (catalogType.equals("-1")) {//按发布栏目
-                        sql="select a.assetType,a.assetId, max(a.pubTime) pubTime, max(a.sort) sort, a.flowFlag from wt_ChannelAsset a where a.isValidate=1 and a.flowFlag=2";
+                        sql="select distinct a.assetType,a.assetId from wt_ChannelAsset a where a.isValidate=1 and a.flowFlag=2";
                     } else {//按分类
                         sql="select distinct a.resTableName,a.resId from wt_ResDict_Ref a where ( a.dictMid='"+catalogType+"'";
                         if (catalogType.equals("1") || catalogType.equals("2")) {
@@ -1936,7 +1938,10 @@ public class ContentService {
                     }
                     if (orSql.length()>0) sql+=" and ("+orSql+")";
                     if (mediaFilterSql.length()>0) sql+=" and ("+mediaFilterSql+")";
-                    if (catalogType.equals("-1")) sql+=" group by a.assetType,a.assetId,a.flowFlag order by a.loopSort desc, a.sort desc, a.pubTime desc";//栏目
+                    if (catalogType.equals("-1")) {//栏目
+                        if (!root.isLeaf()) sql+=" order by a.pubTime desc";
+                        else sql+=" order by a.topSort desc, a.pubTime desc";
+                    }
                     else sql+="  order by field(a.dictDid,"+orderBySql+") ,cTime desc";//分类
                 } else {
                     if (catalogType.equals("-1")&&f_catalogType.equals("-1")) {//按发布栏目,用发布栏目过滤
@@ -1997,154 +2002,106 @@ public class ContentService {
 
                 Connection conn=null;
                 PreparedStatement ps=null;//获得所需的记录的id
-                PreparedStatement ps1=null;//如果需要提取专辑中的第一条记录，按此处理
                 ResultSet rs=null;
                 try {
                     conn=dataSource.getConnection();
                     //获得总条数
                     long count=0l;
-//                    ps=conn.prepareStatement(sqlCount);
-//                    rs=ps.executeQuery();
-//                    while (rs!=null&&rs.next()) {
-//                        count=rs.getLong(1);
-//                    }
-                    count=2945894l;
-//                    rs.close(); rs=null;
-//                    ps.close(); ps=null;
-                    
+                    count=1000;
                     //获得记录
+                    System.out.println("============================002=="+System.currentTimeMillis());
                     ps=conn.prepareStatement(sql);
                     rs=ps.executeQuery();
+                    System.out.println("============================003=="+System.currentTimeMillis());
 
-                    String sma2msInSql="";
-                    String bcSqlSign="", maSqlSign="", smaSqlSign="";   //为找到内容设置
-                    String bcSqlSign1="", maSqlSign1="", smaSqlSign1="";//为查询相关信息设置
-                    String bcPlayOrId="";
+                    String bcSqlSign="";   //为找到内容设置
+                    String bcSqlSign1="";//为查询相关信息设置
                     orderBySql = "";
-                    List<Map<String, Object>> pubChannelList=new ArrayList<Map<String, Object>>();
+                    List<String> cacheIdList=new ArrayList<String>();
                     while (rs!=null&&rs.next()) {
                         sortIdList.add(rs.getString(typeCName)+"="+rs.getString(resIdCName));
-                        if (rs.getString(typeCName).equals("wt_Broadcast")) {
+
+                        MediaType MT=MediaType.buildByTabName(rs.getString(typeCName));
+                        if (MT==MediaType.RADIO) {
                             bcSqlSign+=" or a.id='"+rs.getString(resIdCName)+"'";
                             bcSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
-                            bcPlayOrId+=" or bcId='"+rs.getString(resIdCName)+"'";
                             orderBySql+=",'"+rs.getString(resIdCName)+"'";
-                        }
-//                        } else if (rs.getString(typeCName).equals("wt_MediaAsset")) {
-//                            maSqlSign+=" or id='"+rs.getString(resIdCName)+"'";
-//                            maSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
-//                        } else if (rs.getString(typeCName).equals("wt_SeqMediaAsset")) {
-//                            smaSqlSign+=" or id='"+rs.getString(resIdCName)+"'";
-//                            smaSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
-//                            if (pageType==0) sma2msInSql+=" or sma.sId='"+rs.getString(resIdCName)+"'";
-//                        }
-                        Map<String, Object> oneAsset=new HashMap<String, Object>();
-                        oneAsset.put("resId", rs.getString(resIdCName));
-                        oneAsset.put("resTableName", rs.getString(typeCName));
-                        assetList.add(oneAsset);
-                        if (catalogType.equals("-1")) {
-                            Map<String, Object> onePub=new HashMap<String, Object>();
-                            onePub.put("assetType", rs.getString(resIdCName));
-                            onePub.put("assetId", rs.getString(resIdCName));
-                            onePub.put("pubTime", rs.getString("pubTime"));
-                            onePub.put("flowFlag",rs.getString("flowFlag"));
-                            pubChannelList.add(onePub);
+                        } else {
+                            cacheIdList.add(MT.getTypeName()+"_"+rs.getString(resIdCName)+"_INFO");
                         }
                     }
-                    //得到发布列表
-                    if (!catalogType.equals("-1")) pubChannelList=channelService.getPubChannelList(assetList);
-
                     rs.close(); rs=null;
                     ps.close(); ps=null;
-                    if (sortIdList!=null&&!sortIdList.isEmpty()) {
-                        //重构人员及分类列表
-                        Map<String, Object> paraM=new HashMap<String, Object>();
-                        if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {
-                            bcSqlSign=bcSqlSign.substring(4);
-                            paraM.put("bcIds", "a.resTableName='wt_Broadcast' and ("+bcSqlSign1.substring(4)+")");
-                        }
-//                        if (!StringUtils.isNullOrEmptyOrSpace(maSqlSign)) {
-//                            maSqlSign=maSqlSign.substring(4);
-//                            paraM.put("maIds", "a.resTableName='wt_MediaAsset' and ("+maSqlSign1.substring(4)+")");
-//                            //playUriList=contentDao.queryForListAutoTranform("getPlayListByIds", paraM);
-//                        }
-//                        if (!StringUtils.isNullOrEmptyOrSpace(smaSqlSign)) {//专辑处理
-//                            smaSqlSign=smaSqlSign.substring(4);
-//                            paraM.put("smaIds", "a.resTableName='wt_SeqMediaAsset' and ("+smaSqlSign1.substring(4)+")");
-//                        }
-                        List<Map<String, Object>> cataList=null;
-                        List<Map<String, Object>> personList=null;
-                        List<Map<String, Object>> playCountList=null; //播放次数
-                        List<Map<String, Object>> playingList=null; //电台播放节目
-                        if (!paraM.isEmpty()) {
-                            playCountList=contentDao.queryForListAutoTranform("refPlayCountById", paraM);; //播放次数
-                            cataList=contentDao.queryForListAutoTranform("refCataById", paraM);
-                            personList=contentDao.queryForListAutoTranform("refPersonById", paraM); //人员
-                            if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {
-                                Calendar cal = Calendar.getInstance();
-                                Date date = new Date();
-                                cal.setTime(date);
-                                int week = cal.get(Calendar.DAY_OF_WEEK);
-                                DateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-                                String timestr = sdf.format(date);
-                                paraM.clear();
-                                paraM.put("bcIds", bcPlayOrId.substring(4));
-                                paraM.put("weekDay", week);
-                                paraM.put("sort", 0);
-                                paraM.put("timeStr", timestr);
-                                playingList=contentDao.queryForListAutoTranform("playingBc", paraM); //电台播放节目
-                            }
-                        }
 
+                    if (sortIdList!=null&&!sortIdList.isEmpty()) {
                         List<Map<String, Object>> _ret=new ArrayList<Map<String, Object>>();
                         for (int j=0; j<sortIdList.size(); j++) _ret.add(null);
+                        System.out.println("============================004=="+System.currentTimeMillis());
 
-                        if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {//电台处理
-                            String bcSql = "select a.*, b.bcSource, b.flowURI from wt_Broadcast a left join wt_BCLiveFlow b on a.id=b.bcId and b.isMain=1 where "+bcSqlSign+" order by field(a.id,"+orderBySql.substring(1)+")";
-                            ps=conn.prepareStatement(bcSql);
-                            rs=ps.executeQuery();
-                            while (rs!=null&&rs.next()) {
-                                Map<String, Object> oneData=new HashMap<String, Object>();
-                                oneData.put("id", rs.getString("id"));
-                                oneData.put("bcTitle", rs.getString("bcTitle"));
-                                oneData.put("bcPubType", rs.getInt("bcPubType"));
-                                oneData.put("bcPubId", rs.getString("bcPubId"));
-                                oneData.put("bcPublisher", rs.getString("bcPublisher"));
-                                oneData.put("bcImg", rs.getString("bcImg"));
-                                oneData.put("bcURL", rs.getString("bcURL"));
-                                oneData.put("descn", rs.getString("descn"));
-                                oneData.put("pubCount", rs.getInt("pubCount"));
-                                oneData.put("bcSource", rs.getString("bcSource"));
-                                oneData.put("flowURI", rs.getString("flowURI"));
-                                oneData.put("cTime", rs.getTimestamp("cTime"));
-
-                                Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, personList, cataList, pubChannelList, null, playCountList, playingList);
-                                Map<String, Object> pm = getBCIsPlayingProgramme(oneData.get("id")+"", System.currentTimeMillis());
-                                if (pm!=null && pm.size()>0) {
-                                    oneMedia.put("IsPlaying", pm.get(oneData.get("id")+""));
-                                } else {
-                                    oneMedia.put("IsPlaying", null);
+                        if (!cacheIdList.isEmpty()) {
+                            List<Map<String, Object>> fromCache=getCacheDBList(cacheIdList, 1, 10, true);
+                            if (fromCache!=null&&!fromCache.isEmpty()) {
+                                for (int i=0; i<sortIdList.size(); i++) {
+                                    String[] s=sortIdList.get(i).split("=");
+                                    String typeStr=MediaType.buildByTabName(s[0]).getTypeName();
+                                    for (Map<String, Object> o:fromCache) {
+                                        if (o.get("MediaType")!=null&&o.get("MediaType").equals(typeStr)&&o.get("ContentId")!=null&&o.get("ContentId").equals(s[1])) {
+                                            _ret.set(i, o);
+                                        }
+                                    }
                                 }
-                                int i=0;
-                                for (; i<sortIdList.size(); i++) {
-                                    if (sortIdList.get(i).equals("wt_Broadcast="+oneMedia.get("ContentId"))) break;
-                                }
-                                _ret.set(i, oneMedia);
                             }
-                            rs.close(); rs=null;
-                            ps.close(); ps=null;
                         }
-                        int i=0;
-//                        for (; i<sortIdList.size(); i++) {
-//                            if (sortIdList.get(i).equals("wt_MediaAsset="+oneMedia.get("ContentId"))) break;
-//                        }
-//                        _ret.set(i, oneMedia);
-                        
+                        System.out.println("============================005=="+System.currentTimeMillis());
+                        if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {
+                            Map<String, Object> paraM=new HashMap<String, Object>();
+                            List<Map<String, Object>> cataList=null;
+                            bcSqlSign=bcSqlSign.substring(4);
+                            paraM.put("bcIds", "a.resTableName='wt_Broadcast' and ("+bcSqlSign1.substring(4)+")");
+                            cataList=contentDao.queryForListAutoTranform("refCataById", paraM);
+                            if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {//电台处理
+                                String bcSql = "select a.*, b.bcSource, b.flowURI from wt_Broadcast a left join wt_BCLiveFlow b on a.id=b.bcId and b.isMain=1 where "+bcSqlSign+" order by field(a.id,"+orderBySql.substring(1)+")";
+                                ps=conn.prepareStatement(bcSql);
+                                rs=ps.executeQuery();
+                                while (rs!=null&&rs.next()) {
+                                    Map<String, Object> oneData=new HashMap<String, Object>();
+                                    oneData.put("id", rs.getString("id"));
+                                    oneData.put("bcTitle", rs.getString("bcTitle"));
+                                    oneData.put("bcPubType", rs.getInt("bcPubType"));
+                                    oneData.put("bcPubId", rs.getString("bcPubId"));
+                                    oneData.put("bcPublisher", rs.getString("bcPublisher"));
+                                    oneData.put("bcImg", rs.getString("bcImg"));
+                                    oneData.put("bcURL", rs.getString("bcURL"));
+                                    oneData.put("descn", rs.getString("descn"));
+                                    oneData.put("pubCount", rs.getInt("pubCount"));
+                                    oneData.put("bcSource", rs.getString("bcSource"));
+                                    oneData.put("flowURI", rs.getString("flowURI"));
+                                    oneData.put("cTime", rs.getTimestamp("cTime"));
+
+                                    Map<String, Object> oneMedia=ContentUtils.convert2Bc(oneData, null, cataList, null, null, null, null);
+                                    Map<String, Object> pm = getBCIsPlayingProgramme(oneData.get("id")+"", System.currentTimeMillis());
+                                    if (pm!=null && pm.size()>0) {
+                                        oneMedia.put("IsPlaying", pm.get(oneData.get("id")+""));
+                                    } else {
+                                        oneMedia.put("IsPlaying", null);
+                                    }
+                                    int i=0;
+                                    for (; i<sortIdList.size(); i++) {
+                                        if (sortIdList.get(i).equals("wt_Broadcast="+oneMedia.get("ContentId"))) break;
+                                    }
+                                    _ret.set(i, oneMedia);
+                                }
+                                rs.close(); rs=null;
+                                ps.close(); ps=null;
+                            }
+                        }
+
                         ret.put("ResultType", resultType);
                         ret.put("AllCount", count);
                         ret.put("Page", page);
                         ret.put("PageSize",_ret.size());
                         ret.put("List",_ret);
+                        return JsonUtils.objToJson(ret);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -2668,6 +2625,7 @@ public class ContentService {
     public List<Map<String, Object>> getCacheDBList(List<String> cacheDBIds, int page, int pageSize, boolean isOrNoToLoad) {
     	if (cacheDBIds!=null && cacheDBIds.size()>0) {
     		List<Map<String, Object>> retList = new ArrayList<>();
+    		for (int i = 0; i < cacheDBIds.size(); i++) retList.add(null);
     		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(cacheDBIds.size());
     		for (int i = 0; i < cacheDBIds.size(); i++) {
     			int f = i;
@@ -2675,21 +2633,19 @@ public class ContentService {
 					public void run() {
 						try {
 							String cacheDBId = cacheDBIds.get(f);
-							retList.add(null);
 							if (cacheDBId!=null && cacheDBId.length()>0) {
 								String[] params = cacheDBId.split("_");
 								String type = params[0];
 								String id = params[1];
 								Map<String, Object> retM = getCacheDBInfo(id, type, page, pageSize);
-								if (retM==null) {
+								if (retM==null||retM.size()==0) {
+			                        System.out.println("============================NOIN CacheDB=="+System.currentTimeMillis());
 									if (isOrNoToLoad) {
 										if (type.equals("SEQU")) retM = getSeqMaInfo(id, pageSize, page, 1, null);
 										else if (type.equals("AUDIO")) retM = getMaInfo(id, null);
 									}
 									addCacheDBInfo(id, type); //往CacheDB表里添加数据
-								}
-								
-								if (retM!=null && retM.size()>0) {
+								} else {
 									retList.set(f, retM);
 								}
 							}
@@ -2750,7 +2706,7 @@ public class ContentService {
 							int begNum = (page-1)*pageSize;
 							int endNum = page*pageSize;
 							if (smaSubs.size()>=begNum) {
-								List<String> maIds = smaSubs.subList(begNum, smaSubs.size()>endNum?endNum:(smaSubs.size()-1));
+								List<String> maIds = smaSubs.subList(begNum, smaSubs.size()>endNum?endNum:smaSubs.size());
 								if (maIds!=null && maIds.size()>0) {
 									List<Map<String, Object>> audios = cacheDBService.getCacheDBAudios(maIds);
 									if (audios!=null && audios.size()>0) {
