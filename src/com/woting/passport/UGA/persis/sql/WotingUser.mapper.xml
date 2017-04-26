@@ -91,8 +91,8 @@
   <select id="getStrangers" resultMap="userMap" parameterType="java.util.Map">
   select * from (
     select <include refid="Base_Column_List_A"/> from plat_User a
-    left join (select distinct aUserId from vWt_Friend_Rel where aUserId='${userId}') b on a.id=b.aUserId
-    where a.id!='${userId}' and b.aUserId is null and (
+    left join (select distinct bUserId from vWt_Friend_Rel where aUserId='${userId}') b on a.id=b.bUserId
+    where a.id!='${userId}' and b.bUserId is null and (
          a.loginName like '%${searchStr}%'
       or a.userNum   like '%${searchStr}%'
       or a.userName  like '%${searchStr}%'

@@ -26,7 +26,6 @@ public class OwnerWord implements Serializable {
     private Map<String, MiddleWord> pyMiddleWordMap; //汉语拼音热词搜索结构
 
     private Map<String, Word> searchWordMap; //最终搜索词的结构
-    private Map<String, Integer> wordIndex;  //最终搜索词位置对象
     private List<Word> searchWordSortList;   //最终搜索词列表，此列表是按照词的频度进行排列的
 
     public Owner getOwner() {
@@ -59,7 +58,6 @@ public class OwnerWord implements Serializable {
         middleWordMap=new HashMap<String, MiddleWord>();
         pyMiddleWordMap=new HashMap<String, MiddleWord>();
         searchWordMap=new HashMap<String, Word>();
-        wordIndex=new HashMap<String, Integer>();
         searchWordSortList=new ArrayList<Word>();
     }
 
@@ -74,23 +72,10 @@ public class OwnerWord implements Serializable {
         if (w==null) {
             w=new Word(word);
             searchWordMap.put(word, w);
-            searchWordSortList.add(w);
-            wordIndex.put(word, searchWordSortList.size()-1);
         } else {
             w.incream(1);
-            if (!searchWordSortList.isEmpty()) {
-                int wordPos=wordIndex.get(word);
-                searchWordSortList.remove(wordPos);
-                int newPos=WordUtils.findInsertPos(w, 0, wordPos, searchWordSortList);
-                if (newPos!=-1) {
-                    searchWordSortList.add(newPos, w);
-                    //调整位置索引
-                    for (int i=wordPos; i<=newPos; i++) {
-                        wordIndex.put(searchWordSortList.get(i).getWord(), i);
-                    }
-                }
-            }
         }
+        WordUtils.addToSortList(w, searchWordSortList);
         //分字处理
         splitWord(w);
     }
@@ -105,33 +90,11 @@ public class OwnerWord implements Serializable {
         Word w=searchWordMap.get(word.getWord());
         if (w==null) {//这个词不存在
             searchWordMap.put(word.getWord(), word);
-            //排序插入
-            int insertIndex=0;
-            if (!searchWordSortList.isEmpty()) {
-                insertIndex=WordUtils.findInsertPos(word, 0, searchWordSortList.size(), searchWordSortList);
-            }
-            searchWordSortList.add(insertIndex, word);
-            for (int i=insertIndex; i<searchWordSortList.size(); i++) {
-                wordIndex.put(searchWordSortList.get(i).getWord(), i);
-            }
+            w=word;
         } else {
             w.incream(word.getCount());
-            //调整排序
-            if (!searchWordSortList.isEmpty()) {
-                int wordPos=wordIndex.get(word.getWord());
-                searchWordSortList.remove(wordPos);
-                if (wordPos!=-1) {
-                    int newPos=WordUtils.findInsertPos(w, 0, wordPos, searchWordSortList);
-                    if (newPos!=-1) {
-                        searchWordSortList.add(newPos, w);
-                        //调整位置索引
-                        for (int i=newPos; i<=wordPos; i++) {
-                            wordIndex.put(searchWordSortList.get(i).getWord(), i);
-                        }
-                    }
-                }
-            }
         }
+        WordUtils.addToSortList(w, searchWordSortList);
         //分字处理
         splitWord(word);
     }
@@ -190,7 +153,7 @@ public class OwnerWord implements Serializable {
                 tempMw=new MiddleWord(splitWords);
                 middleWordMap.put(splitWords, tempMw);
             }
-            tempMw.insertWord(w);
+            tempMw.addWord(w);
             //处理拼音
             String swPy=ChineseCharactersUtils.getFullSpellFirstUp(splitWords);
             swPy=swPy.toLowerCase();
@@ -199,7 +162,7 @@ public class OwnerWord implements Serializable {
                 tempMw=new MiddleWord(swPy);
                 pyMiddleWordMap.put(swPy, tempMw);
             }
-            tempMw.insertWord(w);
+            tempMw.addWord(w);
 
             hasChar=(notSplitWords.length()>0);
             hasSplit++;

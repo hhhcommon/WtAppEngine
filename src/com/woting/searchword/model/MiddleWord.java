@@ -20,7 +20,6 @@ public class MiddleWord implements Serializable {
     private String middleWord;//中间过度词
 
     private Map<String, Word> searchWordMap; //最终的查找词Map，便于查找
-    private Map<String, Integer> wordIndex;  //最终搜索词位置对象
     private List<Word> searchWordSortList;   //最终的查找词列表，此列表是按照词的频度进行排列的
 
     public String getMiddleWord() {
@@ -37,7 +36,6 @@ public class MiddleWord implements Serializable {
         super();
         this.middleWord=middleWord;
         searchWordMap=new HashMap<String, Word>();
-        wordIndex=new HashMap<String, Integer>();
         searchWordSortList=new ArrayList<Word>();
     }
 
@@ -68,39 +66,16 @@ public class MiddleWord implements Serializable {
      * 把一个词按其顺序插入最终词结构
      * @param word
      */
-    public void insertWord(Word word) {
+    public void addWord(Word word) {
         if (StringUtils.isNullOrEmptyOrSpace(word.getWord())) return;
         //查查看是否已经有了这个词
         synchronized (dealLock) {
             Word w=searchWordMap.get(word.getWord());
             if (w==null) {
                 searchWordMap.put(word.getWord(), word);
-                //排序插入
-                int insertIndex=0;
-                if (searchWordSortList!=null&&!searchWordSortList.isEmpty()) {
-                    insertIndex=WordUtils.findInsertPos(word, 0, searchWordSortList.size(), searchWordSortList);
-                }
-                searchWordSortList.add(insertIndex, word);
-                for (int i=insertIndex; i<searchWordSortList.size(); i++) {
-                    wordIndex.put(searchWordSortList.get(i).getWord(), i);
-                }
-            } else {
-                //调整排序
-                if (searchWordSortList!=null&&!searchWordSortList.isEmpty()) {
-                    int wordPos=wordIndex.get(word.getWord());
-                    searchWordSortList.remove(wordPos);
-                    if (wordPos!=-1) { //查到了，排序
-                        int newPos=WordUtils.findInsertPos(w, 0, wordPos, searchWordSortList);
-                        if (newPos!=-1) {
-                            searchWordSortList.add(newPos, w);
-                            //调整位置索引
-                            for (int i=newPos; i<=wordPos; i++) {
-                                wordIndex.put(searchWordSortList.get(i).getWord(), i);
-                            }
-                        }
-                    }
-                }
+                w=word;
             }
+            WordUtils.addToSortList(w, searchWordSortList);
         }
     }
 }

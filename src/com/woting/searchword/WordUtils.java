@@ -87,4 +87,47 @@ public abstract class WordUtils {
         else if (wordL.get(halfIndex).getCount()>w.getCount()) return findInsertPos(w, halfIndex, _e, wordL);
         else return findInsertPos(w, _b, halfIndex, wordL);
     }
+
+    /**
+     * 把词w从排序列表wordSortL中删除掉。
+     * 注意wordSortList对于词是唯一的
+     * @param w 搜索词
+     * @param wordSortL 搜索词排序列表
+     * @return 若删除成功，返回1，若未找到返回0，若有错误返回-1
+     */
+    public static int delFromSortList(Word w, List<Word> wordSortL) {
+        if (w==null||wordSortL==null||wordSortL.isEmpty()) return -1;
+        int i=0;
+        for (; i<wordSortL.size(); i++) if (wordSortL.get(i).equals(w)) break;
+        if (i==wordSortL.size()) return 0;
+        wordSortL.remove(i);
+        return 1;
+    }
+
+    /**
+     * 把词w插入wordSortL中。
+     * 注意wordSortList对于词是唯一的
+     * @param w 搜索词
+     * @param wordSortL 搜索词排序列表
+     * @return 若删除成功，返回1，若未找到返回0
+     */
+    public static int addToSortList(Word w, List<Word> wordSortL) {
+        if (w==null||wordSortL==null) return 0;
+        try {
+            if (wordSortL.isEmpty()) wordSortL.add(w);
+            else {
+                WordUtils.delFromSortList(w, wordSortL);
+                if (wordSortL.isEmpty()) wordSortL.add(w);
+                else {
+                    int i=0;
+                    for (; i<wordSortL.size(); i++) if (wordSortL.get(i).getCount()<w.getCount()) break;
+                    wordSortL.add(i, w);
+                }
+            }
+            return 1;
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

@@ -129,7 +129,7 @@
     select count(*) from plat_Group <if test="_parameter!=null">where <include refid="WhereClauseByEntiey"/></if>
   </select>
   <select id="judgeUserInGroup" parameterType="java.util.Map" resultType="java.lang.Integer">
-    select count(*) from plat_GroupUser a, plat_Group b, plat_Group c
+    select count(*) from plat_GroupUser a, plat_Group b, plat_User c
     where a.userId=c.id and a.groupId=b.id and
       a.userId=#{userId,jdbcType=VARCHAR} and a.groupId=#{groupId,jdbcType=VARCHAR}
   </select>

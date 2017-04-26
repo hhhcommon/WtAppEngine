@@ -1324,7 +1324,7 @@ public class GroupService {
                 igPo.setAcceptFlag(1);
                 m.put("DealType", "1");
                 //判断是否已是用户，若已是，则不必插入了
-                if (existUserInGroup(groupId, userId)) {
+                if (!existUserInGroup(groupId, userId)) {
                     //插入用户组表
                     insertGroupUser(gp, userDao.getInfoObject("getUserById", userId), 0, true, operId);
                     m.put("Message", "成功加入组");
@@ -1750,7 +1750,7 @@ public class GroupService {
     public Map<String, Object> changGroupAdminner(GroupPo gp, String toUserId, String operId) {
         Map<String, Object> ret=new HashMap<String, Object>();
         //1、判断是否已经在组
-        if (existUserInGroup(gp.getGroupId(), toUserId)) {
+        if (!existUserInGroup(gp.getGroupId(), toUserId)) {
             ret.put("ReturnType", "10041");
             ret.put("Message", "被移交用户不在该组");
         } else {
@@ -1873,7 +1873,7 @@ public class GroupService {
     public Map<String, Object> changGroupMaster(GroupPo gp, String toUserId, String operId) {
         Map<String, Object> ret=new HashMap<String, Object>();
         //1、判断是否已经在组
-        if (existUserInGroup(gp.getGroupId(), toUserId)) {
+        if (!existUserInGroup(gp.getGroupId(), toUserId)) {
             ret.put("ReturnType", "10041");
             ret.put("Message", "被移交用户不在该组");
         } else {

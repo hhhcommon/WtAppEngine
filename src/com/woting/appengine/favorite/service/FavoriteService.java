@@ -151,7 +151,7 @@ public class FavoriteService {
                 if (typeSql.length()>0) {
                     typeSql=typeSql.substring(3);
                     param.put("mediaFilterSql", typeSql);
-                }
+                } else return null;
             }
             resultPage=userFavoriteDao.pageQueryAutoTranform(null, "getFavoriteAssets", param, page, pageSize);
             if (!(resultPage==null||resultPage.getDataCount()==0||resultPage.getResult()==null||resultPage.getResult().isEmpty())) {
