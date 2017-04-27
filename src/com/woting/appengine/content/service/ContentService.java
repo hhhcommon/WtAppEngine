@@ -2625,10 +2625,11 @@ public class ContentService {
     public List<Map<String, Object>> getCacheDBList(List<String> cacheDBIds, int page, int pageSize, boolean isOrNoToLoad) {
     	if (cacheDBIds!=null && cacheDBIds.size()>0) {
     		List<Map<String, Object>> retList = new ArrayList<>();
-    		for (int i = 0; i < cacheDBIds.size(); i++) retList.add(null);
+//    		for (int i = 0; i < cacheDBIds.size(); i++) retList.add(null);
     		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(cacheDBIds.size());
     		for (int i = 0; i < cacheDBIds.size(); i++) {
     			int f = i;
+    			retList.add(null);
 				fixedThreadPool.execute(new Runnable() {
 					public void run() {
 						try {
@@ -2643,6 +2644,9 @@ public class ContentService {
 									if (isOrNoToLoad) {
 										if (type.equals("SEQU")) retM = getSeqMaInfo(id, pageSize, page, 1, null);
 										else if (type.equals("AUDIO")) retM = getMaInfo(id, null);
+										if (retM!=null) {
+											retList.set(f, retM);
+										}
 									}
 									addCacheDBInfo(id, type); //往CacheDB表里添加数据
 								} else {
