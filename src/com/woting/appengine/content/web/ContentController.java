@@ -236,8 +236,11 @@ public class ContentController {
             try {
                 filter=(Map)m.get("FilterData");
             } catch(Exception e) {}
+            //11-是否递归
+            int recursionTree=1;
+            try {pageSize=Integer.parseInt(m.get("RecursionTree")+"");} catch(Exception e) {};
 
-            Map<String, Object> contents=contentService.getContents(catalogType, catalogId, resultType, mediaType, perSize, pageSize, page, beginCatalogId, pageType, mUdk, filter);
+            Map<String, Object> contents=contentService.getContents(catalogType, catalogId, resultType, mediaType, perSize, pageSize, page, beginCatalogId, pageType, mUdk, filter, recursionTree);
             if (contents!=null&&contents.size()>0) {
                 map.put("ResultList", contents);
                 map.put("ReturnType", "1001");

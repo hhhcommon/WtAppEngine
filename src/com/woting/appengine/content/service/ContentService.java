@@ -635,7 +635,7 @@ public class ContentService {
      * @return
      */
     public Map<String, Object> getMainPage(String userId, int pageType, int pageSize, int page, MobileUDKey mUdk) {
-        return getContents("-1", null, 3, null, 3, pageSize, page, null, pageType, mUdk, null);
+        return getContents("-1", null, 3, null, 3, pageSize, page, null, pageType, mUdk, null, 1);
     }
 
     /**
@@ -877,7 +877,7 @@ public class ContentService {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Map<String, Object> getContents(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId,
-                                            int pageType, MobileUDKey mUdk, Map<String, Object> filterData) {
+                                            int pageType, MobileUDKey mUdk, Map<String, Object> filterData, int recursionTree) {
         Map<String, Object> param=new HashMap<String, Object>();
         RedisOperService roService=new RedisOperService(redisConn7_2, 11);
         //1-得到喜欢列表
@@ -914,6 +914,7 @@ public class ContentService {
         param.put("PerSize", perSize);
         param.put("BeginCatalogId", beginCatalogId);
         param.put("FilterData", filterData);
+        param.put("RecursionTree", recursionTree);
 
         roService=new RedisOperService(redisConn7_2, 11);
         try {
@@ -1698,6 +1699,7 @@ public class ContentService {
         private int perSize;
         private String beginCatalogId;
         private Map<String, Object> filterData;
+        private int recursionTree=1;
 
         public GetContents(Map<String, Object> param) {
             super(param);
@@ -1718,11 +1720,11 @@ public class ContentService {
             perSize=param.get("PerSize")==null?0:(Integer)param.get("PerSize");
             beginCatalogId=param.get("BeginCatalogId")==null?null:(String)param.get("BeginCatalogId");
             filterData=param.get("FilterData")==null?null:(Map)param.get("FilterData");
+            recursionTree=param.get("RecursionTree")==null?0:(Integer)param.get("RecursionTree");
         }
         @SuppressWarnings("unchecked")
         @Override
         public String _getBizData() {
-            System.out.println("============================001=="+System.currentTimeMillis());
             Map<String, Object> ret=new HashMap<String, Object>();
             //1-根据参数获得范围
             //1.1-根据分类获得根
@@ -1852,13 +1854,15 @@ public class ContentService {
                 String orSql="";
                 String orderBySql = "";
                 if (!root.isRoot()) {
-                    allTn=TreeUtils.getDeepList(root);
                     orSql+=" or a."+idCName+"='"+root.getId()+"'";
                     orderBySql += "'"+root.getId()+"'";
-                    if (allTn!=null&&!allTn.isEmpty()) {
-                        for (TreeNode<? extends TreeNodeBean> tn: allTn) {
-                            orSql+=" or a."+idCName+"='"+tn.getId()+"'";
-                            orderBySql += ",'"+tn.getId()+"'";
+                    if (recursionTree==1) {
+                        allTn=TreeUtils.getDeepList(root);
+                        if (allTn!=null&&!allTn.isEmpty()) {
+                            for (TreeNode<? extends TreeNodeBean> tn: allTn) {
+                                orSql+=" or a."+idCName+"='"+tn.getId()+"'";
+                                orderBySql += ",'"+tn.getId()+"'";
+                            }
                         }
                     }
                 }
@@ -2009,10 +2013,8 @@ public class ContentService {
                     long count=0l;
                     count=1000;
                     //获得记录
-                    System.out.println("============================002=="+System.currentTimeMillis());
                     ps=conn.prepareStatement(sql);
                     rs=ps.executeQuery();
-                    System.out.println("============================003=="+System.currentTimeMillis());
 
                     String bcSqlSign="";   //为找到内容设置
                     String bcSqlSign1="";//为查询相关信息设置
@@ -2036,23 +2038,32 @@ public class ContentService {
                     if (sortIdList!=null&&!sortIdList.isEmpty()) {
                         List<Map<String, Object>> _ret=new ArrayList<Map<String, Object>>();
                         for (int j=0; j<sortIdList.size(); j++) _ret.add(null);
-                        System.out.println("============================004=="+System.currentTimeMillis());
 
                         if (!cacheIdList.isEmpty()) {
                             List<Map<String, Object>> fromCache=getCacheDBList(cacheIdList, 1, 10, true);
                             if (fromCache!=null&&!fromCache.isEmpty()) {
                                 for (int i=0; i<sortIdList.size(); i++) {
                                     String[] s=sortIdList.get(i).split("=");
-                                    String typeStr=MediaType.buildByTabName(s[0]).getTypeName();
+                                    MediaType MT=MediaType.buildByTabName(s[0]);
+                                    String typeStr=MT.getTypeName();
                                     for (Map<String, Object> o:fromCache) {
                                         if (o.get("MediaType")!=null&&o.get("MediaType").equals(typeStr)&&o.get("ContentId")!=null&&o.get("ContentId").equals(s[1])) {
-                                            _ret.set(i, o);
+                                            if (pageType==0&&MT==MediaType.SEQU) {//需要提取内容
+                                                Map newOne=(Map)((List)o.get("SubList")).get(0);
+                                                if (newOne!=null) {
+                                                    o.remove("SubList");
+                                                    newOne.put("SeqInfo", o);
+                                                    _ret.set(i, newOne);
+                                                }
+                                            } else {
+                                                _ret.set(i, o);
+                                            }
+                                            break;
                                         }
                                     }
                                 }
                             }
                         }
-                        System.out.println("============================005=="+System.currentTimeMillis());
                         if (!StringUtils.isNullOrEmptyOrSpace(bcSqlSign)) {
                             Map<String, Object> paraM=new HashMap<String, Object>();
                             List<Map<String, Object>> cataList=null;

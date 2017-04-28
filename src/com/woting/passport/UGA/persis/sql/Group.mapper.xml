@@ -111,7 +111,7 @@
       <if test="groupSignature!=null">groupSignature=#{groupSignature,jdbcType=VARCHAR},</if>
       <if test="groupPwd!=null">groupPwd=#{groupPwd,jdbcType=VARCHAR},</if>
       <if test="groupImg!=null">groupImg=#{groupImg,jdbcType=VARCHAR},</if>
-      <if test="groupType!=null">groupType=#{groupType,jdbcType=VARCHAR},</if>
+      <if test="groupType!=null and groupType!=-1">groupType=#{groupType,jdbcType=VARCHAR},</if>
       <if test="pId!=null">pId=#{pId,jdbcType=VARCHAR},</if>
       <if test="sort!=null and sort!=0">sort=#{sort,jdbcType=INTEGER},</if>
       <if test="createUserId!=null">createUserId=#{createUserId,jdbcType=VARCHAR},</if>
