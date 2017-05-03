@@ -657,13 +657,19 @@ public class ContentService {
             param.put("mUdk", mUdk);
             String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
             RedisOperService roService=new RedisOperService(redisConn7_2, 11);
+            Map<String, Object> bizData=null;
             try {
-                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
+                bizData=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
             } finally {
                 if (roService!=null) roService.close();
                 roService=null;
             }
-            List<Map<String, Object>> _fList=(key==null?null:(List<Map<String, Object>>)JsonUtils.jsonToObj(key, List.class));
+            List<Map<String, Object>> _fList=null;
+            if (bizData!=null) {
+                if (bizData.get("FromBiz")!=null) _fList=(List<Map<String, Object>>)(bizData.get("FromBiz"));
+                else
+                if (bizData.get("FromRedis")!=null) _fList=(List<Map<String, Object>>)JsonUtils.jsonToObj((String)bizData.get("FromRedis"), List.class);
+            }
             if (_fList!=null&&!_fList.isEmpty()) {
                 fList=new ArrayList<Map<String, Object>>();
                 for (Map<String, Object> ufPo: _fList) {
@@ -761,13 +767,19 @@ public class ContentService {
             param.put("mUdk", mUdk);
             String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
             RedisOperService roService=new RedisOperService(redisConn7_2, 11);
+            Map<String, Object> bizData=null;
             try {
-                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
+                bizData=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
             } finally {
                 if (roService!=null) roService.close();
                 roService=null;
             }
-            List<Map<String, Object>> _fList=(key==null?null:(List<Map<String, Object>>)JsonUtils.jsonToObj(key, List.class));
+            List<Map<String, Object>> _fList=null;
+            if (bizData!=null) {
+                if (bizData.get("FromBiz")!=null) _fList=(List<Map<String, Object>>)(bizData.get("FromBiz"));
+                else
+                if (bizData.get("FromRedis")!=null) _fList=(List<Map<String, Object>>)JsonUtils.jsonToObj((String)bizData.get("FromRedis"), List.class);
+            }
             if (_fList!=null&&!_fList.isEmpty()) {
                 fList=new ArrayList<Map<String, Object>>();
                 for (Map<String, Object> ufPo: _fList) {
@@ -821,13 +833,19 @@ public class ContentService {
             param.put("mUdk", mUdk);
             String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
             RedisOperService roService=new RedisOperService(redisConn7_2, 11);
+            Map<String, Object> bizData=null;
             try {
-                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
+                bizData=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
             } finally {
                 if (roService!=null) roService.close();
                 roService=null;
             }
-            List<Map<String, Object>> _fList=(key==null?null:(List<Map<String, Object>>)JsonUtils.jsonToObj(key, List.class));
+            List<Map<String, Object>> _fList=null;
+            if (bizData!=null) {
+                if (bizData.get("FromBiz")!=null) _fList=(List<Map<String, Object>>)(bizData.get("FromBiz"));
+                else
+                if (bizData.get("FromRedis")!=null) _fList=(List<Map<String, Object>>)JsonUtils.jsonToObj((String)bizData.get("FromRedis"), List.class);
+            }
             if (_fList!=null&&!_fList.isEmpty()) {
                 fList=new ArrayList<Map<String, Object>>();
                 for (Map<String, Object> ufPo: _fList) {
@@ -886,13 +904,19 @@ public class ContentService {
         if (mUdk!=null) {
             param.put("mUdk", mUdk);
             key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
+            Map<String, Object> bizData=null;
             try {
-                key=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
+                bizData=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
             } finally {
                 if (roService!=null) roService.close();
                 roService=null;
             }
-            List<Map<String, Object>> _fList=(key==null?null:(List<Map<String, Object>>)JsonUtils.jsonToObj(key, List.class));
+            List<Map<String, Object>> _fList=null;
+            if (bizData!=null) {
+                if (bizData.get("FromBiz")!=null) _fList=(List<Map<String, Object>>)(bizData.get("FromBiz"));
+                else
+                if (bizData.get("FromRedis")!=null) _fList=(List<Map<String, Object>>)JsonUtils.jsonToObj((String)bizData.get("FromRedis"), List.class);
+            }
             if (_fList!=null&&!_fList.isEmpty()) {
                 fList=new ArrayList<Map<String, Object>>();
                 for (Map<String, Object> ufPo: _fList) {
@@ -917,13 +941,21 @@ public class ContentService {
         param.put("RecursionTree", recursionTree);
 
         roService=new RedisOperService(redisConn7_2, 11);
+
+        Map<String, Object> bizData=null;
         try {
-            key=roService.getAndSet(key, new GetContents(param), 30*60*1000, true);
+            bizData=roService.getAndSet(key, new GetContents(param), 30*60*1000, true);
         } finally {
             if (roService!=null) roService.close();
             roService=null;
         }
-        if (key==null) return null;
+        param=null;
+        if (bizData!=null) {
+            if (bizData.get("FromBiz")!=null) param=(Map)(bizData.get("FromBiz"));
+            else
+            if (bizData.get("FromRedis")!=null) param=(Map)JsonUtils.jsonToObj((String)bizData.get("FromRedis"), Map.class);
+        }
+        if (param==null) return null;
         param=(Map)JsonUtils.jsonToObj(key, Map.class);
 
         //加入喜欢
@@ -1166,16 +1198,13 @@ public class ContentService {
 			if (solrips!=null && solrips.size()>0) {
 				Map<String, Object> mf = new HashMap<>();
 				mf.put("mUdk", mUdk);
-				String fstr = new GetFavoriteList(mf)._getBizData();
-				List<Map<String, Object>> favret = null;
-				if (fstr!=null) favret = (List<Map<String, Object>>) JsonUtils.jsonToObj(fstr, List.class);
+				List<Map<String, Object>> favret=(List<Map<String, Object>>)new GetFavoriteList(mf).getBizData();
 				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
 				for (int i=0;i<solrips.size();i++) {
 					int f = i;
 					retLs.add(null);
 					List<Map<String, Object>> ret = favret;
 					fixedThreadPool.execute(new Runnable() {
-						@SuppressWarnings("unchecked")
 						public void run() {
 							String contentid = solrips.get(f).getItem_id();
 							String info = null;
@@ -1249,7 +1278,7 @@ public class ContentService {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Map<String, Object> makeSearchByChannel(String searchStr, String mediaType, int pageType, int resultType, int page, int pageSize, String rootInfo, MobileUDKey mUdk) {
 		try {
 			Map<String, Object> params = new HashMap<>();
@@ -1262,7 +1291,7 @@ public class ContentService {
 			}
 			String channelName = null;
 			if (channelId!=null) {
-				TreeNode chtree =  _cc.channelTree.getChild(channelId);
+				TreeNode chtree=_cc.channelTree.getChild(channelId);
 				channelName = chtree.getNodeName();
 			}
 			if (channelName==null) return null;
@@ -1291,9 +1320,7 @@ public class ContentService {
 			if (solrips!=null && solrips.size()>0) {
 				Map<String, Object> mf = new HashMap<>();
 				mf.put("mUdk", mUdk);
-				String fstr = new GetFavoriteList(mf)._getBizData();
-				List<Map<String, Object>> favret = null;
-				if (fstr!=null) favret = (List<Map<String, Object>>) JsonUtils.jsonToObj(fstr, List.class);
+                List<Map<String, Object>> favret=(List<Map<String, Object>>)new GetFavoriteList(mf).getBizData();
 				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
 				for (int i=0;i<solrips.size();i++) {
 					int f = i;
@@ -1407,9 +1434,7 @@ public class ContentService {
 			if (solrips!=null && solrips.size()>0) {
 				Map<String, Object> mf = new HashMap<>();
 				mf.put("mUdk", mUdk);
-				String fstr = new GetFavoriteList(mf)._getBizData();
-				List<Map<String, Object>> favret = null;
-				if (fstr!=null) favret = (List<Map<String, Object>>) JsonUtils.jsonToObj(fstr, List.class);
+                List<Map<String, Object>> favret=(List<Map<String, Object>>)new GetFavoriteList(mf).getBizData();
 				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
 				for (int i=0;i<solrips.size();i++) {
 					int f = i;
@@ -1576,9 +1601,7 @@ public class ContentService {
 			if (solrips!=null && solrips.size()>0) {
 				Map<String, Object> mf = new HashMap<>();
 				mf.put("mUdk", mUdk);
-				String fstr = new GetFavoriteList(mf)._getBizData();
-				List<Map<String, Object>> favret = null;
-				if (fstr!=null) favret = (List<Map<String, Object>>) JsonUtils.jsonToObj(fstr, List.class);
+                List<Map<String, Object>> favret=(List<Map<String, Object>>)new GetFavoriteList(mf).getBizData();
 				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
 				for (int i=0;i<solrips.size();i++) {
 					int f = i;
@@ -1668,22 +1691,8 @@ public class ContentService {
             super(param);
         }
         @Override
-        public String _getBizData() {
-            List<UserFavoritePo> ret=favoriteService.getPureFavoriteList((MobileUDKey)param.get("mUdk"));
-            if (ret==null||ret.isEmpty()) return null;
-            return JsonUtils.objToJson(ret);
-        }
-    }
-
-    class GetSmSubMedias extends GetBizData {
-        public GetSmSubMedias(Map<String, Object> param) {
-            super(param);
-        }
-        @Override
-        public String _getBizData() {
-            Object ret=favoriteService.getPureFavoriteList((MobileUDKey)param.get("mUdk"));
-            if (ret==null) return null;
-            return JsonUtils.objToJson(ret);
+        public Object getBizData() {
+            return favoriteService.getPureFavoriteList((MobileUDKey)param.get("mUdk"));
         }
     }
 
@@ -1722,9 +1731,9 @@ public class ContentService {
             filterData=param.get("FilterData")==null?null:(Map)param.get("FilterData");
             recursionTree=param.get("RecursionTree")==null?0:(Integer)param.get("RecursionTree");
         }
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
-        public String _getBizData() {
+        public Object getBizData() {
             Map<String, Object> ret=new HashMap<String, Object>();
             //1-根据参数获得范围
             //1.1-根据分类获得根
@@ -2112,7 +2121,7 @@ public class ContentService {
                         ret.put("Page", page);
                         ret.put("PageSize",_ret.size());
                         ret.put("List",_ret);
-                        return JsonUtils.objToJson(ret);
+                        return ret;
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -2472,7 +2481,7 @@ public class ContentService {
                     ret.put("Page", page);
                     ret.put("PageSize", pageCount);
                     ret.put("List", retCataList);
-                    return JsonUtils.objToJson(ret);
+                    return ret;
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
@@ -2704,6 +2713,7 @@ public class ContentService {
      *            当type='SEQU'时有效，专辑下级节目每页页数，默认为0
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> getCacheDBInfo(String id, String type, int page, int pageSize) {
     	if (id!=null && type!=null) {
 			if (type.equals("wt_SeqMediaAsset")) type = "SEQU";
