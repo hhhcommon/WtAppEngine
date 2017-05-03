@@ -736,9 +736,9 @@ public class ContentService {
             }
             retInfo.put("SubList", subList);
             retInfo.put("PageSize", subList.size());
-            retInfo.put("Page", page);
-            retInfo.put("ContentSubCount", pageList.getDataCount());
         }
+        retInfo.put("Page", page);
+        retInfo.put("ContentSubCount", pageList.getDataCount());
         return retInfo;
     }
     /**
