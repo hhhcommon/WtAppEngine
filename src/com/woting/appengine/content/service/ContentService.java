@@ -726,18 +726,18 @@ public class ContentService {
             List<Map<String, Object>> subList=new ArrayList<Map<String, Object>>();
             //计算页数
             int begin=0, end=tempList.size();
-            if (pageSize>0&&page>0) {
-                begin=pageSize*(page-1);
-                end=begin+pageSize;
-                if (end>tempList.size()) end=tempList.size();
-            }
+//            if (pageSize>0&&page>0) {
+//                begin=pageSize*(page-1);
+//                end=begin+pageSize;
+//                if (end>tempList.size()) end=tempList.size();
+//            }
             for (int i=begin; i<end; i++) {
                 subList.add(ContentUtils.convert2Ma(tempList.get(i), personList, cataList, pubChannelList, fList, playCountList));
             }
             retInfo.put("SubList", subList);
             retInfo.put("PageSize", subList.size());
             retInfo.put("Page", page);
-            retInfo.put("ContentSubCount", tempList.size());
+            retInfo.put("ContentSubCount", pageList.getDataCount());
         }
         return retInfo;
     }
