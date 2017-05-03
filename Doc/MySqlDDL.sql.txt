@@ -58,6 +58,8 @@ CREATE TABLE plat_User (
   userType       int(4) unsigned                          COMMENT '用户分类：对应OwnerType，1xx::系统:100-我们自己的系统(cm/crawl/push等);101-其他系统(wt_Organize表中的Id);2xx::用户:200-后台系统用户;201-前端用户-wt_Member表中的用户Id',
   userClass      int(4) unsigned                          COMMENT '用户类型，现在还没有用，比如是一般用户还是管理原等',
   userState      int(1)           NOT NULL  DEFAULT '0'   COMMENT '用户状态，0-2,0代表未激活的用户，1代表已激用户，2代表失效用户,3根据邮箱找密码的用户',
+  rUserType      int(1)           NOT NULL  DEFAULT '0'   COMMENT '注册用户分类：0一般用户；1认证用户；2专业用户',
+  aUserType      int(1)           NOT NULL  DEFAULT '0'   COMMENT '管理用户分类：0没有任何管理权限；1一般管理员；2审核管理员',
   portraitBig    varchar(300)                             COMMENT '用户头像大',
   portraitMini   varchar(300)                             COMMENT '用户头像小',
   descn          varchar(2000)              DEFAULT NULL  COMMENT '备注',

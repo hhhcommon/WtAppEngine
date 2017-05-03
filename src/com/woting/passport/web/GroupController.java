@@ -2500,14 +2500,15 @@ public class GroupController {
             String groupSignature=(m.get("GroupSignature")==null?null:m.get("GroupSignature")+"");
             String groupFreq=(m.get("GroupFreq")==null?null:m.get("GroupFreq")+"");
             String groupAlias=(m.get("GroupAlias")==null?null:m.get("GroupAlias")+"");
-            if (StringUtils.isNullOrEmptyOrSpace(groupName)&&StringUtils.isNullOrEmptyOrSpace(groupDescn)&&StringUtils.isNullOrEmptyOrSpace(groupSignature)&&StringUtils.isNullOrEmptyOrSpace(groupFreq)&&StringUtils.isNullOrEmptyOrSpace(groupAlias)) {
+            if (StringUtils.isNullOrEmptyOrSpace(groupName)&&StringUtils.isNullOrEmptyOrSpace(groupDescn)&&StringUtils.isNullOrEmptyOrSpace(groupSignature)&&StringUtils.isNullOrEmptyOrSpace(groupFreq)
+              &&groupAlias==null) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "无法获得修改所需的新信息");
                 return map;
             }
 
             Map<String, Object> param=new HashMap<String, Object>();
-            if (!StringUtils.isNullOrEmptyOrSpace(groupName)) param.put("groupAlias", groupAlias);
+            if (groupAlias!=null) param.put("groupAlias", groupAlias);
             if (!StringUtils.isNullOrEmptyOrSpace(groupName)) param.put("groupName", groupName);
             if (!StringUtils.isNullOrEmptyOrSpace(groupDescn)) param.put("groupDescn", groupDescn);
             if (!StringUtils.isNullOrEmptyOrSpace(groupSignature)&&isManager==1) param.put("groupSignature", groupSignature);//只有管理员才能修改用户组的签名

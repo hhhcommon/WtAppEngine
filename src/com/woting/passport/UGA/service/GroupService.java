@@ -428,6 +428,7 @@ public class GroupService {
             if (newInfo.get("groupName")!=null) g.setGroupName(newInfo.get("groupName")+"");
             if (newInfo.get("groupSignature")!=null) g.setGroupSignature(newInfo.get("groupSignature")+"");
             if (newInfo.get("groupFreq")!=null) g.setDefaultFreq(newInfo.get("groupFreq")+"");
+            if (newInfo.get("groupType")==null) g.setGroupType(-1);
             this.updateGroup(g);
             changed=true;
         }
@@ -2154,6 +2155,7 @@ public class GroupService {
         //七、更新数据库
         GroupPo uGp=new GroupPo();
         uGp.setGroupId(gp.getGroupId());
+        uGp.setGroupType(-1);
         uGp.setAdminUserIds(nowAdminUserIds.substring(1));
         int flag=this.updateGroup(uGp);
         if (flag==0) ret.put("ReturnType","1005");
