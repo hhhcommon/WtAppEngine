@@ -956,7 +956,6 @@ public class ContentService {
             if (bizData.get("FromRedis")!=null) param=(Map)JsonUtils.jsonToObj((String)bizData.get("FromRedis"), Map.class);
         }
         if (param==null) return null;
-        param=(Map)JsonUtils.jsonToObj(key, Map.class);
 
         //加入喜欢
         if (fList==null||fList.size()==0) return param;
