@@ -1,10 +1,8 @@
 package com.woting.searchword.monitor;
 
-import java.util.TimerTask;
-
 import com.woting.searchword.service.WordService;
 
-public class DealLoadQueue extends TimerTask {
+public class DealLoadQueue extends Thread {
     private WordService wordService;
 
     /**

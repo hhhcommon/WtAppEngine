@@ -65,7 +65,7 @@
         <if test="userId==null"> and (userId is null or userId='')</if>
       </trim>
     </where>
-    order by cTime desc
+    order by cTime asc
   </select>
 
   <!-- 获得一条数据 -->

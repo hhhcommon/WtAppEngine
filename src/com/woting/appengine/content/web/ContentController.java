@@ -236,8 +236,11 @@ public class ContentController {
             try {
                 filter=(Map)m.get("FilterData");
             } catch(Exception e) {}
+            //11-是否递归
+            int recursionTree=1;
+            try {pageSize=Integer.parseInt(m.get("RecursionTree")+"");} catch(Exception e) {};
 
-            Map<String, Object> contents=contentService.getContents(catalogType, catalogId, resultType, mediaType, perSize, pageSize, page, beginCatalogId, pageType, mUdk, filter);
+            Map<String, Object> contents=contentService.getContents(catalogType, catalogId, resultType, mediaType, perSize, pageSize, page, beginCatalogId, pageType, mUdk, filter, recursionTree);
             if (contents!=null&&contents.size()>0) {
                 map.put("ResultList", contents);
                 map.put("ReturnType", "1001");
@@ -395,6 +398,7 @@ public class ContentController {
         }
     }
 
+    @SuppressWarnings("rawtypes")
     @RequestMapping(value="getSmSubMedias.do")
     @ResponseBody
     public Map<String,Object> getSmSubMediaList(HttpServletRequest request) {
@@ -489,7 +493,12 @@ public class ContentController {
             
             if (contentInfo!=null&&contentInfo.size()>0) {
                 map.put("ResultInfo", contentInfo);
-                map.put("ReturnType", "1001");
+                List l=(List)contentInfo.get("SubList");
+                if (l!=null&&!l.isEmpty()) map.put("ReturnType", "1001");
+                else {
+                    map.put("ReturnType", "1011");
+                    map.put("Message", "专辑下该页节目为空");
+                }
             } else {
                 map.put("ReturnType", "1011");
                 map.put("Message", "没有查到任何内容");

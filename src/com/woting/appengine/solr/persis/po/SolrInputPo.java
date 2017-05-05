@@ -13,6 +13,8 @@ public class SolrInputPo extends BaseObject {
 	private String item_publisher;
 	private String item_type;
 	private String item_pid;
+	private String item_persons;
+	private String item_channel;
 	private int item_cloumnum;
 	private long item_mediasize;
 	private long item_playcount;
@@ -59,6 +61,12 @@ public class SolrInputPo extends BaseObject {
 	public void setItem_type(String item_type) {
 		this.item_type = item_type;
 	}
+	public String getItem_channel() {
+		return item_channel;
+	}
+	public void setItem_channel(String item_channel) {
+		this.item_channel = item_channel;
+	}
 	public String getItem_pid() {
 		return item_pid;
 	}
@@ -70,6 +78,12 @@ public class SolrInputPo extends BaseObject {
 	}
 	public void setItem_cloumnum(int item_cloumnum) {
 		this.item_cloumnum = item_cloumnum;
+	}
+	public String getItem_persons() {
+		return item_persons;
+	}
+	public void setItem_persons(String item_persons) {
+		this.item_persons = item_persons;
 	}
 	public long getItem_mediasize() {
 		return item_mediasize;

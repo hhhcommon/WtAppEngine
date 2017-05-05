@@ -39,9 +39,7 @@ public class MobileUsedService {
             }
         }
         //把其他的用户使用情况设置为未登录
-        if (mu.getStatus()==1) {
-            muDao.update("adjustByIMEI", mu);
-        }
+        if (mu.getStatus()==1) muDao.update("adjustByIMEI", mu);
     }
 
     /**
@@ -49,10 +47,10 @@ public class MobileUsedService {
      * @param imei 手机串号
      * @param PCDType 设备类型
      */
-    public MobileUsedPo getUsedInfo(String imei, int PCDType) {
+    public MobileUsedPo getUserUsedInDevice(String imei, int PCDType) {
         Map<String, String> paraM=new HashMap<String, String>();
         paraM.put("imei", imei);
         paraM.put("PCDType", PCDType+"");
-        return muDao.getInfoObject("getUsedInfo", paraM);
+        return muDao.getInfoObject("getUserUsedInDevice", paraM);
     }
 }

@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import com.woting.appengine.solr.persis.po.SolrInputPo;
 import com.woting.appengine.solr.persis.po.SolrSearchResult;
 import com.woting.appengine.solr.utils.SolrUtils;
+import com.woting.cm.core.media.persis.po.SeqMediaAssetPo;
 
 @Service
 public class SolrJService {
@@ -35,9 +36,23 @@ public class SolrJService {
 	@Resource
 	private HttpSolrServer httpSolrServer;
 	
-	public void addSolrIndex(Object media , String pid, long playcount) {
+	public void addSolrIndex(Object media , String pid, String persons, String chstr, long playcount) {
 		if (media!=null) {
-			SolrInputPo sPo = SolrUtils.convert2SolrInput(media, pid, playcount);
+			SolrInputPo sPo = SolrUtils.convert2SolrInput(media, pid, persons, chstr, playcount);
+			SolrInputDocument document = SolrUtils.convert2SolrDocument(sPo);
+			try {
+				httpSolrServer.add(document);
+				httpSolrServer.commit();
+			} catch (SolrServerException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public void addSolrIndex(SolrInputPo sPo) {
+		if (sPo!=null) {
 			SolrInputDocument document = SolrUtils.convert2SolrDocument(sPo);
 			try {
 				httpSolrServer.add(document);

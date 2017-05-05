@@ -20,6 +20,8 @@
     <result  column="userType"       property="userType"       jdbcType="INTEGER"/>
     <result  column="userClass"      property="userClass"      jdbcType="INTEGER"/>
     <result  column="userState"      property="userState"      jdbcType="INTEGER"/>
+    <result  column="rUserType"      property="RUserType"      jdbcType="INTEGER"/>
+    <result  column="aUserType"      property="AUserType"      jdbcType="INTEGER"/>
     <result  column="portraitBig"    property="portraitBig"    jdbcType="VARCHAR"/>
     <result  column="portraitMini"   property="portraitMini"   jdbcType="VARCHAR"/>
     <result  column="homepage"       property="homepage"       jdbcType="VARCHAR"/>
@@ -30,11 +32,11 @@
 
   <!-- 所有列 -->
   <sql id="Base_Column_List">
-    id, userName, userNum, loginName, nickName, userSign, password, mainPhoneNum, phoneNumIsPub, mailAddress, birthday, starSign, userType, userClass, userState, portraitBig, portraitMini, homepage, descn, cTime, lmTime
+    id, userName, userNum, loginName, nickName, userSign, password, mainPhoneNum, phoneNumIsPub, mailAddress, birthday, starSign, userType, userClass, userState, rUserType, aUserType, portraitBig, portraitMini, homepage, descn, cTime, lmTime
   </sql>
   <!-- 所有列 -->
   <sql id="Base_Column_List_A">
-    a.id, a.userName, a.userNum, a.loginName, a.nickName, a.userSign, a.password, a.mainPhoneNum, a.phoneNumIsPub, a.mailAddress, a.birthday, a.starSign, a.userType, a.userClass, a.userState, a.portraitBig, a.portraitMini, a.homepage, a.descn, a.cTime, a.lmTime
+    a.id, a.userName, a.userNum, a.loginName, a.nickName, a.userSign, a.password, a.mainPhoneNum, a.phoneNumIsPub, a.mailAddress, a.birthday, a.starSign, a.userType, a.userClass, a.userState, a.rUserType, a.aUserType, a.portraitBig, a.portraitMini, a.homepage, a.descn, a.cTime, a.lmTime
   </sql>
 
   <!-- 条件子句 -->
@@ -56,6 +58,8 @@
         <if test="userType!=null"> and userType=#{userType,jdbcType=INTEGER}</if>
         <if test="userClass!=null"> and userClass=#{userClass,jdbcType=INTEGER}</if>
         <if test="userState!=null"> and userState=#{userState,jdbcType=INTEGER}</if>
+        <if test="RUserType!=null"> and rUserType=#{RUserType,jdbcType=INTEGER}</if>
+        <if test="AUserType!=null"> and aUserType=#{AUserType,jdbcType=INTEGER}</if>
         <if test="portraitBig!=null"> and portraitBig=#{portraitBig,jdbcType=VARCHAR}</if>
         <if test="portraitMini!=null"> and portraitMini=#{portraitMini,jdbcType=VARCHAR}</if>
         <if test="homepage!=null"> and homepage=#{homepage,jdbcType=INTEGER}</if>
@@ -91,8 +95,8 @@
   <select id="getStrangers" resultMap="userMap" parameterType="java.util.Map">
   select * from (
     select <include refid="Base_Column_List_A"/> from plat_User a
-    left join (select distinct aUserId from vWt_Friend_Rel where aUserId='${userId}') b on a.id=b.aUserId
-    where a.id!='${userId}' and b.aUserId is null and (
+    left join (select distinct bUserId from vWt_Friend_Rel where aUserId='${userId}') b on a.id=b.bUserId
+    where a.id!='${userId}' and b.bUserId is null and (
          a.loginName like '%${searchStr}%'
       or a.userNum   like '%${searchStr}%'
       or a.userName  like '%${searchStr}%'
@@ -109,9 +113,6 @@
   -->
    <select id="getMembers" resultMap="userMap" parameterType="java.lang.String">
     select * from plat_User where id in (${value})
-  </select>
-  <select id="getGroupMembers" resultMap="userMap" parameterType="java.lang.String">
-    select <include refid="Base_Column_List_A"/> from plat_User a, plat_GroupUser b where a.id=b.userId and b.groupId=#{value, jdbcType=VARCHAR}
   </select>
   <select id="getGroupMembersByORIDSQL" resultMap="userMap" parameterType="java.lang.String">
     select <include refid="Base_Column_List_A"/> from plat_User a, plat_GroupUser b where a.id=b.userId and ${value}
@@ -155,6 +156,8 @@
       <if test="userType!=null">userType,</if>
       <if test="userClass!=null">userClass,</if>
       <if test="userState!=null">userState,</if>
+      <if test="RUserType!=null">rUserType,</if>
+      <if test="AUserType!=null">aUserType,</if>
       <if test="portraitBig!=null">portraitBig,</if>
       <if test="portraitMini!=null">portraitMini,</if>
       <if test="homepage!=null">homepage,</if>
@@ -177,6 +180,8 @@
       <if test="userType!=null">#{userType,jdbcType=INTEGER},</if>
       <if test="userClass!=null">#{userClass,jdbcType=INTEGER},</if>
       <if test="userState!=null">#{userState,jdbcType=INTEGER},</if>
+      <if test="RUserType!=null">#{RUserType,jdbcType=INTEGER},</if>
+      <if test="AUserType!=null">#{AUserType,jdbcType=INTEGER},</if>
       <if test="portraitBig!=null">#{portraitBig,jdbcType=VARCHAR},</if>
       <if test="portraitMini!=null">#{portraitMini,jdbcType=VARCHAR},</if>
       <if test="homepage!=null">#{homepage,jdbcType=VARCHAR},</if>
@@ -202,6 +207,8 @@
       <if test="userType!=null">userType=#{userType,jdbcType=INTEGER},</if>
       <if test="userClass!=null">userClass=#{userClass,jdbcType=INTEGER},</if>
       <if test="userState!=null">userState=#{userState,jdbcType=INTEGER},</if>
+      <if test="RUserType!=null">rUserType=#{RUserType,jdbcType=INTEGER},</if>
+      <if test="AUserType!=null">aUserType=#{AUserType,jdbcType=INTEGER},</if>
       <if test="portraitBig!=null">portraitBig=#{portraitBig,jdbcType=VARCHAR},</if>
       <if test="portraitMini!=null">portraitMini=#{portraitMini,jdbcType=VARCHAR},</if>
       <if test="homepage!=null">homepage=#{homepage,jdbcType=VARCHAR},</if>

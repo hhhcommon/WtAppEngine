@@ -111,7 +111,7 @@
       <if test="groupSignature!=null">groupSignature=#{groupSignature,jdbcType=VARCHAR},</if>
       <if test="groupPwd!=null">groupPwd=#{groupPwd,jdbcType=VARCHAR},</if>
       <if test="groupImg!=null">groupImg=#{groupImg,jdbcType=VARCHAR},</if>
-      <if test="groupType!=null">groupType=#{groupType,jdbcType=VARCHAR},</if>
+      <if test="groupType!=null and groupType!=-1">groupType=#{groupType,jdbcType=VARCHAR},</if>
       <if test="pId!=null">pId=#{pId,jdbcType=VARCHAR},</if>
       <if test="sort!=null and sort!=0">sort=#{sort,jdbcType=INTEGER},</if>
       <if test="createUserId!=null">createUserId=#{createUserId,jdbcType=VARCHAR},</if>
@@ -129,7 +129,7 @@
     select count(*) from plat_Group <if test="_parameter!=null">where <include refid="WhereClauseByEntiey"/></if>
   </select>
   <select id="judgeUserInGroup" parameterType="java.util.Map" resultType="java.lang.Integer">
-    select count(*) from plat_GroupUser a, plat_Group b, plat_Group c
+    select count(*) from plat_GroupUser a, plat_Group b, plat_User c
     where a.userId=c.id and a.groupId=b.id and
       a.userId=#{userId,jdbcType=VARCHAR} and a.groupId=#{groupId,jdbcType=VARCHAR}
   </select>
@@ -141,7 +141,9 @@
       plat_Group a, 
       (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b
     where a.id=b.groupId
-    <if test="_parameter!=null">and (<include refid="WhereClauseByEntiey"/>)</if>
+    <if test="_parameter!=null">
+      <if test="orderByClause==null">and (<include refid="WhereClauseByEntiey"/>)</if>
+    </if>
     <if test="orderByClause!=null">order by ${orderByClause}</if>
   </select>
 
@@ -152,7 +154,9 @@
       plat_Group a,
       (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b
     where a.id=b.groupId
-    <if test="_parameter!=null">and (<include refid="WhereClauseByEntiey"/>)</if>
+    <if test="_parameter!=null">
+      <if test="orderByClause==null">and (<include refid="WhereClauseByEntiey"/>)</if>
+    </if>
   </select>
   <select id="getGroupById" resultMap="groupMap" parameterType="java.lang.String">
     select <include refid="Base_Column_List"/>, b.groupCount, null groupAlias, null groupDescn
@@ -193,6 +197,7 @@
     (select * from plat_GroupUser where userId=#{value, jdbcType=VARCHAR}) c
     where a.id=b.groupId and a.createUserId=#{value, jdbcType=VARCHAR} and a.id=c.groupId
   </select>
+
   <!-- 得到某用户所创建的用户组的数量 -->
   <select id="getCreateGroupCount" resultType="java.lang.Integer" parameterType="java.lang.String">
     select count(*) from plat_Group where createUserId=#{value, jdbcType=VARCHAR} and groupType=1
@@ -226,6 +231,17 @@
     (select groupId, count(userId) groupCount from plat_GroupUser group by groupId) b,
     (select * from plat_GroupUser where userId=#{value, jdbcType=VARCHAR}) c
     where a.id=b.groupId and a.groupMasterId=#{value, jdbcType=VARCHAR} and a.id=c.groupId
+  </select>
+
+  <!-- 得到有未处理申请人的我所管理的用户组 -->
+  <select id="existApplyUserGroupList" resultMap="groupMap" parameterType="java.lang.String">
+    select a.*, b.groupCount, null groupAlias, null groupDescn  from plat_Group a,
+    (select groupId, count(id) groupCount from plat_GroupUser group by groupId) b,
+  <![CDATA[
+    (select groupId, count(id) inviteCount from wt_GroupInvite where inviteVector<0 and flag=1 and acceptFlag=0 group by groupId) c,
+  ]]>
+    (select * from plat_GroupUser where userId=#{value, jdbcType=VARCHAR}) d
+    where a.id=b.groupId and a.id=c.groupId and a.adminUserIds like '%#{value, jdbcType=VARCHAR}%' and a.id=d.grouopId
   </select>
 
   <!-- 删除数据 -->
@@ -262,8 +278,8 @@
     delete from plat_GroupUser where groupId=#{groupId,jdbcType=VARCHAR} <if test="userId!=null">and userId=#{userId,jdbcType=VARCHAR}</if>
   </delete>
   <!-- 得到某用户所创建的用户组的数量 -->
-  <select id="getGroupUserByGroupId" resultMap="groupUserMap" parameterType="java.lang.String">
-    select * from plat_GroupUser where groupId=#{groupId, jdbcType=VARCHAR}
+  <select id="getUserInGroupRefListByGroupId" resultMap="groupUserMap" parameterType="java.lang.String">
+    select * from plat_GroupUser where groupId=#{groupId, jdbcType=VARCHAR} order by cTime desc
   </select>
   <!-- 根据用户Id和组Id修改用户所在组表 -->
   <update id="updateGroupUserByUserIdGroupId"  parameterType="java.util.Map">

@@ -59,30 +59,35 @@ public class WordService {
      * 处理在线搜索词，加载入内存，并写入持久化的数据库
      */
     public void dealWordOnlineQueue() {
-        String _oneWord=swm.pollFromOnlineQueue();
-        if (!StringUtils.isNullOrEmptyOrSpace(_oneWord)) {
-            String[] _split=_oneWord.split("=");
-            if (_split.length==3) {
-                Owner o=new Owner(Integer.parseInt(_split[1]), _split[0]);
-                Owner sysO=new Owner(100, "cm");
+        try {
+            while (true) {
+                String _oneWord=swm.takeFromOnlineQueue();
+                if (!StringUtils.isNullOrEmptyOrSpace(_oneWord)) {
+                    String[] _split=_oneWord.split("=");
+                    if (_split.length==3) {
+                        Owner o=new Owner(Integer.parseInt(_split[1]), _split[0]);
+                        Owner sysO=new Owner(100, "cm");
 
-                OwnerWord ow=swm.getOwnerWord(o);
-                if (ow==null) {
-                    ow=new OwnerWord(o, 5);
-                    swm.putOwnerWord(ow);
-                }
-                ow.addWord(_split[2]);
-                if (!o.equals(sysO)) {
-                    ow=swm.getOwnerWord(sysO);
-                    if (ow==null) {
-                        ow=new OwnerWord(sysO, 5);
-                        swm.putOwnerWord(ow);
+                        OwnerWord ow=swm.getOwnerWord(o);
+                        if (ow==null) {
+                            ow=new OwnerWord(o, 5);
+                            swm.putOwnerWord(ow);
+                        }
+                        ow.addWord(_split[2]);
+                        if (!o.equals(sysO)) {
+                            ow=swm.getOwnerWord(sysO);
+                            if (ow==null) {
+                                ow=new OwnerWord(sysO, 5);
+                                swm.putOwnerWord(ow);
+                            }
+                            ow.addWord(_split[2]);
+                        }
+                        //数据库处理
+                        updateWordDb(o, _split[2]);
                     }
-                    ow.addWord(_split[2]);
                 }
-                //数据库处理
-                updateWordDb(o, _split[2]);
             }
+        } catch(Exception e) {
         }
     }
 
@@ -90,36 +95,41 @@ public class WordService {
      * 处理加载搜索词，加载入内存
      */
     public void dealWordLoadQueue() {
-        String _oneWord=swm.pollFromLoadQueue();
-        if (!StringUtils.isNullOrEmptyOrSpace(_oneWord)) {
-            String[] _split=_oneWord.split("=");
-            if (_split.length==4) {
-                Owner o=new Owner(Integer.parseInt(_split[1]), _split[0]);
-                Owner sysO=new Owner(100, "cm");
+        try {
+            while (true) {
+                String _oneWord=swm.takeFromLoadQueue();
+                if (!StringUtils.isNullOrEmptyOrSpace(_oneWord)) {
+                    String[] _split=_oneWord.split("=");
+                    if (_split.length==4) {
+                        Owner o=new Owner(Integer.parseInt(_split[1]), _split[0]);
+                        Owner sysO=new Owner(100, "cm");
 
-                //总要处理一次系统
-                OwnerWord ow=swm.getOwnerWord(sysO);
-                if (ow==null) {
-                    ow=new OwnerWord(sysO, 5);
-                    swm.putOwnerWord(ow);
-                }
-                try {
-                    ow.loadWord(new Word(_split[2], Integer.parseInt(_split[3])));
-                } catch (Exception e) {
-                }
-                //再处理一次自己
-                if (!o.equals(sysO)) {
-                    ow=swm.getOwnerWord(o);
-                    if (ow==null) {
-                        ow=new OwnerWord(o, 5);
-                        swm.putOwnerWord(ow);
-                    }
-                    try {
-                        ow.loadWord(new Word(_split[2], Integer.parseInt(_split[3])));
-                    } catch (Exception e) {
+                        //总要处理一次系统
+                        OwnerWord ow=swm.getOwnerWord(sysO);
+                        if (ow==null) {
+                            ow=new OwnerWord(sysO, 5);
+                            swm.putOwnerWord(ow);
+                        }
+                        try {
+                            ow.loadWord(new Word(_split[2], Integer.parseInt(_split[3])));
+                        } catch (Exception e) {
+                        }
+                        //再处理一次自己
+                        if (!o.equals(sysO)) {
+                            ow=swm.getOwnerWord(o);
+                            if (ow==null) {
+                                ow=new OwnerWord(o, 5);
+                                swm.putOwnerWord(ow);
+                            }
+                            try {
+                                ow.loadWord(new Word(_split[2], Integer.parseInt(_split[3])));
+                            } catch (Exception e) {
+                            }
+                        }
                     }
                 }
             }
+        } catch(Exception e) {
         }
     }
 

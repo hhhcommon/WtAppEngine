@@ -2,7 +2,6 @@ package com.woting.passport.web;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -237,8 +236,7 @@ public class GroupController {
                 //组织返回值
                 map.put("ReturnType", "1001");
                 g.setGroupCount(ml.size());
-                g.toHashMap4View();
-                Map<String, Object> groupMap=g.toHashMap4View();
+                Map<String, Object> groupMap=g.toHashMap4ViewWithPwd();
                 groupMap.put("CreateTime", System.currentTimeMillis()+"");
                 map.put("GroupInfo", groupMap);
             } else {
@@ -346,7 +344,10 @@ public class GroupController {
             List<GroupPo> gl=groupService.getGroupsByUserId(userId, pageSize, page);
             List<Map<String, Object>> rgl=new ArrayList<Map<String, Object>>();
             if (gl!=null&&gl.size()>0) {
-                for (GroupPo g:gl) rgl.add(g.toHashMap4View());
+                for (GroupPo g:gl) {
+                    if (g.getAdminUserIds().indexOf(userId)!=-1||g.getGroupMasterId().equals(userId)) rgl.add(g.toHashMap4ViewWithPwd());
+                    else rgl.add(g.toHashMap4View());
+                }
                 map.put("ReturnType", "1001");
                 map.put("GroupList", rgl);
             } else {
@@ -454,7 +455,10 @@ public class GroupController {
             List<GroupPo> gl=groupService.getCreateGroupsByUserId(userId, pageSize, page);
             List<Map<String, Object>> rgl=new ArrayList<Map<String, Object>>();
             if (gl!=null&&gl.size()>0) {
-                for (GroupPo g:gl) rgl.add(g.toHashMap4View());
+                for (GroupPo g:gl) {
+                    if (g.getAdminUserIds().indexOf(userId)!=-1||g.getGroupMasterId().equals(userId)) rgl.add(g.toHashMap4ViewWithPwd());
+                    else rgl.add(g.toHashMap4View());
+                }
                 map.put("ReturnType", "1001");
                 map.put("GroupList", rgl);
             } else {
@@ -562,7 +566,7 @@ public class GroupController {
             List<GroupPo> gl=groupService.getManageGroupsByUserId(userId, pageSize, page);
             List<Map<String, Object>> rgl=new ArrayList<Map<String, Object>>();
             if (gl!=null&&gl.size()>0) {
-                for (GroupPo g:gl) rgl.add(g.toHashMap4View());
+                for (GroupPo g:gl) rgl.add(g.toHashMap4ViewWithPwd());
                 map.put("ReturnType", "1001");
                 map.put("GroupList", rgl);
             } else {
@@ -670,7 +674,7 @@ public class GroupController {
             List<GroupPo> gl=groupService.getMasterGroupsByUserId(userId, pageSize, page);
             List<Map<String, Object>> rgl=new ArrayList<Map<String, Object>>();
             if (gl!=null&&gl.size()>0) {
-                for (GroupPo g:gl) rgl.add(g.toHashMap4View());
+                for (GroupPo g:gl) rgl.add(g.toHashMap4ViewWithPwd());
                 map.put("ReturnType", "1001");
                 map.put("GroupList", rgl);
             } else {
@@ -1379,30 +1383,19 @@ public class GroupController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            List<Map<String, Object>> aul=groupService.getApplyUserList(groupId);
-            List<Map<String, Object>> rAul=new ArrayList<Map<String, Object>>();
+            //2-获取分页信息
+            int page=0;//获取页数
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            int pageSize=10;//得到每页条数
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+
+            List<Map<String, Object>> aul=groupService.getApplyUserList(groupId, pageSize, page);
             if (aul!=null&&aul.size()>0) {
-                Map<String, Object> au;
-                for (Map<String, Object> one:aul) {
-                    au=new HashMap<String, Object>();
-                    au.put("GroupId", one.get("groupId"));
-                    au.put("GroupName", one.get("groupName"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupSignature"))) au.put("GgroupSignature", one.get("groupSignature"));
-                    au.put("ApplyTime",((Date)one.get("inviteTime")).getTime()+"");
-                    au.put("UserId", one.get("applyUserId"));
-                    au.put("UserName", one.get("loginName"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("userDescn"))) au.put("UserDescn", one.get("userDescn"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mailAddress"))) au.put("Email", one.get("mailAddress"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mainPhoneNum"))) au.put("PhoneNum", one.get("mainPhoneNum"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("portraitBig"))) au.put("PortraitBig", one.get("portraitBig"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("portraitMini"))) au.put("PortraitMini", one.get("portraitMini"));
-                    rAul.add(au);
-                }
                 map.put("ReturnType", "1001");
-                map.put("UserList", rAul);
+                map.put("UserList", aul);
             } else {
                 map.put("ReturnType", "1011");
-                map.put("Message", "无所属用户组");
+                map.put("Message", "该用户组下没有申请人列表");
             }
             return map;
         } catch(Exception e) {
@@ -1495,30 +1488,19 @@ public class GroupController {
             }
             if (map.get("ReturnType")!=null) return map;
 
-            List<Map<String, Object>> eauGl=groupService.getExistApplyUserGroupList(userId);
-            List<Map<String, Object>> rEauGl=new ArrayList<Map<String, Object>>();
+            //1-获取分页信息
+            int page=0;//获取页数
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            int pageSize=10;//得到每页条数
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+
+            List<Map<String, Object>> eauGl=groupService.getExistApplyUserGroupList(userId, pageSize, page);
             if (eauGl!=null&&eauGl.size()>0) {
-                Map<String, Object> gInfo;
-                for (Map<String, Object> one:eauGl) {
-                    gInfo=new HashMap<String, Object>();
-                    gInfo.put("GroupId", one.get("groupId"));
-                    gInfo.put("GroupNum", one.get("groupNum"));
-                    gInfo.put("GroupType", one.get("groupType"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupImg"))) gInfo.put("GroupImg", one.get("groupImg"));
-                    gInfo.put("GroupName", one.get("groupName"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("groupSignature"))) gInfo.put("GgroupSignature", one.get("groupSignature"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("createUserId"))) gInfo.put("GroupCreator", one.get("createUserId"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("adminUserIds"))) gInfo.put("GroupManager", one.get("adminUserIds"));
-                    gInfo.put("GroupCount", one.get("groupCount"));
-                    if (one.get("inviteCount")!=null) gInfo.put("InviteCount", one.get("inviteCount"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("descn"))) gInfo.put("GroupDescn", one.get("descn"));
-                    rEauGl.add(gInfo);
-                }
                 map.put("ReturnType", "1001");
-                map.put("GroupList", rEauGl);
+                map.put("GroupList", eauGl);
             } else {
                 map.put("ReturnType", "1011");
-                map.put("Message", "无所属用户组");
+                map.put("Message", "该用户组下没有申请人列表");
             }
             return map;
         } catch(Exception e) {
@@ -2148,12 +2130,12 @@ public class GroupController {
                     map.put("ReturnType", "1003");
                     map.put("Message", "无法获取用户组Id为["+groupId+"]的用户组");
                 } else {
-                    if (gp.getAdminUserIds()==null) {
+                    if (gp.getGroupMasterId()==null) {
                         map.put("ReturnType", "10032");
-                        map.put("Message", "该群未设置管理员！");
-                    } else  if (gp.getAdminUserIds().indexOf(userId)==-1) {
+                        map.put("Message", "该群未设置群主！");
+                    } else  if (!gp.getGroupMasterId().equals(userId)) {
                         map.put("ReturnType", "10021");
-                        map.put("Message", "用户不是该组的管理员！");
+                        map.put("Message", "用户不是该组的群主！");
                     }
                 }
             }
@@ -2319,6 +2301,7 @@ public class GroupController {
 
         Map<String,Object> map=new HashMap<String, Object>();
         try {
+            String userId=null;
             //0-获取参数
             MobileUDKey mUdk=null;
             Map<String, Object> m=RequestUtils.getDataFromRequest(request);
@@ -2348,6 +2331,7 @@ public class GroupController {
             }
             //数据收集处理==2
             if (map.get("UserId")!=null&&!StringUtils.isNullOrEmptyOrSpace(map.get("UserId")+"")) {
+                userId=map.get("UserId")+"";
                 alPo.setOwnerId(map.get("UserId")+"");
             } else {
                 //过客
@@ -2381,37 +2365,20 @@ public class GroupController {
                 map.put("Message", "无法得到查询串");
                 return map;
             }
-            List<Group> gl=groupService.searchGroup(searchStr);
+            //2-获取分页信息
+            int page=0;//获取页数
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            int pageSize=10;//得到每页条数
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+
+            List<Group> gl=groupService.searchGroup(searchStr, pageSize, page);
             if (gl!=null&&gl.size()>0) {
                 map.put("ReturnType", "1001");
-                List<Map<String, String>> groupList=new ArrayList<Map<String,String>>();
+                List<Map<String, Object>> groupList=new ArrayList<Map<String, Object>>();
                 for (int i=0; i<gl.size(); i++) {
-                    Map<String, String> oneGroup= new HashMap<String, String>();
-                    Group _g=gl.get(i);
-                    oneGroup.put("GroupId", _g.getGroupId());
-                    oneGroup.put("GroupNum", _g.getGroupNum());
-                    if (!StringUtils.isNullOrEmptyOrSpace(_g.getGroupSignature())) oneGroup.put("GroupSignature", _g.getGroupSignature());
-                    oneGroup.put("GroupType", _g.getGroupType()+"");
-                    oneGroup.put("GroupImg", _g.getGroupImg());
-                    oneGroup.put("GroupName", _g.getGroupName());
-                    if (!StringUtils.isNullOrEmptyOrSpace(_g.getCreateUserId())) oneGroup.put("GroupCreator", _g.getCreateUserId());
-                    if (!StringUtils.isNullOrEmptyOrSpace(_g.getAdminUserIds())) oneGroup.put("GroupManager", _g.getAdminUserIds());
-                    oneGroup.put("GroupCount", _g.getUserList().size()+"");
-                    if (!StringUtils.isNullOrEmptyOrSpace(_g.getDescn())) oneGroup.put("GroupOriDescn", _g.getDescn());
-                    oneGroup.put("CreateTime", _g.getCTime().getTime()+"");
-
-                    List<UserPo> ul=_g.getUserList();
-                    if (ul!=null&&!ul.isEmpty()) {
-                        String userNames="";
-                        String userIds="";
-                        for (int j=0;j<ul.size(); j++) {
-                            userNames+=","+ul.get(j).getLoginName();
-                            userIds+=","+ul.get(j).getUserId();
-                        }
-                        oneGroup.put("UserNames", userNames.substring(1));
-                        oneGroup.put("UserIds", userIds.substring(1));
-                    }
-                    groupList.add(oneGroup);
+                    Group g=gl.get(i);
+                    if (g.getAdminUserIds().indexOf(userId)!=-1||g.getGroupMasterId().equals(userId)) groupList.add(g.toHashMap4ViewWithPwd());
+                    else groupList.add(g.toHashMap4View());
                 }
                 map.put("GroupList", groupList);
             } else {
@@ -2532,13 +2499,16 @@ public class GroupController {
             String groupDescn=(m.get("Descn")==null?null:m.get("Descn")+"");
             String groupSignature=(m.get("GroupSignature")==null?null:m.get("GroupSignature")+"");
             String groupFreq=(m.get("GroupFreq")==null?null:m.get("GroupFreq")+"");
-            if (StringUtils.isNullOrEmptyOrSpace(groupName)&&StringUtils.isNullOrEmptyOrSpace(groupDescn)&&StringUtils.isNullOrEmptyOrSpace(groupSignature)&&StringUtils.isNullOrEmptyOrSpace(groupFreq)) {
+            String groupAlias=(m.get("GroupAlias")==null?null:m.get("GroupAlias")+"");
+            if (StringUtils.isNullOrEmptyOrSpace(groupName)&&StringUtils.isNullOrEmptyOrSpace(groupDescn)&&StringUtils.isNullOrEmptyOrSpace(groupSignature)&&StringUtils.isNullOrEmptyOrSpace(groupFreq)
+              &&groupAlias==null) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "无法获得修改所需的新信息");
                 return map;
             }
-            
+
             Map<String, Object> param=new HashMap<String, Object>();
+            if (groupAlias!=null) param.put("groupAlias", groupAlias);
             if (!StringUtils.isNullOrEmptyOrSpace(groupName)) param.put("groupName", groupName);
             if (!StringUtils.isNullOrEmptyOrSpace(groupDescn)) param.put("groupDescn", groupDescn);
             if (!StringUtils.isNullOrEmptyOrSpace(groupSignature)&&isManager==1) param.put("groupSignature", groupSignature);//只有管理员才能修改用户组的签名
@@ -2805,7 +2775,7 @@ public class GroupController {
                     if (gp.getAdminUserIds()==null) {
                         map.put("ReturnType", "10032");
                         map.put("Message", "该群未设置管理员！");
-                    } else if (gp.getAdminUserIds().indexOf(userId)==-1) {
+                    } else if (!gp.getAdminUserIds().equals(userId)) {
                         map.put("ReturnType", "10021");
                         map.put("Message", "用户不是该组的管理员！");
                     }
@@ -2813,31 +2783,20 @@ public class GroupController {
             }
             if (map.get("ReturnType")!=null) return map;
 
+            //2-获取分页信息
+            int page=0;//获取页数
+            try {page=Integer.parseInt(m.get("Page")+"");} catch(Exception e) {};
+            int pageSize=10;//得到每页条数
+            try {pageSize=Integer.parseInt(m.get("PageSize")+"");} catch(Exception e) {};
+
             //3-处理
-            List<Map<String, Object>> rul=new ArrayList<Map<String, Object>>();
-            List<Map<String, Object>> iuml=groupService.getNeedCheckInviteUserGroupList(groupId);
+            List<Map<String, Object>> iuml=groupService.getNeedCheckInviteUserGroupList(groupId, pageSize, page);
             if (iuml!=null&&iuml.size()>0) {
-                Map<String, Object> ium;
-                for (Map<String, Object> one:iuml) {
-                    ium=new HashMap<String, Object>();
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("inviteMessage"))) ium.put("InviteMessage", one.get("inviteMessage"));
-                    ium.put("InviteTime", ((Date)one.get("inviteTime")).getTime()+"");
-                    ium.put("InviteCount", one.get("inviteVector"));
-                    ium.put("InviteUserId", one.get("inviteUserId"));
-                    ium.put("BeInviteUserId", one.get("userId"));
-                    ium.put("UserName", one.get("loginName"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("userDescn"))) ium.put("UserDescn", one.get("userDescn"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mailAddress"))) ium.put("Email", one.get("mailAddress"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("mainPhoneNum"))) ium.put("PhoneNum", one.get("mainPhoneNum"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("portraitBig"))) ium.put("PortraitBig", one.get("portraitBig"));
-                    if (!StringUtils.isNullOrEmptyOrSpace((String)one.get("portraitMini"))) ium.put("PortraitMini", one.get("portraitMini"));
-                    rul.add(ium);
-                }
                 map.put("ReturnType", "1001");
-                map.put("InviteUserList", rul);
+                map.put("InviteUserList", iuml);
             } else {
                 map.put("ReturnType", "1011");
-                map.put("Message", "无需要审核的邀请");
+                map.put("Message", "该用户组下没有申请人列表");
             }
             return map;
         } catch(Exception e) {
@@ -3260,12 +3219,12 @@ public class GroupController {
     /**
      * 群主设置管理员
      */
-    @RequestMapping(value="setGroupMaster.do")
+    @RequestMapping(value="setGroupAdmin.do")
     @ResponseBody
     public Map<String,Object> setGroupMaster(HttpServletRequest request) {
         //数据收集处理==1
         ApiLogPo alPo=ApiGatherUtils.buildApiLogDataFromRequest(request);
-        alPo.setApiName("2.2.24-passport/group/setGroupMaster");
+        alPo.setApiName("2.2.24-passport/group/setGroupAdmin");
         alPo.setObjType("005");//用户组对象
         alPo.setDealFlag(1);//处理成功
         alPo.setOwnerType(201);
@@ -3288,7 +3247,7 @@ public class GroupController {
                 }
                 mUdk=mp.getUserDeviceKey();
                 if (mUdk!=null) {
-                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/setGroupMaster");
+                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "passport/group/setGroupAdmin");
                     if ((retM.get("ReturnType")+"").equals("2003")) {
                         map.put("ReturnType", "200");
                         map.put("Message", "需要登录");
@@ -3360,7 +3319,7 @@ public class GroupController {
             if (map.get("ReturnType")!=null) return map;
 
             //3-处理
-            map.putAll(groupService.setGroupMaster(gp, addAdminUserIds, delAdminUserIds, userId));
+            map.putAll(groupService.setGroupAdmin(gp, addAdminUserIds, delAdminUserIds, userId));
             return map;
         } catch(Exception e) {
             e.printStackTrace();

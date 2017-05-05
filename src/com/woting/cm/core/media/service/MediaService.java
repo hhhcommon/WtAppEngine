@@ -109,6 +109,12 @@ public class MediaService {
     	return sma;
 	}
     
+    public SeqMediaAssetPo getSmaPoInfoById(String id) {
+    	SeqMediaAssetPo smapo = seqMediaAssetDao.getInfoObject("getSmaInfoById", id);
+    	if(smapo==null) return null;
+    	return smapo;
+	}
+    
     public List<MediaAssetPo> getMaListBy(Map<String, Object> m) {
     	List<MediaAssetPo> mas = mediaAssetDao.queryForList("getMaListBy", m);
     	if (mas!=null) {
@@ -309,4 +315,13 @@ public class MediaService {
     public List<Map<String, Object>> getSeqMaListByWhereStr(String where) {
         return seqMediaAssetDao.queryForListAutoTranform("getSeqMaListByWhereStr", where);
     }
+
+	public MediaPlayCountPo getMediaPlayCount(Map<String, Object> m) {
+//		m.put("resId", resId);
+//		m.put("resTableName", resTableName);
+		List<MediaPlayCountPo> mplays = mediaPlayCountDao.queryForList("getMediaPlayCountLatest", m);
+		if(mplays!=null && mplays.size()>0) 
+			return mplays.get(0);
+		return null;
+	}
 }

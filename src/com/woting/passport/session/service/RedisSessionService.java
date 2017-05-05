@@ -103,7 +103,11 @@ public class RedisSessionService implements SessionService {
                 }
                 map.put("Message", "用户已登录");
             } else {//处理未登录
-                MobileUsedPo mup=muService.getUsedInfo(udk.getDeviceId(), udk.getPCDType());
+                MobileUsedPo mup=null;
+                try {
+                    mup=muService.getUserUsedInDevice(udk.getDeviceId(), udk.getPCDType());
+                } catch(Exception e) {
+                }
                 boolean noLog=false;
                 noLog=(mup==null||mup.getStatus()!=1||mup.getUserId()==null);
                 if (noLog) {//无法登录
@@ -200,7 +204,6 @@ public class RedisSessionService implements SessionService {
             } catch(Exception e) {}
             //2-删除在该设备上的其他用户登录信息（不允许同一设备上有两个用户同时登录）
             try {
-                //删除用户在
                 String uid=roService.get(rUdk.getKey_DeviceType_UserId());
                 if (uid!=null&&uid.trim().length()>0) {
                     RedisUserDeviceKey _oldKey=new RedisUserDeviceKey(udk);

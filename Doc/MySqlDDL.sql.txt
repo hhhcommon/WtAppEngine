@@ -58,6 +58,8 @@ CREATE TABLE plat_User (
   userType       int(4) unsigned                          COMMENT '用户分类：对应OwnerType，1xx::系统:100-我们自己的系统(cm/crawl/push等);101-其他系统(wt_Organize表中的Id);2xx::用户:200-后台系统用户;201-前端用户-wt_Member表中的用户Id',
   userClass      int(4) unsigned                          COMMENT '用户类型，现在还没有用，比如是一般用户还是管理原等',
   userState      int(1)           NOT NULL  DEFAULT '0'   COMMENT '用户状态，0-2,0代表未激活的用户，1代表已激用户，2代表失效用户,3根据邮箱找密码的用户',
+  rUserType      int(1)           NOT NULL  DEFAULT '0'   COMMENT '注册用户分类：0一般用户；1认证用户；2专业用户',
+  aUserType      int(1)           NOT NULL  DEFAULT '0'   COMMENT '管理用户分类：0没有任何管理权限；1一般管理员；2审核管理员',
   portraitBig    varchar(300)                             COMMENT '用户头像大',
   portraitMini   varchar(300)                             COMMENT '用户头像小',
   descn          varchar(2000)              DEFAULT NULL  COMMENT '备注',
@@ -214,6 +216,59 @@ VIEW vWt_Friend_Rel AS
   union all
   select id, bUserId aUserId, aUserId bUserId, 0-inviteVector inviteVector, inviteTime from wt_Friend_Rel
 ;
+
+/**== SS、用户权限 =============================================*/
+/**SS01 PLAT_ROLE(角色表)*/
+DROP TABLE IF EXISTS plat_Role;
+CREATE TABLE plat_Role (
+  id         varchar(32)      NOT NULL                             COMMENT 'uuid(角色id)',
+  roleName   varchar(300)     NOT NULL                             COMMENT '角色名称',
+  roleType   int(4) unsigned  NOT NULL  DEFAULT 0                  COMMENT '角色分类：0=程序角色；1=配置角色',
+  descn      longtext                                              COMMENT '角色说明',
+  cTime      timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '邀请成功的时间',
+  PRIMARY KEY(id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='SS01 角色表';
+
+/**SS02 PLAT_ROLEFUNCTION(角色功能表)*/
+DROP TABLE IF EXISTS plat_RoleFunction;
+CREATE TABLE plat_RoleFunction (
+  id        varchar(32)      NOT NULL                             COMMENT 'uuid',
+  roleId    varchar(32)      NOT NULL                             COMMENT '角色表Id，是外键',
+  funName   varchar(100)                                          COMMENT '此字段有一定的规则，不可随意填写,目前只有“栏目权限”',
+  funClass  varchar(50)      NOT NULL                             COMMENT '功能类型目前有：Data=数据权限;Module=模块(界面)权限;Oper=操作权限',
+  funType   varchar(32)      NOT NULL                             COMMENT '可以有很多要和roleClass配置使用，目前有:Channel-Add=栏目中添加内容。若是Module，这里是Module表中的结点Id',
+  funFlag1  int(1) unsigned                                       COMMENT '操作标识1：对于“栏目权限”1是包括2是不包括',
+  funFlag2  int(1) unsigned                                       COMMENT '另一个标识',
+  extInfo   longtext                                              COMMENT 'Json格式的扩展数据',
+  cTime     timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '邀请成功的时间',
+  PRIMARY KEY(id),
+  INDEX roleIdIdx (roleId) USING HASH,
+  INDEX funCatalogIdx (funClass, funType) USING HASH,
+  INDEX bizIdx (roleId, funClass, funType) USING HASH
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='SS02 角色功能表';
+
+/**SS03 PLAT_USERFUNCTION(用户功能表)*/
+DROP TABLE IF EXISTS plat_UserFunction;
+CREATE TABLE plat_UserFunction (
+  id        varchar(32)      NOT NULL                             COMMENT 'uuid',
+  userId    varchar(32)      NOT NULL                             COMMENT '用户Id',
+  roleType  int(1) unsigned  NOT NULL  DEFAULT 1                  COMMENT '规则类型：等于1是角色;不等于1是手工录入的',
+  roleId    varchar(32)                                           COMMENT '若ruleType=1，则这里是角色的Id，外键',
+  funName   varchar(100)                                          COMMENT '此字段有一定的规则，不可随意填写,目前只有“栏目权限”',
+  funClass  varchar(50)      NOT NULL                             COMMENT '功能类型目前有：Data=数据权限;Module=模块(界面)权限;Oper=操作权限',
+  funType   varchar(32)      NOT NULL                             COMMENT '可以有很多要和roleClass配置使用，目前有:Channel-Add=栏目中添加内容。若是Module，这里是Module表中的结点Id',
+  funFlag1  int(1) unsigned                                       COMMENT '操作标识1：对于“栏目权限”1是包括2是不包括',
+  funFlag2  int(1) unsigned                                       COMMENT '另一个标识',
+  extInfo   longtext                                              COMMENT 'Json格式的扩展数据',
+  cTime     timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '邀请成功的时间',
+  PRIMARY KEY(id),
+  INDEX userIdIdx (userId) USING HASH,
+  INDEX funCatalogIdx (funClass, funType) USING HASH,
+  INDEX bizIdx (userId, funClass, funType) USING HASH
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='SS03 用户功能表';
 
 /**== 三、用户意见=============================================*/
 /**012 WT_APPOPINION(应用意见表)*/
@@ -559,7 +614,6 @@ CREATE TABLE wt_ChannelAsset (
   checkRuleIds  varchar(100)                          COMMENT '审核规则，0为手工/人工创建，其他为系统规则id',
   cTime         timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
   pubTime       timestamp                             COMMENT '发布时间，发布时的时间，若多次发布，则是最新的发布时间',
-  lmTime        timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  COMMENT '最后修改时间，任何字段进行了修改都要改这个字段',
   INDEX pubAsset (assetType, assetId, flowFlag) USING HASH,
   INDEX bizIdx (assetType, assetId, channelId) USING BTREE,
   PRIMARY KEY (id)

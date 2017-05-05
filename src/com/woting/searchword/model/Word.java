@@ -50,7 +50,12 @@ public class Word implements Serializable {
 
     @Override
     public String toString() {
-        return word;
+        return word+":"+count;
+    }
+
+    @Override
+    public int hashCode() {
+        return word.hashCode();
     }
 
     @Override
