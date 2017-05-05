@@ -2057,6 +2057,8 @@ public class ContentService {
                                     for (Map<String, Object> o:fromCache) {
                                         if (o.get("MediaType")!=null&&o.get("MediaType").equals(typeStr)&&o.get("ContentId")!=null&&o.get("ContentId").equals(s[1])) {
                                             if (pageType==0&&MT==MediaType.SEQU) {//需要提取内容
+                                                if (o.get("SubList")==null) continue;
+                                                if (((List)o.get("SubList")).isEmpty()) continue;
                                                 Map newOne=(Map)((List)o.get("SubList")).get(0);
                                                 if (newOne!=null) {
                                                     o.remove("SubList");
