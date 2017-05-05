@@ -116,15 +116,7 @@
   </delete>
 
   <!-- ===偏好相关===================================== -->
-  <select id="queryPrefList" resultMap="dictRefResMap" parameterType="java.util.Map">
-    select * from wt_ResDict_Ref where (dictMid='3' or dictMid='6') and resTableName=#{resTableName,jdbcType=VARCHAR} and resId=#{resId,jdbcType=VARCHAR}
+  <select id="delPreference" resultMap="dictRefResMap" parameterType="java.util.Map">
+    delete from wt_ResDict_Ref where resTableName=#{resTableName,jdbcType=VARCHAR} and resId=#{resId,jdbcType=VARCHAR} and refName='${refName}'
   </select>
-  <!-- 取消偏好 -->
-  <update id="cancelPref" parameterType="java.util.Map">
-    update wt_ResDict_Ref set refName=#{refName,jdbcType=VARCHAR} where resTableName=#{resTableName,jdbcType=VARCHAR} and resId=#{resId,jdbcType=VARCHAR} and dictMid=#{dictMid,jdbcType=VARCHAR}
-  </update>
-  <!-- 取消偏好 -->
-  <update id="changeToLike" parameterType="java.util.Map">
-    update wt_ResDict_Ref set refName=#{refName,jdbcType=VARCHAR} where ${whereStr}
-  </update>
 </mapper>

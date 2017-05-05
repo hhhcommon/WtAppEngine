@@ -31,7 +31,6 @@ import com.woting.cm.core.common.model.Owner;
 import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictDetail;
 import com.woting.cm.core.dict.model.DictModel;
-import com.woting.cm.core.dict.model.DictRefRes;
 import com.woting.cm.core.dict.service.DictService;
 import com.woting.dataanal.gather.API.ApiGatherUtils;
 import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
@@ -199,11 +198,11 @@ public class CommonController {
                 }
                 mUdk=mp.getUserDeviceKey();
                 if (mUdk!=null) {
-                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "mainPage");
-                    if ((retM.get("ReturnType")+"").equals("2004")||(retM.get("ReturnType")+"").equals("3004")) {
-                        map.put("ReturnType", "0000");
-                        map.put("Message", "无法获取设备Id(IMEI|SessionId)");
-                    }
+//                    Map<String, Object> retM=sessionService.dealUDkeyEntry(mUdk, "mainPage");
+//                    if ((retM.get("ReturnType")+"").equals("2004")||(retM.get("ReturnType")+"").equals("3004")) {
+//                        map.put("ReturnType", "0000");
+//                        map.put("Message", "无法获取设备Id(IMEI|SessionId)");
+//                    }
                 } else {
                     map.put("ReturnType", "0000");
                     map.put("Message", "无法获取需要的参数");
@@ -1070,24 +1069,31 @@ public class CommonController {
 
             //1-得到UserId
             String _userId=(m.get("UserId")==null?null:m.get("UserId")+"");
-            if (!StringUtils.isNullOrEmptyOrSpace(_userId)) {//判断是否需要登录
-                if (!isLogin) {
-                    map.put("ReturnType", "200");
-                    map.put("Message", "需要登录");
-                } else {
-                    if (map.get("UserId")==null||(map.get("UserId")!=null&&!map.get("UserId").equals(_userId))) {
-                        map.put("ReturnType", "1002");
-                        map.put("Message", "用户不匹配");
-                    }
+            if (!StringUtils.isNullOrEmptyOrSpace(_userId)&&isLogin) {//判断是否需要登录
+                if (map.get("UserId")==null||(map.get("UserId")!=null&&!map.get("UserId").equals(_userId))) {
+                    map.put("ReturnType", "1002");
+                    map.put("Message", "用户不匹配");
                 }
+//                if (!isLogin) {
+//                    map.put("ReturnType", "200");
+//                    map.put("Message", "需要登录");
+//                } else {
+//                }
             }
             if (map.get("ReturnType")!=null) return map;
+            //2-得到是否获得所有内容
+            String isAll=(m.get("IsAll")==null?"1":m.get("IsAll")+"");
 
             TreeNode<? extends TreeNodeBean> root=null;
-            if (StringUtils.isNullOrEmptyOrSpace(_userId)) {//获得纯的偏好内容
+            if (isAll.equals("1")) {//获得纯的偏好内容
                 root=pService.getPreference();
             } else {//获得用户偏好
-                root=pService.getUserPreference(_userId);
+                int fromType=1;//从用户
+                if (StringUtils.isNullOrEmptyOrSpace(_userId)) {
+                    _userId=m.get("IMEI")==null?null:m.get("IMEI")+"";
+                    fromType=2;
+                }
+                root=pService.getUserPreference(_userId, fromType);
             }
             if (root!=null&&root.getChildren()!=null&&!root.getChildren().isEmpty()) {
                 map.put("ReturnType", "1001");
@@ -1113,7 +1119,6 @@ public class CommonController {
             } catch (InterruptedException e) {}
         }
     }
-    
 
     @RequestMapping(value="/setPreference.do")
     @ResponseBody

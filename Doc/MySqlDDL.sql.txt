@@ -217,6 +217,59 @@ VIEW vWt_Friend_Rel AS
   select id, bUserId aUserId, aUserId bUserId, 0-inviteVector inviteVector, inviteTime from wt_Friend_Rel
 ;
 
+/**== SS、用户权限 =============================================*/
+/**SS01 PLAT_ROLE(角色表)*/
+DROP TABLE IF EXISTS plat_Role;
+CREATE TABLE plat_Role (
+  id         varchar(32)      NOT NULL                             COMMENT 'uuid(角色id)',
+  roleName   varchar(300)     NOT NULL                             COMMENT '角色名称',
+  roleType   int(4) unsigned  NOT NULL  DEFAULT 0                  COMMENT '角色分类：0=程序角色；1=配置角色',
+  descn      longtext                                              COMMENT '角色说明',
+  cTime      timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '邀请成功的时间',
+  PRIMARY KEY(id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='SS01 角色表';
+
+/**SS02 PLAT_ROLEFUNCTION(角色功能表)*/
+DROP TABLE IF EXISTS plat_RoleFunction;
+CREATE TABLE plat_RoleFunction (
+  id        varchar(32)      NOT NULL                             COMMENT 'uuid',
+  roleId    varchar(32)      NOT NULL                             COMMENT '角色表Id，是外键',
+  funName   varchar(100)                                          COMMENT '此字段有一定的规则，不可随意填写,目前只有“栏目权限”',
+  funClass  varchar(50)      NOT NULL                             COMMENT '功能类型目前有：Data=数据权限;Module=模块(界面)权限;Oper=操作权限',
+  funType   varchar(32)      NOT NULL                             COMMENT '可以有很多要和roleClass配置使用，目前有:Channel-Add=栏目中添加内容。若是Module，这里是Module表中的结点Id',
+  funFlag1  int(1) unsigned                                       COMMENT '操作标识1：对于“栏目权限”1是包括2是不包括',
+  funFlag2  int(1) unsigned                                       COMMENT '另一个标识',
+  extInfo   longtext                                              COMMENT 'Json格式的扩展数据',
+  cTime     timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '邀请成功的时间',
+  PRIMARY KEY(id),
+  INDEX roleIdIdx (roleId) USING HASH,
+  INDEX funCatalogIdx (funClass, funType) USING HASH,
+  INDEX bizIdx (roleId, funClass, funType) USING HASH
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='SS02 角色功能表';
+
+/**SS03 PLAT_USERFUNCTION(用户功能表)*/
+DROP TABLE IF EXISTS plat_UserFunction;
+CREATE TABLE plat_UserFunction (
+  id        varchar(32)      NOT NULL                             COMMENT 'uuid',
+  userId    varchar(32)      NOT NULL                             COMMENT '用户Id',
+  roleType  int(1) unsigned  NOT NULL  DEFAULT 1                  COMMENT '规则类型：等于1是角色;不等于1是手工录入的',
+  roleId    varchar(32)                                           COMMENT '若ruleType=1，则这里是角色的Id，外键',
+  funName   varchar(100)                                          COMMENT '此字段有一定的规则，不可随意填写,目前只有“栏目权限”',
+  funClass  varchar(50)      NOT NULL                             COMMENT '功能类型目前有：Data=数据权限;Module=模块(界面)权限;Oper=操作权限',
+  funType   varchar(32)      NOT NULL                             COMMENT '可以有很多要和roleClass配置使用，目前有:Channel-Add=栏目中添加内容。若是Module，这里是Module表中的结点Id',
+  funFlag1  int(1) unsigned                                       COMMENT '操作标识1：对于“栏目权限”1是包括2是不包括',
+  funFlag2  int(1) unsigned                                       COMMENT '另一个标识',
+  extInfo   longtext                                              COMMENT 'Json格式的扩展数据',
+  cTime     timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '邀请成功的时间',
+  PRIMARY KEY(id),
+  INDEX userIdIdx (userId) USING HASH,
+  INDEX funCatalogIdx (funClass, funType) USING HASH,
+  INDEX bizIdx (userId, funClass, funType) USING HASH
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='SS03 用户功能表';
+
 /**== 三、用户意见=============================================*/
 /**012 WT_APPOPINION(应用意见表)*/
 DROP TABLE IF EXISTS wt_AppOpinion;
