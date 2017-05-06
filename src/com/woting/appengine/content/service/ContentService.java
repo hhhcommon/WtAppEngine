@@ -957,7 +957,8 @@ public class ContentService {
         }
         if (param==null) return null;
 
-        //加入喜欢
+        //3-获取播放次数
+        //5-加入喜欢
         if (fList==null||fList.size()==0) return param;
         resultType=0;
         try {resultType=Integer.parseInt(""+param.get("ResultType"));} catch(Exception e) {};
@@ -1852,10 +1853,8 @@ public class ContentService {
                         mediaFilterSql+="or a."+typeCName+"='wt_SeqMediaAsset'";
                     }
                 }
-                if (mediaFilterSql.indexOf("wt_Broadcast")!=-1&&mediaFilterSql.indexOf("wt_MediaAsset")!=-1&&mediaFilterSql.indexOf("wt_SeqMediaAsset")!=-1) mediaFilterSql="";
-                else mediaFilterSql=mediaFilterSql.substring(3);
+                if (!mediaFilterSql.isEmpty()) mediaFilterSql=mediaFilterSql.substring(3);
             }
-
             List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();//指标列表
             if (resultType==3) {//按列表处理
                 //得到分类id的语句
@@ -2030,7 +2029,6 @@ public class ContentService {
                     List<String> cacheIdList=new ArrayList<String>();
                     while (rs!=null&&rs.next()) {
                         sortIdList.add(rs.getString(typeCName)+"="+rs.getString(resIdCName));
-
                         MediaType MT=MediaType.buildByTabName(rs.getString(typeCName));
                         if (MT==MediaType.RADIO) {
                             bcSqlSign+=" or a.id='"+rs.getString(resIdCName)+"'";
@@ -2633,7 +2631,23 @@ public class ContentService {
 			} catch (Exception e) {e.printStackTrace();}
 		}
     }
-    
+
+    /**
+     * 获得内容快照
+     * @param catchDBIds，快照Id的列表（排好顺序的，仅包括Id）
+     * @param page 只有当是专辑时，这个字段才有意义，获取所属节目的列表
+     * @param pageSize 只有当是专辑时，这个字段才有意义，获取所属节目的列表
+     * @param nullIsLoad 当cacheDB未包含id信息时是否从总库中加载这条记录
+     * @return 返回结果包含内容信息，栏目信息，字典信息，专辑下级节目信息
+     */
+    public List<Map<String, Object>> getMediaContentListFromCacheDB(List<String> cacheDBIds, int page, int pageSize, boolean isOrNoToLoad) {
+        if (cacheDBIds==null||cacheDBIds.isEmpty()) return null;
+        String orSql="", orderSql="";
+        for (int i=0; i<cacheDBIds.size(); i++) {
+            
+        }
+        return null;
+    }
     /**
      * 获得内容快照
      * @param cacheDBIds 例如 AUDIO_00022bbcc4b349f582587c2ef579ae5f_INFO
@@ -2661,7 +2675,6 @@ public class ContentService {
 								String id = params[1];
 								Map<String, Object> retM = getCacheDBInfo(id, type, page, pageSize);
 								if (retM==null||retM.size()==0) {
-			                        System.out.println("============================NOIN CacheDB=="+System.currentTimeMillis());
 									if (isOrNoToLoad) {
 										if (type.equals("SEQU")) retM = getSeqMaInfo(id, pageSize, page, 1, null);
 										else if (type.equals("AUDIO")) retM = getMaInfo(id, null);
@@ -2680,7 +2693,6 @@ public class ContentService {
 					}
 				});
 			}
-    		
     		fixedThreadPool.shutdown();
 			while (true) {
 				try {
