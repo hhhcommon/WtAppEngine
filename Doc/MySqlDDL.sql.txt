@@ -86,6 +86,37 @@ CREATE TABLE plat_ThirdUser (
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='0031第三方用户的扩展信息';
 
+/** PLAT_USER_EXT(用户扩展表)*/
+DROP TABLE IF EXISTS plat_User_Ext;
+CREATE TABLE plat_User_Ext (
+  userid         varchar(32)      NOT NULL                COMMENT 'uuid(用户id)',
+  iDCard         varchar(100)     NOT NULL                COMMENT '用户身份证号',
+  frontImg       varchar(100)     NOT NULL                COMMENT '正面图片',
+  reverseImg     varchar(100)     NOT NULL                COMMENT '反面图片',
+  mixImg         varchar(100)     NOT NULL                COMMENT '复合照片',
+  anchorCardImg  varchar(100)                             COMMENT '主播证',
+  cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
+  PRIMARY KEY(id),
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户扩展表';
+
+
+/** 主播认证进程表[PLAT_USERPROGRESS]*/
+DROP TABLE IF EXISTS plat_UserProgress;
+CREATE TABLE plat_UserProgress (
+  id             varchar(32)      NOT NULL             COMMENT 'UUID',
+  userId         varchar(32)      NOT NULL             COMMENT '用户Id',
+  checkerId      varchar(32)      NOT NULL             COMMENT '审核者Id，可以为空，若为1，则审核者为系统',
+  applyRoleId    varchar(32)      NOT NULL             COMMENT '申请角色Id',
+  reState        int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '流程状态：0待处理；1通过；2未通过',
+  applyDescn     varchar(500)                          COMMENT '请求意见',
+  reDescn        varchar(500)                          COMMENT '返回意见',
+  cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+  modifyTime     timestamp                             COMMENT '操作时间',
+  PRIMARY KEY (id)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='主播认证进程表';
+
 /**004 手机用户使用[WT_MOBILEUSED]*/
 /**
  * 记录手机最近一次用某账号登录的情况。
@@ -237,7 +268,8 @@ CREATE TABLE plat_RoleFunction (
   roleId    varchar(32)      NOT NULL                             COMMENT '角色表Id，是外键',
   funName   varchar(100)                                          COMMENT '此字段有一定的规则，不可随意填写,目前只有“栏目权限”',
   funClass  varchar(50)      NOT NULL                             COMMENT '功能类型目前有：Data=数据权限;Module=模块(界面)权限;Oper=操作权限',
-  funType   varchar(32)      NOT NULL                             COMMENT '可以有很多要和roleClass配置使用，目前有:Channel-Add=栏目中添加内容。若是Module，这里是Module表中的结点Id',
+  funType   varchar(32)                                           COMMENT '若是数据权限，此字段才有意义，目前有:Channel-Add=栏目中添加内容。',
+  objId     varchar(32)      NOT NULL                             COMMENT '若是数据权限，并且funType=Channel-Add，目前是栏目的Id;若是Module，这里是Module表中的结点Id',
   funFlag1  int(1) unsigned                                       COMMENT '操作标识1：对于“栏目权限”1是包括2是不包括',
   funFlag2  int(1) unsigned                                       COMMENT '另一个标识',
   extInfo   longtext                                              COMMENT 'Json格式的扩展数据',
@@ -258,7 +290,8 @@ CREATE TABLE plat_UserFunction (
   roleId    varchar(32)                                           COMMENT '若ruleType=1，则这里是角色的Id，外键',
   funName   varchar(100)                                          COMMENT '此字段有一定的规则，不可随意填写,目前只有“栏目权限”',
   funClass  varchar(50)      NOT NULL                             COMMENT '功能类型目前有：Data=数据权限;Module=模块(界面)权限;Oper=操作权限',
-  funType   varchar(32)      NOT NULL                             COMMENT '可以有很多要和roleClass配置使用，目前有:Channel-Add=栏目中添加内容。若是Module，这里是Module表中的结点Id',
+  funType   varchar(32)                                           COMMENT '若是数据权限，此字段才有意义，目前有:Channel-Add=栏目中添加内容。',
+  objId     varchar(32)      NOT NULL                             COMMENT '若是数据权限，并且funType=Channel-Add，目前是栏目的Id;若是Module，这里是Module表中的结点Id',
   funFlag1  int(1) unsigned                                       COMMENT '操作标识1：对于“栏目权限”1是包括2是不包括',
   funFlag2  int(1) unsigned                                       COMMENT '另一个标识',
   extInfo   longtext                                              COMMENT 'Json格式的扩展数据',
