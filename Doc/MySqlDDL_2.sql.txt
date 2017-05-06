@@ -300,36 +300,3 @@ SUBPARTITIONS 5 (
 PARTITION p0 values in ('wt_SeqMediaAsset'),
 PARTITION p1 values in ('wt_MediaAsset')
 );
-
-/** PLAT_USER_EXT(用户扩展表)*/
-DROP TABLE IF EXISTS plat_User_Ext;
-CREATE TABLE plat_User_Ext (
-  userid         varchar(32)      NOT NULL                COMMENT 'uuid(用户id)',
-  iDCard         varchar(100)     NOT NULL                COMMENT '用户身份证号',
-  frontImg       varchar(100)     NOT NULL                COMMENT '正面图片',
-  reverseImg     varchar(100)     NOT NULL                COMMENT '反面图片',
-  mixImg         varchar(100)     NOT NULL                COMMENT '复合照片',
-  userType       int(1) unsigned  NOT NULL  DEFAULT 0     COMMENT '流程状态：0待处理；1通过；2未通过',
-  cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
-  PRIMARY KEY(id),
-)
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户扩展表';
-
-
-/** 主播认证进程表[PLAT_USERPROGRESS]*/
-DROP TABLE IF EXISTS plat_UserProgress;
-CREATE TABLE plat_UserProgress (
-  id             varchar(32)      NOT NULL             COMMENT 'UUID',
-  userId         varchar(32)      NOT NULL             COMMENT '用户Id',
-  checkerId      varchar(32)      NOT NULL             COMMENT '审核者Id，可以为空，若为1，则审核者为系统',
-  applyRoleId    varchar(32)      NOT NULL             COMMENT '申请角色Id',
-  applyDataType  varchar(32)      NOT NULL             COMMENT '申请资料类型',
-  applyDataPath  varchar(100)     NOT NULL             COMMENT '申请资料路径',
-  reState        int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '流程状态：0待处理；1通过；2未通过',
-  applyDescn     varchar(500)                          COMMENT '请求意见',
-  reDescn        varchar(500)                          COMMENT '返回意见',
-  cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
-  modifyTime     timestamp                             COMMENT '操作时间',
-  PRIMARY KEY (id)
-)
-ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='主播认证进程表';
