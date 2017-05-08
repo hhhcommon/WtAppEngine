@@ -664,16 +664,17 @@ public class ContentService {
                 if (roService!=null) roService.close();
                 roService=null;
             }
-            List<Map<String, Object>> _fList=null;
             if (bizData!=null) {
-                if (bizData.get("FromBiz")!=null) _fList=(List<Map<String, Object>>)(bizData.get("FromBiz"));
-                else
-                if (bizData.get("FromRedis")!=null) _fList=(List<Map<String, Object>>)JsonUtils.jsonToObj((String)bizData.get("FromRedis"), List.class);
-            }
-            if (_fList!=null&&!_fList.isEmpty()) {
                 fList=new ArrayList<Map<String, Object>>();
-                for (Map<String, Object> ufPo: _fList) {
-                    fList.add(ufPo);
+                if (bizData.get("FromBiz")!=null) {
+                    List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
+                    if (_fList!=null&&!_fList.isEmpty()) {
+                        for (UserFavoritePo ufPo: _fList) {
+                            fList.add(ufPo.toHashMapAsBean());
+                        }
+                    }
+                } else if (bizData.get("FromRedis")!=null) {
+                    fList=(List<Map<String, Object>>)JsonUtils.jsonToObj((String)bizData.get("FromRedis"), List.class);
                 }
             }
         }
@@ -774,16 +775,17 @@ public class ContentService {
                 if (roService!=null) roService.close();
                 roService=null;
             }
-            List<Map<String, Object>> _fList=null;
             if (bizData!=null) {
-                if (bizData.get("FromBiz")!=null) _fList=(List<Map<String, Object>>)(bizData.get("FromBiz"));
-                else
-                if (bizData.get("FromRedis")!=null) _fList=(List<Map<String, Object>>)JsonUtils.jsonToObj((String)bizData.get("FromRedis"), List.class);
-            }
-            if (_fList!=null&&!_fList.isEmpty()) {
                 fList=new ArrayList<Map<String, Object>>();
-                for (Map<String, Object> ufPo: _fList) {
-                    fList.add(ufPo);
+                if (bizData.get("FromBiz")!=null) {
+                    List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
+                    if (_fList!=null&&!_fList.isEmpty()) {
+                        for (UserFavoritePo ufPo: _fList) {
+                            fList.add(ufPo.toHashMapAsBean());
+                        }
+                    }
+                } else if (bizData.get("FromRedis")!=null) {
+                    fList=(List<Map<String, Object>>)JsonUtils.jsonToObj((String)bizData.get("FromRedis"), List.class);
                 }
             }
         }
@@ -840,16 +842,17 @@ public class ContentService {
                 if (roService!=null) roService.close();
                 roService=null;
             }
-            List<Map<String, Object>> _fList=null;
             if (bizData!=null) {
-                if (bizData.get("FromBiz")!=null) _fList=(List<Map<String, Object>>)(bizData.get("FromBiz"));
-                else
-                if (bizData.get("FromRedis")!=null) _fList=(List<Map<String, Object>>)JsonUtils.jsonToObj((String)bizData.get("FromRedis"), List.class);
-            }
-            if (_fList!=null&&!_fList.isEmpty()) {
                 fList=new ArrayList<Map<String, Object>>();
-                for (Map<String, Object> ufPo: _fList) {
-                    fList.add(ufPo);
+                if (bizData.get("FromBiz")!=null) {
+                    List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
+                    if (_fList!=null&&!_fList.isEmpty()) {
+                        for (UserFavoritePo ufPo: _fList) {
+                            fList.add(ufPo.toHashMapAsBean());
+                        }
+                    }
+                } else if (bizData.get("FromRedis")!=null) {
+                    fList=(List<Map<String, Object>>)JsonUtils.jsonToObj((String)bizData.get("FromRedis"), List.class);
                 }
             }
         }
@@ -911,16 +914,17 @@ public class ContentService {
                 if (roService!=null) roService.close();
                 roService=null;
             }
-            List<Map<String, Object>> _fList=null;
             if (bizData!=null) {
-                if (bizData.get("FromBiz")!=null) _fList=(List<Map<String, Object>>)(bizData.get("FromBiz"));
-                else
-                if (bizData.get("FromRedis")!=null) _fList=(List<Map<String, Object>>)JsonUtils.jsonToObj((String)bizData.get("FromRedis"), List.class);
-            }
-            if (_fList!=null&&!_fList.isEmpty()) {
                 fList=new ArrayList<Map<String, Object>>();
-                for (Map<String, Object> ufPo: _fList) {
-                    fList.add(ufPo);
+                if (bizData.get("FromBiz")!=null) {
+                    List<UserFavoritePo> _fList=favoriteService.getPureFavoriteList(mUdk);
+                    if (_fList!=null&&!_fList.isEmpty()) {
+                        for (UserFavoritePo ufPo: _fList) {
+                            fList.add(ufPo.toHashMapAsBean());
+                        }
+                    }
+                } else if (bizData.get("FromRedis")!=null) {
+                    fList=(List<Map<String, Object>>)JsonUtils.jsonToObj((String)bizData.get("FromRedis"), List.class);
                 }
             }
         }
@@ -981,6 +985,7 @@ public class ContentService {
         } else if (resultType==3) {//列表
             List<Map> lm=(List<Map>)param.get("List");
             for (Map m: lm) {
+                if (m==null) continue;
                 boolean find=false;
                 String tableName=MediaType.buildByTypeName(""+m.get("MediaType")).getTabName();
                 for (Map fm: fList) {
@@ -1198,12 +1203,12 @@ public class ContentService {
 			if (solrips!=null && solrips.size()>0) {
 				Map<String, Object> mf = new HashMap<>();
 				mf.put("mUdk", mUdk);
-				List<Map<String, Object>> favret=(List<Map<String, Object>>)new GetFavoriteList(mf).getBizData();
+				List<UserFavoritePo> favret=(List<UserFavoritePo>)new GetFavoriteList(mf).getBizData();
 				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
 				for (int i=0;i<solrips.size();i++) {
 					int f = i;
 					retLs.add(null);
-					List<Map<String, Object>> ret = favret;
+					List<UserFavoritePo> ret=favret;
 					fixedThreadPool.execute(new Runnable() {
 						public void run() {
 							String contentid = solrips.get(f).getItem_id();
@@ -1236,11 +1241,11 @@ public class ContentService {
 									}
 								} catch (Exception e) {}
 								if (ret!=null && ret.size()>0) {
-									for (Map<String, Object> userfav : ret) {
-										if (userfav!=null && userfav.get("resId").equals(contentid)) {
-											if ((mediaType.equals("AUDIO") && userfav.get("resTableName").equals("wt_MediaAsset")) 
-											|| (mediaType.equals("SEQU") && userfav.get("resTableName").equals("wt_SeqMediaAsset")) 
-											|| (mediaType.equals("RADIO") && userfav.get("resTableName").equals("wt_Broadcast"))) 
+									for (UserFavoritePo userfav : ret) {
+										if (userfav!=null && userfav.getResId().equals(contentid)) {
+											if ((mediaType.equals("AUDIO") && userfav.getResTableName().equals("wt_MediaAsset")) 
+											|| (mediaType.equals("SEQU") && userfav.getResTableName().equals("wt_SeqMediaAsset")) 
+											|| (mediaType.equals("RADIO") && userfav.getResTableName().equals("wt_Broadcast"))) 
 												infomap.put("ContentFavorite", 1);
 										}
 								    }
@@ -1320,12 +1325,12 @@ public class ContentService {
 			if (solrips!=null && solrips.size()>0) {
 				Map<String, Object> mf = new HashMap<>();
 				mf.put("mUdk", mUdk);
-                List<Map<String, Object>> favret=(List<Map<String, Object>>)new GetFavoriteList(mf).getBizData();
+                List<UserFavoritePo> favret=(List<UserFavoritePo>)new GetFavoriteList(mf).getBizData();
 				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
 				for (int i=0;i<solrips.size();i++) {
 					int f = i;
 					retLs.add(null);
-					List<Map<String, Object>> ret = favret;
+					List<UserFavoritePo> ret = favret;
 					fixedThreadPool.execute(new Runnable() {
 						public void run() {
 							String contentid = solrips.get(f).getItem_id();
@@ -1358,11 +1363,11 @@ public class ContentService {
 									}
 								} catch (Exception e) {}
 								if (ret!=null && ret.size()>0) {
-									for (Map<String, Object> userfav : ret) {
-										if (userfav!=null && userfav.get("resId").equals(contentid)) {
-											if ((mediaType.equals("AUDIO") && userfav.get("resTableName").equals("wt_MediaAsset")) 
-											|| (mediaType.equals("SEQU") && userfav.get("resTableName").equals("wt_SeqMediaAsset")) 
-											|| (mediaType.equals("RADIO") && userfav.get("resTableName").equals("wt_Broadcast"))) 
+									for (UserFavoritePo userfav : ret) {
+										if (userfav!=null && userfav.getResId().equals(contentid)) {
+											if ((mediaType.equals("AUDIO") && userfav.getResTableName().equals("wt_MediaAsset")) 
+											|| (mediaType.equals("SEQU") && userfav.getResTableName().equals("wt_SeqMediaAsset")) 
+											|| (mediaType.equals("RADIO") && userfav.getResTableName().equals("wt_Broadcast"))) 
 												infomap.put("ContentFavorite", 1);
 										}
 								    }
@@ -1434,12 +1439,12 @@ public class ContentService {
 			if (solrips!=null && solrips.size()>0) {
 				Map<String, Object> mf = new HashMap<>();
 				mf.put("mUdk", mUdk);
-                List<Map<String, Object>> favret=(List<Map<String, Object>>)new GetFavoriteList(mf).getBizData();
+                List<UserFavoritePo> favret=(List<UserFavoritePo>)new GetFavoriteList(mf).getBizData();
 				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
 				for (int i=0;i<solrips.size();i++) {
 					int f = i;
 					retLs.add(null);
-					List<Map<String, Object>> ret = favret;
+					List<UserFavoritePo> ret = favret;
 					fixedThreadPool.execute(new Runnable() {
 						public void run() {
 							String contentid = solrips.get(f).getItem_id();
@@ -1477,11 +1482,11 @@ public class ContentService {
 									}
 								} catch (Exception e) {}
 								if (ret!=null && ret.size()>0) {
-									for (Map<String, Object> userfav : ret) {
-										if (userfav!=null && userfav.get("resId").equals(contentid)) {
-											if ((mediaType.equals("AUDIO") && userfav.get("resTableName").equals("wt_MediaAsset")) 
-											|| (mediaType.equals("SEQU") && userfav.get("resTableName").equals("wt_SeqMediaAsset")) 
-											|| (mediaType.equals("RADIO") && userfav.get("resTableName").equals("wt_Broadcast"))) 
+									for (UserFavoritePo userfav : ret) {
+										if (userfav!=null && userfav.getResId().equals(contentid)) {
+											if ((mediaType.equals("AUDIO") && userfav.getResTableName().equals("wt_MediaAsset")) 
+											|| (mediaType.equals("SEQU") && userfav.getResTableName().equals("wt_SeqMediaAsset")) 
+											|| (mediaType.equals("RADIO") && userfav.getResTableName().equals("wt_Broadcast"))) 
 												infomap.put("ContentFavorite", 1);
 										}
 								    }
@@ -1512,11 +1517,11 @@ public class ContentService {
 										}
 									} catch (Exception e) {}
 									if (ret!=null && ret.size()>0) {
-										for (Map<String, Object> userfav : ret) {
-											if (userfav!=null && userfav.get("resId").equals(contentid)) {
-												if ((mediaType.equals("AUDIO") && userfav.get("resTableName").equals("wt_MediaAsset")) 
-												|| (mediaType.equals("SEQU") && userfav.get("resTableName").equals("wt_SeqMediaAsset")) 
-												|| (mediaType.equals("RADIO") && userfav.get("resTableName").equals("wt_Broadcast"))) 
+										for (UserFavoritePo userfav : ret) {
+											if (userfav!=null && userfav.getResId().equals(contentid)) {
+												if ((mediaType.equals("AUDIO") && userfav.getResTableName().equals("wt_MediaAsset")) 
+												|| (mediaType.equals("SEQU") && userfav.getResTableName().equals("wt_SeqMediaAsset")) 
+												|| (mediaType.equals("RADIO") && userfav.getResTableName().equals("wt_Broadcast"))) 
 													infomap.put("ContentFavorite", 1);
 											}
 									    }
@@ -1601,12 +1606,12 @@ public class ContentService {
 			if (solrips!=null && solrips.size()>0) {
 				Map<String, Object> mf = new HashMap<>();
 				mf.put("mUdk", mUdk);
-                List<Map<String, Object>> favret=(List<Map<String, Object>>)new GetFavoriteList(mf).getBizData();
+                List<UserFavoritePo> favret=(List<UserFavoritePo>)new GetFavoriteList(mf).getBizData();
 				ExecutorService fixedThreadPool = Executors.newFixedThreadPool(solrips.size());
 				for (int i=0;i<solrips.size();i++) {
 					int f = i;
 					retLs.add(null);
-					List<Map<String, Object>> ret = favret;
+					List<UserFavoritePo> ret = favret;
 					fixedThreadPool.execute(new Runnable() {
 						public void run() {
 							String contentid = solrips.get(f).getItem_id();
@@ -1639,11 +1644,11 @@ public class ContentService {
 									}
 								} catch (Exception e) {}
 								if (ret!=null && ret.size()>0) {
-									for (Map<String, Object> userfav : ret) {
-										if (userfav!=null && userfav.get("resId").equals(contentid)) {
-											if ((mediaType.equals("AUDIO") && userfav.get("resTableName").equals("wt_MediaAsset")) 
-											|| (mediaType.equals("SEQU") && userfav.get("resTableName").equals("wt_SeqMediaAsset")) 
-											|| (mediaType.equals("RADIO") && userfav.get("resTableName").equals("wt_Broadcast"))) 
+									for (UserFavoritePo userfav : ret) {
+										if (userfav!=null && userfav.getResId().equals(contentid)) {
+											if ((mediaType.equals("AUDIO") && userfav.getResTableName().equals("wt_MediaAsset")) 
+											|| (mediaType.equals("SEQU") && userfav.getResTableName().equals("wt_SeqMediaAsset")) 
+											|| (mediaType.equals("RADIO") && userfav.getResTableName().equals("wt_Broadcast"))) 
 												infomap.put("ContentFavorite", 1);
 										}
 								    }
@@ -2055,8 +2060,10 @@ public class ContentService {
                                     for (Map<String, Object> o:fromCache) {
                                         if (o.get("MediaType")!=null&&o.get("MediaType").equals(typeStr)&&o.get("ContentId")!=null&&o.get("ContentId").equals(s[1])) {
                                             if (pageType==0&&MT==MediaType.SEQU) {//需要提取内容
-                                                if (o.get("SubList")==null) continue;
-                                                if (((List)o.get("SubList")).isEmpty()) continue;
+                                                if (o.get("SubList")==null||((List)o.get("SubList")).isEmpty()) {
+                                                    _ret.set(i, o);
+                                                    continue;
+                                                }
                                                 Map newOne=(Map)((List)o.get("SubList")).get(0);
                                                 if (newOne!=null) {
                                                     o.remove("SubList");
