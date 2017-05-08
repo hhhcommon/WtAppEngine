@@ -82,6 +82,8 @@ public class ContentService {
     private MybatisDAO<BaseObject> contentDao;
     @Resource
     private DataSource dataSource;
+    @Resource(name="dataSource_CacheDB")
+    private DataSource catchDataSource;
     @Resource
     private FavoriteService favoriteService;
     @Resource
@@ -100,7 +102,7 @@ public class ContentService {
     private CacheDBService cacheDBService;
     @Resource
     private PlayCountDBService playCountDBService;
-    
+
     private _CacheDictionary _cd=null;
     private _CacheChannel _cc=null;
 
@@ -940,11 +942,12 @@ public class ContentService {
         param.put("FilterData", filterData);
         param.put("RecursionTree", recursionTree);
 
-        roService=new RedisOperService(redisConn7_2, 11);
-
         Map<String, Object> bizData=null;
+        roService=new RedisOperService(redisConn7_2, 11);
         try {
-            bizData=roService.getAndSet(key, new GetContents(param), 30*60*1000, true);
+            GetContents gc=new GetContents(param);
+            gc.setDataSource(dataSource, catchDataSource);
+            bizData=roService.getAndSet(key, gc, 30*60*1000, true);
         } finally {
             if (roService!=null) roService.close();
             roService=null;
@@ -1696,7 +1699,7 @@ public class ContentService {
         }
     }
 
-    class GetContents extends GetBizData {
+    class GetContents1 extends GetBizData {
         private String catalogType;
         private String catalogId;
         private int resultType;//=3仅列表返回；1=按下级分类；2=按媒体类型
@@ -1710,7 +1713,7 @@ public class ContentService {
         private Map<String, Object> filterData;
         private int recursionTree=1;
 
-        public GetContents(Map<String, Object> param) {
+        public GetContents1(Map<String, Object> param) {
             super(param);
             parseParam();
         }
@@ -1729,7 +1732,7 @@ public class ContentService {
             perSize=param.get("PerSize")==null?0:(Integer)param.get("PerSize");
             beginCatalogId=param.get("BeginCatalogId")==null?null:(String)param.get("BeginCatalogId");
             filterData=param.get("FilterData")==null?null:(Map)param.get("FilterData");
-            recursionTree=param.get("RecursionTree")==null?0:(Integer)param.get("RecursionTree");
+            recursionTree=param.get("RecursionTree")==null?recursionTree:(Integer)param.get("RecursionTree");
         }
         @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
@@ -1782,7 +1785,7 @@ public class ContentService {
                         } else {
                             filterSql_inwhere="(b.dictMid='"+f_catalogType+"' or b.dictMid='9') and (";
                         }
-                    } 
+                    }
                     filterSql_inwhere+="b."+_idCName+"='"+_root.getId()+"'";
                     f_orderBySql+="'"+_root.getId()+"'";
                     allTn=TreeUtils.getDeepList(_root);
@@ -1855,6 +1858,7 @@ public class ContentService {
                 }
                 if (!mediaFilterSql.isEmpty()) mediaFilterSql=mediaFilterSql.substring(3);
             }
+
             List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();//指标列表
             if (resultType==3) {//按列表处理
                 //得到分类id的语句
@@ -2016,27 +2020,20 @@ public class ContentService {
                 ResultSet rs=null;
                 try {
                     conn=dataSource.getConnection();
-                    //获得总条数
+                    //获得总条数??
                     long count=0l;
                     count=1000;
+
                     //获得记录
                     ps=conn.prepareStatement(sql);
                     rs=ps.executeQuery();
-
                     String bcSqlSign="";   //为找到内容设置
                     String bcSqlSign1="";//为查询相关信息设置
                     orderBySql = "";
                     List<String> cacheIdList=new ArrayList<String>();
                     while (rs!=null&&rs.next()) {
-                        sortIdList.add(rs.getString(typeCName)+"="+rs.getString(resIdCName));
                         MediaType MT=MediaType.buildByTabName(rs.getString(typeCName));
-                        if (MT==MediaType.RADIO) {
-                            bcSqlSign+=" or a.id='"+rs.getString(resIdCName)+"'";
-                            bcSqlSign1+=" or a.resId='"+rs.getString(resIdCName)+"'";
-                            orderBySql+=",'"+rs.getString(resIdCName)+"'";
-                        } else {
-                            cacheIdList.add(MT.getTypeName()+"_"+rs.getString(resIdCName)+"_INFO");
-                        }
+                        if (MT!=MT.ERR) cacheIdList.add(MT.getTypeName()+"_"+rs.getString(resIdCName));
                     }
                     rs.close(); rs=null;
                     ps.close(); ps=null;
@@ -2044,9 +2041,8 @@ public class ContentService {
                     if (sortIdList!=null&&!sortIdList.isEmpty()) {
                         List<Map<String, Object>> _ret=new ArrayList<Map<String, Object>>();
                         for (int j=0; j<sortIdList.size(); j++) _ret.add(null);
-
                         if (!cacheIdList.isEmpty()) {
-                            List<Map<String, Object>> fromCache=getCacheDBList(cacheIdList, 1, 10, true);
+                            List<Map<String, Object>> fromCache=getMediaContentListFromCacheDB(cacheIdList, 1, 10, true);
                             if (fromCache!=null&&!fromCache.isEmpty()) {
                                 for (int i=0; i<sortIdList.size(); i++) {
                                     String[] s=sortIdList.get(i).split("=");
@@ -2634,13 +2630,13 @@ public class ContentService {
 
     /**
      * 获得内容快照
-     * @param catchDBIds，快照Id的列表（排好顺序的，仅包括Id）
+     * @param catchDBIds，快照Id的列表（排好顺序的，仅包括Id）形如【AUDIO_34weqr34evad245sgaer23432，READIO_34weqr34evad245sgaer23431, SEQU_34weqr34evad245sgaer23433】
      * @param page 只有当是专辑时，这个字段才有意义，获取所属节目的列表
      * @param pageSize 只有当是专辑时，这个字段才有意义，获取所属节目的列表
      * @param nullIsLoad 当cacheDB未包含id信息时是否从总库中加载这条记录
      * @return 返回结果包含内容信息，栏目信息，字典信息，专辑下级节目信息
      */
-    public List<Map<String, Object>> getMediaContentListFromCacheDB(List<String> cacheDBIds, int page, int pageSize, boolean isOrNoToLoad) {
+    private List<Map<String, Object>> getMediaContentListFromCacheDB(List<String> cacheDBIds, int page, int pageSize, boolean isOrNoToLoad) {
         if (cacheDBIds==null||cacheDBIds.isEmpty()) return null;
         String orSql="", orderSql="";
         for (int i=0; i<cacheDBIds.size(); i++) {
