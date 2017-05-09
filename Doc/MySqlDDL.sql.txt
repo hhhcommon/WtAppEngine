@@ -287,7 +287,7 @@ CREATE TABLE plat_UserFunction (
   id        varchar(32)      NOT NULL                             COMMENT 'uuid',
   userId    varchar(32)      NOT NULL                             COMMENT '用户Id',
   roleType  int(1) unsigned  NOT NULL  DEFAULT 1                  COMMENT '规则类型：等于1是角色;不等于1是手工录入的',
-  roleId    varchar(32)                                           COMMENT '若ruleType=1，则这里是角色的Id，外键',
+  roleFunId varchar(32)                                           COMMENT '角色功能Id, 若ruleType=1，则这里是角色功能表的Id，外键',
   funName   varchar(100)                                          COMMENT '此字段有一定的规则，不可随意填写,目前只有“栏目权限”',
   funClass  varchar(50)      NOT NULL                             COMMENT '功能类型目前有：Data=数据权限;Module=模块(界面)权限;Oper=操作权限',
   funType   varchar(32)                                           COMMENT '若是数据权限，此字段才有意义，目前有:Channel-Add=栏目中添加内容。',

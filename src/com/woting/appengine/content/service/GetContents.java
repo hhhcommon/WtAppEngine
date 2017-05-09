@@ -119,7 +119,7 @@ public class GetContents extends GetBizData {
             if (!countSql.isEmpty()) {
                 ps=conn.prepareStatement(countSql);
                 rs=ps.executeQuery();
-                if (rs!=null&&rs.next()) count=rs.getLong(0);
+                if (rs!=null&&rs.next()) count=rs.getLong(1);
             }
             try {
                 rs.close();
@@ -268,6 +268,7 @@ public class GetContents extends GetBizData {
         if (cacheDBIds==null||cacheDBIds.isEmpty()) return null;
         String orSql="", orderSql="", tmpStr=null;
         for (int i=0; i<cacheDBIds.size(); i++) {
+            if (cacheDBIds.get(i)==null) continue;
             tmpStr="'"+cacheDBIds.get(i)+"_INFO'";
             orSql+=" or id="+tmpStr;
             orderSql+=","+tmpStr;
@@ -282,10 +283,29 @@ public class GetContents extends GetBizData {
         ResultSet rs=null;
         try {
             conn=cacheDataSource.getConnection();
-            ps=conn.prepareStatement("select * from wt_CahceDB where "+orSql.substring(4)+" order by fields(id, "+orderSql.substring(1)+")");
+            ps=conn.prepareStatement("select * from wt_CacheDB where "+orSql.substring(4)+" order by field(id, "+orderSql.substring(1)+")");
             rs=ps.executeQuery();
-            //获得列表
-            
+            List<String> cacheContentList=new ArrayList<String>();
+            while (rs!=null&&rs.next()) {
+                cacheContentList.add(rs.getString("id")+"::"+rs.getString("value"));
+            }
+            try {
+                rs.close();
+                ps.close();
+            } finally {
+                rs=null;
+                ps=null;
+            }
+            //第一次组织返回值
+            List<Map<String, Object>> tempRet=new ArrayList<Map<String, Object>>();
+            for (int i=0; i<cacheDBIds.size(); i++) tempRet.add(null);
+            int j=0, k=0;
+            while (j<cacheDBIds.size()&&k<cacheContentList.size()) {
+                tmpStr=cacheDBIds.get(j);
+                
+                j++;
+                k++;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
