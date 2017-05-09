@@ -23,9 +23,9 @@ public class AppRunningListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent arg0) {
         try {
             //启动Socket
-//            SocketClient sc=new SocketClient(SocketClientConfig.loadConfig());
-//            sc.workStart();
-//            SystemCache.setCache(new CacheEle<SocketClient>(WtAppEngineConstants.SOCKET_OBJ, "模块", sc));//注册到内存
+            SocketClient sc=new SocketClient(SocketClientConfig.loadConfig());
+            sc.workStart();
+            SystemCache.setCache(new CacheEle<SocketClient>(WtAppEngineConstants.SOCKET_OBJ, "模块", sc));//注册到内存
 
             //启动搜索词服务
             SearchWordListener.begin();
