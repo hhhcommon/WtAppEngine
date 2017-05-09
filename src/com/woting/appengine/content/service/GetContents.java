@@ -119,7 +119,7 @@ public class GetContents extends GetBizData {
             if (!countSql.isEmpty()) {
                 ps=conn.prepareStatement(countSql);
                 rs=ps.executeQuery();
-                count=rs.getLong(0);
+                if (rs!=null&&rs.next()) count=rs.getLong(0);
             }
             try {
                 rs.close();
@@ -236,8 +236,8 @@ public class GetContents extends GetBizData {
             if (catalogType.equals("-1")) getContentSql+=" a.isValidate=1 and a.flowFlag=2";
             else  getContentSql+=" (a.dictMid='"+catalogType+"')";
             if (mediaFilterSql.length()>0) getContentSql+=" and ("+mediaFilterSql+")";
-            if (orSql.length()>0) getContentSql+=" and ("+orSql+")";
-            getCountSql="select count(*) from ("+getContentSql+")";
+            if (orSql.length()>0) getContentSql+=" and ("+orSql.substring(4)+")";
+            getCountSql="select count(*) from ("+getContentSql+") as b";
             if (catalogType.equals("-1")) {//栏目
                 if (!root.isLeaf()) getContentSql+=" order by a.pubTime desc";
                 else getContentSql+=" order by a.topSort desc, a.pubTime desc";
@@ -249,8 +249,8 @@ public class GetContents extends GetBizData {
         } else if (resultType==1) {//按分类下级返回
             
         }
-        getContentSql+=" limit "+(((page<=0?1:page)-1)*pageSize)+","+pageSize; //分页
         if (getContentSql.isEmpty()) return null;
+        getContentSql+=" limit "+(((page<=0?1:page)-1)*pageSize)+","+pageSize; //分页
         List<String> ret=new ArrayList<String>();
         ret.add(getContentSql);
         ret.add(getCountSql);
