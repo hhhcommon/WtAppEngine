@@ -304,7 +304,7 @@ CREATE TABLE plat_UserFunction (
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='SS03 用户功能表';
 
 /**SS04 PLAT_ROLE(用户角色表)*/
-DROP TABLE IF EXISTS user_Role;
+DROP TABLE IF EXISTS plat_User_Role;
 CREATE TABLE user_Role (
   id         varchar(32)      NOT NULL                             COMMENT 'uuid',
   userId     varchar(32)      NOT NULL                             COMMENT '用户Id',
