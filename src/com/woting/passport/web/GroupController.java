@@ -2500,7 +2500,7 @@ public class GroupController {
             String groupSignature=(m.get("GroupSignature")==null?null:m.get("GroupSignature")+"");
             String groupFreq=(m.get("GroupFreq")==null?null:m.get("GroupFreq")+"");
             String groupAlias=(m.get("GroupAlias")==null?null:m.get("GroupAlias")+"");
-            if (StringUtils.isNullOrEmptyOrSpace(groupName)&&StringUtils.isNullOrEmptyOrSpace(groupDescn)&&StringUtils.isNullOrEmptyOrSpace(groupSignature)&&StringUtils.isNullOrEmptyOrSpace(groupFreq)
+            if (StringUtils.isNullOrEmptyOrSpace(groupName)&&groupDescn==null&&groupSignature==null&&StringUtils.isNullOrEmptyOrSpace(groupFreq)
               &&groupAlias==null) {
                 map.put("ReturnType", "1004");
                 map.put("Message", "无法获得修改所需的新信息");
@@ -2510,8 +2510,8 @@ public class GroupController {
             Map<String, Object> param=new HashMap<String, Object>();
             if (groupAlias!=null) param.put("groupAlias", groupAlias);
             if (!StringUtils.isNullOrEmptyOrSpace(groupName)) param.put("groupName", groupName);
-            if (!StringUtils.isNullOrEmptyOrSpace(groupDescn)) param.put("groupDescn", groupDescn);
-            if (!StringUtils.isNullOrEmptyOrSpace(groupSignature)&&isManager==1) param.put("groupSignature", groupSignature);//只有管理员才能修改用户组的签名
+            if (groupDescn!=null) param.put("groupDescn", groupDescn);
+            if (groupSignature!=null&&isManager==1) param.put("groupSignature", groupSignature);//只有管理员才能修改用户组的签名
             if (!StringUtils.isNullOrEmptyOrSpace(groupFreq)) {
                 //检查模拟对讲频率是否合法
                 if (checkFreqArr(groupFreq)) param.put("groupFreq", groupFreq);
