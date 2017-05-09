@@ -302,7 +302,13 @@ public class GetContents extends GetBizData {
             int j=0, k=0;
             while (j<cacheDBIds.size()&&k<cacheContentList.size()) {
                 tmpStr=cacheDBIds.get(j);
-                
+                orSql=cacheContentList.get(k);
+                if (tmpStr.startsWith("AUDIO")) {
+                    
+                }
+                if (tmpStr.startsWith("SEQU")) {
+                    
+                }
                 j++;
                 k++;
             }
