@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.sql.DataSource;
 
@@ -15,6 +17,7 @@ import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.ext.redis.GetBizData;
+import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
@@ -128,6 +131,7 @@ public class GetContents extends GetBizData {
                 rs=null;
                 ps=null;
             }
+            if (count==0) return null;
             //获得内容
             ps=conn.prepareStatement(contentSql);
             rs=ps.executeQuery();
@@ -264,6 +268,7 @@ public class GetContents extends GetBizData {
      * @param nullIsLoad 当cacheDB未包含id信息时是否从总库中加载这条记录
      * @return 返回结果包含内容信息，栏目信息，字典信息，专辑下级节目信息，其排序要与catchDBIds相同
      */
+    @SuppressWarnings("unchecked")
     private List<Map<String, Object>> getMediaContentListFromCacheDB(List<String> cacheDBIds, int page, int pageSize, boolean nullIsLoad) {
         if (cacheDBIds==null||cacheDBIds.isEmpty()) return null;
         String orSql="", orderSql="", tmpStr=null;
@@ -278,12 +283,13 @@ public class GetContents extends GetBizData {
                 orderSql+=","+tmpStr;
             }
         }
+        orSql="select * from wt_CacheDB where "+orSql.substring(4)+" order by field(id, "+orderSql.substring(1)+")";
         Connection conn=null;
         PreparedStatement ps=null;//获得所需的记录的id
         ResultSet rs=null;
         try {
             conn=cacheDataSource.getConnection();
-            ps=conn.prepareStatement("select * from wt_CacheDB where "+orSql.substring(4)+" order by field(id, "+orderSql.substring(1)+")");
+            ps=conn.prepareStatement(orSql);
             rs=ps.executeQuery();
             List<String> cacheContentList=new ArrayList<String>();
             while (rs!=null&&rs.next()) {
@@ -296,22 +302,131 @@ public class GetContents extends GetBizData {
                 rs=null;
                 ps=null;
             }
+
+            List<String> loadContentList=new ArrayList<String>();
+            Map<String, Object> audioMap=new HashMap<String, Object>();//存储单体内容的数据
+            Map<String, Object> tempM=null;
             //第一次组织返回值
             List<Map<String, Object>> tempRet=new ArrayList<Map<String, Object>>();
             for (int i=0; i<cacheDBIds.size(); i++) tempRet.add(null);
             int j=0, k=0;
-            while (j<cacheDBIds.size()&&k<cacheContentList.size()) {
+            String[] splitOneCacheInfo=null;
+            for (; j<cacheDBIds.size(); j++) {
                 tmpStr=cacheDBIds.get(j);
-                orSql=cacheContentList.get(k);
-                if (tmpStr.startsWith("AUDIO")) {
-                    
+                for (; k<cacheContentList.size(); ) {
+                    orSql=cacheContentList.get(k);
+                    splitOneCacheInfo=orSql.split("::");
+                    if (splitOneCacheInfo.length!=2) k++;
+                    else {
+                        if (tmpStr.startsWith("AUDIO")) {
+                            if ((tmpStr+"_INFO").equals(splitOneCacheInfo[0])) {
+                                tempRet.remove(j);
+                                tempM=(Map<String, Object>)JsonUtils.jsonToObj(splitOneCacheInfo[1], Map.class);
+                                tempRet.add(j, tempM);
+                                audioMap.put("AUDIO_"+tempM.get("ContentId")+"", tempM);
+                            }
+                            k++;
+                        }
+                        if (tmpStr.startsWith("SEQU")) {
+                            if ((tmpStr+"_INFO").equals(splitOneCacheInfo[0])) {
+                                tempM=(Map<String, Object>)JsonUtils.jsonToObj(splitOneCacheInfo[1], Map.class);
+                                k++;
+                                orSql=cacheContentList.get(k);
+                                splitOneCacheInfo=orSql.split("::");
+                                if (splitOneCacheInfo.length!=2) k++;
+                                else {
+                                    if ((tmpStr+"_SUBLIST").equals(splitOneCacheInfo[0])) {
+                                        List<String> l=new ArrayList<String>();
+                                        List<String> smaSubs=(List<String>) JsonUtils.jsonToObj(splitOneCacheInfo[1], List.class);
+                                        if (smaSubs!=null && smaSubs.size()>0) {
+                                            for (int n=(page-1)*pageSize; n<(page*pageSize>smaSubs.size()?page*pageSize:smaSubs.size()); n++) {
+                                                orderSql=smaSubs.get(n);
+                                                if (audioMap.get(orderSql)==null) audioMap.put("AUDIO_"+orderSql, null);
+                                                l.add(orderSql);
+                                            }
+                                        }
+                                        tempM.put("SubList", l);
+                                        tempRet.add(j, tempM);
+                                        k++;
+                                    }
+                                }
+                            }
+                            if (tmpStr.startsWith("RADIO")) {
+                                if ((tmpStr+"_INFO").equals(splitOneCacheInfo[0])) {
+                                    tempRet.remove(j);
+                                    tempM=(Map<String, Object>)JsonUtils.jsonToObj(splitOneCacheInfo[1], Map.class);
+                                    tempRet.add(j, tempM);
+                                }
+                                k++;
+                            }
+                        }
+                    }
                 }
-                if (tmpStr.startsWith("SEQU")) {
-                    
-                }
-                j++;
-                k++;
+                if (k==cacheContentList.size()) break;
             }
+            //看是否有不存在的内容
+            for (int i=0; i<cacheDBIds.size(); i++) {
+                if (tempRet.get(i)==null) loadContentList.add(cacheDBIds.get(i));
+            }
+            //获得Seq下面的单体内容
+            orSql="";
+            for (String audioId: audioMap.keySet()) {
+                if (audioMap.get(audioId)==null) orSql+=" or id='"+audioId+"_INFO'";
+            }
+            orSql="select * from wt_CacheDB where "+orSql.substring(4);
+            ps=conn.prepareStatement(orSql);
+            rs=ps.executeQuery();
+            while (rs!=null&&rs.next()) {
+                audioMap.put(rs.getString("id"), rs.getString("value"));
+            }
+            try {
+                rs.close();
+                ps.close();
+            } finally {
+                rs=null;
+                ps=null;
+            }
+            //补充不存在的内容
+            for (String audioId: audioMap.keySet()) {
+                if (audioMap.get(audioId)==null) loadContentList.add("AUDIO_"+audioId);
+            }
+            //多线程获取不存在的内容
+            if (nullIsLoad) {
+                ExecutorService fixedThreadPool = Executors.newFixedThreadPool(loadContentList.size());
+                for (int i=0; i<loadContentList.size(); i++) {
+                    String loadId=loadContentList.get(i);
+                    String[] params=loadId.split("_");
+//                    String type=params[0];
+//                    String id=params[1];
+                    fixedThreadPool.execute(new Runnable() {
+                        public void run() {
+                            try {
+                                //Map<String, Object> retM=getCacheDBInfo(id, type, page, pageSize);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                }
+                fixedThreadPool.shutdown();
+                while (true) {
+                    if (fixedThreadPool.isTerminated()) break;
+                    try { Thread.sleep(50); } catch (Exception e) {e.printStackTrace();}
+                }
+                //组装多线程获取到的数据获得的内容
+            }
+            //最后的组装
+            List<Map<String, Object>> ret=new ArrayList<Map<String, Object>>();
+            for (int i=0; i<tempRet.size(); i++) {
+                Map<String, Object> one=tempRet.get(i);
+                if (one!=null) {
+                    if (cacheDBIds.get(i).startsWith("SEQU_")) {//组装SubList
+                        
+                    }
+                    ret.add(one);
+                }
+            }
+            return ret.isEmpty()?null:ret;
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
