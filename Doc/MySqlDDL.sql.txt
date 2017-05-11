@@ -89,14 +89,14 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='0031第三方用户的扩展信息';
 /** PLAT_USER_EXT(用户扩展表)*/
 DROP TABLE IF EXISTS plat_User_Ext;
 CREATE TABLE plat_User_Ext (
-  userid         varchar(32)      NOT NULL                COMMENT 'uuid(用户id)',
+  userId         varchar(32)      NOT NULL                COMMENT 'uuid(用户id)',
   iDCard         varchar(100)     NOT NULL                COMMENT '用户身份证号',
   frontImg       varchar(100)     NOT NULL                COMMENT '正面图片',
   reverseImg     varchar(100)     NOT NULL                COMMENT '反面图片',
   mixImg         varchar(100)     NOT NULL                COMMENT '复合照片',
   anchorCardImg  varchar(100)                             COMMENT '主播证',
   cTime          timestamp        NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间:创建时的系统时间',
-  PRIMARY KEY(id),
+  PRIMARY KEY(userId)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户扩展表';
 
