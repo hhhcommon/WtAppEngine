@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -53,6 +54,7 @@ import com.woting.appengine.solr.service.SolrJService;
 import com.woting.appengine.solr.utils.SolrUtils;
 import com.woting.cm.core.utils.ContentUtils;
 import com.woting.cm.cachedb.cachedb.service.CacheDBService;
+import com.woting.cm.cachedb.playcountdb.persis.po.PlayCountDBPo;
 import com.woting.cm.cachedb.playcountdb.service.PlayCountDBService;
 import com.woting.cm.core.broadcast.persis.po.BCProgrammePo;
 import com.woting.cm.core.broadcast.service.BcProgrammeService;
@@ -930,6 +932,7 @@ public class ContentService {
                 }
             }
         }
+        boolean hasFList=(fList!=null&&!fList.isEmpty());
 
         //2-根据参数得到内容
         key="Contents=CatalogType_CatalogId_ResultType_PageType_MediaType_PageSize_Page_PerSize_BeginCatalogId=FilterData=["+catalogType+"_"+catalogId+"_"+resultType+"_"+pageType+"_"+mediaType+"_"+pageSize+"_"+page+"_"+"_"+perSize+"_"+beginCatalogId+"_"+JsonUtils.objToJson(filterData)+"]";
@@ -950,7 +953,7 @@ public class ContentService {
         roService=new RedisOperService(redisConn7_2, 11);
         try {
             GetContents gc=new GetContents(param);
-            gc.setDataSource(dataSource, catchDataSource);
+            gc.setDataSource(dataSource, catchDataSource, this, cacheDBService);
             bizData=roService.getAndSet(key, gc, 30*60*1000, true);
         } finally {
             if (roService!=null) roService.close();
@@ -964,40 +967,108 @@ public class ContentService {
         }
         if (param==null) return null;
 
-        //3-获取播放次数
-        //5-加入喜欢
-        if (fList==null||fList.size()==0) return param;
+        List<Map> lm=(List<Map>)param.get("List");
+        if (lm==null||lm.isEmpty()) return param;
+
+        //3-扫描，并获取需要得到播放次数的列，得到需要的电台
         resultType=0;
+        Map<String, Long> contentPlayCountMap=new HashMap<String, Long>();
+        String bcIds="";
         try {resultType=Integer.parseInt(""+param.get("ResultType"));} catch(Exception e) {};
-        if (resultType==1) {
-            List<Map> lm=(List<Map>)param.get("List");
+        if (resultType==1||resultType==2) {
             for (Map m: lm) {
+                if (m==null) continue;
                 List<Map> lm2=(List<Map>)m.get("List");
                 for (Map m2: lm2) {
+                    if (m2==null) continue;
+                    MediaType MT=MediaType.buildByTypeName(""+m2.get("MediaType"));
+                    if (MT==MediaType.ERR) continue;
+                    contentPlayCountMap.put(m2.get("MediaType")+"_"+m2.get("ContentId"), 0l);
+                    if (MT==MediaType.RADIO) bcIds=","+m2.get("ContentId");
+                    if (hasFList) {
+                        boolean find=false;
+                        for (Map fm: fList) {
+                            if (m2.get("ContentId").equals(fm.get("resId"))&&fm.get("resTableName").equals(MT.getTabName())) {
+                                find=true;
+                                break;
+                            }
+                        }
+                        if (find) m2.put("ContentFavorite", "1");
+                    }
+                }
+            }
+        } else if (resultType==3) {//列表
+            for (Map m: lm) {
+                if (m==null) continue;
+                contentPlayCountMap.put(m.get("MediaType")+"_"+m.get("ContentId"), 0l);
+                if (hasFList) {
                     boolean find=false;
-                    String tableName=MediaType.buildByTypeName(""+m2.get("MediaType")).getTabName();
+                    MediaType MT=MediaType.buildByTypeName(""+m.get("MediaType"));
+                    if (MT==MediaType.ERR) continue;
+                    if (MT==MediaType.RADIO) bcIds=","+m.get("ContentId");
                     for (Map fm: fList) {
-                        if (m2.get("ContentId").equals(fm.get("resId"))&&fm.get("resTableName").equals(tableName)) {
+                        if (m.get("ContentId").equals(fm.get("resId"))&&fm.get("resTableName").equals(MT.getTabName())) {
                             find=true;
                             break;
                         }
                     }
-                    if (find) m2.put("ContentFavorite", "1");
+                    if (find) m.put("ContentFavorite", "1");
+                }
+            }
+        }
+        //获得播放次数
+        List<String> ids=new ArrayList<String>();
+        for (String k: contentPlayCountMap.keySet()) {
+            ids.add(k+"_PLAYCOUNT");
+        }
+        List<PlayCountDBPo> pcList=playCountDBService.getPlayCountList(ids);
+        if (pcList!=null&&pcList.size()>0) {
+            for (PlayCountDBPo pcPo: pcList) {
+                contentPlayCountMap.put(pcPo.getId(), pcPo.getPlayCount());
+            }
+        }
+        //获得当前播放列表
+        Map<String, String> curBcPlayingName=null;
+        if (bcIds.length()>=0) curBcPlayingName=getCurBcPlaying(bcIds.substring(1));
+
+        //填充播放次数
+        if (resultType==1||resultType==2) {
+            for (Map m: lm) {
+                List<Map> lm2=(List<Map>)m.get("List");
+                for (Map m2: lm2) {
+                    Long l1=contentPlayCountMap.get(m2.get("MediaType")+"_"+m2.get("ContentId")+"_PLAYCOUNT");
+                    Long l2=0l;
+                    try {
+                        l2=Long.parseLong(m2.get("PlayCount")+"");
+                    } catch(Exception e) {
+                        l2=-1l;
+                    }
+                    if (l2==-1l) m2.put("PlayCount", convertToCName(l1));
+                    else {
+                       if (l1>l2) m2.put("PlayCount", convertToCName(l1));
+                    }
+                    if (curBcPlayingName==null||curBcPlayingName.isEmpty()) continue;
+                    MediaType MT=MediaType.buildByTypeName(""+m2.get("MediaType"));
+                    if (MT==MediaType.RADIO && curBcPlayingName.get(m2.get("ContentId"))!=null) m2.put("IsPlaying", curBcPlayingName.get(m2.get("ContentId")));
                 }
             }
         } else if (resultType==3) {//列表
-            List<Map> lm=(List<Map>)param.get("List");
             for (Map m: lm) {
                 if (m==null) continue;
-                boolean find=false;
-                String tableName=MediaType.buildByTypeName(""+m.get("MediaType")).getTabName();
-                for (Map fm: fList) {
-                    if (m.get("ContentId").equals(fm.get("resId"))&&fm.get("resTableName").equals(tableName)) {
-                        find=true;
-                        break;
-                    }
+                Long l1=contentPlayCountMap.get(m.get("MediaType")+"_"+m.get("ContentId")+"_PLAYCOUNT");
+                Long l2=0l;
+                try {
+                    l2=Long.parseLong(m.get("PlayCount")+"");
+                } catch(Exception e) {
+                    l2=-1l;
                 }
-                if (find) m.put("ContentFavorite", "1");
+                if (l2==-1l) m.put("PlayCount", convertToCName(l1));
+                else {
+                   if (l1>l2) m.put("PlayCount", convertToCName(l1));
+                }
+                if (curBcPlayingName==null||curBcPlayingName.isEmpty()) continue;
+                MediaType MT=MediaType.buildByTypeName(""+m.get("MediaType"));
+                if (MT==MediaType.RADIO && curBcPlayingName.get(m.get("ContentId"))!=null) m.put("IsPlaying", curBcPlayingName.get(m.get("ContentId")));
             }
         }
         return param;
@@ -1790,7 +1861,7 @@ public class ContentService {
                         } else {
                             filterSql_inwhere="(b.dictMid='"+f_catalogType+"' or b.dictMid='9') and (";
                         }
-                    } 
+                    }
                     filterSql_inwhere+="b."+_idCName+"='"+_root.getId()+"'";
                     f_orderBySql+="'"+_root.getId()+"'";
                     allTn=TreeUtils.getDeepList(_root);
@@ -2779,4 +2850,156 @@ public class ContentService {
 //    public String getSEQUSublist(String id) {
 //      return FileUtils.readContentInfo("Content=MediaType_CID=[SEQU_"+id+"]=SUBLIST");
 //    }
+
+    private String convertToCName(Long l) {
+        if (l==null) return "0";
+        if (l<10000) return l+"";
+        DecimalFormat df = new java.text.DecimalFormat(",###.##");
+        double ret=0;
+        String retS;
+        if (l<10000000) {
+            ret= l/(double)10000;
+            retS=df.format(ret)+"万";
+        } else {
+            ret= l/(double)100000000;
+            retS=df.format(ret);
+            if (retS.length()>7&&retS.indexOf(".")!=-1) {
+                retS=retS.substring(0, retS.indexOf("."));
+            }
+            retS=retS+"亿";
+        }
+        return retS;
+    }
+
+    /**
+     * 获得一组电台的节目播放列表，若改电台在当前时间没有播放节目，则不在返回值中体现
+     * 
+     * @param ids 电台组Id列表
+     * @return 电台当前播放的节目Map，key是电台的Id，value是当前播放节目的名称
+     */
+    public Map<String, String> getCurBcPlaying(String ids) {
+        return bcProgrammeService.getBcsPlaying(ids, System.currentTimeMillis());
+    }
+
+    //=以下为缓存所写，是从正式库中获取信息================================================================================================================
+    /**
+     * 为缓存得到电台信息，不包括喜欢，不包括当前播放的节目
+     * @param contentId 电台Id
+     * @return 电台内容信息
+     */
+    protected Map<String, Object> getBcInfo4Cache(String contentId) {
+        List<Map<String, Object>> cataList=null;//分类
+        List<Map<String, Object>> personList=null;//人员
+        List<Map<String, Object>> pubChannelList=null;//发布情况;
+
+        Map<String, Object> paraM=new HashMap<String, Object>();
+        //1、得主内容
+        Map<String, Object> tempMap=contentDao.queryForObjectAutoTranform("getBcById", contentId);
+        if (tempMap==null||tempMap.size()==0) return null;
+        //2、得到分类和人员
+        paraM.put("resTableName", "wt_Broadcast");
+        paraM.put("ids", "a.resId='"+contentId+"'");
+        cataList=contentDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
+        personList=contentDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+        //3、得到发布情况
+        Map<String, Object> oneAsset=new HashMap<String, Object>();
+        oneAsset.put("resId", contentId);
+        oneAsset.put("resTableName", "wt_Broadcast");
+        List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
+        assetList.add(oneAsset);
+        pubChannelList=channelService.getPubChannelList(assetList);
+
+        //4、组装内容
+        Map<String, Object> retInfo=ContentUtils.convert2Bc(tempMap, personList, cataList, pubChannelList, null, null, null);
+        return retInfo;
+    }
+
+    /**
+     * 为缓存得到单体节目信息，不包括喜欢
+     * @param contentId 电台Id
+     * @return 单体节目信息
+     */
+    protected Map<String, Object> getMaInfo4Cache(String contentId) {
+        List<Map<String, Object>> cataList=null;//分类
+        List<Map<String, Object>> personList=null;//人员
+        List<Map<String, Object>> pubChannelList=null;//发布情况;
+
+        Map<String, Object> paraM=new HashMap<String, Object>();
+        //1、得主内容
+        Map<String, Object> tempMap=contentDao.queryForObjectAutoTranform("getMediaById", contentId);
+        if (tempMap==null||tempMap.size()==0) return null;
+        //2、得到分类和人员
+        paraM.put("resTableName", "wt_MediaAsset");
+        paraM.put("ids", "a.resId='"+contentId+"'");
+        cataList=contentDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
+        personList=contentDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+        //3、得到发布情况
+        Map<String, Object> oneAsset=new HashMap<String, Object>();
+        oneAsset.put("resId", contentId);
+        oneAsset.put("resTableName", "wt_MediaAsset");
+        List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
+        assetList.add(oneAsset);
+        pubChannelList=channelService.getPubChannelList(assetList);
+
+        //4、组装内容
+        Map<String, Object> retInfo=ContentUtils.convert2Ma(tempMap, personList, cataList, pubChannelList, null, null);
+        return retInfo;
+
+    }
+
+    /**
+     * 为缓存得到专辑信息，不包括喜欢
+     * @param contentId 电台Id
+     * @return 是一个Map:
+     * <pre>
+     *   key=MainInfo；value是专辑信息，仅包括一个下级节目
+     *   key=SubList；value是专辑所属的单体节目的列表，已经排好顺序
+     * </pre>
+     */
+    protected Map<String, Object> getSeqMaInfo4Cache(String contentId) {
+        List<Map<String, Object>> cataList=null;//分类
+        List<Map<String, Object>> personList=null;//人员
+        List<Map<String, Object>> pubChannelList=null;//发布情况;
+
+        Map<String, Object> paraM=new HashMap<String, Object>();
+        //1、得主内容
+        Map<String, Object> tempMap=contentDao.queryForObjectAutoTranform("getSmById", contentId);
+        if (tempMap==null||tempMap.size()==0) return null;
+        //2、得到分类和人员
+        paraM.put("resTableName", "wt_SeqMediaAsset");
+        paraM.put("ids", "a.resId='"+contentId+"'");
+        cataList=contentDao.queryForListAutoTranform("getCataListByTypeAndIds", paraM);
+        personList=contentDao.queryForListAutoTranform("getPersonListByTypeAndIds", paraM);
+        //3、得到发布情况
+        Map<String, Object> oneAsset=new HashMap<String, Object>();
+        oneAsset.put("resId", contentId);
+        oneAsset.put("resTableName", "wt_SeqMediaAsset");
+        List<Map<String, Object>> assetList=new ArrayList<Map<String, Object>>();
+        assetList.add(oneAsset);
+        pubChannelList=channelService.getPubChannelList(assetList);
+
+        //4、组装内容
+        Map<String, Object> mainInfo=ContentUtils.convert2Bc(tempMap, personList, cataList, pubChannelList, null, null, null);
+        
+        Map<String, Object> retInfo=null;
+        if (mainInfo!=null) {
+            retInfo=new HashMap<String, Object>();
+            retInfo.put("MainInfo", mainInfo);
+            //获得专辑内的所有内容
+            paraM.put("sId", contentId);
+            paraM.put("orderByClause", "order by b.columnNum desc, a.maTitle desc, a.cTime desc");
+            List<Map<String, Object>> tempList=contentDao.queryForListAutoTranform("getSmSubMedias", paraM);
+            if (tempList!=null&&tempList.size()>0) {
+                List<String> subIdList=new ArrayList<String>();
+                for (Map<String, Object> m: tempList) subIdList.add(m.get("id")+"");
+                retInfo.put("SubList", subIdList);
+                //得到第一个内容
+                Map<String, Object> firstMa=getMaInfo4Cache(subIdList.get(0));
+                tempList.clear();
+                tempList.add(firstMa);
+                mainInfo.put("SubList", tempList);
+            }
+        }
+        return retInfo;
+    }
 }

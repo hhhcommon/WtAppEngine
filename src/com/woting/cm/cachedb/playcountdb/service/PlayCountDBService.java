@@ -1,5 +1,9 @@
 package com.woting.cm.cachedb.playcountdb.service;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
@@ -41,4 +45,12 @@ public class PlayCountDBService {
 		}
 		return 0;
 	}
+
+    public List<PlayCountDBPo> getPlayCountList(List<String> ids) {
+        if (ids==null||ids.isEmpty()) return null;
+        //return playCountDBDao.queryForList("getList", ids);
+        Map<String, Object> p=new HashMap<String, Object>();
+        p.put("ids", ids);
+        return playCountDBDao.queryForList("getListById", p);
+    }
 }

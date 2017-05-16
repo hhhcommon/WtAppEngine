@@ -238,13 +238,14 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='栏目映射表';
 /**PM001 版本记录[PM_NOTIFYMSG]*/
 DROP TABLE IF EXISTS pm_NotifyMsg;
 CREATE TABLE pm_NotifyMsg (
-  id            varchar(32)  NOT NULL  COMMENT 'UUID',
-  msgId         varchar(32)  NOT NULL  COMMENT '通知消息Id',
-  toUserId      varchar(32)  NOT NULL  COMMENT '发送到的人员Id',
-  bizReUdkJson  varchar(200)           COMMENT '业务回复者Id',
-  msgJson       text         NOT NULL  COMMENT '消息本身的序列化结果',
-  sendTime      timestamp              COMMENT '第一次发送数据的时间',
-  sendInfoJson  text                   COMMENT '每个结点的发送情况',
+  id            varchar(32)       NOT NULL             COMMENT 'UUID',
+  msgId         varchar(32)       NOT NULL             COMMENT '通知消息Id',
+  toUserId      varchar(32)       NOT NULL             COMMENT '发送到的人员Id',
+  bizReUdkJson  varchar(200)                           COMMENT '业务回复者Id',
+  msgJson       text              NOT NULL             COMMENT '消息本身的序列化结果',
+  sendTime      timestamp                              COMMENT '第一次发送数据的时间',
+  sendAllNum    int(10) UNSIGNED  NOT NULL  DEFAULT 0  COMMENT '给该用户发送消息的总数',
+  sendInfoJson  text                                   COMMENT '每个结点的发送情况',
   lmTime        timestamp    NOT NULL  DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
   PRIMARY KEY(id),
   UNIQUE INDEX bizKey(msgId, toUserId) USING BTREE
