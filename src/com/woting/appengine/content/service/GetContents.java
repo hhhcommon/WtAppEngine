@@ -10,13 +10,19 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.servlet.ServletContext;
 import javax.sql.DataSource;
 
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.model.tree.TreeNode;
 import com.spiritdata.framework.core.model.tree.TreeNodeBean;
 import com.spiritdata.framework.ext.redis.GetBizData;
+import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
@@ -126,8 +132,6 @@ public class GetContents extends GetBizData {
         //一、根据参数获得范围Sql
         List<String> sqlList=getRangeSql(root);
         if (sqlList==null||sqlList.isEmpty()) return null;
-        String contentSql=sqlList.get(0);
-//        String countSql=sqlList.size()>0?sqlList.get(1).trim():null;
 
         //二、获得实际内容
         Map<String, Object> ret=new HashMap<String, Object>();
@@ -135,36 +139,75 @@ public class GetContents extends GetBizData {
         PreparedStatement ps=null;//获得所需的记录的id
         ResultSet rs=null;
         try {
-            conn=dataSource.getConnection();
-            //获得条数
-            long count=100;
-//            if (!countSql.isEmpty()) {
-//                ps=conn.prepareStatement(countSql);
-//                rs=ps.executeQuery();
-//                if (rs!=null&&rs.next()) count=rs.getLong(1);
-//            }
-//            try {
-//                rs.close();
-//                ps.close();
-//            } finally {
-//                rs=null;
-//                ps=null;
-//            }
-            if (count==0) return null;
-            //获得内容
-            ps=conn.prepareStatement(contentSql);
-            rs=ps.executeQuery();
             List<String> contentIds=new ArrayList<String>();
-            while (rs!=null&&rs.next()) {
-                MediaType MT=MediaType.buildByTabName(rs.getString(typeCName));
-                if (MT!=MediaType.ERR) contentIds.add(MT.getTypeName()+"_"+rs.getString(resIdCName));
-            }
-            try {
-                rs.close();
-                ps.close();
-            } finally {
-                rs=null;
-                ps=null;
+            List<String> contentCataIds=new ArrayList<String>();
+            String contentSql=sqlList.get(0);
+
+            conn=dataSource.getConnection();
+            List<String> sortCataList=new ArrayList<String>();//层级结构的排序列表，当且仅当resultType!=1是有作用
+            long count=100;
+            if (resultType==3) {
+                //获得条数
+//                if (!countSql.isEmpty()) {
+//                    ps=conn.prepareStatement(countSql);
+//                    rs=ps.executeQuery();
+//                    if (rs!=null&&rs.next()) count=rs.getLong(1);
+//                }
+//                try {
+//                    rs.close();
+//                    ps.close();
+//                } finally {
+//                    rs=null;
+//                    ps=null;
+//                }
+                if (count==0) return null;
+                //获得内容
+                ps=conn.prepareStatement(contentSql);
+                rs=ps.executeQuery();
+                while (rs!=null&&rs.next()) {
+                    MediaType MT=MediaType.buildByTabName(rs.getString(typeCName));
+                    if (MT!=MediaType.ERR) contentIds.add(MT.getTypeName()+"_"+rs.getString(resIdCName));
+                }
+                try {
+                    rs.close();
+                    ps.close();
+                } finally {
+                    rs=null;
+                    ps=null;
+                }
+            } else {
+                int i=0;
+                for (;i<sqlList.size(); i++) {
+                    contentSql=sqlList.get(i);
+                    
+                    ps=conn.prepareStatement(contentSql);
+                    rs=ps.executeQuery();
+                    while (rs!=null&&rs.next()) {
+                        MediaType MT=MediaType.buildByTabName(rs.getString(typeCName));
+                        if (MT!=MediaType.ERR) {
+                            contentIds.add(MT.getTypeName()+"_"+rs.getString(resIdCName));
+                            contentCataIds.add(rs.getString("ThisCataId"));
+                        }
+                    }
+                    //获得分类
+                    contentSql=contentSql.substring(0, contentSql.indexOf("ThisCataId"));
+                    contentSql=contentSql.substring(23, contentSql.length()-2);
+                    sortCataList.add(contentSql);
+                    if (contentCataIds.size()>=pageSize) break;
+                }
+                try {
+                    rs.close();
+                    ps.close();
+                } finally {
+                    rs=null;
+                    ps=null;
+                }
+                if (i==sqlList.size()) beginCatalogId="ENDEND";
+                else {
+                    String cataSql=sqlList.get(i+1);
+                    beginCatalogId=cataSql.substring(0, cataSql.indexOf("ThisCataId"));
+                    beginCatalogId=beginCatalogId.substring(23, beginCatalogId.length()-2);
+                }
             }
             if (contentIds==null||contentIds.isEmpty()) return null;//若没有任何内容，返回空
             Map<String, Map<String, Object>> fromCache=getMediaContentListFromCacheDB(contentIds, true);
@@ -185,7 +228,6 @@ public class GetContents extends GetBizData {
                 }
                 ret.put("PageSize",retList.size());
             } else if (resultType==1) {//按下级分类处理
-                List<String> sortCataList=(List<String>)fromCache.get("sortCataList");
                 if (sortCataList==null||sortCataList.isEmpty()) return null;
 
                 TreeNode<? extends TreeNodeBean> node=null;
@@ -203,55 +245,54 @@ public class GetContents extends GetBizData {
                     }
                 }
                 int k=0;
-                for (int i=0; i<contentIds.size()&&k<retList.size(); i++) {
+                oneCatalog=retList.get(k);
+                for (int i=0; i<contentIds.size()&&k<=retList.size(); i++) {
                     o=fromCache.get(contentIds.get(i));
-                    String oneCataId=(String)o.remove("ThisCataId");
+                    String oneCataId=contentCataIds.get(i);
 
-                    oneCatalog=retList.get(k);
-                    while(!oneCataId.equals(oneCatalog.get("CatalogId"))) {
-                        k++;
-                        oneCatalog=retList.get(k);
+                    while(!oneCataId.equals(oneCatalog.get("CatalogId"))&&k<retList.size()) {
+                        oneCatalog=retList.get(k++);
                     }
-                    if (k<retList.size()) {
+                    if (k<=retList.size()) {
                         ((List<Map<String, Object>>)oneCatalog.get("List")).add(o);
                     }
                 }
+                
                 ret.put("BeginCatalogId", beginCatalogId);
                 ret.put("PageSize", fromCache.size()-1);
-            } else {
-                List<String> sortCataList=(List<String>)fromCache.get("sortCataList");
-                if (sortCataList==null||sortCataList.isEmpty()) return null;
-
-                TreeNode<? extends TreeNodeBean> node=null;
-                Map<String, Object> oneCatalog=null;
-                for (int i=0; i<sortCataList.size(); i++) {
-                    String cataId=sortCataList.get(i);
-                    node=root.findNode(cataId);
-                    if (node!=null) {
-                        oneCatalog=new HashMap<String, Object>();
-                        oneCatalog.put("CatalogType", catalogType);
-                        oneCatalog.put("CatalogId", node.getId());
-                        oneCatalog.put("CatalogName", node.getNodeName());
-                        oneCatalog.put("List", new ArrayList<Map<String, Object>>());
-                        retList.add(oneCatalog);
-                    }
-                }
-                int k=0;
-                for (int i=0; i<contentIds.size()&&k<retList.size(); i++) {
-                    o=fromCache.get(contentIds.get(i));
-                    String oneCataId=(String)o.remove("ThisCataId");
-
-                    oneCatalog=retList.get(k);
-                    while(!oneCataId.equals(oneCatalog.get("CatalogId"))) {
-                        k++;
-                        oneCatalog=retList.get(k);
-                    }
-                    if (k<retList.size()) {
-                        ((List<Map<String, Object>>)oneCatalog.get("List")).add(o);
-                    }
-                }
-                ret.put("BeginCatalogId", beginCatalogId);
-                ret.put("PageSize", fromCache.size()-1);
+            } else {//按类型处理，目前用不到
+//                if (sortCataList==null||sortCataList.isEmpty()) return null;
+//
+//                TreeNode<? extends TreeNodeBean> node=null;
+//                Map<String, Object> oneCatalog=null;
+//                for (int i=0; i<sortCataList.size(); i++) {
+//                    String cataId=sortCataList.get(i);
+//                    node=root.findNode(cataId);
+//                    if (node!=null) {
+//                        oneCatalog=new HashMap<String, Object>();
+//                        oneCatalog.put("CatalogType", catalogType);
+//                        oneCatalog.put("CatalogId", node.getId());
+//                        oneCatalog.put("CatalogName", node.getNodeName());
+//                        oneCatalog.put("List", new ArrayList<Map<String, Object>>());
+//                        retList.add(oneCatalog);
+//                    }
+//                }
+//                int k=0;
+//                for (int i=0; i<contentIds.size()&&k<retList.size(); i++) {
+//                    o=fromCache.get(contentIds.get(i));
+//                    String oneCataId=(String)o.remove("ThisCataId");
+//
+//                    oneCatalog=retList.get(k);
+//                    while(!oneCataId.equals(oneCatalog.get("CatalogId"))) {
+//                        k++;
+//                        oneCatalog=retList.get(k);
+//                    }
+//                    if (k<retList.size()) {
+//                        ((List<Map<String, Object>>)oneCatalog.get("List")).add(o);
+//                    }
+//                }
+//                ret.put("BeginCatalogId", beginCatalogId);
+//                ret.put("PageSize", fromCache.size()-1);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -265,6 +306,7 @@ public class GetContents extends GetBizData {
 
     //根据参数获得范围Sql
     private List<String> getRangeSql(TreeNode<? extends TreeNodeBean> root) {
+        List<String> ret=new ArrayList<String>();
         //1-得到媒体类型过滤串
         String mediaFilterSql="";//过滤类型的字符串
         if (!StringUtils.isNullOrEmptyOrSpace(mediaType)) {
@@ -303,33 +345,12 @@ public class GetContents extends GetBizData {
                     _resIdCName="resId";
                     _tableName="wt_ResDict_Ref";
                 }
-                String _mediaFilterSql="";//过滤类型的字符串
-                if (!StringUtils.isNullOrEmptyOrSpace(mediaType)) {
-                    String[] _mt=mediaType.split(",");
-                    Map<String, String> tempMediaSql=new HashMap<String, String>();
-                    for (int i=0; i<_mt.length; i++) {
-                        MediaType MT=MediaType.buildByTypeName(_mt[i].trim());
-                        if (MT!=MediaType.ERR) tempMediaSql.put(_mt[i].trim(), "or c."+_typeCName+"='"+MT.getTabName()+"'");
-                    }
-                    if (!tempMediaSql.isEmpty()) {
-                        for (String ms: tempMediaSql.keySet()) _mediaFilterSql+=tempMediaSql.get(ms);
-                        _mediaFilterSql=_mediaFilterSql.substring(3);
-                    }
-                }
-                filterSql_innerJoin=" inner join "+_tableName+" on a."+typeCName+"=c."+_typeCName+" and a."+resIdCName+"=c."+_resIdCName+" and "+(_mediaFilterSql.equals("")?"":("("+_mediaFilterSql+") and "));
+                filterSql_innerJoin=" inner join "+_tableName+" c on a."+typeCName+"=c."+_typeCName+" and a."+resIdCName+"=c."+_resIdCName+" and "+(mediaFilterSql.equals("")?"":("("+mediaFilterSql+") and "));
                 if (f_catalogType.equals("-1")) {
-                    filterSql_innerJoin+="c.isValidat=1 and c.flowFlag=2";
+                    filterSql_innerJoin+="c.isValidate=1 and c.flowFlag=2";
                 } else {
                     filterSql_innerJoin+="c.dictMid='"+f_catalogType+"'";
                 }
-//                filterSql_innerJoin+="(c."+_idCName+"='"+_root.getId()+"'";
-//                if (!f_catalogType.equals("-1")) {
-//                    if (!f_catalogType.equals("2")) {
-//                        filterSql_innerJoin="c.dictMid='"+f_catalogType+"' and (";
-////                    } else {
-////                        filterSql_innerJoin="(b.dictMid='"+f_catalogType+"' or b.dictMid='9') and (";
-//                    }
-//                }
                 String _orSql="";
                 List<TreeNode<? extends TreeNodeBean>> allTn=TreeUtils.getDeepList(_root);
                 if (allTn!=null&&!allTn.isEmpty()) {
@@ -338,11 +359,11 @@ public class GetContents extends GetBizData {
                     }
                 }
                 if (_orSql.length()>4) _orSql=_orSql.substring(4);
-                if (_orSql.length()>0) filterSql_innerJoin+=" and (c."+_idCName+"='"+_root.getId()+"' and ("+_orSql+"))";
+                if (_orSql.length()>0) filterSql_innerJoin+=" and (c."+_idCName+"='"+_root.getId()+"' or ("+_orSql+"))";
                 else filterSql_innerJoin+=" and (c."+_idCName+"='"+_root.getId()+")";
             }
         }
-        String orSql="", orderBySql = "", getContentSql="", getCountSql="";
+        String orSql="", orderBySql = "", getContentSql="", getCountSql="", wtChannelIsPub="";
         if (resultType==3) { //按列表返回
             if (!root.isRoot()) {
                 orSql+=" or a."+idCName+"='"+root.getId()+"'";
@@ -358,10 +379,13 @@ public class GetContents extends GetBizData {
                 }
             }
 
-            if (!catalogType.equals("-1")) getContentSql=", wt_ChannelAsset b";
-            getContentSql="select distinct a."+typeCName+", a."+resIdCName+" from "+tableName+" a"+getContentSql;
-            if (!StringUtils.isNullOrEmptyOrSpace(filterSql_innerJoin)) getContentSql+=" "+filterSql_innerJoin+" where "; else getContentSql+=" where ";
-            getContentSql+=(catalogType.equals("-1")?" a.isValidate=1 and a.flowFlag=2":" (a.dictMid='"+catalogType+"') and (a."+typeCName+"=b.assetType and a."+resIdCName+"=b.assetId and b.isValidate=1 and b.flowFlag=2)");
+            if (!catalogType.equals("-1")&&!f_catalogType.equals("-1")) {//主分类是字典，过滤不是栏目
+                wtChannelIsPub=" inner join wt_ChannelAsset b on a.resTableName=b.assetType and a.resId=b.assetId and b.isValidate=1 and b.flowFlag=2"+(mediaFilterSql.equals("")?"":(" and ("+mediaFilterSql+")"));
+            }
+            getContentSql="select distinct a."+typeCName+", a."+resIdCName+" from "+tableName+" a";
+            if (!StringUtils.isNullOrEmptyOrSpace(wtChannelIsPub)) getContentSql+=" "+wtChannelIsPub;
+            if (!StringUtils.isNullOrEmptyOrSpace(filterSql_innerJoin)) getContentSql+=" "+filterSql_innerJoin;
+            getContentSql+=" where "+(catalogType.equals("-1")?" a.isValidate=1 and a.flowFlag=2":" (a.dictMid='"+catalogType+"')");
             if (mediaFilterSql.length()>0) getContentSql+=" and ("+mediaFilterSql+")";
             if (orSql.length()>0) getContentSql+=" and ("+orSql.substring(4)+")";
             getCountSql="select count(*) from ("+getContentSql+") as b";
@@ -370,100 +394,281 @@ public class GetContents extends GetBizData {
                 else getContentSql+=" order by a.topSort desc, a.pubTime desc";
             } else { //分类
                 getContentSql+=" order by field(a.dictDid"+orderBySql+")";
-                if (!root.isLeaf()) getContentSql+=",b.pubTime desc";
-                else getContentSql+=",b.topSort desc, b.pubTime desc";
+                String flag=(StringUtils.isNullOrEmptyOrSpace(wtChannelIsPub)?"c":"b");
+                if (!root.isLeaf()) getContentSql+=","+flag+".pubTime desc";
+                else getContentSql+=","+flag+".topSort desc, "+flag+".pubTime desc";
             }
-            getContentSql+=" limit "+(((page<=0?1:page)-1)*pageSize)+","+pageSize; //分页
-        } else if (resultType==2) { //按内容类型返回，先不做
-            if (!root.isRoot()) {
-                orSql+=" or a."+idCName+"='"+root.getId()+"'";
-                orderBySql += ",'"+root.getId()+"'";
-                if (recursionTree==1) {
-                    List<TreeNode<? extends TreeNodeBean>> allTn=TreeUtils.getDeepList(root);
-                    if (allTn!=null&&!allTn.isEmpty()) {
-                        for (TreeNode<? extends TreeNodeBean> tn: allTn) {
-                            orSql+=" or a."+idCName+"='"+tn.getId()+"'";
-                            orderBySql+=",'"+tn.getId()+"'";
+            //加入电台的特殊处理
+            if (mediaType!=null&&mediaType.equals("RADIO")) {
+                //联合中央台
+                String nationalSql="select distinct a.assetType, a.assetId from wt_ChannelAsset a";
+                if (!StringUtils.isNullOrEmptyOrSpace(catalogId)) {
+                    if (catalogType.equals("-1")) nationalSql+=" inner join wt_ChannelAsset b on a.assetType=b.assetType and a.assetId=b.assetId and b.channelId='"+catalogId+"' ";
+                    else nationalSql+=" inner join wt_ResDict_Ref b on a.assetType=b.resTableName and a.assetId=b.resId and b.dictDid='"+catalogId+"' and b.dictMid='"+catalogType+"' ";
+                }
+                nationalSql+="where a.channelId='dtfl2001_1' and a.assetType='wt_Broadcast' and a.flowFlag=2 and a.isValidate=1";
+                getContentSql="select * from ("+getContentSql+") as getSql union "+nationalSql;
+                //找到所属地区
+                String areaId="";
+                if (f_catalogType.equals("2")) areaId=f_catalogId;
+                if (catalogType!=null&&catalogType.equals("2")&&StringUtils.isNullOrEmpty(areaId)) areaId=catalogId;
+                //找到所有的对应的其他电台，按地区排序
+                List<String> neighborIds=new ArrayList<String>();
+                try {
+                    if (!StringUtils.isNullOrEmptyOrSpace(areaId)) {
+                        TreeNode<? extends TreeNodeBean> xzqhRoot=null;
+                        DictModel dm=_cd.getDictModelById("2");
+                        if (dm!=null&&dm.dictTree!=null) xzqhRoot=dm.dictTree;
+                        if (xzqhRoot!=null) {
+                            ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+                            if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                                JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory182");
+                                RedisOperService ros=new RedisOperService(conn, 5);
+                                String neighbors=ros.get(areaId);
+                                if (!StringUtils.isNullOrEmptyOrSpace(neighbors)) {
+                                    if (xzqhRoot!=null) {
+                                        String[] _neighbors=neighbors.split(",");
+                                        for (int i=0;i<_neighbors.length;i++) {
+                                            if (i>4) break;
+                                            neighborIds.add(_neighbors[i]);
+                                            TreeNode<? extends TreeNodeBean> areaNode=xzqhRoot.findNode(_neighbors[i]);
+                                            if (areaNode!=null) {
+                                                List<TreeNode<? extends TreeNodeBean>> inTreeNodes=TreeUtils.getDeepList(areaNode);
+                                                if (inTreeNodes!=null&&!inTreeNodes.isEmpty()) {
+                                                    for (TreeNode<? extends TreeNodeBean> tn: inTreeNodes) {
+                                                        String tmpId=tn.getId();
+                                                        if (tmpId.startsWith("11")||tmpId.startsWith("12")||tmpId.startsWith("31")||tmpId.startsWith("50")) {
+                                                            neighborIds.add(tn.getId());
+                                                        } else {
+                                                            if (!tmpId.endsWith("00")) neighborIds.add(tn.getId());
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
+                } catch(Exception e) {
                 }
+                String neighborSql=null;
+                if (!neighborIds.isEmpty()) {
+                    neighborSql="select distinct a.resTableName, a.resId from wt_ResDict_Ref a ";
+                    if (!StringUtils.isNullOrEmptyOrSpace(catalogId)) {
+                        if (catalogType.equals("-1")) neighborSql+=" inner join wt_ChannelAsset b on a.resTableName=b.assetType and a.resId=b.assetId and b.channelId='"+catalogId+"' and isValidate=1 and flowFlag=2";
+                        else {
+                            neighborSql+=" inner join wt_ResDict_Ref  b on a.resTableName=b.resTableName and a.resId=b.resId and b.dictDid='"+catalogId+"' and b.dictMid='"+catalogType+"' ";
+                            neighborSql+=" inner join wt_ChannelAsset c on a.resTableName=c.assetType and a.resId=c.assetId and c.isValidate=1 and c.flowFlag=2";
+                        }
+                    }
+                    neighborSql+=" where a.resTableName='wt_Broadcast' and a.dictMid='2'";
+                    if (catalogType.equals("-1")) {
+                        if (!StringUtils.isNullOrEmptyOrSpace(catalogId)) neighborSql+=" order by field(b.channelId, '"+catalogId+"'), field(a.dictDid";
+                        else neighborSql+=" order by field(a.dictDid";
+                    } else {
+                        neighborSql+=" order by field(a.dictDid";
+                    }
+                    for (int i=neighborIds.size()-1; i>=0; i--) {
+                        neighborSql+=",'"+neighborIds.get(i)+"'";
+                    }
+                    neighborSql+=") desc";
+                }
+                if (!StringUtils.isNullOrEmptyOrSpace(neighborSql)) {
+                    getContentSql+=" union select * from ("+neighborSql+") as neighbor";
+                }
+                getContentSql="select * from ("+getContentSql+") as allSql ";
             }
-            if (orSql.length()>0) {
-                orSql=catalogType.equals("-1")?orSql.substring(4):" a.dictMid='"+catalogType+"' and ("+orSql.substring(4)+")";
-            }
-
-            if (!catalogType.equals("-1")) getContentSql=", wt_ChannelAsset b";
-            getContentSql="select a."+typeCName+", a."+resIdCName+" from "+tableName+" a"+getContentSql+" where";
-            getContentSql+=(catalogType.equals("-1")?" a.isValidate=1 and a.flowFlag=2":" (a.dictMid='"+catalogType+"') and (a."+typeCName+"=b.assetType and a."+resIdCName+"=b.assetId and b.isValidate=1 and b.flowFlag=2)");
-            getContentSql+="#mediaType#";
-            if (mediaFilterSql.length()>0) getContentSql+=" and ("+mediaFilterSql+")";
-            if (orSql.length()>0) getContentSql+=" and ("+orSql+")";
-            getCountSql="select count(*) from ("+getContentSql.replaceAll("#mediaType#", "")+") as b";
-            if (catalogType.equals("-1")) {//栏目
-                if (!root.isLeaf()) getContentSql+=" order by a.pubTime desc";
-                else getContentSql+=" order by a.topSort desc, a.pubTime desc";
-            } else {//分类
-                getContentSql+=" order by field(a.dictDid,"+orderBySql+")";
-                if (!root.isLeaf()) getContentSql+=",b.pubTime desc";
-                else getContentSql+=",b.topSort desc, b.pubTime desc";
-            }
-            String audioSql, radioSql, seqSql;
-            audioSql="select 'AUDIO' ThisCataId, audio.* from ("+getContentSql.replaceAll("#mediaType#", " and (a."+typeCName+"='wt_MediaAsset')")+" limit "+perSize+") as audio";
-            radioSql="select 'AUDIO' ThisCataId, radio.* from ("+getContentSql.replaceAll("#mediaType#", " and (a."+typeCName+"='wt_Broadcast')")+" limit "+perSize+") as radio";
-            seqSql="select 'AUDIO' ThisCataId, sequ.* from ("+getContentSql.replaceAll("#mediaType#", " and (a."+typeCName+"='wt_SeqMediaAsset')")+" limit "+perSize+") as sequ";
-            getContentSql=audioSql+" union all "+radioSql+" union all "+seqSql;
+            getContentSql+=" limit "+(((page<=0?1:page)-1)*pageSize)+","+pageSize; //分页
+            ret.add(getContentSql);
+            ret.add(getCountSql);
+        } else if (resultType==2) { //按内容类型返回，先不做
+//            if (!root.isRoot()) {
+//                orSql+=" or a."+idCName+"='"+root.getId()+"'";
+//                orderBySql += ",'"+root.getId()+"'";
+//                if (recursionTree==1) {
+//                    List<TreeNode<? extends TreeNodeBean>> allTn=TreeUtils.getDeepList(root);
+//                    if (allTn!=null&&!allTn.isEmpty()) {
+//                        for (TreeNode<? extends TreeNodeBean> tn: allTn) {
+//                            orSql+=" or a."+idCName+"='"+tn.getId()+"'";
+//                            orderBySql+=",'"+tn.getId()+"'";
+//                        }
+//                    }
+//                }
+//            }
+//            if (orSql.length()>0) {
+//                orSql=catalogType.equals("-1")?orSql.substring(4):" a.dictMid='"+catalogType+"' and ("+orSql.substring(4)+")";
+//            }
+//
+//            if (!catalogType.equals("-1")) getContentSql=", wt_ChannelAsset b";
+//            getContentSql="select a."+typeCName+", a."+resIdCName+" from "+tableName+" a"+getContentSql+" where";
+//            getContentSql+=(catalogType.equals("-1")?" a.isValidate=1 and a.flowFlag=2":" (a.dictMid='"+catalogType+"') and (a."+typeCName+"=b.assetType and a."+resIdCName+"=b.assetId and b.isValidate=1 and b.flowFlag=2)");
+//            getContentSql+="#mediaType#";
+//            if (mediaFilterSql.length()>0) getContentSql+=" and ("+mediaFilterSql+")";
+//            if (orSql.length()>0) getContentSql+=" and ("+orSql+")";
+//            getCountSql="select count(*) from ("+getContentSql.replaceAll("#mediaType#", "")+") as b";
+//            if (catalogType.equals("-1")) {//栏目
+//                if (!root.isLeaf()) getContentSql+=" order by a.pubTime desc";
+//                else getContentSql+=" order by a.topSort desc, a.pubTime desc";
+//            } else {//分类
+//                getContentSql+=" order by field(a.dictDid,"+orderBySql+")";
+//                if (!root.isLeaf()) getContentSql+=",b.pubTime desc";
+//                else getContentSql+=",b.topSort desc, b.pubTime desc";
+//            }
+//            String audioSql, radioSql, seqSql;
+//            audioSql="select 'AUDIO' ThisCataId, audio.* from ("+getContentSql.replaceAll("#mediaType#", " and (a."+typeCName+"='wt_MediaAsset')")+" limit "+perSize+") as audio";
+//            radioSql="select 'AUDIO' ThisCataId, radio.* from ("+getContentSql.replaceAll("#mediaType#", " and (a."+typeCName+"='wt_Broadcast')")+" limit "+perSize+") as radio";
+//            seqSql="select 'AUDIO' ThisCataId, sequ.* from ("+getContentSql.replaceAll("#mediaType#", " and (a."+typeCName+"='wt_SeqMediaAsset')")+" limit "+perSize+") as sequ";
+//            getContentSql=audioSql+" union all "+radioSql+" union all "+seqSql;
         } else if (resultType==1) { //按分类下级返回
-            List<TreeNode<? extends TreeNodeBean>> subCata=new ArrayList<TreeNode<? extends TreeNodeBean>>();
-            for (TreeNode<? extends TreeNodeBean> _stn: root.getChildren()) subCata.add(_stn);
-            if (catalogType.equals("2")&&(catalogId.equals("110000")||catalogId.equals("120000")||catalogId.equals("310000")||catalogId.equals("500000"))) {//对行政区划做特别的处理
-                List<TreeNode<? extends TreeNodeBean>> subCata1=new ArrayList<TreeNode<? extends TreeNodeBean>>();
+            if (beginCatalogId==null||!beginCatalogId.equals("ENDEND")) {
+                List<TreeNode<? extends TreeNodeBean>> subCata=new ArrayList<TreeNode<? extends TreeNodeBean>>();
+                for (TreeNode<? extends TreeNodeBean> _stn: root.getChildren()) subCata.add(_stn);
+                if (catalogType.equals("2")&&catalogId!=null&&(catalogId.equals("110000")||catalogId.equals("120000")||catalogId.equals("310000")||catalogId.equals("500000"))) {//对行政区划做特别的处理
+                    List<TreeNode<? extends TreeNodeBean>> subCata1=new ArrayList<TreeNode<? extends TreeNodeBean>>();
+                    for (int i=0; i<subCata.size(); i++) {
+                        TreeNode<? extends TreeNodeBean> _stn=subCata.get(i);
+                        if (_stn.isLeaf()) subCata1.add(_stn);
+                        else {
+                            for (TreeNode<? extends TreeNodeBean> _stn1: _stn.getChildren()) subCata1.add(_stn1);
+                        }
+                    }
+                    subCata=subCata1;
+                }
+                if (!catalogType.equals("-1")&&!f_catalogType.equals("-1")) {//主分类是字典，过滤不是栏目
+                    wtChannelIsPub=" inner join wt_ChannelAsset b on a.resTableName=b.assetType and a.resId=b.assetId and b.isValidate=1 and b.flowFlag=2"+(mediaFilterSql.equals("")?"":(" and ("+mediaFilterSql+")"));
+                }
+                getContentSql="select distinct a."+typeCName+", a."+resIdCName+" from "+tableName+" a";
+                if (!StringUtils.isNullOrEmptyOrSpace(wtChannelIsPub)) getContentSql+=" "+wtChannelIsPub;
+                if (!StringUtils.isNullOrEmptyOrSpace(filterSql_innerJoin)) getContentSql+=" "+filterSql_innerJoin;
+                getContentSql+=" where "+(catalogType.equals("-1")?" a.isValidate=1 and a.flowFlag=2":" (a.dictMid='"+catalogType+"')");
+                if (mediaFilterSql.length()>0) getContentSql+=" and ("+mediaFilterSql+")";
+                getContentSql+="#subOr#";
+
+                String oneCataSql="";
+                boolean canBegin=StringUtils.isNullOrEmpty(beginCatalogId);
+
+                //为电台找到所属地区
+                List<String> neighborIds=new ArrayList<String>();
+                if (mediaType!=null&&mediaType.equals("RADIO")) {
+                    String areaId="";
+                    if (f_catalogType.equals("2")) areaId=f_catalogId;
+                    if (catalogType!=null&&catalogType.equals("2")&&StringUtils.isNullOrEmpty(areaId)) areaId=catalogId;
+                    //找到所有的对应的其他电台，按地区排序
+                    try {
+                        if (!StringUtils.isNullOrEmptyOrSpace(areaId)) {
+                            TreeNode<? extends TreeNodeBean> xzqhRoot=null;
+                            DictModel dm=_cd.getDictModelById("2");
+                            if (dm!=null&&dm.dictTree!=null) xzqhRoot=dm.dictTree;
+                            if (xzqhRoot!=null) {
+                                ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+                                if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                                    JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory182");
+                                    RedisOperService ros=new RedisOperService(conn, 5);
+                                    String neighbors=ros.get(areaId);
+                                    if (!StringUtils.isNullOrEmptyOrSpace(neighbors)) {
+                                        if (xzqhRoot!=null) {
+                                            String[] _neighbors=neighbors.split(",");
+                                            for (int k=0;k<_neighbors.length;k++) {
+                                                if (k>4) break;
+                                                neighborIds.add(_neighbors[k]);
+                                                TreeNode<? extends TreeNodeBean> areaNode=xzqhRoot.findNode(_neighbors[k]);
+                                                if (areaNode!=null) {
+                                                    List<TreeNode<? extends TreeNodeBean>> inTreeNodes=TreeUtils.getDeepList(areaNode);
+                                                    if (inTreeNodes!=null&&!inTreeNodes.isEmpty()) {
+                                                        for (TreeNode<? extends TreeNodeBean> tn: inTreeNodes) {
+                                                            String tmpId=tn.getId();
+                                                            if (tmpId.startsWith("11")||tmpId.startsWith("12")||tmpId.startsWith("31")||tmpId.startsWith("50")) {
+                                                                neighborIds.add(tn.getId());
+                                                            } else {
+                                                                if (!tmpId.endsWith("00")) neighborIds.add(tn.getId());
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch(Exception e) {
+                    }
+                }
+
                 for (int i=0; i<subCata.size(); i++) {
                     TreeNode<? extends TreeNodeBean> _stn=subCata.get(i);
-                    if (_stn.isLeaf()) subCata1.add(_stn);
-                    else {
-                        for (TreeNode<? extends TreeNodeBean> _stn1: _stn.getChildren()) subCata1.add(_stn1);
+                    canBegin=canBegin||_stn.getId().equals(beginCatalogId);
+                    if (!canBegin) continue;
+                    orSql=" or a."+idCName+"='"+_stn.getId()+"'";
+                    if (recursionTree==1&&!_stn.isLeaf()) {
+                        List<TreeNode<? extends TreeNodeBean>> allTn=TreeUtils.getDeepList(_stn);
+                        if (allTn!=null&&!allTn.isEmpty()) {
+                            for (TreeNode<? extends TreeNodeBean> tn: allTn) orSql+=" or a."+idCName+"='"+tn.getId()+"'";
+                        }
                     }
-                }
-                subCata=subCata1;
-            }
-            if (!catalogType.equals("-1")) getContentSql=", wt_ChannelAsset b";
-            getContentSql="select #cataType#distinct a."+typeCName+", a."+resIdCName+" from "+tableName+" a"+getContentSql+" where";
-            getContentSql+=(catalogType.equals("-1")?" a.isValidate=1 and a.flowFlag=2":" (a.dictMid='"+catalogType+"') and (a."+typeCName+"=b.assetType and a."+resIdCName+"=b.assetId and b.isValidate=1 and b.flowFlag=2)");
-            getContentSql+="#mediaType#";
-            if (mediaFilterSql.length()>0) getContentSql+=" and ("+mediaFilterSql+")";
-            getContentSql+="#orSql#";
-            getCountSql="select count(*) from ("+getContentSql.replaceAll("#cataType#", "").replaceAll("#mediaType#", "")+") as b";
-            if (catalogType.equals("-1")) {//栏目
-                if (!root.isLeaf()) getContentSql+=" order by a.pubTime desc";
-                else getContentSql+=" order by a.topSort desc, a.pubTime desc";
-            } else {//分类
-                getContentSql+=" order by field(a.dictDid,"+orderBySql+")";
-                if (!root.isLeaf()) getContentSql+=",b.pubTime desc";
-                else getContentSql+=",b.topSort desc, b.pubTime desc";
-            }
-            String oneCata="";
-            String getContentSql_1="";
-            for (int i=0; i<subCata.size(); i++) {
-                TreeNode<? extends TreeNodeBean> _stn=subCata.get(i);
-                orSql=" or a."+idCName+"='"+_stn.getId()+"'";
-                if (recursionTree==1&&!_stn.isLeaf()) {
-                    List<TreeNode<? extends TreeNodeBean>> allTn=TreeUtils.getDeepList(_stn);
-                    if (allTn!=null&&!allTn.isEmpty()) {
-                        for (TreeNode<? extends TreeNodeBean> tn: allTn) orSql+=" or a."+idCName+"='"+tn.getId()+"'";
+                    if (orSql.length()>0) {
+                        orSql=catalogType.equals("-1")?orSql.substring(4):" a.dictMid='"+catalogType+"' and ("+orSql.substring(4)+")";
                     }
+                    //先不加排序，太慢了
+                    oneCataSql=getContentSql;
+                    if (catalogType.equals("-1")) {//栏目
+                        if (!_stn.isLeaf()) oneCataSql+=" order by a.pubTime desc";
+                        else oneCataSql+=" order by a.topSort desc, a.pubTime desc";
+                    } else {//分类
+                        oneCataSql+=" order by ";
+                        if (!StringUtils.isNullOrEmpty(catalogId)) oneCataSql+="field(a.dictDid,'"+catalogId+"'),";
+                        if (!_stn.isLeaf()) oneCataSql+=" b.pubTime desc";
+                        else oneCataSql+=" b.topSort desc, b.pubTime desc";
+                    }
+                    oneCataSql=oneCataSql.replaceAll("#subOr#", " and ("+orSql+") ")+" limit "+perSize;
+                    oneCataSql="select '"+_stn.getId()+"' ThisCataId, cidt.* from ("+oneCataSql+") cidt";
+                    //加入电台的特殊处理
+                    if (mediaType!=null&&mediaType.equals("RADIO")) {
+                        //为填充其他信息做准备
+                        String extSql=orSql.replaceAll("a\\.", "b\\.");
+                        //联合中央台
+                        String nationalSql="select distinct a.assetType, a.assetId from wt_ChannelAsset a ";
+                        if (!StringUtils.isNullOrEmptyOrSpace(catalogId)) {
+                            if (catalogType.equals("-1")) nationalSql+=" inner join wt_ChannelAsset b on a.assetType=b.assetType and a.assetId=b.assetId and ("+extSql+") ";
+                            else nationalSql+=" inner join wt_ResDict_Ref b on a.assetType=b.resTableName and a.assetId=b.resId and b.dictMid='"+catalogType+"' and ("+extSql+") ";
+                        }
+                        nationalSql+="where a.channelId='dtfl2001_1' and a.assetType='wt_Broadcast' and a.flowFlag=2 and a.isValidate=1";
+                        nationalSql="select '"+_stn.getId()+"' ThisCataId, national.* from ("+nationalSql+" limit "+perSize+") national";
+                        oneCataSql=oneCataSql+" union "+nationalSql;
+                        String neighborSql=null;
+                        if (!neighborIds.isEmpty()) {
+                            neighborSql="select distinct a.resTableName, a.resId from wt_ResDict_Ref a ";
+                            if (!StringUtils.isNullOrEmptyOrSpace(catalogId)) {
+                                if (catalogType.equals("-1")) neighborSql+=" inner join wt_ChannelAsset b on a.resTableName=b.assetType and a.resId=b.assetId and isValidate=1 and flowFlag=2 and ("+extSql+")";
+                                else {
+                                    neighborSql+=" inner join wt_ResDict_Ref  b on a.resTableName=b.resTableName and a.resId=b.resId' and b.dictMid='"+catalogType+"' and ("+extSql+")";
+                                    neighborSql+=" inner join wt_ChannelAsset c on a.resTableName=c.assetType and a.resId=c.assetId and c.isValidate=1 and c.flowFlag=2";
+                                }
+                            }
+                            neighborSql+=" where a.resTableName='wt_Broadcast' and a.dictMid='2'";
+                            if (catalogType.equals("-1")) {
+                                if (!StringUtils.isNullOrEmptyOrSpace(catalogId)) neighborSql+=" order by field(b.channelId, '"+catalogId+"'), field(a.dictDid";
+                                else neighborSql+=" order by field(a.dictDid";
+                            } else {
+                                neighborSql+=" order by field(a.dictDid";
+                            }
+                            for (int j=neighborIds.size()-1; j>=0; j--) {
+                                neighborSql+=",'"+neighborIds.get(j)+"'";
+                            }
+                            neighborSql+=") desc";
+                        }
+                        if (!StringUtils.isNullOrEmptyOrSpace(neighborSql)) {
+                            neighborSql="select '"+_stn.getId()+"' ThisCataId, neighbor.* from ("+neighborSql+" limit "+perSize+") neighbor";
+                            oneCataSql=oneCataSql+" union "+neighborSql;
+                        }
+                    }
+                    ret.add("select * from ("+oneCataSql+") as allSql limit "+perSize);
                 }
-                if (orSql.length()>0) {
-                    orSql=catalogType.equals("-1")?orSql.substring(4):" a.dictMid='"+catalogType+"' and ("+orSql.substring(4)+")";
-                }
-                oneCata=getContentSql.replaceAll("#cataType#", "'"+subCata.get(i).getId()+"' ThisCataId,").replace("#orSql#", " and ("+orSql+") ")+" limit "+perSize;
-                getContentSql_1+=" union all select * from ("+oneCata+")";
             }
-            getContentSql=getContentSql_1.substring(11);
         }
-        if (getContentSql.isEmpty()) return null;
-        List<String> ret=new ArrayList<String>();
-        ret.add(getContentSql);
-        ret.add(getCountSql);
+        if (ret.isEmpty()) return null;
         return ret;
     }
     /**
@@ -693,7 +898,7 @@ public class GetContents extends GetBizData {
         @Override
         public void run() {
             if ((contentInfo==null||contentInfo.isEmpty())&&(cPo==null)) return;
-            if (contentInfo!=null&&contentInfo.isEmpty()) {
+            if (contentInfo!=null&&!contentInfo.isEmpty()) {
                 MediaType MT=MediaType.buildByTypeName(contentInfo.get("MediaType")+"");
                 CacheDBPo cacheDBPo=new CacheDBPo();
                 cacheDBPo.setId(contentInfo.get("MediaType")+"_"+contentInfo.get("ContentId")+"_INFO");

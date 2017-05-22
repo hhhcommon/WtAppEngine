@@ -59,7 +59,7 @@ public class BcProgrammeService {
 		m.put("weekDay", weekDay);
 		m.put("sort", 0);
 		m.put("wheresql", "'"+timestr + "' BETWEEN beginTime and endTime");
-		m.put("orderByClause", " validTime desc");
+		m.put("orderByClause", " validTime");
 		m.put("limitNum", "1");
 		BCProgrammePo bcPo = bcProDao.getInfoObject("getList", m);
 		if (bcPo!=null) {
@@ -89,7 +89,8 @@ public class BcProgrammeService {
         Map<String, Object> m = new HashMap<>();
         m.put("weekDay", week);
         m.put("sort", 0);
-        m.put("wheresql", "("+orSql+") and '"+timestr + "' BETWEEN beginTime and endTime");
+        m.put("orderByClause", " bcId, validTime");
+        m.put("wheresql", "("+orSql+") and ('"+timestr + "'>beginTime and '"+timestr + "'<endTime)");
         List<BCProgrammePo> bcPoList=bcProDao.queryForList("getList", m);
 
         if (bcPoList==null||bcPoList.isEmpty()) return null;

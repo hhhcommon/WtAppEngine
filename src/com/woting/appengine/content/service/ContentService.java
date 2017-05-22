@@ -970,7 +970,7 @@ public class ContentService {
         List<Map> lm=(List<Map>)param.get("List");
         if (lm==null||lm.isEmpty()) return param;
 
-        //3-扫描，并获取需要得到播放次数的列，得到需要的电台
+        //3-扫描，并获取需要得到播放次数的列，得到需要的电台，清除空域
         resultType=0;
         Map<String, Long> contentPlayCountMap=new HashMap<String, Long>();
         String bcIds="";
@@ -984,7 +984,7 @@ public class ContentService {
                     MediaType MT=MediaType.buildByTypeName(""+m2.get("MediaType"));
                     if (MT==MediaType.ERR) continue;
                     contentPlayCountMap.put(m2.get("MediaType")+"_"+m2.get("ContentId"), 0l);
-                    if (MT==MediaType.RADIO) bcIds=","+m2.get("ContentId");
+                    if (MT==MediaType.RADIO) bcIds+=","+m2.get("ContentId");
                     if (hasFList) {
                         boolean find=false;
                         for (Map fm: fList) {
@@ -1001,11 +1001,11 @@ public class ContentService {
             for (Map m: lm) {
                 if (m==null) continue;
                 contentPlayCountMap.put(m.get("MediaType")+"_"+m.get("ContentId"), 0l);
+                MediaType MT=MediaType.buildByTypeName(""+m.get("MediaType"));
+                if (MT==MediaType.ERR) continue;
+                if (MT==MediaType.RADIO) bcIds+=","+m.get("ContentId");
                 if (hasFList) {
                     boolean find=false;
-                    MediaType MT=MediaType.buildByTypeName(""+m.get("MediaType"));
-                    if (MT==MediaType.ERR) continue;
-                    if (MT==MediaType.RADIO) bcIds=","+m.get("ContentId");
                     for (Map fm: fList) {
                         if (m.get("ContentId").equals(fm.get("resId"))&&fm.get("resTableName").equals(MT.getTabName())) {
                             find=true;
@@ -1029,14 +1029,18 @@ public class ContentService {
         }
         //获得当前播放列表
         Map<String, String> curBcPlayingName=null;
-        if (bcIds.length()>=0) curBcPlayingName=getCurBcPlaying(bcIds.substring(1));
+        try {
+            if (bcIds.length()>0) curBcPlayingName=getCurBcPlaying(bcIds.substring(1));
+        } catch(Exception e) {
+        }
 
-        //填充播放次数
+        //填充播放次数，和电台当前播放节目
         if (resultType==1||resultType==2) {
-            for (Map m: lm) {
-                List<Map> lm2=(List<Map>)m.get("List");
-                for (Map m2: lm2) {
+            for (Map<String, Object> m: lm) {
+                List<Map<String, Object>> lm2=(List<Map<String, Object>>)m.get("List");
+                for (Map<String, Object> m2: lm2) {
                     Long l1=contentPlayCountMap.get(m2.get("MediaType")+"_"+m2.get("ContentId")+"_PLAYCOUNT");
+                    if (l1==null) l1=0l;
                     Long l2=0l;
                     try {
                         l2=Long.parseLong(m2.get("PlayCount")+"");
@@ -1047,15 +1051,18 @@ public class ContentService {
                     else {
                        if (l1>l2) m2.put("PlayCount", convertToCName(l1));
                     }
-                    if (curBcPlayingName==null||curBcPlayingName.isEmpty()) continue;
-                    MediaType MT=MediaType.buildByTypeName(""+m2.get("MediaType"));
-                    if (MT==MediaType.RADIO && curBcPlayingName.get(m2.get("ContentId"))!=null) m2.put("IsPlaying", curBcPlayingName.get(m2.get("ContentId")));
+                    if (curBcPlayingName!=null&&!curBcPlayingName.isEmpty()) {
+                        MediaType MT=MediaType.buildByTypeName(""+m2.get("MediaType"));
+                        if (MT==MediaType.RADIO && curBcPlayingName.get(m2.get("ContentId"))!=null) m2.put("IsPlaying", curBcPlayingName.get(m2.get("ContentId")));
+                    }
+                    try{cleanContentMap(m2);}catch(Exception e) {e.printStackTrace();};
                 }
             }
         } else if (resultType==3) {//列表
             for (Map m: lm) {
                 if (m==null) continue;
                 Long l1=contentPlayCountMap.get(m.get("MediaType")+"_"+m.get("ContentId")+"_PLAYCOUNT");
+                if (l1==null) l1=0l;
                 Long l2=0l;
                 try {
                     l2=Long.parseLong(m.get("PlayCount")+"");
@@ -1066,9 +1073,11 @@ public class ContentService {
                 else {
                    if (l1>l2) m.put("PlayCount", convertToCName(l1));
                 }
-                if (curBcPlayingName==null||curBcPlayingName.isEmpty()) continue;
-                MediaType MT=MediaType.buildByTypeName(""+m.get("MediaType"));
-                if (MT==MediaType.RADIO && curBcPlayingName.get(m.get("ContentId"))!=null) m.put("IsPlaying", curBcPlayingName.get(m.get("ContentId")));
+                if (curBcPlayingName!=null&&!curBcPlayingName.isEmpty()) {
+                    MediaType MT=MediaType.buildByTypeName(""+m.get("MediaType"));
+                    if (MT==MediaType.RADIO && curBcPlayingName.get(m.get("ContentId"))!=null) m.put("IsPlaying", curBcPlayingName.get(m.get("ContentId")));
+                }
+                try{cleanContentMap(m);}catch(Exception e) {e.printStackTrace();};
             }
         }
         return param;
@@ -2991,7 +3000,7 @@ public class ContentService {
             List<Map<String, Object>> tempList=contentDao.queryForListAutoTranform("getSmSubMedias", paraM);
             if (tempList!=null&&tempList.size()>0) {
                 List<String> subIdList=new ArrayList<String>();
-                for (Map<String, Object> m: tempList) subIdList.add(m.get("id")+"");
+                for (Map<String, Object> m: tempList) subIdList.add("AUDIO_"+m.get("id"));
                 retInfo.put("SubList", subIdList);
                 //得到第一个内容
                 Map<String, Object> firstMa=getMaInfo4Cache(subIdList.get(0));
@@ -3001,5 +3010,38 @@ public class ContentService {
             }
         }
         return retInfo;
+    }
+
+    /*
+     * 清除内容对象中的空域
+     * @param contentM 内容对象是Map
+     */
+    @SuppressWarnings("unchecked")
+    private void cleanContentMap(Map<String, Object> contentM) {
+        cleanMap(contentM);
+        for (String k: contentM.keySet()) {
+            if (contentM.get("SubList")!=null) {
+                try {
+                    List<Map<String, Object>> subL=(List<Map<String, Object>>)contentM.get("SubList");
+                    if (subL!=null&&!subL.isEmpty()) {
+                        for (int i=0; i<subL.size(); i++) {
+                            Map<String, Object> subOne=subL.get(i);
+                            if (subOne!=null&&!subOne.isEmpty()) cleanMap(subOne);
+                        }
+                    }
+                } catch(Exception e) {
+                }
+            }
+        } 
+    }
+    private void cleanMap(Map<String, Object> m) {
+        List<String> cleanKeys=new ArrayList<String>();
+        for (String k: m.keySet()) {
+            if (m.get(k)==null) cleanKeys.add(k);
+        }
+        if (cleanKeys.isEmpty()) return;
+        for (String delKey: cleanKeys) {
+            m.remove(delKey);
+        }
     }
 }
