@@ -349,29 +349,29 @@ public class ContentController {
             //检测内容是否存在redis里
 //            map = ContentRedisUtils.isOrNoToLocal(m, 1);
 //            if (map!=null) {
-//				int isnum = (int) map.get("IsOrNoLocal");
-//				Object info = map.get("Info");
-//				if (isnum == 0) {
-//					contentInfo = (Map<String, Object>) info;
-//				} else if (isnum == 1) {
-//					contentId = (String) info;
-//				}
-//			}
+//              int isnum = (int) map.get("IsOrNoLocal");
+//              Object info = map.get("Info");
+//              if (isnum == 0) {
+//                  contentInfo = (Map<String, Object>) info;
+//              } else if (isnum == 1) {
+//                  contentId = (String) info;
+//              }
+//          }
 //            map=new HashMap<>();
             
             if (contentInfo==null) {
-				if (mediaType.equals("SEQU")) contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page, sortType, mUdk);
-	            else
-	            if (mediaType.equals("TTS")) {
-	                ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
-	                if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
-	                    JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory123");
-	                    RedisOperService roService=new RedisOperService(conn);
-	                    contentInfo=SearchUtils.getNewsInfo(contentId, roService);
-	                }
-	            } else if (mediaType.equals("AUDIO"))  contentInfo=contentService.getMaInfo(contentId, mUdk);
-	            else if (mediaType.equals("RADIO"))  contentInfo=contentService.getBcInfo(contentId, mUdk);
-			}
+                if (mediaType.equals("SEQU")) contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page, sortType, mUdk);
+                else
+                if (mediaType.equals("TTS")) {
+                    ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+                    if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
+                        JedisConnectionFactory conn=(JedisConnectionFactory)WebApplicationContextUtils.getWebApplicationContext(sc).getBean("connectionFactory123");
+                        RedisOperService roService=new RedisOperService(conn);
+                        contentInfo=SearchUtils.getNewsInfo(contentId, roService);
+                    }
+                } else if (mediaType.equals("AUDIO"))  contentInfo=contentService.getMaInfo(contentId, mUdk);
+                else if (mediaType.equals("RADIO"))  contentInfo=contentService.getBcInfo(contentId, mUdk);
+            }
             
             if (contentInfo!=null&&contentInfo.size()>0) {
                 map.put("ResultInfo", contentInfo);
@@ -477,19 +477,19 @@ public class ContentController {
             //检测内容是否存在redis里
 //            map = ContentRedisUtils.isOrNoToLocal(m, 1);
 //            if (map!=null) {
-//				int isnum = (int) map.get("IsOrNoLocal");
-//				Object info = map.get("Info");
-//				if (isnum == 0) {
-//					contentInfo = (Map<String, Object>) info;
-//				} else if (isnum == 1) {
-//					contentId = (String) info;
-//				}
-//			}
+//              int isnum = (int) map.get("IsOrNoLocal");
+//              Object info = map.get("Info");
+//              if (isnum == 0) {
+//                  contentInfo = (Map<String, Object>) info;
+//              } else if (isnum == 1) {
+//                  contentId = (String) info;
+//              }
+//          }
 //            map=new HashMap<>();
             contentInfo=contentService.getSeqMaInfo(contentId, pageSize, page, sortType, mUdk);
             if (contentInfo==null) {
-				contentInfo = contentService.getSmSubMedias(contentId, page, pageSize, sortType, mUdk);
-			}
+                contentInfo = contentService.getSmSubMedias(contentId, page, pageSize, sortType, mUdk);
+            }
             
             if (contentInfo!=null&&contentInfo.size()>0) {
                 map.put("ResultInfo", contentInfo);
@@ -612,23 +612,23 @@ public class ContentController {
             boolean isok = false;
 //            map = ContentRedisUtils.isOrNoToLocal(m, 3);
 //            if (map!=null) {
-//				int isnum = (int) map.get("IsOrNoLocal");
-//				Object info = map.get("Info");
-//				if (isnum == 0) { //未入库
-//					isok = false;
-//				} else if (isnum == 1) { //已入库
-//					contentId = (String) info;
-//					isok = true;
-//				} else if (isnum == 2) { //redis不存在内容
-//					isok = true;
-//				}
-//			}
+//              int isnum = (int) map.get("IsOrNoLocal");
+//              Object info = map.get("Info");
+//              if (isnum == 0) { //未入库
+//                  isok = false;
+//              } else if (isnum == 1) { //已入库
+//                  contentId = (String) info;
+//                  isok = true;
+//              } else if (isnum == 2) { //redis不存在内容
+//                  isok = true;
+//              }
+//          }
 //            map=new HashMap<>();
 
             isok=true;
             if (isok) {
-				flag=favoriteService.favorite(mediaType, contentId, flag, mUdk);
-			}
+                flag=favoriteService.favorite(mediaType, contentId, flag, mUdk);
+            }
             
             if (flag==1) {
                 map.put("ReturnType", "1001");
@@ -1007,8 +1007,8 @@ public class ContentController {
             }
             String requestTimesstr = m.get("RequestTimes")==null?null:m.get("RequestTimes")+"";
             if (StringUtils.isNullOrEmptyOrSpace(requestTimesstr) || requestTimesstr.equals("null")) {
-            	requestTimesstr = System.currentTimeMillis()+"";
-			}
+                requestTimesstr = System.currentTimeMillis()+"";
+            }
             List<Map<String, Object>> bcps = contentService.BcProgrammes(bcId, requestTimesstr);
             if (bcps!=null&&bcps.size()>0) {
                 map.put("ResultList", bcps);
@@ -1100,8 +1100,8 @@ public class ContentController {
             }
             String requestTimesstr = m.get("RequestTimes")==null?null:m.get("RequestTimes")+"";
             if (StringUtils.isNullOrEmptyOrSpace(requestTimesstr) || requestTimesstr.equals("null")) {
-            	requestTimesstr = System.currentTimeMillis()+"";
-			}
+                requestTimesstr = System.currentTimeMillis()+"";
+            }
             long requestTime = Long.valueOf(requestTimesstr);
             Map<String, Object> bcps = contentService.getBCIsPlayingProgramme(bcIds, requestTime);
             if (bcps!=null&&bcps.size()>0) {
@@ -1221,21 +1221,21 @@ public class ContentController {
 //            boolean isok = false;
 //            map = ContentRedisUtils.isOrNoToLocal(m, 3);
 //            if (map!=null) {
-//				int isnum = (int) map.get("IsOrNoLocal");
-//				Object info = map.get("Info");
-//				if (isnum == 0) { //未入库
-//					isok = false;
-//				} else if (isnum == 1) { //已入库
-//					contentId = (String) info;
-//					isok = true;
-//				} else if (isnum == 2) {
-//					isok = true;
-//				}
-//			}
+//              int isnum = (int) map.get("IsOrNoLocal");
+//              Object info = map.get("Info");
+//              if (isnum == 0) { //未入库
+//                  isok = false;
+//              } else if (isnum == 1) { //已入库
+//                  contentId = (String) info;
+//                  isok = true;
+//              } else if (isnum == 2) {
+//                  isok = true;
+//              }
+//          }
 //            map = new HashMap<>();
 //            if (isok) {
-				flag=subscribeService.Subscribe(contentId, flag, mUdk);
-//			}
+                flag=subscribeService.Subscribe(contentId, flag, mUdk);
+//          }
             
             if (flag==1) {
                 map.put("ReturnType", "1001");
@@ -1337,7 +1337,7 @@ public class ContentController {
             List<Map<String, Object>> result=subscribeService.getSubscribeList(pageSize, page, sortType, mUdk);
             
             if (result!=null&&result.size()>0) {
-            	map.put("ReturnType", "1001");
+                map.put("ReturnType", "1001");
                 map.put("ResultList", result);
             } else {
                 map.put("ReturnType", "1011");
