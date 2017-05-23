@@ -119,7 +119,9 @@
 
   <!-- 下面是系列内容的获得 -->
   <select id="getBcById" parameterType="java.lang.String" resultType="java.util.HashMap">
-    select * from wt_Broadcast where id=#{value,jdbcType=VARCHAR}
+    select a.*, b.bcSource, b.flowURI from wt_Broadcast a
+    left join wt_BCLiveFlow b on a.id=b.bcId and b.isMain=1
+    where a.id=#{value,jdbcType=VARCHAR}
   </select>
   <select id="getMediaById" parameterType="java.lang.String" resultType="java.util.HashMap">
     select * from wt_MediaAsset where id=#{value,jdbcType=VARCHAR}

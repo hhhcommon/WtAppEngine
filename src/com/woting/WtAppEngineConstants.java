@@ -11,4 +11,6 @@ public abstract class WtAppEngineConstants {
     public static final String APP_VERSIONCONFIG="AppVersionConfig";
     //socket客户端连接对象
     public static final String SOCKET_OBJ="SocketClientObj";
+    //内容配置信息
+    public static final String CONTENT_CFG="ContentCfg";
 }

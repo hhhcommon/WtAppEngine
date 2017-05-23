@@ -45,6 +45,7 @@ import com.spiritdata.framework.util.StringUtils;
 import com.spiritdata.framework.util.TreeUtils;
 import com.woting.WtAppEngineConstants;
 import com.woting.appengine.content.AddCacheDBInfoThread;
+import com.woting.appengine.content.ContentConfig;
 import com.woting.appengine.favorite.persis.po.UserFavoritePo;
 import com.woting.appengine.favorite.service.FavoriteService;
 import com.woting.appengine.solr.SolrUpdateThread;
@@ -660,14 +661,7 @@ public class ContentService {
             Map<String, Object> param=new HashMap<String, Object>();
             param.put("mUdk", mUdk);
             String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
-            RedisOperService roService=new RedisOperService(redisConn7_2, 11);
-            Map<String, Object> bizData=null;
-            try {
-                bizData=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
-            } finally {
-                if (roService!=null) roService.close();
-                roService=null;
-            }
+            Map<String, Object> bizData=this.getBizData(key, new GetFavoriteList(param));
             if (bizData!=null) {
                 fList=new ArrayList<Map<String, Object>>();
                 if (bizData.get("FromBiz")!=null) {
@@ -771,14 +765,7 @@ public class ContentService {
             Map<String, Object> param=new HashMap<String, Object>();
             param.put("mUdk", mUdk);
             String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
-            RedisOperService roService=new RedisOperService(redisConn7_2, 11);
-            Map<String, Object> bizData=null;
-            try {
-                bizData=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
-            } finally {
-                if (roService!=null) roService.close();
-                roService=null;
-            }
+            Map<String, Object> bizData=getBizData(key, new GetFavoriteList(param));
             if (bizData!=null) {
                 fList=new ArrayList<Map<String, Object>>();
                 if (bizData.get("FromBiz")!=null) {
@@ -838,14 +825,7 @@ public class ContentService {
             Map<String, Object> param=new HashMap<String, Object>();
             param.put("mUdk", mUdk);
             String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
-            RedisOperService roService=new RedisOperService(redisConn7_2, 11);
-            Map<String, Object> bizData=null;
-            try {
-                bizData=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
-            } finally {
-                if (roService!=null) roService.close();
-                roService=null;
-            }
+            Map<String, Object> bizData=getBizData(key, new GetFavoriteList(param));
             if (bizData!=null) {
                 fList=new ArrayList<Map<String, Object>>();
                 if (bizData.get("FromBiz")!=null) {
@@ -911,13 +891,7 @@ public class ContentService {
         if (mUdk!=null) {
             param.put("mUdk", mUdk);
             key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
-            Map<String, Object> bizData=null;
-            try {
-                bizData=roService.getAndSet(key, new GetFavoriteList(param), 30*60*1000, true);
-            } finally {
-                if (roService!=null) roService.close();
-                roService=null;
-            }
+            Map<String, Object> bizData=getBizData(key, new GetFavoriteList(param));
             if (bizData!=null) {
                 fList=new ArrayList<Map<String, Object>>();
                 if (bizData.get("FromBiz")!=null) {
@@ -3019,20 +2993,18 @@ public class ContentService {
     @SuppressWarnings("unchecked")
     private void cleanContentMap(Map<String, Object> contentM) {
         cleanMap(contentM);
-        for (String k: contentM.keySet()) {
-            if (contentM.get("SubList")!=null) {
-                try {
-                    List<Map<String, Object>> subL=(List<Map<String, Object>>)contentM.get("SubList");
-                    if (subL!=null&&!subL.isEmpty()) {
-                        for (int i=0; i<subL.size(); i++) {
-                            Map<String, Object> subOne=subL.get(i);
-                            if (subOne!=null&&!subOne.isEmpty()) cleanMap(subOne);
-                        }
+        if (contentM.get("SubList")!=null) {
+            try {
+                List<Map<String, Object>> subL=(List<Map<String, Object>>)contentM.get("SubList");
+                if (subL!=null&&!subL.isEmpty()) {
+                    for (int i=0; i<subL.size(); i++) {
+                        Map<String, Object> subOne=subL.get(i);
+                        if (subOne!=null&&!subOne.isEmpty()) cleanMap(subOne);
                     }
-                } catch(Exception e) {
                 }
+            } catch(Exception e) {
             }
-        } 
+        }
     }
     private void cleanMap(Map<String, Object> m) {
         List<String> cleanKeys=new ArrayList<String>();
@@ -3043,5 +3015,36 @@ public class ContentService {
         for (String delKey: cleanKeys) {
             m.remove(delKey);
         }
+    }
+
+    /**
+     * 获得业务数据，从Redis中
+     * @param key 业务key值
+     * @param getData 获得业务数据的方法类实例
+     * @param expiredTime 过期时间
+     * @param isResident 如果Redis中有数据，是否钉在内存中，若是false，则该条数据将按照过期时间失效
+     * @param roService redis操作服务类
+     * @return 业务数据
+     */
+    private Map<String, Object> getBizData(String key, GetBizData getData) {
+        ContentConfig cc=(ContentConfig)SystemCache.getCache(WtAppEngineConstants.CONTENT_CFG).getContent();
+        Map<String, Object> bizData=null;
+        if (!cc.isUseRedis()) {
+            Object o=getData.getBizData();
+            if (o!=null) {
+                bizData=new HashMap<String, Object>();
+                bizData.put("FromBiz", o);
+            }
+        } else {
+            RedisOperService roService=new RedisOperService(redisConn7_2, 11);
+            try {
+                bizData=roService.getAndSet(key, getData, cc.getExpiredTime(), cc.isResident());
+            } finally {
+                if (roService!=null) roService.close();
+                roService=null;
+            }
+        }
+        return bizData.isEmpty()?null:bizData;
+
     }
 }

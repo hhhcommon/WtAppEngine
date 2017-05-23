@@ -10,6 +10,7 @@ import com.spiritdata.framework.core.cache.CacheEle;
 import com.spiritdata.framework.core.cache.SystemCache;
 import com.woting.WtAppEngineConstants;
 import com.woting.appengine.common.cache.CacheRefreshListener;
+import com.woting.appengine.content.ContentConfig;
 import com.woting.dataanal.gather.API.ApiGatherListener;
 import com.woting.searchword.SearchWordListener;
 import com.woting.push.socketclient.SocketClientConfig;
@@ -22,11 +23,15 @@ public class AppRunningListener implements ServletContextListener {
     //初始化
     public void contextInitialized(ServletContextEvent arg0) {
         try {
-//            //启动Socket
-//            SocketClient sc=new SocketClient(SocketClientConfig.loadConfig());
-//            sc.workStart();
-//            SystemCache.setCache(new CacheEle<SocketClient>(WtAppEngineConstants.SOCKET_OBJ, "模块", sc));//注册到内存
+            //启动Socket
+            SocketClient sc=new SocketClient(SocketClientConfig.loadConfig());
+            sc.workStart();
+            SystemCache.setCache(new CacheEle<SocketClient>(WtAppEngineConstants.SOCKET_OBJ, "Socket配置", sc));//注册到内存
 
+            //获取Content参数
+            ContentConfig cc=new ContentConfig();
+            cc.loadConfig();
+            SystemCache.setCache(new CacheEle<ContentConfig>(WtAppEngineConstants.CONTENT_CFG, "内容配置", cc));//注册到内存
             //启动搜索词服务
             SearchWordListener.begin();
             //启动缓存刷新服务

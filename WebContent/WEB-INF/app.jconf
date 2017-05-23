@@ -15,5 +15,11 @@
     "reConnStrategy":[
       "INTE::500","INTE::1000","INTE::3000","INTE::6000","GOTO::0"
     ]
+  },
+  //使用Redis
+  "contentRedisCfg":{
+    "useRedis":"0", //=1:使用Redis；其他值，不使用Redis
+    "expiredTime":"30*60*1000", //=过期时间
+    "isResident":"0" //是否钉在内存中，若是false，则该条数据将按照过期时间失效；=1:钉在内存
   }
 }
