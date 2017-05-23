@@ -44,6 +44,15 @@
   <select id="getInfoById" resultMap="BaseResultMap" parameterType="java.lang.String">
     select <include refid="Base_Column_List"/> from wt_PlayCountDB where id=#{id,jdbcType=VARCHAR}
   </select>
+  <!-- 获取轮播图列表总数 -->
+  <select id="getListById" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select * from wt_PlayCountDB
+    <if test="ids!=null">
+      <foreach collection="ids" index="index" item="value" open="where " separator="or" close="">
+        id=#{value, jdbcType=VARCHAR}
+      </foreach>
+    </if>
+  </select>
   
   <!-- 新增数据 -->
   <insert id="insert" parameterType="java.util.Map">

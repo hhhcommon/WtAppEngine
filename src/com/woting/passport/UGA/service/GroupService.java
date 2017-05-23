@@ -424,12 +424,28 @@ public class GroupService {
     public void updateGroup(Map<String, Object> newInfo, String userId, GroupPo g) {
         boolean changed=false;
         if (g.getAdminUserIds().indexOf(userId)!=-1) { //修改组本身信息
-            if (newInfo.get("groupDescn")!=null) g.setDescn(newInfo.get("groupDescn")+"");
-            if (newInfo.get("groupName")!=null) g.setGroupName(newInfo.get("groupName")+"");
-            if (newInfo.get("groupSignature")!=null) g.setGroupSignature(newInfo.get("groupSignature")+"");
-            if (newInfo.get("groupFreq")!=null) g.setDefaultFreq(newInfo.get("groupFreq")+"");
-            if (newInfo.get("groupType")==null) g.setGroupType(-1);
-            this.updateGroup(g);
+            GroupPo newGp=new GroupPo();
+            newGp.setGroupId(g.getGroupId());
+            if (newInfo.get("groupDescn")!=null) {
+                g.setDescn(newInfo.get("groupDescn")+"");
+                newGp.setDescn(newInfo.get("groupDescn")+"");
+            }
+            if (newInfo.get("groupName")!=null) {
+                g.setGroupName(newInfo.get("groupName")+"");
+                newGp.setGroupName(newInfo.get("groupName")+"");
+            }
+            if (newInfo.get("groupSignature")!=null) {
+                g.setGroupSignature(newInfo.get("groupSignature")+"");
+                newGp.setGroupSignature(newInfo.get("groupSignature")+"");
+            }
+            if (newInfo.get("groupFreq")!=null) {
+                g.setDefaultFreq(newInfo.get("groupFreq")+"");
+                newGp.setDefaultFreq(newInfo.get("groupFreq")+"");
+            }
+            if (newInfo.get("groupType")==null) {
+                newGp.setGroupType(-1);
+            }
+            this.updateGroup(newGp);
             changed=true;
         }
 

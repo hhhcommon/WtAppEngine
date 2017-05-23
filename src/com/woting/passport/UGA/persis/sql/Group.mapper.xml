@@ -105,7 +105,6 @@
   <update id="update" parameterType="java.util.Map">
     update plat_Group
     <set>
-      <if test="groupId!=null">id=#{groupId,jdbcType=VARCHAR},</if>
       <if test="groupNum!=null">groupNum=#{groupNum,jdbcType=VARCHAR},</if>
       <if test="groupName!=null">groupName=#{groupName,jdbcType=VARCHAR},</if>
       <if test="groupSignature!=null">groupSignature=#{groupSignature,jdbcType=VARCHAR},</if>

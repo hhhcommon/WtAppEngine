@@ -18,7 +18,6 @@ import com.woting.cm.core.media.MediaType;
 public class Discuss extends DiscussPo implements ModelSwapPo {
     private static final long serialVersionUID = 1020093563227522687L;
 
-
     @Override
     public void buildFromPo(Object po) {
         if (po==null) throw new Plat0006CException("Po对象为空，无法从空对象得到概念/逻辑对象！");

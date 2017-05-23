@@ -22,7 +22,7 @@ public class AppRunningListener implements ServletContextListener {
     //初始化
     public void contextInitialized(ServletContextEvent arg0) {
         try {
-            //启动Socket
+//            //启动Socket
 //            SocketClient sc=new SocketClient(SocketClientConfig.loadConfig());
 //            sc.workStart();
 //            SystemCache.setCache(new CacheEle<SocketClient>(WtAppEngineConstants.SOCKET_OBJ, "模块", sc));//注册到内存

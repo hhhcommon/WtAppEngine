@@ -42,6 +42,13 @@
       <if test="orderByClause!=null">order by ${orderByClause}</if>
       <if test="limitNum!=null"> limit ${limitNum}</if>
     </select>
+
+    <!-- 获得当前播放的节目列表 -->
+    <select id="getCurPcList" resultMap="BaseResultMap" parameterType="java.util.Map">
+      select <include refid="Base_Column_List"/> from wt_BCProgramme
+      <if test="_parameter!=null"><include refid="WhereClauseByEntiey"/></if>
+      <if test="wheresql!=null"> and (${wheresql})</if>
+    </select>
 	
 	<insert id="insertList" parameterType="java.util.List">
 		insert into

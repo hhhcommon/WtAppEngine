@@ -170,8 +170,8 @@ public class UserPo extends UgaUser {
         if (!StringUtils.isNullOrEmptyOrSpace(this.nickName)) retM.put("NickName", this.nickName);
         if (!StringUtils.isNullOrEmptyOrSpace(this.mainPhoneNum)&&this.isPubPhoneNum()) retM.put("PhoneNum", this.mainPhoneNum);
         if (!StringUtils.isNullOrEmptyOrSpace(this.descn)) retM.put("Descn", this.descn);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.portraitBig)) retM.put("PortraitBig", this.portraitBig);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.portraitMini)) retM.put("PortraitMini", this.portraitMini);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.portraitBig)) retM.put("Portrait", this.portraitBig);
+        //if (!StringUtils.isNullOrEmptyOrSpace(this.portraitMini)) retM.put("PortraitMini", this.portraitMini);
         DictService dictService=null;
         ServletContext sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
         if (WebApplicationContextUtils.getWebApplicationContext(sc)!=null) {
@@ -233,8 +233,8 @@ public class UserPo extends UgaUser {
         if (!StringUtils.isNullOrEmptyOrSpace(this.mainPhoneNum)) retM.put("PhoneNum", this.mainPhoneNum);
         if (!StringUtils.isNullOrEmptyOrSpace(this.mailAddress)) retM.put("Email", this.mailAddress);
         retM.put("PhoneNumIsPub", this.phoneNumIsPub);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.portraitBig)) retM.put("PortraitBig", this.portraitBig);
-        if (!StringUtils.isNullOrEmptyOrSpace(this.portraitMini)) retM.put("PortraitMini", this.portraitMini);
+        if (!StringUtils.isNullOrEmptyOrSpace(this.portraitBig)) retM.put("Portrait", this.portraitBig);
+//        if (!StringUtils.isNullOrEmptyOrSpace(this.portraitMini)) retM.put("PortraitMini", this.portraitMini);
         if (!StringUtils.isNullOrEmptyOrSpace(this.descn)) retM.put("Descn", this.descn);
         return retM;
     }
