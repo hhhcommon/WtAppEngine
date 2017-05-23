@@ -266,8 +266,9 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='内容快照表'
 PARTITION by LIST COLUMNS(resTableName)
 SUBPARTITION BY KEY(resId)
 SUBPARTITIONS 5 (
-PARTITION p0 values in ('AUDIO'),
-PARTITION p1 values in ('SEQU')
+PARTITION p0 values in ('wt_MediaAsset'),
+PARTITION p1 values in ('wt_SeqMediaAsset'),
+PARTITION p2 values in ('wt_Broadcast')
 );
 
 /** 内容点击量快照表[WT_PLAYCOUNTDB]*/
