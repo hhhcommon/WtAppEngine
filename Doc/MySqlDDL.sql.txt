@@ -692,19 +692,19 @@ ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='031数据日志';
 
 /**== 八、资源与外部系统对照 =============================================*/
 /**032 资产与外部系统对照表[WT_RESORGASSET_Ref]*/
-DROP TABLE IF EXISTS wt_ResOrgAsset_Ref;
-CREATE TABLE wt_ResOrgAsset_Ref (
-  idxMd5        varchar(32)   NOT NULL             COMMENT '用于索引的Md5码，是resTableName+refType+origType+origId，作为唯一索引',
-  resTableName  varchar(200)  NOT NULL             COMMENT 'WT资源类型，表名：主要的资产表，目前1电台；2单体媒体资源；3专辑资源',
-  resId         varchar(32)   NOT NULL             COMMENT '表内记录Id',
-  refType       varchar(20)   NOT NULL             COMMENT '关系类型，目前只有ETL',
-  orgId         varchar(32)   NOT NULL             COMMENT '外部系统ID,对应wt_Organize',
-  origType      varchar(200)  NOT NULL             COMMENT '外部系统中主对象的分类，各个源不相同，有自己的规则',
-  origId        varchar(100)  NOT NULL             COMMENT '外部系统中主对象的ID',
-  contentMd5    varchar(32)                        COMMENT '内容Md5,这个内容是以Wt资源库为准的',
-  dealFlag      int unsigned  NOT NULL  DEFAULT 0  COMMENT '处理类型：0未处理，1已处理',
+DROP TABLE IF EXISTS wt_ResOrgAsset_Ref_New;
+CREATE TABLE wt_ResOrgAsset_Ref_New (
+  id            varchar(32)   NOT NULL             COMMENT 'uuid',
+  resTableName  varchar(200)  NOT NULL             COMMENT '资源库表名称',
+  resId         varchar(32)   NOT NULL             COMMENT '资源库Id',
+  origId        varchar(32)   NOT NULL             COMMENT '抓取中间库Id',
+  origTableName varchar(200)  NOT NULL             COMMENT '抓取中间库表名称',
+  orgName       varchar(20)   NOT NULL             COMMENT '组织名称',
+  origSrcId     varchar(32)   NOT NULL             COMMENT '外平台Id',
+  isSame        int(1) unsigned  NOT NULL  DEFAULT 0  COMMENT '是否重复资源(抓取去重功能入库),0=否，1=是',
   cTime         timestamp     NOT NULL  DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
-  PRIMARY KEY (idxMd5)
+  UNIQUE INDEX dataIdx (origId,isSame) USING HASH,
+  PRIMARY KEY (id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='032资产与外部系统对照表';
 
