@@ -661,7 +661,7 @@ public class ContentService {
             Map<String, Object> param=new HashMap<String, Object>();
             param.put("mUdk", mUdk);
             String key="Favorite="+(mUdk.isUser()?("UserId=["+mUdk.getUserId()+"]=LIST"):("DeviceId=["+mUdk.getDeviceId()+"]=LIST"));
-            Map<String, Object> bizData=this.getBizData(key, new GetFavoriteList(param));
+            Map<String, Object> bizData=getBizData(key, new GetFavoriteList(param));
             if (bizData!=null) {
                 fList=new ArrayList<Map<String, Object>>();
                 if (bizData.get("FromBiz")!=null) {
@@ -884,7 +884,6 @@ public class ContentService {
     public Map<String, Object> getContents(String catalogType, String catalogId, int resultType, String mediaType, int perSize, int pageSize, int page, String beginCatalogId,
                                             int pageType, MobileUDKey mUdk, Map<String, Object> filterData, int recursionTree) {
         Map<String, Object> param=new HashMap<String, Object>();
-        RedisOperService roService=new RedisOperService(redisConn7_2, 11);
         //1-得到喜欢列表
         String key=null;
         List<Map<String, Object>> fList=null;
@@ -923,17 +922,10 @@ public class ContentService {
         param.put("FilterData", filterData);
         param.put("RecursionTree", recursionTree);
 
-        Map<String, Object> bizData=null;
-        roService=new RedisOperService(redisConn7_2, 11);
-        try {
-            GetContents gc=new GetContents(param);
-            gc.setDataSource(dataSource, catchDataSource, this, cacheDBService);
-            bizData=roService.getAndSet(key, gc, 30*60*1000, true);
-        } finally {
-            if (roService!=null) roService.close();
-            roService=null;
-        }
+        GetContents gc=new GetContents(param);
         param=null;
+        gc.setDataSource(dataSource, catchDataSource, this, cacheDBService);
+        Map<String, Object> bizData=getBizData(key, gc);
         if (bizData!=null) {
             if (bizData.get("FromBiz")!=null) param=(Map)(bizData.get("FromBiz"));
             else
@@ -3044,7 +3036,7 @@ public class ContentService {
                 roService=null;
             }
         }
-        return bizData.isEmpty()?null:bizData;
+        return bizData==null||bizData.isEmpty()?null:bizData;
 
     }
 }

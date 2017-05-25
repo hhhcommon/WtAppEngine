@@ -107,15 +107,14 @@
   ) c
   order by c.nickName, c.userName, c.loginName
   </select>
-  <!--
-      or a.mailAddress like '%${searchStr}%'
-      or a.mainPhoneNum like '%${searchStr}%'
-  -->
-   <select id="getMembers" resultMap="userMap" parameterType="java.lang.String">
+  <select id="getMembers" resultMap="userMap" parameterType="java.lang.String">
     select * from plat_User where id in (${value})
   </select>
   <select id="getGroupMembersByORIDSQL" resultMap="userMap" parameterType="java.lang.String">
     select <include refid="Base_Column_List_A"/> from plat_User a, plat_GroupUser b where a.id=b.userId and ${value}
+  </select>
+  <select id="getGroupMembers" resultMap="userMap" parameterType="java.lang.String">
+    select <include refid="Base_Column_List_A"/> from plat_User a, plat_GroupUser b where a.id=b.userId and b.groupId=#{value, jdbcType=VARCHAR}
   </select>
 
   <!-- 获得一条数据 -->
