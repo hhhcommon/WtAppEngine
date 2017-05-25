@@ -21,9 +21,11 @@ import com.woting.cm.core.dict.mem._CacheDictionary;
 import com.woting.cm.core.dict.model.DictModel;
 import com.woting.cm.core.dict.model.DictRefRes;
 import com.woting.cm.core.dict.service.DictService;
+import com.woting.passport.UGA.PasswordConfig;
 import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.thirdlogin.ThirdLoginUtils;
 import com.woting.passport.thirdlogin.persis.po.ThirdUserPo;
+import org.apache.commons.codec.digest.DigestUtils;
 
 public class UserService implements UgaUserService {
     @Resource(name="defaultDAO")
@@ -32,6 +34,8 @@ public class UserService implements UgaUserService {
     private MybatisDAO<ThirdUserPo> thirdUserDao;
     @Resource
     private DictService dictService;
+
+    private PasswordConfig pc=null;
 
     @PostConstruct
     public void initParam() {
@@ -115,6 +119,16 @@ public class UserService implements UgaUserService {
     public int insertUser(UserPo user) {
         int i=0;
         try {
+            if (pc==null) pc=(PasswordConfig)SystemCache.getCache(WtAppEngineConstants.PASSWORD_CFG).getContent();
+            if (pc!=null&&pc.isUseEncryption()) {
+                String pwd=user.getPassword();
+                if (pwd!=null&&!pwd.startsWith("--")) {
+                    pwd=DigestUtils.md5Hex(pwd+"##");
+                    pwd=pwd.substring(0, pwd.length()-2)+"##";
+                    user.setPassword(pwd);
+                }
+            }
+            
             if (StringUtils.isNullOrEmptyOrSpace(user.getUserId())) {
                 user.setUserId(SequenceUUID.getUUIDSubSegment(4));
             }
@@ -230,6 +244,12 @@ public class UserService implements UgaUserService {
             }
             //10-用户密码
             if (userInfo.get("password")!=null&&!StringUtils.isNullOrEmptyOrSpace(userInfo.get("password")+"")) {
+                if (pc==null) pc=(PasswordConfig)SystemCache.getCache(WtAppEngineConstants.PASSWORD_CFG).getContent();
+                if (pc!=null&&pc.isUseEncryption()) {
+                    String encryPwd=DigestUtils.md5Hex(userInfo.get("password")+"##");
+                    encryPwd=encryPwd.substring(0, encryPwd.length()-2)+"##";
+                    userInfo.put("password", encryPwd);
+                }
                 OKFields+=",Password";
             }
             //11-手机号码
@@ -372,5 +392,25 @@ public class UserService implements UgaUserService {
         if (tuPo!=null) r.put("count", tuPo.getThirdLoginCount());
        
         return r;
+    }
+
+    /**
+     * 重置所有密码
+     */
+    public void reEncryptionPwd() {
+        List<UserPo> ul=userDao.queryForList();
+        if (ul!=null&&!ul.isEmpty()) {
+            for (UserPo up: ul) {
+                String pwd=up.getPassword();
+                if (pwd!=null&&!StringUtils.isNullOrEmpty(pwd)&&!pwd.startsWith("--")&&pwd.length()!=32&&!pwd.endsWith("##")) {
+                    pwd=DigestUtils.md5Hex(pwd+"##");
+                    pwd=pwd.substring(0, pwd.length()-2)+"##";
+                    UserPo pUp=new UserPo();
+                    pUp.setUserId(up.getUserId());
+                    pUp.setPassword(pwd);
+                    userDao.update(pUp);
+                }
+            }
+        }
     }
 }

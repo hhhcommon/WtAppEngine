@@ -11,6 +11,7 @@ import java.util.Random;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,16 +20,19 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.spiritdata.framework.util.SequenceUUID;
 import com.spiritdata.framework.util.SpiritRandom;
 import com.spiritdata.framework.util.StringUtils;
+import com.spiritdata.framework.core.cache.SystemCache;
 import com.spiritdata.framework.core.lock.BlockLockConfig;
 import com.spiritdata.framework.core.lock.ExpirableBlockKey;
 import com.spiritdata.framework.ext.redis.lock.RedisBlockLock;
 import com.spiritdata.framework.ext.spring.redis.RedisOperService;
 import com.spiritdata.framework.util.JsonUtils;
 import com.spiritdata.framework.util.RequestUtils;
+import com.woting.WtAppEngineConstants;
 import com.woting.cm.core.dict.service.DictService;
 import com.woting.dataanal.gather.API.ApiGatherUtils;
 import com.woting.dataanal.gather.API.mem.ApiGatherMemory;
 import com.woting.dataanal.gather.API.persis.pojo.ApiLogPo;
+import com.woting.passport.UGA.PasswordConfig;
 import com.woting.passport.UGA.persis.pojo.GroupPo;
 import com.woting.passport.UGA.persis.pojo.UserPo;
 import com.woting.passport.UGA.service.GroupService;
@@ -63,6 +67,7 @@ public class PassportController {
     private SessionService sessionService;
     @Resource(name="connectionFactory123")
     JedisConnectionFactory redisConn;
+    private PasswordConfig pc=null;
 
     private UserAliasMemoryManage uamm=UserAliasMemoryManage.getInstance();
 
@@ -152,6 +157,11 @@ public class PassportController {
                 return map;
             }
             //2-判断密码是否匹配
+            if (pc==null) pc=(PasswordConfig)SystemCache.getCache(WtAppEngineConstants.PASSWORD_CFG).getContent();
+            if (pc!=null&&pc.isUseEncryption()&&pwd!=null) {
+                pwd=DigestUtils.md5Hex(pwd+"##");
+                pwd=pwd.substring(0, pwd.length()-2)+"##";
+            }
             if (!u.getPassword().equals(pwd)) {
                 map.put("ReturnType", "1003");
                 map.put("Message", "密码不匹配.");
@@ -297,7 +307,7 @@ public class PassportController {
                 }
                 nu.setMainPhoneNum(phonenum);
             }
-            if (StringUtils.isNullOrEmptyOrSpace(ln)) {
+            if (!StringUtils.isNullOrEmptyOrSpace(ln)) {
                 UserPo oldUser=userService.getUserByLoginName(ln);
                 if (oldUser!=null) { //重复
                     map.put("ReturnType", "10032");
@@ -696,6 +706,12 @@ public class PassportController {
                 return map;
             }
             UserPo u=(UserPo)userService.getUserById(userId);
+
+            if (pc==null) pc=(PasswordConfig)SystemCache.getCache(WtAppEngineConstants.PASSWORD_CFG).getContent();
+            if (pc!=null&&pc.isUseEncryption()&&oldPwd!=null) {
+                oldPwd=DigestUtils.md5Hex(oldPwd+"##");
+                oldPwd=oldPwd.substring(0, oldPwd.length()-2)+"##";
+            }
             if (u.getPassword().equals(oldPwd)) {
                 Map<String, Object> updateInfo=new HashMap<String, Object>();
                 updateInfo.put("userId",  userId);

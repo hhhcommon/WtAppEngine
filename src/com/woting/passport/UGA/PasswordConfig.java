@@ -7,12 +7,12 @@ import com.woting.push.config.Config;
  * @author wanghui
  */
 public class PasswordConfig implements Config {
-    private boolean encryption; //是否对密码进行加密
-    public boolean isEncryption() {
-        return encryption;
+    private boolean useEncryption; //是否对密码进行加密
+    public boolean isUseEncryption() {
+        return useEncryption;
     }
-    public void setEncryption(boolean encryption) {
-        this.encryption=encryption;
+    public void setUseEncryption(boolean useEncryption) {
+        this.useEncryption=useEncryption;
     }
 
     private boolean reEncryption; //是否重新进行加密，只对那些未加密的密码进行处理

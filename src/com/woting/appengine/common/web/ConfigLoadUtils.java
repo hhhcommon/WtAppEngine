@@ -146,15 +146,15 @@ public abstract class ConfigLoadUtils {
         PasswordConfig pc=new PasswordConfig();
 
         //设置默认值
-        pc.setEncryption(false);
+        pc.setUseEncryption(false);
         pc.setReEncryption(false);
 
         if (jc!=null) {
             int tmpInt=-1;
             try {
-                tmpInt=(int)fel.eval(jc.getString("passwordCfg.isEncryption"));
+                tmpInt=(int)fel.eval(jc.getString("passwordCfg.useEncryption"));
             } catch(Exception e) {tmpInt=-1;}
-            pc.setEncryption(tmpInt==1);
+            pc.setUseEncryption(tmpInt==1);
             tmpInt=-1;
             try {
                 tmpInt=(int)fel.eval(jc.getString("passwordCfg.reEncryption"));

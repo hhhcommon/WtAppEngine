@@ -3,11 +3,13 @@ package com.woting.appengine.common.web;
 import java.io.File;
 import java.io.IOException;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.spiritdata.framework.FConstants;
 import com.spiritdata.framework.core.cache.CacheEle;
@@ -19,6 +21,7 @@ import com.woting.appengine.common.cache.CacheRefreshListener;
 import com.woting.appengine.content.ContentConfig;
 import com.woting.dataanal.gather.API.ApiGatherListener;
 import com.woting.passport.UGA.PasswordConfig;
+import com.woting.passport.UGA.service.UserService;
 import com.woting.searchword.SearchWordListener;
 import com.woting.push.socketclient.SocketClientConfig;
 import com.woting.push.socketclient.oio.SocketClient;
@@ -42,6 +45,15 @@ public class AppRunningListener implements ServletContextListener {
             CacheRefreshListener.begin();
             //启动数据收集数据
             ApiGatherListener.begin();
+            //看是否需要重新加密
+            PasswordConfig pc=(PasswordConfig)SystemCache.getCache(WtAppEngineConstants.PASSWORD_CFG).getContent();
+            if (pc!=null&&pc.isReEncryption()&&pc.isUseEncryption()) {
+                ServletContext _sc=(SystemCache.getCache(FConstants.SERVLET_CONTEXT)==null?null:(ServletContext)SystemCache.getCache(FConstants.SERVLET_CONTEXT).getContent());
+                if (WebApplicationContextUtils.getWebApplicationContext(_sc)!=null) {
+                    UserService us=(UserService)WebApplicationContextUtils.getWebApplicationContext(_sc).getBean("userService");
+                    us.reEncryptionPwd();
+                }
+            }
         } catch(Exception e) {
             logger.error("Web运行时监听启动异常：",e);
         }
